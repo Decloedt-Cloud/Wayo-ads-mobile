@@ -1,0 +1,12 @@
+{
+  "AUTH_WAYO_BASE_URL": "https://preprodauth.wayo.ac",
+  "AUTH_API_URL": "https://preprodauth.wayo.ac",
+  "AUTH_OAUTH_CLIENT_ID": "019d9750-1485-72d2-9fc4-9a4d993ac0fc",
+  "AUTH_OAUTH_CLIENT_SECRET": "JXQou3gWAnftgssNiG1oP9UNEocFbuKCfWyQDX3W",
+  "AUTH_APP_NAME": "wayo_ads",
+  "AUTH_OAUTH_REDIRECT_URI": "com.wayo.wayoadsgo:/oauthredirect",
+  "AUTH_GOOGLE_SERVER_CLIENT_ID": "748602924455-5dmaapq41i6jrfa35qgh34dp68upqh30.apps.googleusercontent.com",
+  "WAYO_ADS_APP_KEY": "oxz2HNCvFTGROqMw3KyAp9cV7qH5XxbquyJn6wrhRyk=",
+  "WAYO_ADS_API_BASE_URL": "https://preprodauth.wayo.ac",
+  "CHAT_SERVICE_API_BASE_URL": "https://wayochat.wayo.ac"
+}

@@ -16,9 +16,9 @@ class LoginRequest {
   final String? appKey;
 
   Map<String, dynamic> toJson() => {
-        'email': email,
-        'password': password,
-        if (app != null && app!.trim().isNotEmpty) 'app': app!.trim(),
-        if (appKey != null && appKey!.trim().isNotEmpty) 'app_key': appKey!.trim(),
-      };
+    'email': email,
+    'password': password,
+    if (app != null && app!.trim().isNotEmpty) 'app': app!.trim(),
+    if (appKey != null && appKey!.trim().isNotEmpty) 'app_key': appKey!.trim(),
+  };
 }

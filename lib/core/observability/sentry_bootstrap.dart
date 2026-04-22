@@ -22,9 +22,7 @@ void applySentryFlutterOptions(SentryFlutterOptions o) {
       return event.copyWith(extra: scrubbedExtra);
     }
     final headers = scrubToStringHeaders(
-      scrub(
-        Map<String, dynamic>.from(req.headers),
-      ),
+      scrub(Map<String, dynamic>.from(req.headers)),
     );
     final data = _scrubRequestPayload(req.data);
     return event.copyWith(
@@ -45,9 +43,7 @@ Map<String, dynamic>? _scrubExtra(Map<String, dynamic>? extra) {
 dynamic _scrubRequestPayload(dynamic data) {
   if (data is Map) {
     return scrub(
-      Map<String, dynamic>.from(
-        data.map((k, dynamic v) => MapEntry('$k', v)),
-      ),
+      Map<String, dynamic>.from(data.map((k, dynamic v) => MapEntry('$k', v))),
     );
   }
   return data;

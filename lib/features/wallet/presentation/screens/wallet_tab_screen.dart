@@ -15,10 +15,10 @@ import '../../../dashboard/presentation/providers/dashboard_state_providers.dart
 import '../../../dashboard/presentation/widgets/error_banner.dart';
 
 String _moneyLocale(AppLocale l) => switch (l) {
-      AppLocale.en => 'en_US',
-      AppLocale.fr => 'fr_FR',
-      AppLocale.ar => 'ar_SA',
-    };
+  AppLocale.en => 'en_US',
+  AppLocale.fr => 'fr_FR',
+  AppLocale.ar => 'ar_SA',
+};
 
 /// Wallet tab — balance from Wayo-ads `/api/wallet` (same stream as dashboard).
 /// Shown for **creator** and **advertiser** (and other roles get the same view when balance exists).
@@ -39,20 +39,21 @@ class WalletTabScreen extends ConsumerWidget {
     };
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(t.nav.wallet),
-        elevation: 0,
-      ),
+      appBar: AppBar(title: Text(t.nav.wallet), elevation: 0),
       body: RefreshIndicator(
         color: AppColors.primary,
         onRefresh: () async {
-          await ref.read(authNotifierProvider.notifier).refreshProfileFromAuthServer();
+          await ref
+              .read(authNotifierProvider.notifier)
+              .refreshProfileFromAuthServer();
           ref.invalidate(dashboardStreamProvider);
           await ref.read(dashboardStreamProvider.future);
           HapticFeedback.lightImpact();
         },
         child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+          physics: const AlwaysScrollableScrollPhysics(
+            parent: BouncingScrollPhysics(),
+          ),
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 120),
           children: [
             if (roleLine != null)
@@ -60,17 +61,20 @@ class WalletTabScreen extends ConsumerWidget {
                 padding: const EdgeInsets.only(bottom: 8),
                 child: Text(
                   roleLine,
-                  style: AppTextStyles.caption(context).copyWith(
-                    color: AppColors.textSecondaryOf(context),
-                  ),
+                  style: AppTextStyles.caption(
+                    context,
+                  ).copyWith(color: AppColors.textSecondaryOf(context)),
                 ),
               ),
             async.when(
               loading: () => const Padding(
                 padding: EdgeInsets.all(32),
-                child: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+                child: Center(
+                  child: CircularProgressIndicator(color: AppColors.primary),
+                ),
               ),
-              error: (e, _) => Text('$e', style: AppTextStyles.bodyLarge(context)),
+              error: (e, _) =>
+                  Text('$e', style: AppTextStyles.bodyLarge(context)),
               data: (snap) {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -81,7 +85,10 @@ class WalletTabScreen extends ConsumerWidget {
                         retryLabel: t.dashboard.errors.retry,
                         onRetry: () => ref.invalidate(dashboardStreamProvider),
                       ),
-                    _WalletBalanceBlock(snapshot: snap, moneyLocale: moneyLocale),
+                    _WalletBalanceBlock(
+                      snapshot: snap,
+                      moneyLocale: moneyLocale,
+                    ),
                   ],
                 );
               },
@@ -113,7 +120,10 @@ class _WalletBalanceBlock extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(t.dashboard.balance.title, style: AppTextStyles.headlineMedium(context)),
+        Text(
+          t.dashboard.balance.title,
+          style: AppTextStyles.headlineMedium(context),
+        ),
         const SizedBox(height: 16),
         if (loading)
           const Center(
@@ -125,30 +135,42 @@ class _WalletBalanceBlock extends StatelessWidget {
         else if (!hasBalance)
           Text(
             t.dashboard.errors.load_balance,
-            style: AppTextStyles.bodyLarge(context).copyWith(
-              color: AppColors.textSecondaryOf(context),
-            ),
+            style: AppTextStyles.bodyLarge(
+              context,
+            ).copyWith(color: AppColors.textSecondaryOf(context)),
           )
         else
           Column(
             children: [
               _WalletMetricTile(
                 label: t.dashboard.balance.available,
-                value: MoneyFormatter.format(b?.available ?? 0, currency: currency, locale: moneyLocale),
+                value: MoneyFormatter.format(
+                  b.available,
+                  currency: currency,
+                  locale: moneyLocale,
+                ),
                 icon: Icons.account_balance_wallet_outlined,
                 accent: const Color(0xFF10B981),
               ),
               const SizedBox(height: 10),
               _WalletMetricTile(
                 label: t.dashboard.balance.locked,
-                value: MoneyFormatter.format(b?.locked ?? 0, currency: currency, locale: moneyLocale),
+                value: MoneyFormatter.format(
+                  b.locked,
+                  currency: currency,
+                  locale: moneyLocale,
+                ),
                 icon: Icons.lock_outline_rounded,
                 accent: AppColors.primary,
               ),
               const SizedBox(height: 10),
               _WalletMetricTile(
                 label: t.dashboard.balance.spent,
-                value: MoneyFormatter.format(b?.spent ?? 0, currency: currency, locale: moneyLocale),
+                value: MoneyFormatter.format(
+                  b.spent,
+                  currency: currency,
+                  locale: moneyLocale,
+                ),
                 icon: Icons.trending_down_rounded,
                 accent: const Color(0xFF8B5CF6),
               ),
@@ -189,14 +211,16 @@ class _WalletMetricTile extends StatelessWidget {
                 children: [
                   Text(
                     label,
-                    style: AppTextStyles.caption(context).copyWith(
-                      color: AppColors.textSecondaryOf(context),
-                    ),
+                    style: AppTextStyles.caption(
+                      context,
+                    ).copyWith(color: AppColors.textSecondaryOf(context)),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     value,
-                    style: AppTextStyles.headlineMedium(context).copyWith(fontSize: 20),
+                    style: AppTextStyles.headlineMedium(
+                      context,
+                    ).copyWith(fontSize: 20),
                   ),
                 ],
               ),

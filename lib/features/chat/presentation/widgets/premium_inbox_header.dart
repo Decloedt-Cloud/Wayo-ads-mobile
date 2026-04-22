@@ -87,10 +87,7 @@ class PremiumInboxHeader extends StatelessWidget {
               ],
             ),
           ),
-          if (trailing != null) ...[
-            const SizedBox(width: 14),
-            trailing!,
-          ],
+          if (trailing != null) ...[const SizedBox(width: 14), trailing!],
         ],
       ),
     );
@@ -357,10 +354,7 @@ class PremiumStateCard extends StatelessWidget {
                 height: 1.45,
               ),
             ),
-            if (action != null) ...[
-              const SizedBox(height: 18),
-              action!,
-            ],
+            if (action != null) ...[const SizedBox(height: 18), action!],
           ],
         ),
       ),

@@ -38,7 +38,9 @@ class AdvertiserCampaignCard extends StatelessWidget {
         child: Ink(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
-            color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.05),
+            color: (isDark ? Colors.white : Colors.black).withValues(
+              alpha: 0.05,
+            ),
             border: Border.all(color: AppColors.borderOf(context)),
           ),
           child: Padding(
@@ -59,10 +61,9 @@ class AdvertiserCampaignCard extends StatelessWidget {
                             c.name,
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
-                            style: AppTextStyles.labelLarge(context).copyWith(
-                              fontSize: 17,
-                              height: 1.25,
-                            ),
+                            style: AppTextStyles.labelLarge(
+                              context,
+                            ).copyWith(fontSize: 17, height: 1.25),
                           ),
                           const SizedBox(height: 8),
                           Wrap(
@@ -126,8 +127,10 @@ class AdvertiserCampaignCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      t.advertiser_campaigns.card.valid_engagements
-                          .replaceAll('{count}', '${c.validViews}'),
+                      t.advertiser_campaigns.card.valid_engagements.replaceAll(
+                        '{count}',
+                        '${c.validViews}',
+                      ),
                       style: AppTextStyles.caption(context).copyWith(
                         color: AppColors.textSecondaryOf(context),
                         fontWeight: FontWeight.w600,
@@ -191,7 +194,10 @@ class _Thumb extends StatelessWidget {
   Widget _placeholder(BuildContext context) {
     return ColoredBox(
       color: AppColors.surfaceElevatedOf(context),
-      child: Icon(Icons.campaign_outlined, color: AppColors.primary.withValues(alpha: 0.85)),
+      child: Icon(
+        Icons.campaign_outlined,
+        color: AppColors.primary.withValues(alpha: 0.85),
+      ),
     );
   }
 }
@@ -206,30 +212,30 @@ class _StatusBadge extends StatelessWidget {
     final t = context.t;
     final (Color bg, Color fg, String label) = switch (status) {
       CampaignStatus.active => (
-          const Color(0xFF10B981).withValues(alpha: 0.2),
-          const Color(0xFF34D399),
-          t.advertiser_campaigns.status.active,
-        ),
+        const Color(0xFF10B981).withValues(alpha: 0.2),
+        const Color(0xFF34D399),
+        t.advertiser_campaigns.status.active,
+      ),
       CampaignStatus.paused => (
-          const Color(0xFFF59E0B).withValues(alpha: 0.18),
-          const Color(0xFFFBBF24),
-          t.advertiser_campaigns.status.paused,
-        ),
+        const Color(0xFFF59E0B).withValues(alpha: 0.18),
+        const Color(0xFFFBBF24),
+        t.advertiser_campaigns.status.paused,
+      ),
       CampaignStatus.completed => (
-          const Color(0xFF64748B).withValues(alpha: 0.25),
-          const Color(0xFF94A3B8),
-          t.advertiser_campaigns.status.completed,
-        ),
+        const Color(0xFF64748B).withValues(alpha: 0.25),
+        const Color(0xFF94A3B8),
+        t.advertiser_campaigns.status.completed,
+      ),
       CampaignStatus.draft => (
-          AppColors.textMuted.withValues(alpha: 0.2),
-          AppColors.textMuted,
-          t.advertiser_campaigns.status.draft,
-        ),
+        AppColors.textMuted.withValues(alpha: 0.2),
+        AppColors.textMuted,
+        t.advertiser_campaigns.status.draft,
+      ),
       CampaignStatus.unknown => (
-          AppColors.textMuted.withValues(alpha: 0.2),
-          AppColors.textMuted,
-          t.advertiser_campaigns.status.other,
-        ),
+        AppColors.textMuted.withValues(alpha: 0.2),
+        AppColors.textMuted,
+        t.advertiser_campaigns.status.other,
+      ),
     };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -304,9 +310,9 @@ class _MetricBlock extends StatelessWidget {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w800,
-                color: AppColors.textPrimaryOf(context),
-              ),
+            fontWeight: FontWeight.w800,
+            color: AppColors.textPrimaryOf(context),
+          ),
         ),
       ],
     );

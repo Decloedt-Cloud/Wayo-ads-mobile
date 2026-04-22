@@ -18,7 +18,10 @@ final class WayoLoggingInterceptor extends Interceptor {
   }
 
   @override
-  void onResponse(Response<dynamic> response, ResponseInterceptorHandler handler) {
+  void onResponse(
+    Response<dynamic> response,
+    ResponseInterceptorHandler handler,
+  ) {
     if (kDebugMode) {
       _emit(response.requestOptions, response.statusCode);
     }
@@ -33,11 +36,7 @@ final class WayoLoggingInterceptor extends Interceptor {
     handler.next(err);
   }
 
-  void _emit(
-    RequestOptions options,
-    int? statusCode, {
-    DioException? error,
-  }) {
+  void _emit(RequestOptions options, int? statusCode, {DioException? error}) {
     final started = options.extra[_kStart] as DateTime?;
     final elapsedMs = started == null
         ? null

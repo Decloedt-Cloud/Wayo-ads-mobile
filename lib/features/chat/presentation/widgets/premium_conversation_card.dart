@@ -59,7 +59,8 @@ class PremiumConversationCard extends StatefulWidget {
   final VoidCallback? onLongPress;
 
   @override
-  State<PremiumConversationCard> createState() => _PremiumConversationCardState();
+  State<PremiumConversationCard> createState() =>
+      _PremiumConversationCardState();
 }
 
 class _PremiumConversationCardState extends State<PremiumConversationCard>
@@ -146,7 +147,9 @@ class _PremiumConversationCardState extends State<PremiumConversationCard>
                           shape: BoxShape.circle,
                           gradient: RadialGradient(
                             colors: [
-                              p.accentWarm.withValues(alpha: p.isDark ? 0.32 : 0.22),
+                              p.accentWarm.withValues(
+                                alpha: p.isDark ? 0.32 : 0.22,
+                              ),
                               p.accentWarm.withValues(alpha: 0.0),
                             ],
                           ),
@@ -276,8 +279,9 @@ class _PremiumConversationCardState extends State<PremiumConversationCard>
                                                     ? FontWeight.w500
                                                     : FontWeight.w400,
                                                 color: hasUnread
-                                                    ? p.textPrimary
-                                                        .withValues(alpha: 0.82)
+                                                    ? p.textPrimary.withValues(
+                                                        alpha: 0.82,
+                                                      )
                                                     : p.textSecondary,
                                                 letterSpacing: -0.05,
                                               ),
@@ -385,10 +389,7 @@ class _PremiumAvatar extends StatelessWidget {
                         ],
                       ),
                 color: hasPhoto ? p.surfaceCrown : null,
-                border: Border.all(
-                  color: p.borderHairline,
-                  width: 0.8,
-                ),
+                border: Border.all(color: p.borderHairline, width: 0.8),
               ),
               child: ClipOval(
                 child: hasPhoto
@@ -398,7 +399,8 @@ class _PremiumAvatar extends StatelessWidget {
                         height: d,
                         fit: BoxFit.cover,
                         fadeInDuration: const Duration(milliseconds: 180),
-                        placeholder: (_, _) => _Monogram(initial: initial, p: p),
+                        placeholder: (_, _) =>
+                            _Monogram(initial: initial, p: p),
                         errorWidget: (context, url, error) =>
                             _Monogram(initial: initial, p: p),
                       )
@@ -473,11 +475,7 @@ class _PinnedChip extends StatelessWidget {
           width: 0.6,
         ),
       ),
-      child: Icon(
-        Icons.push_pin_rounded,
-        size: 11,
-        color: tokens.accentWarm,
-      ),
+      child: Icon(Icons.push_pin_rounded, size: 11, color: tokens.accentWarm),
     );
   }
 }
@@ -579,10 +577,7 @@ class PremiumGlassSurface extends StatelessWidget {
           padding: padding,
           decoration: BoxDecoration(
             color: p.surfaceElevated.withValues(alpha: p.isDark ? 0.82 : 0.88),
-            border: Border.all(
-              color: p.borderHairline,
-              width: 0.6,
-            ),
+            border: Border.all(color: p.borderHairline, width: 0.6),
             borderRadius: BorderRadius.circular(radius),
           ),
           child: child,

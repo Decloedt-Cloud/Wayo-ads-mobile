@@ -5,11 +5,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 
 class WayoLogo extends StatelessWidget {
-  const WayoLogo({
-    super.key,
-    this.size = 72,
-    this.enableMotion = true,
-  });
+  const WayoLogo({super.key, this.size = 72, this.enableMotion = true});
 
   final double size;
   final bool enableMotion;
@@ -47,6 +43,11 @@ class WayoLogo extends StatelessWidget {
     }
     return logo
         .animate(onPlay: (c) => c.repeat(reverse: true))
-        .scaleXY(begin: 1, end: 1.03, duration: 2500.ms, curve: Curves.easeInOut);
+        .scaleXY(
+          begin: 1,
+          end: 1.03,
+          duration: 2500.ms,
+          curve: Curves.easeInOut,
+        );
   }
 }

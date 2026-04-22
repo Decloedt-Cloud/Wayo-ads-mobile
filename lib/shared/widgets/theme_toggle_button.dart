@@ -12,7 +12,8 @@ class ThemeToggleButton extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final mode = ref.watch(themeModeProvider);
     final platform = MediaQuery.platformBrightnessOf(context);
-    final isDark = mode == ThemeMode.dark ||
+    final isDark =
+        mode == ThemeMode.dark ||
         (mode == ThemeMode.system && platform == Brightness.dark);
 
     return _GlassIconButton(

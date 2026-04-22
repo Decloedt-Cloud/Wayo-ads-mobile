@@ -4,10 +4,7 @@ import '../../../../core/theme/app_colors.dart';
 
 /// Linear strength bar (0–1) from password rules.
 class PasswordStrengthIndicator extends StatelessWidget {
-  const PasswordStrengthIndicator({
-    super.key,
-    required this.password,
-  });
+  const PasswordStrengthIndicator({super.key, required this.password});
 
   final String password;
 
@@ -25,8 +22,8 @@ class PasswordStrengthIndicator extends StatelessWidget {
     final color = v >= 1
         ? AppColors.primary
         : v >= 0.66
-            ? AppColors.primarySoft
-            : AppColors.textMutedOf(context);
+        ? AppColors.primarySoft
+        : AppColors.textMutedOf(context);
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(4),

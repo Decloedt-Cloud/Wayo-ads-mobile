@@ -7,7 +7,9 @@ import '../../domain/chat_conversation.dart';
 import '../../domain/chat_credentials.dart';
 import '../../domain/chat_message.dart';
 
-final chatRealtimeServiceProvider = Provider.autoDispose<ChatRealtimeService>((ref) {
+final chatRealtimeServiceProvider = Provider.autoDispose<ChatRealtimeService>((
+  ref,
+) {
   final s = ChatRealtimeService();
   ref.keepAlive();
   ref.onDispose(s.dispose);
@@ -23,7 +25,9 @@ final chatBootstrapProvider = FutureProvider<ChatCredentials>((ref) async {
 
 /// Conversation list from chat-service (Bearer chat JWT).
 /// Not `autoDispose`: shell IndexedStack + login prefetch can cancel in-flight loads if disposed too early.
-final chatConversationsProvider = FutureProvider<List<ChatConversation>>((ref) async {
+final chatConversationsProvider = FutureProvider<List<ChatConversation>>((
+  ref,
+) async {
   ref.keepAlive();
   final creds = await ref.watch(chatBootstrapProvider.future);
   final rt = ref.read(chatRealtimeServiceProvider);
@@ -58,17 +62,17 @@ final chatRealtimeBindingProvider = FutureProvider<void>((ref) async {
   }
 });
 
-final chatMessagesFamilyProvider =
-    FutureProvider.autoDispose.family<List<ChatMessage>, int>((ref, conversationId) async {
-  final creds = await ref.watch(chatBootstrapProvider.future);
-  final rt = ref.read(chatRealtimeServiceProvider);
-  final repo = ref.read(chatRepositoryProvider);
-  return repo.fetchMessages(
-    creds,
-    conversationId,
-    socketId: () => rt.socketId,
-  );
-});
+final chatMessagesFamilyProvider = FutureProvider.autoDispose
+    .family<List<ChatMessage>, int>((ref, conversationId) async {
+      final creds = await ref.watch(chatBootstrapProvider.future);
+      final rt = ref.read(chatRealtimeServiceProvider);
+      final repo = ref.read(chatRepositoryProvider);
+      return repo.fetchMessages(
+        creds,
+        conversationId,
+        socketId: () => rt.socketId,
+      );
+    });
 
 /// Call on logout so chat tokens and sockets are dropped.
 void invalidateChatProviders(Ref ref) {

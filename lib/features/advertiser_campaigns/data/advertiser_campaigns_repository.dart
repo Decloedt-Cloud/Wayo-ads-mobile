@@ -6,17 +6,18 @@ import '../../../core/network/wayo_ads_dio.dart';
 import 'advertiser_campaigns_remote_datasource.dart';
 import '../domain/advertiser_campaign.dart';
 
-final advertiserCampaignsRemoteProvider =
-    Provider<AdvertiserCampaignsRemote>((ref) {
+final advertiserCampaignsRemoteProvider = Provider<AdvertiserCampaignsRemote>((
+  ref,
+) {
   return AdvertiserCampaignsRemoteDatasource(ref.watch(wayoAdsDioProvider));
 });
 
 final advertiserCampaignsRepositoryProvider =
     Provider<AdvertiserCampaignsRepository>((ref) {
-  return AdvertiserCampaignsRepository(
-    ref.watch(advertiserCampaignsRemoteProvider),
-  );
-});
+      return AdvertiserCampaignsRepository(
+        ref.watch(advertiserCampaignsRemoteProvider),
+      );
+    });
 
 final class AdvertiserCampaignsRepository {
   AdvertiserCampaignsRepository(this._remote);

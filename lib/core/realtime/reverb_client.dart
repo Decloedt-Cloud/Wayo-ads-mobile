@@ -47,8 +47,9 @@ final class WayoReverbRealtime {
     await disconnect();
     _connectedUserId = userId;
 
-    final authUrl =
-        AuthRuntimeConfig.instance.wayoAdsAbsoluteUrl(ApiEndpoints.broadcastingAuth);
+    final authUrl = AuthRuntimeConfig.instance.wayoAdsAbsoluteUrl(
+      ApiEndpoints.broadcastingAuth,
+    );
     final port = int.tryParse(runtime.reverbPort) ?? 443;
     final useTls = runtime.reverbScheme.toLowerCase() == 'https';
 
@@ -93,15 +94,15 @@ final class WayoReverbRealtime {
       ..add(usr.stream.listen(forward));
   }
 
-  Future<Map<String, String>> _authorizer(String channelName, String socketId) async {
+  Future<Map<String, String>> _authorizer(
+    String channelName,
+    String socketId,
+  ) async {
     final token = await _storage.getAccessToken();
     if (token == null || token.isEmpty) {
       return const {};
     }
-    return {
-      'Authorization': 'Bearer $token',
-      'Accept': 'application/json',
-    };
+    return {'Authorization': 'Bearer $token', 'Accept': 'application/json'};
   }
 
   /// Stops websocket subscriptions (e.g. on logout).

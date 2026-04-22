@@ -104,8 +104,8 @@ class LanguageSwitcher extends ConsumerWidget {
   }
 
   String _flagFor(AppLocale locale) => switch (locale) {
-        AppLocale.en => 'GB',
-        AppLocale.fr => 'FR',
-        AppLocale.ar => 'AE',
-      };
+    AppLocale.en => 'GB',
+    AppLocale.fr => 'FR',
+    AppLocale.ar => 'AE',
+  };
 }

@@ -55,5 +55,6 @@ class ScanLinePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant ScanLinePainter oldDelegate) =>
-      oldDelegate.progress != progress || oldDelegate.dotProgress != dotProgress;
+      oldDelegate.progress != progress ||
+      oldDelegate.dotProgress != dotProgress;
 }

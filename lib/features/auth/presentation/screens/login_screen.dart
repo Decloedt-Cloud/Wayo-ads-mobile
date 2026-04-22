@@ -38,6 +38,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _password = TextEditingController();
   bool _obscure = true;
   bool _googleSigningIn = false;
+
   /// Blocks duplicate POSTs when both "Done" on keyboard and the CTA fire together.
   bool _submitInProgress = false;
 
@@ -75,10 +76,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       if (!ok) {
         return;
       }
-      await ref.read(authNotifierProvider.notifier).login(
-            _email.text.trim(),
-            _password.text,
-          );
+      await ref
+          .read(authNotifierProvider.notifier)
+          .login(_email.text.trim(), _password.text);
       if (!context.mounted) {
         return;
       }
@@ -94,16 +94,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final googleCid = AuthRuntimeConfig.instance.googleServerClientId;
     if (googleCid.isEmpty) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(t.login.google_not_configured)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(t.login.google_not_configured)));
       return;
     }
     if (!AuthRuntimeConfig.looksLikeGoogleWebClientId(googleCid)) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(t.login.google_wrong_client_id)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(t.login.google_wrong_client_id)));
       return;
     }
     FocusScope.of(context).unfocus();
@@ -115,9 +115,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         return;
       }
       if (idToken.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(t.login.google_failed)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(t.login.google_failed)));
         return;
       }
       await ref.read(authNotifierProvider.notifier).loginWithGoogle(idToken);
@@ -125,7 +125,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       if (!mounted) return;
       final msg = GoogleSignInFacade.looksLikeStaleChannel(e)
           ? t.login.google_channel_restart
-          : (e.message?.isNotEmpty == true ? e.message! : t.login.google_failed);
+          : (e.message?.isNotEmpty == true
+                ? e.message!
+                : t.login.google_failed);
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
     } catch (e) {
       if (!mounted) return;
@@ -209,10 +211,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          _LoginTopBar(
-                            reduce: reduce,
-                            brand: t.login.brand,
-                          ),
+                          _LoginTopBar(reduce: reduce, brand: t.login.brand),
                           SizedBox(height: media.size.height * 0.038),
                           _wrapEntrance(
                             reduce,
@@ -237,40 +236,51 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             duration: const Duration(milliseconds: 220),
                             curve: Curves.easeOut,
                             padding: EdgeInsets.only(
-                              bottom: (rateLimit == null && apiError == null) ? 0 : 16,
+                              bottom: (rateLimit == null && apiError == null)
+                                  ? 0
+                                  : 16,
                             ),
                             child: rateLimit != null
                                 ? RateLimitCooldownBanner(
                                     key: ValueKey(rateLimit.retryAfterSeconds),
                                     initialSeconds: rateLimit.retryAfterSeconds,
-                                    onComplete: () =>
-                                        ref.read(authNotifierProvider.notifier).clearLoginError(),
+                                    onComplete: () => ref
+                                        .read(authNotifierProvider.notifier)
+                                        .clearLoginError(),
                                   )
                                 : apiError == null
-                                    ? const SizedBox.shrink()
-                                    : Material(
-                                        color: AppColors.surfaceElevatedOf(context),
-                                        borderRadius: BorderRadius.circular(14),
-                                        child: Padding(
-                                          padding: const EdgeInsets.all(14),
-                                          child: Row(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
-                                              const Icon(Icons.error_outline, color: AppColors.error, size: 22),
-                                              const SizedBox(width: 10),
-                                              Expanded(
-                                                child: Text(
-                                                  apiError,
-                                                  style: AppTextStyles.bodyLarge(context).copyWith(
+                                ? const SizedBox.shrink()
+                                : Material(
+                                    color: AppColors.surfaceElevatedOf(context),
+                                    borderRadius: BorderRadius.circular(14),
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(14),
+                                      child: Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          const Icon(
+                                            Icons.error_outline,
+                                            color: AppColors.error,
+                                            size: 22,
+                                          ),
+                                          const SizedBox(width: 10),
+                                          Expanded(
+                                            child: Text(
+                                              apiError,
+                                              style:
+                                                  AppTextStyles.bodyLarge(
+                                                    context,
+                                                  ).copyWith(
                                                     color: AppColors.error,
                                                     fontSize: 14,
                                                   ),
-                                                ),
-                                              ),
-                                            ],
+                                            ),
                                           ),
-                                        ),
+                                        ],
                                       ),
+                                    ),
+                                  ),
                           ),
                           _wrapEntrance(
                             reduce,
@@ -313,10 +323,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 context,
                                 labelText: t.login.password_label,
                                 suffixIcon: IconButton(
-                                  tooltip: _obscure ? t.login.show_password : t.login.hide_password,
-                                  onPressed: formLocked ? null : () => setState(() => _obscure = !_obscure),
+                                  tooltip: _obscure
+                                      ? t.login.show_password
+                                      : t.login.hide_password,
+                                  onPressed: formLocked
+                                      ? null
+                                      : () => setState(
+                                          () => _obscure = !_obscure,
+                                        ),
                                   icon: Icon(
-                                    _obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                                    _obscure
+                                        ? Icons.visibility_outlined
+                                        : Icons.visibility_off_outlined,
                                     color: AppColors.textSecondaryOf(context),
                                   ),
                                 ),
@@ -352,13 +370,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           Align(
                             alignment: AlignmentDirectional.centerEnd,
                             child: TextButton(
-                              onPressed: formLocked ? null : () => context.push('/forgot-password'),
+                              onPressed: formLocked
+                                  ? null
+                                  : () => context.push('/forgot-password'),
                               child: Text(
                                 t.login.forgot_password_link,
-                                style: AppTextStyles.labelLarge(context).copyWith(
-                                  color: AppColors.primary,
-                                  fontWeight: FontWeight.w600,
-                                ),
+                                style: AppTextStyles.labelLarge(context)
+                                    .copyWith(
+                                      color: AppColors.primary,
+                                      fontWeight: FontWeight.w600,
+                                    ),
                               ),
                             ),
                           ),

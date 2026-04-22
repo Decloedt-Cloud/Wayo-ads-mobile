@@ -9,8 +9,8 @@ import '../../../../core/result.dart';
 
 final passwordResetRemoteDataSourceProvider =
     Provider<PasswordResetRemoteDataSource>((ref) {
-  return PasswordResetRemoteDataSource(ref.watch(dioProvider));
-});
+      return PasswordResetRemoteDataSource(ref.watch(dioProvider));
+    });
 
 /// Calls Auth_Wayo `POST /api/auth/forgot-password|verify-otp|reset-password`.
 class PasswordResetRemoteDataSource {

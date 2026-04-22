@@ -44,7 +44,10 @@ String _rewriteChatApiBaseForAndroidEmulator(String url) {
     if (!Platform.isAndroid) return url;
     final uri = Uri.parse(url.trim());
     if (uri.host != 'localhost' && uri.host != '127.0.0.1') return url;
-    return uri.replace(host: '10.0.2.2').toString().replaceAll(RegExp(r'/+$'), '');
+    return uri
+        .replace(host: '10.0.2.2')
+        .toString()
+        .replaceAll(RegExp(r'/+$'), '');
   } catch (_) {
     return url;
   }
@@ -53,7 +56,9 @@ String _rewriteChatApiBaseForAndroidEmulator(String url) {
 String _effectiveChatApiBaseUrl(String fromBootstrap) {
   final overlay = AuthRuntimeConfig.instance.chatServiceApiBaseUrl.trim();
   final raw = overlay.isNotEmpty ? overlay : fromBootstrap.trim();
-  return _rewriteChatApiBaseForAndroidEmulator(raw.replaceAll(RegExp(r'/+$'), ''));
+  return _rewriteChatApiBaseForAndroidEmulator(
+    raw.replaceAll(RegExp(r'/+$'), ''),
+  );
 }
 
 String _rewriteReverbHostForAndroidEmulator(String host) {
@@ -98,14 +103,18 @@ final class ChatRepository {
   /// Retries up to 3 times on 401 to handle the Android FlutterSecureStorage
   /// propagation delay after a fresh login (token not yet visible to interceptors).
   Future<ChatCredentials> fetchBootstrap() async {
-    final path = AuthRuntimeConfig.instance.wayoAdsRequestPath(ApiEndpoints.chatToken);
+    final path = AuthRuntimeConfig.instance.wayoAdsRequestPath(
+      ApiEndpoints.chatToken,
+    );
     const maxAttempts = 3;
     for (var attempt = 0; attempt < maxAttempts; attempt++) {
       try {
         final res = await _wayoAdsDio.get<Map<String, dynamic>>(path);
         final data = res.data;
         if (data == null || data['success'] != true) {
-          final msg = data?['message'] is String ? data!['message'] as String : 'Chat bootstrap failed';
+          final msg = data?['message'] is String
+              ? data!['message'] as String
+              : 'Chat bootstrap failed';
           throw ServerException(msg);
         }
         final inner = data['data'];
@@ -149,7 +158,9 @@ final class ChatRepository {
         final is401 = e.response?.statusCode == 401;
         final isLastAttempt = attempt == maxAttempts - 1;
         if (is401 && !isLastAttempt) {
-          await Future<void>.delayed(Duration(milliseconds: 400 * (attempt + 1)));
+          await Future<void>.delayed(
+            Duration(milliseconds: 400 * (attempt + 1)),
+          );
           continue;
         }
         rethrow;
@@ -160,30 +171,32 @@ final class ChatRepository {
 
   Dio _chatDio(ChatCredentials c, {String? Function()? socketId}) {
     final base = c.apiBaseUrl.endsWith('/') ? c.apiBaseUrl : '${c.apiBaseUrl}/';
-    final dio = Dio(
-      BaseOptions(
-        baseUrl: base,
-        connectTimeout: const Duration(seconds: 12),
-        receiveTimeout: const Duration(seconds: 20),
-        sendTimeout: const Duration(seconds: 15),
-        headers: <String, dynamic>{
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ${c.token}',
-          'X-Application-ID': c.appId,
-        },
-      ),
-    )..interceptors.add(
-        InterceptorsWrapper(
-          onRequest: (options, handler) {
-            final sid = socketId?.call();
-            if (sid != null && sid.isNotEmpty) {
-              options.headers['X-Socket-ID'] = sid;
-            }
-            handler.next(options);
-          },
-        ),
-      );
+    final dio =
+        Dio(
+            BaseOptions(
+              baseUrl: base,
+              connectTimeout: const Duration(seconds: 12),
+              receiveTimeout: const Duration(seconds: 20),
+              sendTimeout: const Duration(seconds: 15),
+              headers: <String, dynamic>{
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ${c.token}',
+                'X-Application-ID': c.appId,
+              },
+            ),
+          )
+          ..interceptors.add(
+            InterceptorsWrapper(
+              onRequest: (options, handler) {
+                final sid = socketId?.call();
+                if (sid != null && sid.isNotEmpty) {
+                  options.headers['X-Socket-ID'] = sid;
+                }
+                handler.next(options);
+              },
+            ),
+          );
     if (kDebugMode) {
       dio.interceptors.add(WayoLoggingInterceptor());
     }
@@ -211,13 +224,17 @@ final class ChatRepository {
     );
     final data = res.data;
     if (data == null || data['success'] != true) {
-      throw ServerException(data?['message'] as String? ?? 'User search failed');
+      throw ServerException(
+        data?['message'] as String? ?? 'User search failed',
+      );
     }
     final list = data['data'];
     if (list is! List<dynamic>) {
       return const [];
     }
-    return list.map((e) => ChatDirectoryUser.fromJson(e as Map<String, dynamic>)).toList();
+    return list
+        .map((e) => ChatDirectoryUser.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   Future<ChatConversation> createDirectConversation(
@@ -235,7 +252,9 @@ final class ChatRepository {
     );
     final data = res.data;
     if (data == null || data['success'] != true) {
-      throw ServerException(data?['message'] as String? ?? 'Could not start conversation');
+      throw ServerException(
+        data?['message'] as String? ?? 'Could not start conversation',
+      );
     }
     final raw = data['data'];
     if (raw is! Map<String, dynamic>) {
@@ -252,13 +271,17 @@ final class ChatRepository {
     final res = await dio.get<Map<String, dynamic>>('api/v1/conversations');
     final data = res.data;
     if (data == null || data['success'] != true) {
-      throw ServerException(data?['message'] as String? ?? 'Failed to load conversations');
+      throw ServerException(
+        data?['message'] as String? ?? 'Failed to load conversations',
+      );
     }
     final list = data['data'];
     if (list is! List<dynamic>) {
       return const [];
     }
-    return list.map((e) => _parseConversation(e as Map<String, dynamic>)).toList();
+    return list
+        .map((e) => _parseConversation(e as Map<String, dynamic>))
+        .toList();
   }
 
   Future<List<ChatMessage>> fetchMessages(
@@ -274,7 +297,9 @@ final class ChatRepository {
     );
     final data = res.data;
     if (data == null || data['success'] != true) {
-      throw ServerException(data?['message'] as String? ?? 'Failed to load messages');
+      throw ServerException(
+        data?['message'] as String? ?? 'Failed to load messages',
+      );
     }
     final inner = data['data'];
     Map<String, dynamic>? payload;
@@ -285,8 +310,13 @@ final class ChatRepository {
     if (rows is! List<dynamic>) {
       return const [];
     }
-    final messages = rows.map((e) => _parseMessage(e as Map<String, dynamic>)).toList();
-    messages.sort((a, b) => DateTime.parse(a.createdAt).compareTo(DateTime.parse(b.createdAt)));
+    final messages = rows
+        .map((e) => _parseMessage(e as Map<String, dynamic>))
+        .toList();
+    messages.sort(
+      (a, b) =>
+          DateTime.parse(a.createdAt).compareTo(DateTime.parse(b.createdAt)),
+    );
     return messages;
   }
 
@@ -318,7 +348,9 @@ final class ChatRepository {
     String? Function()? socketId,
   }) async {
     final dio = _chatDio(c, socketId: socketId);
-    await dio.post<Map<String, dynamic>>('api/v1/conversations/$conversationId/read');
+    await dio.post<Map<String, dynamic>>(
+      'api/v1/conversations/$conversationId/read',
+    );
   }
 
   /// `PUT /api/v1/conversations/{id}/messages/{messageId}` — owner edits text content.
@@ -392,29 +424,31 @@ final class ChatRepository {
     });
 
     final base = c.apiBaseUrl.endsWith('/') ? c.apiBaseUrl : '${c.apiBaseUrl}/';
-    final dio = Dio(
-      BaseOptions(
-        baseUrl: base,
-        connectTimeout: const Duration(seconds: 120),
-        receiveTimeout: const Duration(seconds: 120),
-        sendTimeout: const Duration(seconds: 120),
-        headers: <String, dynamic>{
-          'Accept': 'application/json',
-          'Authorization': 'Bearer ${c.token}',
-          'X-Application-ID': c.appId,
-        },
-      ),
-    )..interceptors.add(
-        InterceptorsWrapper(
-          onRequest: (options, handler) {
-            final sid = socketId?.call();
-            if (sid != null && sid.isNotEmpty) {
-              options.headers['X-Socket-ID'] = sid;
-            }
-            handler.next(options);
-          },
-        ),
-      );
+    final dio =
+        Dio(
+            BaseOptions(
+              baseUrl: base,
+              connectTimeout: const Duration(seconds: 120),
+              receiveTimeout: const Duration(seconds: 120),
+              sendTimeout: const Duration(seconds: 120),
+              headers: <String, dynamic>{
+                'Accept': 'application/json',
+                'Authorization': 'Bearer ${c.token}',
+                'X-Application-ID': c.appId,
+              },
+            ),
+          )
+          ..interceptors.add(
+            InterceptorsWrapper(
+              onRequest: (options, handler) {
+                final sid = socketId?.call();
+                if (sid != null && sid.isNotEmpty) {
+                  options.headers['X-Socket-ID'] = sid;
+                }
+                handler.next(options);
+              },
+            ),
+          );
 
     final res = await dio.post<Map<String, dynamic>>(
       'api/v1/conversations/$conversationId/messages',
@@ -439,8 +473,12 @@ final class ChatRepository {
       id: (m['id'] as num).toInt(),
       type: '${m['type'] ?? 'direct'}',
       displayName: m['display_name'] as String? ?? m['displayName'] as String?,
-      displayAvatar: m['display_avatar'] as String? ?? m['displayAvatar'] as String?,
-      unreadCount: (m['unread_count'] as num?)?.toInt() ?? (m['unreadCount'] as num?)?.toInt() ?? 0,
+      displayAvatar:
+          m['display_avatar'] as String? ?? m['displayAvatar'] as String?,
+      unreadCount:
+          (m['unread_count'] as num?)?.toInt() ??
+          (m['unreadCount'] as num?)?.toInt() ??
+          0,
       updatedAt: m['updated_at'] as String? ?? m['updatedAt'] as String?,
       lastMessage: last is Map<String, dynamic> ? _parseMessage(last) : null,
       participants: _parseParticipants(m['participants']),
@@ -453,7 +491,10 @@ final class ChatRepository {
       final m = e as Map<String, dynamic>;
       final u = m['user'];
       return ChatParticipant(
-        userId: (m['user_id'] as num?)?.toInt() ?? (m['userId'] as num?)?.toInt() ?? 0,
+        userId:
+            (m['user_id'] as num?)?.toInt() ??
+            (m['userId'] as num?)?.toInt() ??
+            0,
         lastReadAt: m['last_read_at'] as String? ?? m['lastReadAt'] as String?,
         user: u is Map<String, dynamic>
             ? ChatUserPreview(
@@ -480,8 +521,14 @@ final class ChatRepository {
     }
     return ChatMessage(
       id: (m['id'] as num).toInt(),
-      conversationId: (m['conversation_id'] as num?)?.toInt() ?? (m['conversationId'] as num?)?.toInt() ?? 0,
-      userId: (m['user_id'] as num?)?.toInt() ?? (m['userId'] as num?)?.toInt() ?? 0,
+      conversationId:
+          (m['conversation_id'] as num?)?.toInt() ??
+          (m['conversationId'] as num?)?.toInt() ??
+          0,
+      userId:
+          (m['user_id'] as num?)?.toInt() ??
+          (m['userId'] as num?)?.toInt() ??
+          0,
       content: '${m['content'] ?? ''}',
       type: '${m['type'] ?? 'text'}',
       createdAt: '${m['created_at'] ?? m['createdAt'] ?? ''}',
@@ -490,7 +537,8 @@ final class ChatRepository {
       isEdited: m['is_edited'] == true || m['isEdited'] == true,
       fileUrl: m['file_url'] as String? ?? m['fileUrl'] as String?,
       fileName: m['file_name'] as String? ?? m['fileName'] as String?,
-      fileSize: (m['file_size'] as num?)?.toInt() ?? (m['fileSize'] as num?)?.toInt(),
+      fileSize:
+          (m['file_size'] as num?)?.toInt() ?? (m['fileSize'] as num?)?.toInt(),
       user: userEnvelope != null
           ? ChatUserPreview(
               id: (userEnvelope['id'] as num).toInt(),

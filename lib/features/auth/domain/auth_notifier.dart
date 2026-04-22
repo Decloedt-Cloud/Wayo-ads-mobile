@@ -160,7 +160,9 @@ class AuthNotifier extends _$AuthNotifier {
   }
 
   Future<void> _persistUserOnly(AppUser user) async {
-    await ref.read(secureStorageProvider).saveUserJson(jsonEncode(user.toJson()));
+    await ref
+        .read(secureStorageProvider)
+        .saveUserJson(jsonEncode(user.toJson()));
     state = AsyncValue.data(AuthAuthenticated(user));
   }
 
@@ -198,7 +200,10 @@ class AuthNotifier extends _$AuthNotifier {
     invalidateChatProviders(ref);
   }
 
-  Future<void> _persistAuth(SecureStorageService storage, AuthResponse auth) async {
+  Future<void> _persistAuth(
+    SecureStorageService storage,
+    AuthResponse auth,
+  ) async {
     await storage.saveAuthSession(
       accessToken: auth.accessToken,
       refreshToken: auth.refreshToken,

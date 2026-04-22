@@ -38,7 +38,10 @@ class PrivacyPolicyScreen extends ConsumerWidget {
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.textPrimaryOf(context)),
+          icon: Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: AppColors.textPrimaryOf(context),
+          ),
           onPressed: () => context.pop(),
         ),
         title: Text(
@@ -82,10 +85,9 @@ class PrivacyPolicyScreen extends ConsumerWidget {
                 const SizedBox(height: 8),
                 Text(
                   s.body,
-                  style: AppTextStyles.bodyLarge(context).copyWith(
-                    height: 1.55,
-                    fontSize: 15,
-                  ),
+                  style: AppTextStyles.bodyLarge(
+                    context,
+                  ).copyWith(height: 1.55, fontSize: 15),
                 ),
               ],
             );

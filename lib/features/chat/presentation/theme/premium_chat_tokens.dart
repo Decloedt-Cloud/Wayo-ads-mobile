@@ -138,34 +138,22 @@ class PremiumChatTokens {
     cardGradient: const LinearGradient(
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
-      colors: [
-        Color(0x14FFFFFF),
-        Color(0x03FFFFFF),
-      ],
+      colors: [Color(0x14FFFFFF), Color(0x03FFFFFF)],
     ),
     cardGradientUnread: const LinearGradient(
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
-      colors: [
-        Color(0x29FF8A3C),
-        Color(0x0AFF8A3C),
-      ],
+      colors: [Color(0x29FF8A3C), Color(0x0AFF8A3C)],
     ),
     accentGradient: const LinearGradient(
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
-      colors: [
-        Color(0xFFFF8A3C),
-        Color(0xFFFF5A1F),
-      ],
+      colors: [Color(0xFFFF8A3C), Color(0xFFFF5A1F)],
     ),
     sheen: const LinearGradient(
       begin: Alignment.topCenter,
       end: Alignment.bottomCenter,
-      colors: [
-        Color(0x24FFFFFF),
-        Color(0x00FFFFFF),
-      ],
+      colors: [Color(0x24FFFFFF), Color(0x00FFFFFF)],
     ),
     cardShadow: const [
       BoxShadow(
@@ -174,11 +162,7 @@ class PremiumChatTokens {
         offset: Offset(0, 8),
         spreadRadius: -4,
       ),
-      BoxShadow(
-        color: Color(0x40000000),
-        blurRadius: 2,
-        offset: Offset(0, 1),
-      ),
+      BoxShadow(color: Color(0x40000000), blurRadius: 2, offset: Offset(0, 1)),
     ],
     hoverShadow: const [
       BoxShadow(
@@ -203,11 +187,7 @@ class PremiumChatTokens {
         offset: Offset(0, 8),
         spreadRadius: -4,
       ),
-      BoxShadow(
-        color: Color(0x33FF8A3C),
-        blurRadius: 4,
-        offset: Offset(0, 1),
-      ),
+      BoxShadow(color: Color(0x33FF8A3C), blurRadius: 4, offset: Offset(0, 1)),
     ],
     isDark: true,
   );
@@ -242,34 +222,22 @@ class PremiumChatTokens {
     cardGradient: const LinearGradient(
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
-      colors: [
-        Color(0xFFFFFFFF),
-        Color(0xFFFFF7EE),
-      ],
+      colors: [Color(0xFFFFFFFF), Color(0xFFFFF7EE)],
     ),
     cardGradientUnread: const LinearGradient(
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
-      colors: [
-        Color(0xFFFFE8D4),
-        Color(0xFFFFF7EE),
-      ],
+      colors: [Color(0xFFFFE8D4), Color(0xFFFFF7EE)],
     ),
     accentGradient: const LinearGradient(
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
-      colors: [
-        Color(0xFFFF8A3C),
-        Color(0xFFFF5A1F),
-      ],
+      colors: [Color(0xFFFF8A3C), Color(0xFFFF5A1F)],
     ),
     sheen: const LinearGradient(
       begin: Alignment.topCenter,
       end: Alignment.bottomCenter,
-      colors: [
-        Color(0x1AFFFFFF),
-        Color(0x00FFFFFF),
-      ],
+      colors: [Color(0x1AFFFFFF), Color(0x00FFFFFF)],
     ),
     cardShadow: const [
       BoxShadow(
@@ -278,11 +246,7 @@ class PremiumChatTokens {
         offset: Offset(0, 10),
         spreadRadius: -8,
       ),
-      BoxShadow(
-        color: Color(0x0A000000),
-        blurRadius: 2,
-        offset: Offset(0, 1),
-      ),
+      BoxShadow(color: Color(0x0A000000), blurRadius: 2, offset: Offset(0, 1)),
     ],
     hoverShadow: const [
       BoxShadow(

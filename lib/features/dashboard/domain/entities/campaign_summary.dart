@@ -32,14 +32,14 @@ final class CampaignSummary extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        name,
-        status,
-        platform,
-        creatorsCount,
-        coverUrl,
-        createdAt,
-        lockedBudgetCents,
-        spentBudgetCents,
-      ];
+    id,
+    name,
+    status,
+    platform,
+    creatorsCount,
+    coverUrl,
+    createdAt,
+    lockedBudgetCents,
+    spentBudgetCents,
+  ];
 }

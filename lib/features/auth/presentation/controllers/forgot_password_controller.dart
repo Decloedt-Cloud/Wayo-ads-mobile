@@ -90,5 +90,7 @@ class ForgotPasswordController extends StateNotifier<ForgotPasswordState> {
 /// Not autoDispose: survives [GoRouter] pushes between forgot → OTP → new password.
 final forgotPasswordControllerProvider =
     StateNotifierProvider<ForgotPasswordController, ForgotPasswordState>((ref) {
-  return ForgotPasswordController(ref.watch(passwordResetRemoteDataSourceProvider));
-});
+      return ForgotPasswordController(
+        ref.watch(passwordResetRemoteDataSourceProvider),
+      );
+    });

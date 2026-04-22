@@ -87,8 +87,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     final visual = reduced
         ? SplashSequence.reducedMotionDuration
         : second
-            ? SplashSequence.secondLaunchDuration
-            : SplashSequence.totalDuration;
+        ? SplashSequence.secondLaunchDuration
+        : SplashSequence.totalDuration;
 
     if (!mounted) {
       return;
@@ -230,7 +230,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     }
     _navigated = true;
     try {
-      await ref.read(appPrefsProvider).setString(SplashPrefKeys.completedOnce, '1');
+      await ref
+          .read(appPrefsProvider)
+          .setString(SplashPrefKeys.completedOnce, '1');
     } catch (_) {
       // Prefs channel hiccup: still navigate.
     }
@@ -248,11 +250,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     if (master == null) {
       return;
     }
-    final msTotal = master.duration?.inMilliseconds ??
+    final msTotal =
+        master.duration?.inMilliseconds ??
         SplashSequence.totalDuration.inMilliseconds;
-    final elapsed = Duration(
-      milliseconds: (msTotal * master.value).round(),
-    );
+    final elapsed = Duration(milliseconds: (msTotal * master.value).round());
     final minSkip = _secondLaunch && !_reducedMotion
         ? const Duration(milliseconds: 400)
         : const Duration(milliseconds: 1200);
@@ -271,7 +272,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     }
     _navigated = true;
     try {
-      await ref.read(appPrefsProvider).setString(SplashPrefKeys.completedOnce, '1');
+      await ref
+          .read(appPrefsProvider)
+          .setString(SplashPrefKeys.completedOnce, '1');
     } catch (_) {}
     if (!mounted) {
       return;
@@ -331,10 +334,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
           behavior: HitTestBehavior.opaque,
           onTap: _handleSkip,
           child: _reducedMotion
-              ? _ReducedSplashBody(
-                  master: master,
-                  wordmark: wordLayout,
-                )
+              ? _ReducedSplashBody(master: master, wordmark: wordLayout)
               : _FullSplashBody(
                   master: master,
                   ripple: _ripple,
@@ -398,10 +398,7 @@ class _TaglineFader extends StatelessWidget {
 }
 
 class _ReducedSplashBody extends StatelessWidget {
-  const _ReducedSplashBody({
-    required this.master,
-    required this.wordmark,
-  });
+  const _ReducedSplashBody({required this.master, required this.wordmark});
 
   final AnimationController master;
   final SplashWordmarkLayout wordmark;
@@ -412,9 +409,7 @@ class _ReducedSplashBody extends StatelessWidget {
       fit: StackFit.expand,
       children: [
         const _BackgroundGradient(),
-        const RepaintBoundary(
-          child: NoiseOverlay(opacity: 0.03),
-        ),
+        const RepaintBoundary(child: NoiseOverlay(opacity: 0.03)),
         AnimatedBuilder(
           animation: master,
           builder: (context, _) {
@@ -478,9 +473,8 @@ class _FullSplashBody extends StatelessWidget {
         RepaintBoundary(
           child: AnimatedBuilder(
             animation: ripple,
-            builder: (context, _) => LiquidMetalBackground(
-              time: ripple.value * pi * 2,
-            ),
+            builder: (context, _) =>
+                LiquidMetalBackground(time: ripple.value * pi * 2),
           ),
         ),
         const _BackgroundGradient(),
@@ -494,9 +488,7 @@ class _FullSplashBody extends StatelessWidget {
           ),
         ),
         const Positioned.fill(
-          child: RepaintBoundary(
-            child: NoiseOverlay(opacity: 0.03),
-          ),
+          child: RepaintBoundary(child: NoiseOverlay(opacity: 0.03)),
         ),
         RepaintBoundary(
           child: AnimatedBuilder(
@@ -528,7 +520,9 @@ class _FullSplashBody extends StatelessWidget {
                         painter: ParticleSystemPainter(
                           system: particles,
                           burstProgress: SplashSequence.burst.transform(t),
-                          assemblyProgress: SplashSequence.assembly.transform(t),
+                          assemblyProgress: SplashSequence.assembly.transform(
+                            t,
+                          ),
                         ),
                       ),
                     ),
@@ -537,7 +531,9 @@ class _FullSplashBody extends StatelessWidget {
                         painter: WayoMarkPainter(
                           snapProgress: SplashSequence.snap.transform(t),
                           flashProgress: SplashSequence.flash.transform(t),
-                          assemblyProgress: SplashSequence.assembly.transform(t),
+                          assemblyProgress: SplashSequence.assembly.transform(
+                            t,
+                          ),
                         ),
                       ),
                     ),

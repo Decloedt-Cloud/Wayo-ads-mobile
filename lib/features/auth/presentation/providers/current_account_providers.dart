@@ -17,16 +17,16 @@ final Provider<AppUser?> currentAppUserProvider = Provider<AppUser?>((ref) {
 /// **Identity + role** for the active session — use this to branch creator vs advertiser.
 final Provider<LoggedAccountInfo?> loggedAccountInfoProvider =
     Provider<LoggedAccountInfo?>((ref) {
-  final u = ref.watch(currentAppUserProvider);
-  if (u == null) {
-    return null;
-  }
-  return LoggedAccountInfo.fromAppUser(u);
-});
+      final u = ref.watch(currentAppUserProvider);
+      if (u == null) {
+        return null;
+      }
+      return LoggedAccountInfo.fromAppUser(u);
+    });
 
 /// Resolved Wayo Ads role for the current session (creator vs advertiser, etc.).
 final Provider<WayoAdsAccountRole> currentWayoAdsAccountRoleProvider =
     Provider<WayoAdsAccountRole>((ref) {
-  return ref.watch(currentAppUserProvider)?.wayoAdsRole ??
-      WayoAdsAccountRole.unknown;
-});
+      return ref.watch(currentAppUserProvider)?.wayoAdsRole ??
+          WayoAdsAccountRole.unknown;
+    });

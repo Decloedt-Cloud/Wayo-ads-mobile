@@ -21,7 +21,8 @@ class ForgotPasswordScreen extends ConsumerStatefulWidget {
   const ForgotPasswordScreen({super.key});
 
   @override
-  ConsumerState<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
+  ConsumerState<ForgotPasswordScreen> createState() =>
+      _ForgotPasswordScreenState();
 }
 
 class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
@@ -54,7 +55,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   Future<void> _submit(Translations t) async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
     HapticFeedback.mediumImpact();
-    await ref.read(forgotPasswordControllerProvider.notifier).requestOtp(_emailCtrl.text.trim());
+    await ref
+        .read(forgotPasswordControllerProvider.notifier)
+        .requestOtp(_emailCtrl.text.trim());
   }
 
   RateLimitedException? _rateLimit(ForgotPasswordState s) {
@@ -68,7 +71,10 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     final t = context.t;
     ref.watch(localeProvider);
 
-    ref.listen<ForgotPasswordState>(forgotPasswordControllerProvider, (prev, next) {
+    ref.listen<ForgotPasswordState>(forgotPasswordControllerProvider, (
+      prev,
+      next,
+    ) {
       if (next is FpOtpSent && prev is FpLoading) {
         context.push('/forgot-password/otp', extra: next.email);
       } else if (next is FpError && next.error is! RateLimitedException) {
@@ -100,9 +106,14 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                       const PasswordResetTopBar(),
                       const SizedBox(height: 8),
                       Text(
-                        t.forgot_password.title,
-                        style: AppTextStyles.displayLarge(context).copyWith(fontSize: 32, height: 1.1),
-                      ).animate().fadeIn(duration: 500.ms).slideY(begin: 0.12, curve: Curves.easeOutCubic),
+                            t.forgot_password.title,
+                            style: AppTextStyles.displayLarge(
+                              context,
+                            ).copyWith(fontSize: 32, height: 1.1),
+                          )
+                          .animate()
+                          .fadeIn(duration: 500.ms)
+                          .slideY(begin: 0.12, curve: Curves.easeOutCubic),
                       const SizedBox(height: 12),
                       Text(
                         t.forgot_password.subtitle,
@@ -111,44 +122,59 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                       AnimatedPadding(
                         duration: const Duration(milliseconds: 220),
                         curve: Curves.easeOut,
-                        padding: EdgeInsets.only(top: rate != null ? 16 : 0, bottom: rate != null ? 16 : 0),
+                        padding: EdgeInsets.only(
+                          top: rate != null ? 16 : 0,
+                          bottom: rate != null ? 16 : 0,
+                        ),
                         child: rate == null
                             ? const SizedBox.shrink()
                             : RateLimitCooldownBanner(
                                 key: ValueKey(rate.retryAfterSeconds),
                                 initialSeconds: rate.retryAfterSeconds,
                                 variant: RateLimitBannerVariant.passwordReset,
-                                onComplete: () =>
-                                    ref.read(forgotPasswordControllerProvider.notifier).clearError(),
+                                onComplete: () => ref
+                                    .read(
+                                      forgotPasswordControllerProvider.notifier,
+                                    )
+                                    .clearError(),
                               ),
                       ),
                       const SizedBox(height: 24),
                       TextFormField(
-                        controller: _emailCtrl,
-                        keyboardType: TextInputType.emailAddress,
-                        textInputAction: TextInputAction.done,
-                        autocorrect: false,
-                        validator: (v) => _validateEmail(v, t),
-                        style: AppTextStyles.bodyLarge(context).copyWith(
-                          color: AppColors.textPrimaryOf(context),
-                        ),
-                        decoration: InputDecoration(
-                          labelText: t.forgot_password.email_label,
-                          prefixIcon: Icon(Icons.mail_outline_rounded, color: AppColors.textSecondaryOf(context)),
-                        ),
-                      ).animate().fadeIn(delay: 220.ms, duration: 500.ms).slideY(begin: 0.08),
+                            controller: _emailCtrl,
+                            keyboardType: TextInputType.emailAddress,
+                            textInputAction: TextInputAction.done,
+                            autocorrect: false,
+                            validator: (v) => _validateEmail(v, t),
+                            style: AppTextStyles.bodyLarge(
+                              context,
+                            ).copyWith(color: AppColors.textPrimaryOf(context)),
+                            decoration: InputDecoration(
+                              labelText: t.forgot_password.email_label,
+                              prefixIcon: Icon(
+                                Icons.mail_outline_rounded,
+                                color: AppColors.textSecondaryOf(context),
+                              ),
+                            ),
+                          )
+                          .animate()
+                          .fadeIn(delay: 220.ms, duration: 500.ms)
+                          .slideY(begin: 0.08),
                       const SizedBox(height: 32),
                       IgnorePointer(
-                        ignoring: rate != null,
-                        child: Opacity(
-                          opacity: rate != null ? 0.45 : 1,
-                          child: WayoLoginButton(
-                            isLoading: loading,
-                            label: t.forgot_password.cta,
-                            onPressed: () => _submit(t),
-                          ),
-                        ),
-                      ).animate().fadeIn(delay: 320.ms, duration: 500.ms).slideY(begin: 0.12),
+                            ignoring: rate != null,
+                            child: Opacity(
+                              opacity: rate != null ? 0.45 : 1,
+                              child: WayoLoginButton(
+                                isLoading: loading,
+                                label: t.forgot_password.cta,
+                                onPressed: () => _submit(t),
+                              ),
+                            ),
+                          )
+                          .animate()
+                          .fadeIn(delay: 320.ms, duration: 500.ms)
+                          .slideY(begin: 0.12),
                       const SizedBox(height: 24),
                     ],
                   ),

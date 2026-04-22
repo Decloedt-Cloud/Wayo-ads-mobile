@@ -86,7 +86,8 @@ class _ChatInboxScreenState extends ConsumerState<ChatInboxScreen> {
       }
       if (event is ChatMessageSentEvent) {
         setState(() {
-          _pulseTokenByConv[event.conversationId] = (_pulseTokenByConv[event.conversationId] ?? 0) + 1;
+          _pulseTokenByConv[event.conversationId] =
+              (_pulseTokenByConv[event.conversationId] ?? 0) + 1;
         });
         return;
       }
@@ -112,20 +113,26 @@ class _ChatInboxScreenState extends ConsumerState<ChatInboxScreen> {
     try {
       final list = await ref.read(chatConversationsProvider.future);
       final creds = await ref.read(chatBootstrapProvider.future);
-      await ref.read(chatRealtimeServiceProvider).updateConversationSubscriptions(
+      await ref
+          .read(chatRealtimeServiceProvider)
+          .updateConversationSubscriptions(
             creds,
             list.map((e) => e.id).toList(),
           );
     } catch (_) {}
   }
 
-  Future<void> _openChatWithUser(ChatCredentials creds, ChatDirectoryUser user) async {
+  Future<void> _openChatWithUser(
+    ChatCredentials creds,
+    ChatDirectoryUser user,
+  ) async {
     final t = context.t;
     final repo = ref.read(chatRepositoryProvider);
     final rt = ref.read(chatRealtimeServiceProvider);
     final candidates = <int>[
       user.id,
-      if (user.externalUserId != null && user.externalUserId != user.id) user.externalUserId!,
+      if (user.externalUserId != null && user.externalUserId != user.id)
+        user.externalUserId!,
     ];
     ChatConversation? conv;
     for (final pid in candidates) {
@@ -150,7 +157,10 @@ class _ChatInboxScreenState extends ConsumerState<ChatInboxScreen> {
     ref.invalidate(chatRealtimeBindingProvider);
     await _resyncConversationChannels();
     if (!mounted) return;
-    context.push('/chat/thread/${conv.id}', extra: conv.title(t.chat.conversation_unknown));
+    context.push(
+      '/chat/thread/${conv.id}',
+      extra: conv.title(t.chat.conversation_unknown),
+    );
   }
 
   @override
@@ -222,167 +232,231 @@ class _ChatInboxScreenState extends ConsumerState<ChatInboxScreen> {
                   ),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                    child: ref.watch(chatBootstrapProvider).when(
-                      data: (creds) => ChatUserSearchBar(
-                        creds: creds,
-                        useLiquidNeuralStyle: true,
-                        hiddenParticipantIds: _existingPartnerChatUserIds(
-                          ref.watch(chatConversationsProvider).valueOrNull ?? const [],
-                          creds.chatUserId,
+                    child: ref
+                        .watch(chatBootstrapProvider)
+                        .when(
+                          data: (creds) => ChatUserSearchBar(
+                            creds: creds,
+                            useLiquidNeuralStyle: true,
+                            hiddenParticipantIds: _existingPartnerChatUserIds(
+                              ref
+                                      .watch(chatConversationsProvider)
+                                      .valueOrNull ??
+                                  const [],
+                              creds.chatUserId,
+                            ),
+                            onUserSelected: (u) => _openChatWithUser(creds, u),
+                          ),
+                          loading: () => const SizedBox.shrink(),
+                          error: (error, stackTrace) => const SizedBox.shrink(),
                         ),
-                        onUserSelected: (u) => _openChatWithUser(creds, u),
+                  ),
+                  Expanded(
+                    child: async.when(
+                      loading: () => Center(
+                        child: CircularProgressIndicator(color: ln.plasma),
                       ),
-                      loading: () => const SizedBox.shrink(),
-                      error: (error, stackTrace) => const SizedBox.shrink(),
-                    ),
-              ),
-              Expanded(
-                child: async.when(
-                  loading: () => Center(
-                    child: CircularProgressIndicator(color: ln.plasma),
-                  ),
-                  error: (e, _) => _ChatError(
-                    message: t.chat.error_load_threads,
-                    onRetry: () {
-                      ref.invalidate(chatBootstrapProvider);
-                      ref.invalidate(chatConversationsProvider);
-                      ref.invalidate(chatRealtimeBindingProvider);
-                    },
-                  ),
-                  data: (list) {
-                    final creds = ref.watch(chatBootstrapProvider).valueOrNull;
-                    if (list.isEmpty) {
-                      return _ChatEmpty(message: t.chat.empty_threads_title, hint: t.chat.empty_threads_hint);
-                    }
-                    return ListenableBuilder(
-                      listenable: rt.onlineChatUserIds,
-                      builder: (context, _) {
-                        final onlineIds = rt.onlineChatUserIds.value;
-                        return LayoutBuilder(
-                          builder: (context, constraints) {
-                            return RefreshIndicator(
-                              color: ln.plasma,
-                              onRefresh: () async {
-                                ref.invalidate(chatConversationsProvider);
-                                await ref.read(chatConversationsProvider.future);
-                                await _resyncConversationChannels();
-                              },
-                              child: ListView.builder(
-                                controller: _scroll,
-                                physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
-                                padding: const EdgeInsets.fromLTRB(12, 4, 12, 28),
-                                itemCount: list.length,
-                                itemBuilder: (context, index) {
-                                  final c = list[index];
-                                  final title = c.title(t.chat.conversation_unknown);
-                                  final last = _inboxLastPreview(c, t);
-                                  final typingName = _typingUserByConv[c.id];
-                                  final isTyping = typingName != null;
-                                  final time = _sidebarTime(context, c.updatedAt ?? c.lastMessage?.createdAt);
-                                  final partnerId =
-                                      myChatUserId == null ? null : c.partnerChatUserId(myChatUserId);
-                                  final partnerOnline =
-                                      partnerId != null && onlineIds.contains(partnerId);
-                                  final letter = _firstLetter(title);
-                                  final pulseTok = _pulseTokenByConv[c.id] ?? 0;
-                                  final rowAvatarPath = c.displayAvatar ??
-                                      (myChatUserId != null ? c.partnerAvatarFromParticipants(myChatUserId) : null);
-                                  final rowAvatarUrl = creds == null
-                                      ? ''
-                                      : resolveChatMediaUrl(rowAvatarPath, creds.apiBaseUrl);
-
-                                  Widget inner = LiquidNeuralPulseLayer(
-                                    pulseToken: pulseTok,
-                                    child: PremiumConversationCard(
-                                      title: title,
-                                      preview: last,
-                                      time: time,
-                                      initial: letter,
-                                      avatarUrl: rowAvatarUrl,
-                                      unreadCount: c.unreadCount,
-                                      online: partnerOnline,
-                                      typing: isTyping,
-                                      typingName: typingName,
-                                      onTap: () {
-                                        context.push(
-                                          '/chat/thread/${c.id}',
-                                          extra: title,
-                                        );
-                                      },
-                                    ),
-                                  );
-
-                                  if (!reduce) {
-                                    inner = inner
-                                        .animate(delay: (index * 80).ms)
-                                        .fadeIn(duration: 380.ms, curve: Curves.easeOutCubic)
-                                        .slideX(
-                                          begin: 0.14,
-                                          duration: 420.ms,
-                                          curve: Curves.easeOutCubic,
-                                        );
-                                  }
-
-                                  return Dismissible(
-                                    key: ValueKey('conv_${c.id}'),
-                                    confirmDismiss: (dir) async {
-                                      if (dir == DismissDirection.endToStart ||
-                                          dir == DismissDirection.startToEnd) {
-                                        if (context.mounted) {
-                                          ScaffoldMessenger.of(context).showSnackBar(
-                                            SnackBar(
-                                              content: Text(t.chat.inbox_swipe_soon),
-                                            ),
-                                          );
-                                        }
-                                      }
-                                      return false;
-                                    },
-                                    background: Container(
-                                      alignment: Alignment.centerLeft,
-                                      padding: const EdgeInsets.only(left: 26),
-                                      margin: const EdgeInsets.symmetric(vertical: 6),
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(p.radiusXL),
-                                        gradient: LinearGradient(
-                                          begin: Alignment.centerLeft,
-                                          end: Alignment.centerRight,
-                                          colors: [
-                                            p.accentWarm.withValues(alpha: 0.9),
-                                            p.accentWarm.withValues(alpha: 0.35),
-                                          ],
+                      error: (e, _) => _ChatError(
+                        message: t.chat.error_load_threads,
+                        onRetry: () {
+                          ref.invalidate(chatBootstrapProvider);
+                          ref.invalidate(chatConversationsProvider);
+                          ref.invalidate(chatRealtimeBindingProvider);
+                        },
+                      ),
+                      data: (list) {
+                        final creds = ref
+                            .watch(chatBootstrapProvider)
+                            .valueOrNull;
+                        if (list.isEmpty) {
+                          return _ChatEmpty(
+                            message: t.chat.empty_threads_title,
+                            hint: t.chat.empty_threads_hint,
+                          );
+                        }
+                        return ListenableBuilder(
+                          listenable: rt.onlineChatUserIds,
+                          builder: (context, _) {
+                            final onlineIds = rt.onlineChatUserIds.value;
+                            return LayoutBuilder(
+                              builder: (context, constraints) {
+                                return RefreshIndicator(
+                                  color: ln.plasma,
+                                  onRefresh: () async {
+                                    ref.invalidate(chatConversationsProvider);
+                                    await ref.read(
+                                      chatConversationsProvider.future,
+                                    );
+                                    await _resyncConversationChannels();
+                                  },
+                                  child: ListView.builder(
+                                    controller: _scroll,
+                                    physics:
+                                        const AlwaysScrollableScrollPhysics(
+                                          parent: BouncingScrollPhysics(),
                                         ),
-                                      ),
-                                      child: const Icon(
-                                        Icons.push_pin_rounded,
-                                        color: Colors.white,
-                                      ),
+                                    padding: const EdgeInsets.fromLTRB(
+                                      12,
+                                      4,
+                                      12,
+                                      28,
                                     ),
-                                    secondaryBackground: Container(
-                                      alignment: Alignment.centerRight,
-                                      padding: const EdgeInsets.only(right: 26),
-                                      margin: const EdgeInsets.symmetric(vertical: 6),
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(p.radiusXL),
-                                        color: AppColors.error.withValues(alpha: 0.55),
-                                      ),
-                                      child: const Icon(
-                                        Icons.delete_outline_rounded,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                    child: inner,
-                                  );
-                                },
-                              ),
+                                    itemCount: list.length,
+                                    itemBuilder: (context, index) {
+                                      final c = list[index];
+                                      final title = c.title(
+                                        t.chat.conversation_unknown,
+                                      );
+                                      final last = _inboxLastPreview(c, t);
+                                      final typingName =
+                                          _typingUserByConv[c.id];
+                                      final isTyping = typingName != null;
+                                      final time = _sidebarTime(
+                                        context,
+                                        c.updatedAt ?? c.lastMessage?.createdAt,
+                                      );
+                                      final partnerId = myChatUserId == null
+                                          ? null
+                                          : c.partnerChatUserId(myChatUserId);
+                                      final partnerOnline =
+                                          partnerId != null &&
+                                          onlineIds.contains(partnerId);
+                                      final letter = _firstLetter(title);
+                                      final pulseTok =
+                                          _pulseTokenByConv[c.id] ?? 0;
+                                      final rowAvatarPath =
+                                          c.displayAvatar ??
+                                          (myChatUserId != null
+                                              ? c.partnerAvatarFromParticipants(
+                                                  myChatUserId,
+                                                )
+                                              : null);
+                                      final rowAvatarUrl = creds == null
+                                          ? ''
+                                          : resolveChatMediaUrl(
+                                              rowAvatarPath,
+                                              creds.apiBaseUrl,
+                                            );
+
+                                      Widget inner = LiquidNeuralPulseLayer(
+                                        pulseToken: pulseTok,
+                                        child: PremiumConversationCard(
+                                          title: title,
+                                          preview: last,
+                                          time: time,
+                                          initial: letter,
+                                          avatarUrl: rowAvatarUrl,
+                                          unreadCount: c.unreadCount,
+                                          online: partnerOnline,
+                                          typing: isTyping,
+                                          typingName: typingName,
+                                          onTap: () {
+                                            context.push(
+                                              '/chat/thread/${c.id}',
+                                              extra: title,
+                                            );
+                                          },
+                                        ),
+                                      );
+
+                                      if (!reduce) {
+                                        inner = inner
+                                            .animate(delay: (index * 80).ms)
+                                            .fadeIn(
+                                              duration: 380.ms,
+                                              curve: Curves.easeOutCubic,
+                                            )
+                                            .slideX(
+                                              begin: 0.14,
+                                              duration: 420.ms,
+                                              curve: Curves.easeOutCubic,
+                                            );
+                                      }
+
+                                      return Dismissible(
+                                        key: ValueKey('conv_${c.id}'),
+                                        confirmDismiss: (dir) async {
+                                          if (dir ==
+                                                  DismissDirection.endToStart ||
+                                              dir ==
+                                                  DismissDirection.startToEnd) {
+                                            if (context.mounted) {
+                                              ScaffoldMessenger.of(
+                                                context,
+                                              ).showSnackBar(
+                                                SnackBar(
+                                                  content: Text(
+                                                    t.chat.inbox_swipe_soon,
+                                                  ),
+                                                ),
+                                              );
+                                            }
+                                          }
+                                          return false;
+                                        },
+                                        background: Container(
+                                          alignment: Alignment.centerLeft,
+                                          padding: const EdgeInsets.only(
+                                            left: 26,
+                                          ),
+                                          margin: const EdgeInsets.symmetric(
+                                            vertical: 6,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            borderRadius: BorderRadius.circular(
+                                              p.radiusXL,
+                                            ),
+                                            gradient: LinearGradient(
+                                              begin: Alignment.centerLeft,
+                                              end: Alignment.centerRight,
+                                              colors: [
+                                                p.accentWarm.withValues(
+                                                  alpha: 0.9,
+                                                ),
+                                                p.accentWarm.withValues(
+                                                  alpha: 0.35,
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          child: const Icon(
+                                            Icons.push_pin_rounded,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                        secondaryBackground: Container(
+                                          alignment: Alignment.centerRight,
+                                          padding: const EdgeInsets.only(
+                                            right: 26,
+                                          ),
+                                          margin: const EdgeInsets.symmetric(
+                                            vertical: 6,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            borderRadius: BorderRadius.circular(
+                                              p.radiusXL,
+                                            ),
+                                            color: AppColors.error.withValues(
+                                              alpha: 0.55,
+                                            ),
+                                          ),
+                                          child: const Icon(
+                                            Icons.delete_outline_rounded,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                        child: inner,
+                                      );
+                                    },
+                                  ),
+                                );
+                              },
                             );
                           },
                         );
                       },
-                    );
-                  },
-                ),
-              ),
+                    ),
+                  ),
                 ],
               ),
             ),

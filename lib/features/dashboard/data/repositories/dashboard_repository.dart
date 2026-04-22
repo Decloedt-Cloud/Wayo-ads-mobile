@@ -41,15 +41,15 @@ final class DashboardSnapshot extends Equatable {
 
   @override
   List<Object?> get props => [
-        user,
-        balance,
-        campaigns,
-        unreadCount,
-        userError,
-        balanceError,
-        campaignsError,
-        unreadError,
-      ];
+    user,
+    balance,
+    campaigns,
+    unreadCount,
+    userError,
+    balanceError,
+    campaignsError,
+    unreadError,
+  ];
 }
 
 /// Loads dashboard data with SWR (Hive), deduplication, and per-endpoint rate limits.
@@ -63,10 +63,10 @@ final class DashboardRepositoryImpl implements DashboardRepository {
     required RequestDeduplicator deduplicator,
     required RateLimiter rateLimiter,
     required SecureStorageService secureStorage,
-  })  : _remote = remote,
-        _deduplicator = deduplicator,
-        _rate = rateLimiter,
-        _storage = secureStorage;
+  }) : _remote = remote,
+       _deduplicator = deduplicator,
+       _rate = rateLimiter,
+       _storage = secureStorage;
 
   final DashboardRemote _remote;
   final RequestDeduplicator _deduplicator;
@@ -88,8 +88,8 @@ final class DashboardRepositoryImpl implements DashboardRepository {
       final id = idVal is int
           ? idVal
           : idVal is num
-              ? idVal.toInt()
-              : int.tryParse('$idVal');
+          ? idVal.toInt()
+          : int.tryParse('$idVal');
       return _hiveKeyForUserId(id);
     } catch (_) {
       return _hiveKeyForUserId(null);
@@ -119,7 +119,10 @@ final class DashboardRepositoryImpl implements DashboardRepository {
     AuthException? userErr;
 
     try {
-      user = await _deduplicator.run('dashboard_user', () => _remote.fetchUser());
+      user = await _deduplicator.run(
+        'dashboard_user',
+        () => _remote.fetchUser(),
+      );
       userErr = null;
     } catch (e) {
       userErr = _map(e);
@@ -181,9 +184,7 @@ final class DashboardRepositoryImpl implements DashboardRepository {
     // After login, Auth + Wayo-ads requests can race secure storage / JWT; one short
     // delayed retry avoids forcing the user to tap Retry.
     if (user != null &&
-        (balanceErr != null ||
-            campaignsErr != null ||
-            unreadErr != null)) {
+        (balanceErr != null || campaignsErr != null || unreadErr != null)) {
       await Future<void>.delayed(const Duration(milliseconds: 400));
       if (balanceErr != null) {
         try {
@@ -300,12 +301,15 @@ final class DashboardRepositoryImpl implements DashboardRepository {
       platform: CampaignPlatform.fromString(c['platform'] as String?),
       creatorsCount: (c['creatorsCount'] as num).toInt(),
       coverUrl: c['coverUrl'] as String?,
-      createdAt:
-          c['createdAt'] == null ? null : DateTime.tryParse(c['createdAt'] as String),
-      lockedBudgetCents: (c['lockedBudgetCents'] as num?)?.toInt() ??
+      createdAt: c['createdAt'] == null
+          ? null
+          : DateTime.tryParse(c['createdAt'] as String),
+      lockedBudgetCents:
+          (c['lockedBudgetCents'] as num?)?.toInt() ??
           (c['lockedBudget'] as num?)?.toInt() ??
           0,
-      spentBudgetCents: (c['spentBudgetCents'] as num?)?.toInt() ??
+      spentBudgetCents:
+          (c['spentBudgetCents'] as num?)?.toInt() ??
           (c['spentBudget'] as num?)?.toInt() ??
           0,
     );

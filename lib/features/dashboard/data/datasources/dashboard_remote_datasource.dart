@@ -32,11 +32,9 @@ abstract interface class DashboardRemote {
 }
 
 final class DashboardRemoteDatasource implements DashboardRemote {
-  DashboardRemoteDatasource({
-    required Dio authDio,
-    required Dio adsDio,
-  })  : _authDio = authDio,
-        _adsDio = adsDio;
+  DashboardRemoteDatasource({required Dio authDio, required Dio adsDio})
+    : _authDio = authDio,
+      _adsDio = adsDio;
 
   final Dio _authDio;
   final Dio _adsDio;
@@ -65,9 +63,7 @@ final class DashboardRemoteDatasource implements DashboardRemote {
         ? data['data'] as Map<String, dynamic>
         : data;
     final userRaw = envelope['user'];
-    final root = userRaw is Map<String, dynamic>
-        ? userRaw
-        : envelope;
+    final root = userRaw is Map<String, dynamic> ? userRaw : envelope;
     final idVal = root['id'];
     final id = idVal is int ? idVal : int.tryParse('$idVal') ?? 0;
     final name = root['name'] as String?;
@@ -75,7 +71,8 @@ final class DashboardRemoteDatasource implements DashboardRemote {
     return UserProfile(
       id: id,
       email: root['email'] as String? ?? '',
-      firstName: first ??
+      firstName:
+          first ??
           (name != null && name.trim().isNotEmpty
               ? name.trim().split(RegExp(r'\s+')).first
               : null),
@@ -108,14 +105,13 @@ final class DashboardRemoteDatasource implements DashboardRemote {
   }
 
   @override
-  Future<List<CampaignSummary>> fetchCampaigns({int page = 1, int limit = 10}) async {
+  Future<List<CampaignSummary>> fetchCampaigns({
+    int page = 1,
+    int limit = 10,
+  }) async {
     final res = await _adsDio.get<Map<String, dynamic>>(
       AuthRuntimeConfig.instance.wayoAdsRequestPath(ApiEndpoints.campaigns),
-      queryParameters: {
-        'advertiserOnly': 'true',
-        'page': page,
-        'limit': limit,
-      },
+      queryParameters: {'advertiserOnly': 'true', 'page': page, 'limit': limit},
     );
     final data = res.data;
     if (data == null) {
@@ -123,7 +119,9 @@ final class DashboardRemoteDatasource implements DashboardRemote {
     }
     dynamic list = data['campaigns'];
     if (list is! List<dynamic>) {
-      list = data['data'] is List<dynamic> ? data['data'] as List<dynamic> : const [];
+      list = data['data'] is List<dynamic>
+          ? data['data'] as List<dynamic>
+          : const [];
     }
     return list.map((e) {
       final m = e as Map<String, dynamic>;
@@ -135,19 +133,26 @@ final class DashboardRemoteDatasource implements DashboardRemote {
         name: title,
         status: CampaignStatus.fromString(m['status'] as String?),
         platform: CampaignPlatform.fromString(platformStr),
-        creatorsCount: (m['approvedCreators'] as num?)?.toInt() ??
+        creatorsCount:
+            (m['approvedCreators'] as num?)?.toInt() ??
             (m['approved_creators'] as num?)?.toInt() ??
             0,
         coverUrl: m['cover_url'] as String? ?? m['coverUrl'] as String?,
         createdAt: _parseDateTime(m['createdAt'] ?? m['created_at']),
-        lockedBudgetCents: _parseCents(m['lockedBudget'] ?? m['lockedBudgetCents']),
-        spentBudgetCents: _parseCents(m['spentBudgetCents'] ?? m['spentBudget']),
+        lockedBudgetCents: _parseCents(
+          m['lockedBudget'] ?? m['lockedBudgetCents'],
+        ),
+        spentBudgetCents: _parseCents(
+          m['spentBudgetCents'] ?? m['spentBudget'],
+        ),
       );
     }).toList();
   }
 
   @override
-  Future<List<NotificationItem>> fetchNotifications({bool unreadOnly = false}) async {
+  Future<List<NotificationItem>> fetchNotifications({
+    bool unreadOnly = false,
+  }) async {
     final qp = <String, dynamic>{'limit': 100};
     if (unreadOnly) {
       qp['status'] = 'UNREAD';
@@ -186,7 +191,9 @@ final class DashboardRemoteDatasource implements DashboardRemote {
   @override
   Future<int> fetchUnreadCount() async {
     final res = await _adsDio.get<Map<String, dynamic>>(
-      AuthRuntimeConfig.instance.wayoAdsRequestPath(ApiEndpoints.notificationsUnread),
+      AuthRuntimeConfig.instance.wayoAdsRequestPath(
+        ApiEndpoints.notificationsUnread,
+      ),
     );
     final data = res.data;
     if (data == null) {
@@ -210,7 +217,9 @@ final class DashboardRemoteDatasource implements DashboardRemote {
   @override
   Future<void> markNotificationRead(String id) async {
     await _adsDio.post<Map<String, dynamic>>(
-      AuthRuntimeConfig.instance.wayoAdsRequestPath(ApiEndpoints.notificationsMarkRead),
+      AuthRuntimeConfig.instance.wayoAdsRequestPath(
+        ApiEndpoints.notificationsMarkRead,
+      ),
       data: <String, dynamic>{'notificationId': id},
     );
   }
@@ -218,7 +227,9 @@ final class DashboardRemoteDatasource implements DashboardRemote {
   @override
   Future<void> markAllNotificationsRead() async {
     await _adsDio.post<Map<String, dynamic>>(
-      AuthRuntimeConfig.instance.wayoAdsRequestPath(ApiEndpoints.notificationsMarkAllRead),
+      AuthRuntimeConfig.instance.wayoAdsRequestPath(
+        ApiEndpoints.notificationsMarkAllRead,
+      ),
       data: <String, dynamic>{},
     );
   }
@@ -226,7 +237,9 @@ final class DashboardRemoteDatasource implements DashboardRemote {
   @override
   Future<void> dismissNotification(String id) async {
     await _adsDio.post<Map<String, dynamic>>(
-      AuthRuntimeConfig.instance.wayoAdsRequestPath(ApiEndpoints.notificationsDismiss),
+      AuthRuntimeConfig.instance.wayoAdsRequestPath(
+        ApiEndpoints.notificationsDismiss,
+      ),
       data: <String, dynamic>{'notificationId': id},
     );
   }

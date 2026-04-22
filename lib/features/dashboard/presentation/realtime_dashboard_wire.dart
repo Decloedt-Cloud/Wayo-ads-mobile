@@ -13,7 +13,8 @@ class RealtimeDashboardWire extends ConsumerStatefulWidget {
   final Widget child;
 
   @override
-  ConsumerState<RealtimeDashboardWire> createState() => _RealtimeDashboardWireState();
+  ConsumerState<RealtimeDashboardWire> createState() =>
+      _RealtimeDashboardWireState();
 }
 
 class _RealtimeDashboardWireState extends ConsumerState<RealtimeDashboardWire> {
@@ -24,7 +25,9 @@ class _RealtimeDashboardWireState extends ConsumerState<RealtimeDashboardWire> {
       if (!mounted) return;
       final s = ref.read(authNotifierProvider).valueOrNull;
       if (s is AuthAuthenticated) {
-        unawaited(ref.read(wayoReverbRealtimeProvider).connectForUser(s.user.id));
+        unawaited(
+          ref.read(wayoReverbRealtimeProvider).connectForUser(s.user.id),
+        );
       }
     });
   }

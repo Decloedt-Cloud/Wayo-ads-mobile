@@ -24,7 +24,8 @@ class OtpVerificationScreen extends ConsumerStatefulWidget {
   final String email;
 
   @override
-  ConsumerState<OtpVerificationScreen> createState() => _OtpVerificationScreenState();
+  ConsumerState<OtpVerificationScreen> createState() =>
+      _OtpVerificationScreenState();
 }
 
 class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
@@ -75,9 +76,15 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
       return const SizedBox.shrink();
     }
 
-    ref.listen<ForgotPasswordState>(forgotPasswordControllerProvider, (prev, next) {
+    ref.listen<ForgotPasswordState>(forgotPasswordControllerProvider, (
+      prev,
+      next,
+    ) {
       if (next is FpOtpVerified && prev is FpLoading) {
-        context.pushReplacement('/forgot-password/new-password', extra: next.resetToken);
+        context.pushReplacement(
+          '/forgot-password/new-password',
+          extra: next.resetToken,
+        );
       } else if (next is FpError && next.error is! RateLimitedException) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(localizeAuthError(next.error, t))),
@@ -107,7 +114,9 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
                     const SizedBox(height: 8),
                     Text(
                       t.otp.title,
-                      style: AppTextStyles.displayLarge(context).copyWith(fontSize: 32, height: 1.1),
+                      style: AppTextStyles.displayLarge(
+                        context,
+                      ).copyWith(fontSize: 32, height: 1.1),
                     ).animate().fadeIn(duration: 450.ms),
                     const SizedBox(height: 12),
                     Text(
@@ -117,15 +126,21 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
                     AnimatedPadding(
                       duration: const Duration(milliseconds: 220),
                       curve: Curves.easeOut,
-                      padding: EdgeInsets.only(top: rate != null ? 16 : 0, bottom: rate != null ? 16 : 0),
+                      padding: EdgeInsets.only(
+                        top: rate != null ? 16 : 0,
+                        bottom: rate != null ? 16 : 0,
+                      ),
                       child: rate == null
                           ? const SizedBox.shrink()
                           : RateLimitCooldownBanner(
                               key: ValueKey(rate.retryAfterSeconds),
                               initialSeconds: rate.retryAfterSeconds,
                               variant: RateLimitBannerVariant.passwordReset,
-                              onComplete: () =>
-                                  ref.read(forgotPasswordControllerProvider.notifier).clearError(),
+                              onComplete: () => ref
+                                  .read(
+                                    forgotPasswordControllerProvider.notifier,
+                                  )
+                                  .clearError(),
                             ),
                     ),
                     const SizedBox(height: 28),
@@ -136,7 +151,9 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
                         child: OtpInputField(
                           key: ValueKey(_otpRebuildKey),
                           onCompleted: (code) {
-                            ref.read(forgotPasswordControllerProvider.notifier).verifyOtp(widget.email, code);
+                            ref
+                                .read(forgotPasswordControllerProvider.notifier)
+                                .verifyOtp(widget.email, code);
                           },
                         ),
                       ),
@@ -146,7 +163,9 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
                       child: IgnorePointer(
                         ignoring: loading || rate != null || _cooldown > 0,
                         child: Opacity(
-                          opacity: (loading || rate != null || _cooldown > 0) ? 0.45 : 1,
+                          opacity: (loading || rate != null || _cooldown > 0)
+                              ? 0.45
+                              : 1,
                           child: _cooldown > 0
                               ? Text(
                                   t.otp.resend_in(seconds: _cooldown),
@@ -155,7 +174,10 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
                               : TextButton(
                                   onPressed: () async {
                                     await ref
-                                        .read(forgotPasswordControllerProvider.notifier)
+                                        .read(
+                                          forgotPasswordControllerProvider
+                                              .notifier,
+                                        )
                                         .requestOtp(widget.email);
                                     if (context.mounted) {
                                       setState(() => _otpRebuildKey++);
@@ -175,7 +197,9 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
                     ),
                     if (loading) ...[
                       const SizedBox(height: 24),
-                      const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                      const Center(
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
                     ],
                     const SizedBox(height: 24),
                   ],

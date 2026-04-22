@@ -766,8 +766,9 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
                             ValueListenableBuilder<bool>(
                               valueListenable: _fabVisible,
                               builder: (context, show, _) {
-                                if (!show || _loading || _error != null)
+                                if (!show || _loading || _error != null) {
                                   return const SizedBox.shrink();
+                                }
                                 return Positioned(
                                   right: 18,
                                   bottom: 18,

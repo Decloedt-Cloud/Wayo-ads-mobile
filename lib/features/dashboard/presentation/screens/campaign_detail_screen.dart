@@ -158,7 +158,7 @@ class _DetailContent extends StatelessWidget {
     // Prefer nested finance.cpcCents; otherwise root; default 0 (never "—" in UI).
     int cpcCents() {
       if (f != null) {
-        final c = f!['cpcCents'] ?? f!['cpc'];
+        final c = f['cpcCents'] ?? f['cpc'];
         if (c is int) {
           return c;
         }

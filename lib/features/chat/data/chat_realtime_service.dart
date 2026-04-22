@@ -176,7 +176,9 @@ final class ChatRealtimeService {
 
   void _subscribePresenceGlobal(ChatCredentials creds) {
     final client = _client;
-    if (client == null) return;
+    if (client == null) {
+      return;
+    }
 
     final presence = client.presenceChannel(
       'presence-global.${creds.appId}',
@@ -210,19 +212,25 @@ final class ChatRealtimeService {
 
   void _onPresenceSubscriptionSucceeded(ChannelReadEvent ev) {
     final data = ev.tryGetDataAsMap();
-    if (data == null) return;
+    if (data == null) {
+      return;
+    }
     onlineChatUserIds.value = _idsFromPresencePayload(data);
   }
 
   void _onPresenceMemberAdded(ChannelReadEvent ev) {
     final id = _userIdFromPresenceMemberMap(ev.tryGetDataAsMap());
-    if (id == null) return;
+    if (id == null) {
+      return;
+    }
     onlineChatUserIds.value = {...onlineChatUserIds.value, id};
   }
 
   void _onPresenceMemberRemoved(ChannelReadEvent ev) {
     final id = _userIdFromPresenceMemberMap(ev.tryGetDataAsMap());
-    if (id == null) return;
+    if (id == null) {
+      return;
+    }
     final next = {...onlineChatUserIds.value}..remove(id);
     onlineChatUserIds.value = next;
   }
@@ -264,7 +272,9 @@ final class ChatRealtimeService {
     ChatCredentials creds,
     List<int> conversationIds,
   ) async {
-    if (_client == null) return;
+    if (_client == null) {
+      return;
+    }
     await _syncConversationChannels(
       creds,
       conversationIds,
@@ -296,7 +306,9 @@ final class ChatRealtimeService {
     delegate,
   ) async {
     final client = _client;
-    if (client == null) return;
+    if (client == null) {
+      return;
+    }
 
     final wanted = ids
         .map((id) => 'private-conversation.$id.${creds.appId}')
@@ -312,7 +324,9 @@ final class ChatRealtimeService {
 
     for (final id in ids) {
       final name = 'private-conversation.$id.${creds.appId}';
-      if (_subscribedConversationChannels.contains(name)) continue;
+      if (_subscribedConversationChannels.contains(name)) {
+        continue;
+      }
 
       final ch = client.privateChannel(name, authorizationDelegate: delegate);
       ch.subscribe();
@@ -321,7 +335,9 @@ final class ChatRealtimeService {
       int convoId() => id;
 
       void emitMap(String eventName, Map<String, dynamic>? map) {
-        if (map == null) return;
+        if (map == null) {
+          return;
+        }
         switch (eventName) {
           case 'message.sent':
             final m = _unwrapMessage(map['message'] ?? map);
@@ -335,7 +351,9 @@ final class ChatRealtimeService {
             final uid = u is Map<String, dynamic>
                 ? (u['id'] as num?)?.toInt()
                 : null;
-            if (uid == null || uid == creds.chatUserId) return;
+            if (uid == null || uid == creds.chatUserId) {
+              return;
+            }
             final isTyping = map['is_typing'] == true;
             final n = u is Map<String, dynamic> ? '${u['name'] ?? ''}' : '';
             _events.add(
@@ -352,8 +370,9 @@ final class ChatRealtimeService {
                 ? (reader['id'] as num?)?.toInt()
                 : null;
             final readAt = map['read_at'] as String?;
-            if (rid == null || readAt == null || rid == creds.chatUserId)
+            if (rid == null || readAt == null || rid == creds.chatUserId) {
               return;
+            }
             _events.add(
               ChatMessageReadEvent(
                 conversationId: convoId(),

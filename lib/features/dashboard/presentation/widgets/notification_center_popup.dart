@@ -27,7 +27,7 @@ Future<void> showNotificationCenterPopup(
     barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
     barrierColor: Colors.black.withValues(alpha: 0.45),
     transitionDuration: const Duration(milliseconds: 200),
-    pageBuilder: (ctx, _, __) {
+    pageBuilder: (ctx, _, _) {
       return _NotificationCenterOverlay(
         onClose: () => Navigator.of(ctx, rootNavigator: true).pop(),
       );
@@ -178,7 +178,7 @@ class _NotificationCenterPanel extends ConsumerWidget {
                 return ListView.separated(
                   padding: const EdgeInsets.symmetric(vertical: 4),
                   itemCount: preview.length,
-                  separatorBuilder: (_, __) =>
+                  separatorBuilder: (_, _) =>
                       Divider(height: 1, color: border.withValues(alpha: 0.6)),
                   itemBuilder: (context, i) {
                     final n = preview[i];

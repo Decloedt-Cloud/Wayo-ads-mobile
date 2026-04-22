@@ -90,8 +90,9 @@ class _LiquidNeuralPulseLayerState extends State<LiquidNeuralPulseLayer>
             child: AnimatedBuilder(
               animation: _c,
               builder: (context, _) {
-                if (_c.value == 0 && widget.pulseToken == 0)
+                if (_c.value == 0 && widget.pulseToken == 0) {
                   return const SizedBox.shrink();
+                }
                 return CustomPaint(
                   painter: _PulsePainter(
                     progress: Curves.easeOut.transform(_c.value),
@@ -115,7 +116,9 @@ class _PulsePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    if (progress <= 0) return;
+    if (progress <= 0) {
+      return;
+    }
     final cx = size.width * 0.22;
     final cy = size.height * 0.5;
     final maxR = size.shortestSide * 0.95;

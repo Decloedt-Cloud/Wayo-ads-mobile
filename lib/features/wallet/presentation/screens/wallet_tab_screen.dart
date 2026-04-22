@@ -145,7 +145,7 @@ class _WalletBalanceBlock extends StatelessWidget {
               _WalletMetricTile(
                 label: t.dashboard.balance.available,
                 value: MoneyFormatter.format(
-                  b?.available ?? 0,
+                  b.available,
                   currency: currency,
                   locale: moneyLocale,
                 ),
@@ -156,7 +156,7 @@ class _WalletBalanceBlock extends StatelessWidget {
               _WalletMetricTile(
                 label: t.dashboard.balance.locked,
                 value: MoneyFormatter.format(
-                  b?.locked ?? 0,
+                  b.locked,
                   currency: currency,
                   locale: moneyLocale,
                 ),
@@ -167,7 +167,7 @@ class _WalletBalanceBlock extends StatelessWidget {
               _WalletMetricTile(
                 label: t.dashboard.balance.spent,
                 value: MoneyFormatter.format(
-                  b?.spent ?? 0,
+                  b.spent,
                   currency: currency,
                   locale: moneyLocale,
                 ),

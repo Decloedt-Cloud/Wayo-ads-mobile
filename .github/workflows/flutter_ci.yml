@@ -1,0 +1,92 @@
+name: Flutter CI
+
+on:
+  pull_request:
+    branches:
+      - main
+      - master
+      - preprod
+      - develop
+
+jobs:
+  flutter_checks:
+    name: 🔍 Flutter Checks
+    runs-on: ubuntu-latest
+
+    steps:
+      # ── 1. Checkout ──────────────────────────────────────────
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # ── 2. Setup Java (requis pour Android build) ────────────
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      # ── 3. Setup Flutter ─────────────────────────────────────
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.32.0'
+          channel: stable
+          cache: true
+
+      # ── 4. Créer dart_defines.json si nécessaire ─────────────
+      - name: Create dart_defines.json
+        run: |
+          echo '{
+            "AUTH_WAYO_BASE_URL": "${{ secrets.AUTH_WAYO_BASE_URL }}",
+            "AUTH_API_URL": "${{ secrets.AUTH_API_URL }}",
+            "AUTH_OAUTH_CLIENT_ID": "${{ secrets.AUTH_OAUTH_CLIENT_ID }}",
+            "AUTH_OAUTH_CLIENT_SECRET": "${{ secrets.AUTH_OAUTH_CLIENT_SECRET }}",
+            "AUTH_APP_NAME": "wayo_ads",
+            "AUTH_OAUTH_REDIRECT_URI": "${{ secrets.AUTH_OAUTH_REDIRECT_URI }}",
+            "AUTH_GOOGLE_SERVER_CLIENT_ID": "${{ secrets.AUTH_GOOGLE_SERVER_CLIENT_ID }}",
+            "WAYO_ADS_APP_KEY": "${{ secrets.WAYO_ADS_APP_KEY }}",
+            "WAYO_ADS_API_BASE_URL": "${{ secrets.WAYO_ADS_API_BASE_URL }}",
+            "CHAT_SERVICE_API_BASE_URL": "${{ secrets.CHAT_SERVICE_API_BASE_URL }}"
+          }' > dart_defines.json
+
+      # ── 5. Install dependencies ───────────────────────────────
+      - name: Install dependencies
+        run: flutter pub get
+
+      # ── 6. Generate code (Riverpod, slang, etc.) ─────────────
+      - name: Generate code
+        run: dart run build_runner build --delete-conflicting-outputs
+
+      # ── 7. Format check ──────────────────────────────────────
+      - name: Check formatting
+        run: dart format --output=none --set-exit-if-changed .
+
+      # ── 8. Analyze ───────────────────────────────────────────
+      - name: Flutter analyze
+        run: flutter analyze --no-pub --fatal-infos --fatal-warnings
+
+      # ── 9. Unit tests ─────────────────────────────────────────
+      - name: Run unit tests
+        run: flutter test test/ --coverage --reporter=github
+
+      # ── 10. Widget tests ──────────────────────────────────────
+      - name: Run widget tests
+        run: flutter test test/widget/ --reporter=github
+        continue-on-error: false
+
+      # ── 11. Build APK (vérifie que ça compile) ───────────────
+      - name: Build APK
+        run: |
+          flutter build apk --release \
+            --split-per-abi \
+            --obfuscate \
+            --split-debug-info=build/debug-info \
+            --tree-shake-icons
+
+      # ── 12. Upload APK artifact ───────────────────────────────
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-apk
+          path: build/app/outputs/flutter-apk/*.apk
+          retention-days: 7

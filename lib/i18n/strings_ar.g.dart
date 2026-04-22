@@ -181,7 +181,13 @@ class _TranslationsDashboardAr extends TranslationsDashboardEn {
 	@override late final _TranslationsDashboardErrorsAr errors = _TranslationsDashboardErrorsAr._(_root);
 	@override String get notifications_title => 'الإشعارات';
 	@override String get notifications_empty => 'لا إشعارات';
+	@override String get notification_incoming => 'إشعار جديد';
+	@override String get notification_view => 'عرض';
+	@override String get notifications_mark_all_read => 'تعليم الكل كمقروء';
+	@override String get notifications_view_all => 'عرض كل الإشعارات';
+	@override String get notifications_important => 'مهم';
 	@override String get theme_toggle_tooltip => 'التبديل بين الوضع الفاتح والداكن';
+	@override String get refresh => 'تحديث لوحة التحكم';
 }
 
 // Path: advertiser_campaigns
@@ -256,8 +262,23 @@ class _TranslationsChatAr extends TranslationsChatEn {
 	@override String get bubble_copy => 'نسخ';
 	@override String get bubble_react => 'تفاعل';
 	@override String get bubble_delete => 'حذف';
+	@override String get bubble_update => 'تعديل';
 	@override String get bubble_delete_unavailable => 'حذف الرسائل من التطبيق غير متاح بعد.';
 	@override String get bubble_copied => 'تم النسخ إلى الحافظة';
+	@override String get edited => 'معدَّل';
+	@override String get seen => 'تمت القراءة';
+	@override String get delivered => 'تم التسليم';
+	@override String get edit_mode_title => 'تعديل الرسالة';
+	@override String get edit_mode_cancel => 'إلغاء';
+	@override String get edit_mode_hint => 'حدّث رسالتك…';
+	@override String get edit_failed => 'تعذّر تعديل الرسالة. حاول مرة أخرى.';
+	@override String get edit_not_allowed => 'يمكن تعديل رسائلك النصية فقط.';
+	@override String get delete_failed => 'تعذّر حذف الرسالة. حاول مرة أخرى.';
+	@override String get delete_not_allowed => 'يمكنك حذف رسائلك الخاصة فقط.';
+	@override String get delete_confirm_title => 'حذف هذه الرسالة؟';
+	@override String get delete_confirm_text => 'لا يمكن التراجع عن هذا الإجراء.';
+	@override String get delete_confirm_cta => 'حذف';
+	@override String get delete_confirm_cancel => 'إلغاء';
 	@override String get scroll_to_latest => 'الأحدث';
 }
 
@@ -560,7 +581,13 @@ extension on TranslationsAr {
 			case 'dashboard.errors.retry': return 'إعادة المحاولة';
 			case 'dashboard.notifications_title': return 'الإشعارات';
 			case 'dashboard.notifications_empty': return 'لا إشعارات';
+			case 'dashboard.notification_incoming': return 'إشعار جديد';
+			case 'dashboard.notification_view': return 'عرض';
+			case 'dashboard.notifications_mark_all_read': return 'تعليم الكل كمقروء';
+			case 'dashboard.notifications_view_all': return 'عرض كل الإشعارات';
+			case 'dashboard.notifications_important': return 'مهم';
 			case 'dashboard.theme_toggle_tooltip': return 'التبديل بين الوضع الفاتح والداكن';
+			case 'dashboard.refresh': return 'تحديث لوحة التحكم';
 			case 'advertiser_campaigns.title': return 'الحملات';
 			case 'advertiser_campaigns.subtitle': return 'تابع أداء حملاتك — عرض فقط.';
 			case 'advertiser_campaigns.tabs.active': return 'نشطة';
@@ -627,8 +654,23 @@ extension on TranslationsAr {
 			case 'chat.bubble_copy': return 'نسخ';
 			case 'chat.bubble_react': return 'تفاعل';
 			case 'chat.bubble_delete': return 'حذف';
+			case 'chat.bubble_update': return 'تعديل';
 			case 'chat.bubble_delete_unavailable': return 'حذف الرسائل من التطبيق غير متاح بعد.';
 			case 'chat.bubble_copied': return 'تم النسخ إلى الحافظة';
+			case 'chat.edited': return 'معدَّل';
+			case 'chat.seen': return 'تمت القراءة';
+			case 'chat.delivered': return 'تم التسليم';
+			case 'chat.edit_mode_title': return 'تعديل الرسالة';
+			case 'chat.edit_mode_cancel': return 'إلغاء';
+			case 'chat.edit_mode_hint': return 'حدّث رسالتك…';
+			case 'chat.edit_failed': return 'تعذّر تعديل الرسالة. حاول مرة أخرى.';
+			case 'chat.edit_not_allowed': return 'يمكن تعديل رسائلك النصية فقط.';
+			case 'chat.delete_failed': return 'تعذّر حذف الرسالة. حاول مرة أخرى.';
+			case 'chat.delete_not_allowed': return 'يمكنك حذف رسائلك الخاصة فقط.';
+			case 'chat.delete_confirm_title': return 'حذف هذه الرسالة؟';
+			case 'chat.delete_confirm_text': return 'لا يمكن التراجع عن هذا الإجراء.';
+			case 'chat.delete_confirm_cta': return 'حذف';
+			case 'chat.delete_confirm_cancel': return 'إلغاء';
 			case 'chat.scroll_to_latest': return 'الأحدث';
 			case 'common.language': return 'اللغة';
 			case 'common.theme': return 'المظهر';

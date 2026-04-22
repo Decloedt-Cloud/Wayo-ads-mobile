@@ -72,12 +72,30 @@ final wayoReverbRealtimeProvider = Provider<WayoReverbRealtime>((ref) {
   return rt;
 });
 
+/// Matches Wayo-ads / Laravel notification broadcasts (event names are not always `notification.created`).
+bool _isNotificationCreatedRealtimeEvent(String name) {
+  final n = name.toLowerCase();
+  if (n == 'notification.created') return true;
+  if (n == 'usernotificationcreated' || n.endsWith('.usernotificationcreated')) {
+    return true;
+  }
+  if (n.contains('notification') && n.contains('created')) return true;
+  if (n.contains('notification') && n.contains('new')) return true;
+  return false;
+}
+
 /// Listens to Reverb and invalidates dashboard providers (no [StreamProvider] — avoids hanging tests).
 final realtimeInvalidationProvider = Provider<void>((ref) {
   final sub = ref.watch(wayoReverbRealtimeProvider).signals.listen((sig) {
-    const hits = {'balance.updated', 'campaign.updated', 'notification.created'};
-    if (hits.contains(sig.name)) {
+    if (sig.name.startsWith('pusher:')) {
+      return;
+    }
+    final name = sig.name;
+    final notif = _isNotificationCreatedRealtimeEvent(name);
+    if (name == 'balance.updated' || name == 'campaign.updated' || notif) {
       ref.invalidate(dashboardStreamProvider);
+    }
+    if (notif) {
       ref.invalidate(notificationsListProvider);
     }
   });

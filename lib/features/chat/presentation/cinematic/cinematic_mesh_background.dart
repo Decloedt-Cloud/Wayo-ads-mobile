@@ -60,27 +60,40 @@ class _MeshNoisePainter extends CustomPainter {
     final t = phase * math.pi * 2;
     const amp = 60.0;
 
-    void orb(Color c, double ax, double ay, double r, double op) {
+    void orb(
+      Color c,
+      double ax,
+      double ay,
+      double r,
+      double op, {
+      required double cx,
+      required double cy,
+    }) {
       final ox = math.sin(t * ax + 0.4) * amp;
       final oy = math.cos(t * ay + 0.2) * amp;
+      final center = Offset(size.width * cx + ox, size.height * cy + oy);
       final g = Paint()
         ..shader = RadialGradient(
           colors: [c.withValues(alpha: op), Colors.transparent],
-        ).createShader(
-          Rect.fromCircle(
-            center: Offset(size.width * 0.35 + ox, size.height * 0.25 + oy),
-            radius: r,
-          ),
-        );
+        ).createShader(Rect.fromCircle(center: center, radius: r));
       canvas.saveLayer(rect, Paint());
-      canvas.drawCircle(Offset(size.width * 0.35 + ox, size.height * 0.25 + oy), r, g);
+      canvas.drawCircle(center, r, g);
       canvas.restore();
     }
 
     canvas.saveLayer(rect, Paint()..blendMode = BlendMode.plus);
-    orb(theme.amber, 1.0, 1.05, size.shortestSide * 0.55, theme.meshOrb1Opacity);
-    orb(theme.coral, -0.95, 1.1, size.shortestSide * 0.42, theme.meshOrb2Opacity);
-    orb(theme.meshDeep, 1.15, -0.9, size.shortestSide * 0.48, theme.meshOrb3Opacity);
+    // Upper amber glow — behind the header.
+    orb(theme.amber, 1.0, 1.05, size.shortestSide * 0.60, theme.meshOrb1Opacity,
+        cx: 0.30, cy: 0.18);
+    // Mid-screen coral — lifts the conversation area away from flat black.
+    orb(theme.coral, -0.95, 1.1, size.shortestSide * 0.52, theme.meshOrb2Opacity,
+        cx: 0.80, cy: 0.45);
+    // Lower warm halo — softens the empty area between messages and composer.
+    orb(theme.amber, 0.7, -0.85, size.shortestSide * 0.55, theme.meshOrb2Opacity * 0.85,
+        cx: 0.20, cy: 0.78);
+    // Deep accent — subtle dimensional anchor on the right side.
+    orb(theme.meshDeep, 1.15, -0.9, size.shortestSide * 0.46, theme.meshOrb3Opacity,
+        cx: 0.88, cy: 0.88);
     canvas.restore();
 
     final grainBase = theme.meshGrainIsDark ? const Color(0xFF000000) : Colors.white;

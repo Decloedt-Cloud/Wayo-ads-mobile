@@ -18,6 +18,12 @@ abstract final class ApiEndpoints {
   /// POST body: `{ "notificationId": "<id>" }` — [POST /api/notifications/read](Wayo-ads).
   static const String notificationsMarkRead = 'api/notifications/read';
 
+  /// POST (no body) — [POST /api/notifications/mark-all-read](Wayo-ads).
+  static const String notificationsMarkAllRead = 'api/notifications/mark-all-read';
+
+  /// POST body: `{ "notificationId": "<id>" }` — [POST /api/notifications/dismiss](Wayo-ads).
+  static const String notificationsDismiss = 'api/notifications/dismiss';
+
   /// Laravel broadcasting auth for private Reverb/Pusher channels.
   // TODO(endpoint): confirm with Wayo-ads API (Next.js may proxy under `/api`).
   static const String broadcastingAuth = 'api/broadcasting/auth';

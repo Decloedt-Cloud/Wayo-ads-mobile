@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/providers/app_providers.dart';
 import 'core/theme/app_theme.dart';
+import 'core/ui/root_scaffold_messenger_key.dart';
+import 'features/dashboard/presentation/widgets/realtime_notification_toast_host.dart';
 import 'i18n/strings.g.dart';
 import 'router/app_router.dart';
 
@@ -18,6 +20,7 @@ class WayoAdsGoApp extends ConsumerWidget {
 
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
+      scaffoldMessengerKey: rootScaffoldMessengerKey,
       title: 'Wayo Ads',
       routerConfig: router,
       theme: AppTheme.light,
@@ -30,6 +33,8 @@ class WayoAdsGoApp extends ConsumerWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
+      builder: (context, child) =>
+          RealtimeNotificationToastHost(child: child ?? const SizedBox.shrink()),
     );
   }
 }

@@ -61,6 +61,12 @@ class _FakeRemote implements DashboardRemote {
   Future<void> markNotificationRead(String id) async {}
 
   @override
+  Future<void> markAllNotificationsRead() async {}
+
+  @override
+  Future<void> dismissNotification(String id) async {}
+
+  @override
   Future<UserProfile> fetchUser() async {
     return const UserProfile(id: 9, email: 'a@b.c', firstName: 'Sam');
   }

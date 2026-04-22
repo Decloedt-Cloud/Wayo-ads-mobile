@@ -17,11 +17,14 @@ final class NotificationsRepository {
   final RequestDeduplicator _deduplicator;
   final RateLimiter _rate;
 
+  /// Always hits the network when called (or joins an in-flight request via [RequestDeduplicator]).
+  ///
+  /// We **do not** throttle with an empty return: Reverb can invalidate several times
+  /// in a row; returning `[]` would clear the UI and look like "realtime is broken".
   Future<List<NotificationItem>> fetchNotifications({bool unreadOnly = false}) async {
-    if (!_rate.canCall('notifications_list')) {
-      return const [];
+    if (_rate.canCall('notifications_list')) {
+      _rate.mark('notifications_list');
     }
-    _rate.mark('notifications_list');
     return _deduplicator.run(
       'notifications_list',
       () => _remote.fetchNotifications(unreadOnly: unreadOnly),
@@ -32,6 +35,20 @@ final class NotificationsRepository {
     await _deduplicator.run(
       'notification_read_$id',
       () => _remote.markNotificationRead(id),
+    );
+  }
+
+  Future<void> markAllRead() async {
+    await _deduplicator.run(
+      'notifications_mark_all',
+      () => _remote.markAllNotificationsRead(),
+    );
+  }
+
+  Future<void> dismiss(String id) async {
+    await _deduplicator.run(
+      'notification_dismiss_$id',
+      () => _remote.dismissNotification(id),
     );
   }
 }

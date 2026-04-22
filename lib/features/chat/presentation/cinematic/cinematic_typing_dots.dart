@@ -51,19 +51,30 @@ class _CinematicTypingDotsState extends State<CinematicTypingDots> with TickerPr
           child: child,
         );
       },
-      child: DecoratedBox(
+      child: Container(
         decoration: BoxDecoration(
-          color: ct.surface,
+          color: Theme.of(context).brightness == Brightness.dark
+              ? ct.surface.withValues(alpha: 0.92)
+              : Colors.white.withValues(alpha: 0.94),
           borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(22),
             topRight: Radius.circular(22),
-            bottomLeft: Radius.circular(4),
+            bottomLeft: Radius.circular(6),
             bottomRight: Radius.circular(22),
           ),
-          border: Border.all(color: ct.borderSoft.withValues(alpha: 0.6)),
+          border: Border.all(color: ct.borderSoft.withValues(alpha: 0.5), width: 0.6),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(
+                alpha: Theme.of(context).brightness == Brightness.dark ? 0.22 : 0.04,
+              ),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+            ),
+          ],
         ),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: List.generate(3, (i) {
@@ -81,7 +92,11 @@ class _CinematicTypingDotsState extends State<CinematicTypingDots> with TickerPr
                         width: 6,
                         height: h,
                         decoration: BoxDecoration(
-                          color: ct.amber,
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [ct.amber, ct.amberDeep],
+                          ),
                           borderRadius: BorderRadius.circular(3),
                         ),
                       ),

@@ -181,7 +181,13 @@ class _TranslationsDashboardFr extends TranslationsDashboardEn {
 	@override late final _TranslationsDashboardErrorsFr errors = _TranslationsDashboardErrorsFr._(_root);
 	@override String get notifications_title => 'Notifications';
 	@override String get notifications_empty => 'Aucune notification';
+	@override String get notification_incoming => 'Nouvelle notification';
+	@override String get notification_view => 'Voir';
+	@override String get notifications_mark_all_read => 'Tout marquer comme lu';
+	@override String get notifications_view_all => 'Voir toutes les notifications';
+	@override String get notifications_important => 'Important';
 	@override String get theme_toggle_tooltip => 'Basculer entre thème clair et sombre';
+	@override String get refresh => 'Actualiser le tableau de bord';
 }
 
 // Path: advertiser_campaigns
@@ -255,9 +261,24 @@ class _TranslationsChatFr extends TranslationsChatEn {
 	@override String get bubble_reply => 'Répondre';
 	@override String get bubble_copy => 'Copier';
 	@override String get bubble_react => 'Réagir';
-	@override String get bubble_delete => 'Effacer';
+	@override String get bubble_delete => 'Supprimer';
+	@override String get bubble_update => 'Modifier';
 	@override String get bubble_delete_unavailable => 'La suppression des messages depuis l\'app n\'est pas encore disponible.';
 	@override String get bubble_copied => 'Copié dans le presse-papiers';
+	@override String get edited => 'modifié';
+	@override String get seen => 'Vu';
+	@override String get delivered => 'Livré';
+	@override String get edit_mode_title => 'Modification du message';
+	@override String get edit_mode_cancel => 'Annuler';
+	@override String get edit_mode_hint => 'Modifier votre message…';
+	@override String get edit_failed => 'Impossible de modifier ce message. Réessayez.';
+	@override String get edit_not_allowed => 'Seuls vos messages texte peuvent être modifiés.';
+	@override String get delete_failed => 'Impossible de supprimer ce message. Réessayez.';
+	@override String get delete_not_allowed => 'Vous ne pouvez supprimer que vos propres messages.';
+	@override String get delete_confirm_title => 'Supprimer ce message ?';
+	@override String get delete_confirm_text => 'Cette action est irréversible.';
+	@override String get delete_confirm_cta => 'Supprimer';
+	@override String get delete_confirm_cancel => 'Annuler';
 	@override String get scroll_to_latest => 'Récent';
 }
 
@@ -560,7 +581,13 @@ extension on TranslationsFr {
 			case 'dashboard.errors.retry': return 'Réessayer';
 			case 'dashboard.notifications_title': return 'Notifications';
 			case 'dashboard.notifications_empty': return 'Aucune notification';
+			case 'dashboard.notification_incoming': return 'Nouvelle notification';
+			case 'dashboard.notification_view': return 'Voir';
+			case 'dashboard.notifications_mark_all_read': return 'Tout marquer comme lu';
+			case 'dashboard.notifications_view_all': return 'Voir toutes les notifications';
+			case 'dashboard.notifications_important': return 'Important';
 			case 'dashboard.theme_toggle_tooltip': return 'Basculer entre thème clair et sombre';
+			case 'dashboard.refresh': return 'Actualiser le tableau de bord';
 			case 'advertiser_campaigns.title': return 'Campagnes';
 			case 'advertiser_campaigns.subtitle': return 'Suivez les performances de vos campagnes — consultation uniquement.';
 			case 'advertiser_campaigns.tabs.active': return 'Actives';
@@ -626,9 +653,24 @@ extension on TranslationsFr {
 			case 'chat.bubble_reply': return 'Répondre';
 			case 'chat.bubble_copy': return 'Copier';
 			case 'chat.bubble_react': return 'Réagir';
-			case 'chat.bubble_delete': return 'Effacer';
+			case 'chat.bubble_delete': return 'Supprimer';
+			case 'chat.bubble_update': return 'Modifier';
 			case 'chat.bubble_delete_unavailable': return 'La suppression des messages depuis l\'app n\'est pas encore disponible.';
 			case 'chat.bubble_copied': return 'Copié dans le presse-papiers';
+			case 'chat.edited': return 'modifié';
+			case 'chat.seen': return 'Vu';
+			case 'chat.delivered': return 'Livré';
+			case 'chat.edit_mode_title': return 'Modification du message';
+			case 'chat.edit_mode_cancel': return 'Annuler';
+			case 'chat.edit_mode_hint': return 'Modifier votre message…';
+			case 'chat.edit_failed': return 'Impossible de modifier ce message. Réessayez.';
+			case 'chat.edit_not_allowed': return 'Seuls vos messages texte peuvent être modifiés.';
+			case 'chat.delete_failed': return 'Impossible de supprimer ce message. Réessayez.';
+			case 'chat.delete_not_allowed': return 'Vous ne pouvez supprimer que vos propres messages.';
+			case 'chat.delete_confirm_title': return 'Supprimer ce message ?';
+			case 'chat.delete_confirm_text': return 'Cette action est irréversible.';
+			case 'chat.delete_confirm_cta': return 'Supprimer';
+			case 'chat.delete_confirm_cancel': return 'Annuler';
 			case 'chat.scroll_to_latest': return 'Récent';
 			case 'common.language': return 'Langue';
 			case 'common.theme': return 'Thème';

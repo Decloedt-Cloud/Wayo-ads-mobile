@@ -43,6 +43,9 @@ final class ChatMessage {
     bool? failed,
     String? content,
     String? createdAt,
+    String? updatedAt,
+    String? editedAt,
+    bool? isEdited,
     ChatUserPreview? user,
   }) {
     return ChatMessage(
@@ -52,9 +55,9 @@ final class ChatMessage {
       content: content ?? this.content,
       type: type,
       createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt,
-      editedAt: editedAt,
-      isEdited: isEdited,
+      updatedAt: updatedAt ?? this.updatedAt,
+      editedAt: editedAt ?? this.editedAt,
+      isEdited: isEdited ?? this.isEdited,
       fileUrl: fileUrl,
       fileName: fileName,
       fileSize: fileSize,

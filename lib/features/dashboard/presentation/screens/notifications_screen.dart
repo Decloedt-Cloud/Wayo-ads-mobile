@@ -27,7 +27,34 @@ class NotificationsScreen extends ConsumerWidget {
             context.pop();
           },
         ),
-        title: Text(t.dashboard.notifications_title),
+        title: Builder(
+          builder: (context) {
+            final role = GoRouterState.of(context).uri.queryParameters['role'];
+            final String? subtitle = switch (role) {
+              'creator' => t.dashboard.account_creator,
+              'advertiser' => t.dashboard.account_advertiser,
+              _ => null,
+            };
+            if (subtitle == null) {
+              return Text(t.dashboard.notifications_title);
+            }
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(t.dashboard.notifications_title),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textMutedOf(context),
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh_rounded),
@@ -52,9 +79,10 @@ class NotificationsScreen extends ConsumerWidget {
                 ],
               );
             }
-            return ListView.builder(
+            return ListView.separated(
               physics: const AlwaysScrollableScrollPhysics(),
               itemCount: list.length,
+              separatorBuilder: (_, _) => const SizedBox(height: 8),
               itemBuilder: (context, i) {
                 final n = list[i];
                 return _NotificationTile(
@@ -98,17 +126,77 @@ class _NotificationTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      tileColor: item.isRead ? null : AppColors.primary.withValues(alpha: 0.06),
-      title: Text(
-        item.title,
-        style: TextStyle(
-          fontWeight: item.isRead ? FontWeight.w500 : FontWeight.w700,
-          color: AppColors.textPrimaryOf(context),
+    return Card(
+      elevation: 0,
+      color: item.isRead
+          ? AppColors.surfaceElevatedOf(context)
+          : AppColors.primary.withValues(alpha: 0.08),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(
+          color: item.isRead
+              ? AppColors.borderOf(context).withValues(alpha: 0.5)
+              : AppColors.primary.withValues(alpha: 0.2),
         ),
       ),
-      subtitle: Text(item.body, maxLines: 3, overflow: TextOverflow.ellipsis),
-      onTap: onTap,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (!item.isRead)
+                Padding(
+                  padding: const EdgeInsets.only(top: 6, right: 10),
+                  child: Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primary.withValues(alpha: 0.45),
+                          blurRadius: 6,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item.title,
+                      style: TextStyle(
+                        fontWeight: item.isRead ? FontWeight.w600 : FontWeight.w800,
+                        color: AppColors.textPrimaryOf(context),
+                        fontSize: 15,
+                      ),
+                    ),
+                    if (item.body.isNotEmpty) ...[
+                      const SizedBox(height: 6),
+                      Text(
+                        item.body,
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: AppColors.textSecondaryOf(context),
+                          fontSize: 14,
+                          height: 1.35,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

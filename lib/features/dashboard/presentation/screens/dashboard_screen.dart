@@ -28,6 +28,7 @@ import '../../../../shared/widgets/animated_logout_icon.dart';
 import '../../../app_settings/presentation/widgets/app_settings_side_panel.dart';
 import '../widgets/animated_gradient_border.dart';
 import '../widgets/error_banner.dart';
+import '../widgets/notification_center_popup.dart';
 
 String _moneyLocale(AppLocale l) => switch (l) {
       AppLocale.en => 'en_US',
@@ -44,15 +45,6 @@ class DashboardScreen extends ConsumerWidget {
     final t = context.t;
     final locale = ref.watch(localeProvider);
     final async = ref.watch(dashboardStreamProvider);
-
-    ref.listen<AsyncValue<DashboardSnapshot>>(dashboardStreamProvider, (prev, next) {
-      next.whenData((snap) async {
-        final id = snap.user?.id;
-        if (id != null) {
-          await ref.read(wayoReverbRealtimeProvider).connectForUser(id);
-        }
-      });
-    });
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -125,9 +117,26 @@ class DashboardScreen extends ConsumerWidget {
   }
 }
 
-class _Header extends ConsumerWidget {
+class _Header extends ConsumerStatefulWidget {
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_Header> createState() => _HeaderState();
+}
+
+class _HeaderState extends ConsumerState<_Header> {
+  bool _refreshing = false;
+
+  Future<void> _onRefreshTap() async {
+    if (_refreshing) return;
+    setState(() => _refreshing = true);
+    try {
+      await DashboardScreen._refresh(ref);
+    } finally {
+      if (mounted) setState(() => _refreshing = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final async = ref.watch(dashboardStreamProvider);
     final snap = async.valueOrNull;
     final unread = snap?.unreadCount ?? 0;
@@ -138,6 +147,31 @@ class _Header extends ConsumerWidget {
         children: [
           const WayoLogo(size: 36),
           const Spacer(),
+          Tooltip(
+            message: t.dashboard.refresh,
+            child: Material(
+              color: AppColors.surfaceElevatedOf(context).withValues(alpha: 0.5),
+              shape: const CircleBorder(),
+              child: InkWell(
+                customBorder: const CircleBorder(),
+                onTap: _onRefreshTap,
+                child: Padding(
+                  padding: const EdgeInsets.all(10),
+                  child: _refreshing
+                      ? SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AppColors.primary,
+                          ),
+                        )
+                      : Icon(Icons.refresh_rounded, color: AppColors.textPrimaryOf(context)),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
           Tooltip(
             message: t.app_settings.title,
             child: Material(
@@ -169,8 +203,7 @@ class _Header extends ConsumerWidget {
             child: InkWell(
               customBorder: const CircleBorder(),
               onTap: () {
-                HapticFeedback.lightImpact();
-                context.push('/notifications');
+                showNotificationCenterPopup(context, ref);
               },
               child: Padding(
                 padding: const EdgeInsets.all(10),

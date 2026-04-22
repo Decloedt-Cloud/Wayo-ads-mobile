@@ -20,7 +20,9 @@ import '../screens/privacy_policy_screen.dart';
 part 'app_router.g.dart';
 
 /// Root navigator for full-screen routes (detail, notifications).
-final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
+final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>(
+  debugLabel: 'root',
+);
 
 /// Paths that never require an auth redirect away from the shell.
 /// Note: [/login] is intentionally omitted — authenticated users must be sent to [/dashboard].
@@ -37,7 +39,10 @@ bool _isPublicPath(String loc) {
 @Riverpod(keepAlive: true)
 GoRouter goRouter(GoRouterRef ref) {
   final refresh = ValueNotifier<int>(0);
-  ref.listen<AsyncValue<AuthState>>(authNotifierProvider, (Object? previous, Object? next) {
+  ref.listen<AsyncValue<AuthState>>(authNotifierProvider, (
+    Object? previous,
+    Object? next,
+  ) {
     refresh.value++;
   });
   ref.onDispose(refresh.dispose);
@@ -122,10 +127,7 @@ GoRouter goRouter(GoRouterRef ref) {
         path: '/privacy',
         builder: (context, state) => const PrivacyPolicyScreen(),
       ),
-      GoRoute(
-        path: '/login',
-        builder: (context, state) => const LoginScreen(),
-      ),
+      GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(
         path: '/forgot-password',
         builder: (context, state) => const ForgotPasswordScreen(),
@@ -213,7 +215,9 @@ GoRouter goRouter(GoRouterRef ref) {
           final raw = state.pathParameters['conversationId']!;
           final id = int.tryParse(raw);
           if (id == null) {
-            return const Scaffold(body: Center(child: Text('Invalid conversation')));
+            return const Scaffold(
+              body: Center(child: Text('Invalid conversation')),
+            );
           }
           return ChatThreadScreen(conversationId: id);
         },

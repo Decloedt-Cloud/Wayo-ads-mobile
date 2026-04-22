@@ -12,7 +12,8 @@ class CinematicSendBurst extends StatefulWidget {
   State<CinematicSendBurst> createState() => CinematicSendBurstState();
 }
 
-class CinematicSendBurstState extends State<CinematicSendBurst> with SingleTickerProviderStateMixin {
+class CinematicSendBurstState extends State<CinematicSendBurst>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _c = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 420),

@@ -16,7 +16,8 @@ class LiquidNeuralUnreadBadge extends StatelessWidget {
       tween: Tween(begin: 0.65, end: 1),
       duration: const Duration(milliseconds: 620),
       curve: Curves.elasticOut,
-      builder: (context, scale, child) => Transform.scale(scale: scale, child: child),
+      builder: (context, scale, child) =>
+          Transform.scale(scale: scale, child: child),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 240),
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),

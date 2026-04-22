@@ -8,7 +8,9 @@ import 'app_settings_panel_content.dart';
 /// Uses [showGeneralDialog] so we keep full control over motion, barrier, and
 /// `AlignmentDirectional` (correct on RTL).
 Future<void> showAppSettingsSidePanel(BuildContext context) {
-  final barrierLabel = MaterialLocalizations.of(context).modalBarrierDismissLabel;
+  final barrierLabel = MaterialLocalizations.of(
+    context,
+  ).modalBarrierDismissLabel;
   return showGeneralDialog<void>(
     context: context,
     barrierDismissible: true,
@@ -42,15 +44,18 @@ Future<void> showAppSettingsSidePanel(BuildContext context) {
       );
     },
     transitionBuilder: (context, animation, secondaryAnimation, child) {
-      final curved = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
+      final curved = CurvedAnimation(
+        parent: animation,
+        curve: Curves.easeOutCubic,
+      );
       final isRtl = Directionality.of(context) == TextDirection.rtl;
       final beginDx = isRtl ? -1.0 : 1.0;
       return SlideTransition(
-        position: Tween<Offset>(begin: Offset(beginDx, 0), end: Offset.zero).animate(curved),
-        child: FadeTransition(
-          opacity: curved,
-          child: child,
-        ),
+        position: Tween<Offset>(
+          begin: Offset(beginDx, 0),
+          end: Offset.zero,
+        ).animate(curved),
+        child: FadeTransition(opacity: curved, child: child),
       );
     },
   );

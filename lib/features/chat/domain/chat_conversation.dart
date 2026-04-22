@@ -22,7 +22,8 @@ final class ChatConversation {
   final ChatMessage? lastMessage;
   final List<ChatParticipant>? participants;
 
-  String title(String fallback) => displayName?.trim().isNotEmpty == true ? displayName! : fallback;
+  String title(String fallback) =>
+      displayName?.trim().isNotEmpty == true ? displayName! : fallback;
 
   /// Chat-service user id of the other participant (for presence), or `null`.
   int? partnerChatUserId(int myChatUserId) {
@@ -52,11 +53,7 @@ final class ChatConversation {
 }
 
 final class ChatParticipant {
-  const ChatParticipant({
-    required this.userId,
-    this.lastReadAt,
-    this.user,
-  });
+  const ChatParticipant({required this.userId, this.lastReadAt, this.user});
 
   final int userId;
   final String? lastReadAt;

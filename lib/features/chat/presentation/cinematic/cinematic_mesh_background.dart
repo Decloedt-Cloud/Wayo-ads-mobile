@@ -12,7 +12,8 @@ class CinematicMeshBackground extends StatefulWidget {
   final Widget child;
 
   @override
-  State<CinematicMeshBackground> createState() => _CinematicMeshBackgroundState();
+  State<CinematicMeshBackground> createState() =>
+      _CinematicMeshBackgroundState();
 }
 
 class _CinematicMeshBackgroundState extends State<CinematicMeshBackground>
@@ -74,7 +75,10 @@ class _MeshNoisePainter extends CustomPainter {
       final center = Offset(size.width * cx + ox, size.height * cy + oy);
       final g = Paint()
         ..shader = RadialGradient(
-          colors: [c.withValues(alpha: op), Colors.transparent],
+          colors: [
+            c.withValues(alpha: op),
+            Colors.transparent,
+          ],
         ).createShader(Rect.fromCircle(center: center, radius: r));
       canvas.saveLayer(rect, Paint());
       canvas.drawCircle(center, r, g);
@@ -83,21 +87,52 @@ class _MeshNoisePainter extends CustomPainter {
 
     canvas.saveLayer(rect, Paint()..blendMode = BlendMode.plus);
     // Upper amber glow — behind the header.
-    orb(theme.amber, 1.0, 1.05, size.shortestSide * 0.60, theme.meshOrb1Opacity,
-        cx: 0.30, cy: 0.18);
+    orb(
+      theme.amber,
+      1.0,
+      1.05,
+      size.shortestSide * 0.60,
+      theme.meshOrb1Opacity,
+      cx: 0.30,
+      cy: 0.18,
+    );
     // Mid-screen coral — lifts the conversation area away from flat black.
-    orb(theme.coral, -0.95, 1.1, size.shortestSide * 0.52, theme.meshOrb2Opacity,
-        cx: 0.80, cy: 0.45);
+    orb(
+      theme.coral,
+      -0.95,
+      1.1,
+      size.shortestSide * 0.52,
+      theme.meshOrb2Opacity,
+      cx: 0.80,
+      cy: 0.45,
+    );
     // Lower warm halo — softens the empty area between messages and composer.
-    orb(theme.amber, 0.7, -0.85, size.shortestSide * 0.55, theme.meshOrb2Opacity * 0.85,
-        cx: 0.20, cy: 0.78);
+    orb(
+      theme.amber,
+      0.7,
+      -0.85,
+      size.shortestSide * 0.55,
+      theme.meshOrb2Opacity * 0.85,
+      cx: 0.20,
+      cy: 0.78,
+    );
     // Deep accent — subtle dimensional anchor on the right side.
-    orb(theme.meshDeep, 1.15, -0.9, size.shortestSide * 0.46, theme.meshOrb3Opacity,
-        cx: 0.88, cy: 0.88);
+    orb(
+      theme.meshDeep,
+      1.15,
+      -0.9,
+      size.shortestSide * 0.46,
+      theme.meshOrb3Opacity,
+      cx: 0.88,
+      cy: 0.88,
+    );
     canvas.restore();
 
-    final grainBase = theme.meshGrainIsDark ? const Color(0xFF000000) : Colors.white;
-    final n = Paint()..color = grainBase.withValues(alpha: theme.meshNoiseAlpha);
+    final grainBase = theme.meshGrainIsDark
+        ? const Color(0xFF000000)
+        : Colors.white;
+    final n = Paint()
+      ..color = grainBase.withValues(alpha: theme.meshNoiseAlpha);
     final rnd = math.Random((phase * 1000).round());
     for (var i = 0; i < 140; i++) {
       final x = (rnd.nextDouble() * size.width);

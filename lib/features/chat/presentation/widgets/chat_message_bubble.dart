@@ -45,14 +45,22 @@ class ChatMessageBubble extends StatelessWidget {
     final sentGradient = liquidNeural
         ? ln!.sentBubble
         : const LinearGradient(
-            colors: [Color(0xFFFF8F42), AppColors.primary, AppColors.primaryDeep],
+            colors: [
+              Color(0xFFFF8F42),
+              AppColors.primary,
+              AppColors.primaryDeep,
+            ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           );
-    final receivedFill = liquidNeural ? ln!.ghostGlassStrong : const Color(0xFF1C1C1C);
+    final receivedFill = liquidNeural
+        ? ln!.ghostGlassStrong
+        : const Color(0xFF1C1C1C);
     final borderColor = liquidNeural
         ? (isMine ? Colors.white.withValues(alpha: 0.12) : ln!.strokeSubtle)
-        : (isMine ? Colors.white.withValues(alpha: 0.08) : Colors.white.withValues(alpha: 0.05));
+        : (isMine
+              ? Colors.white.withValues(alpha: 0.08)
+              : Colors.white.withValues(alpha: 0.05));
     final shadowPlasma = liquidNeural && isMine
         ? [
             BoxShadow(
@@ -66,20 +74,28 @@ class ChatMessageBubble extends StatelessWidget {
     final bubble = Container(
       margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 12),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      constraints: BoxConstraints(maxWidth: MediaQuery.sizeOf(context).width * 0.78),
+      constraints: BoxConstraints(
+        maxWidth: MediaQuery.sizeOf(context).width * 0.78,
+      ),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(liquidNeural ? 22 : 18),
           topRight: Radius.circular(liquidNeural ? 22 : 18),
-          bottomLeft: Radius.circular(isMine ? (liquidNeural ? 22 : 18) : (liquidNeural ? 8 : 4)),
-          bottomRight: Radius.circular(isMine ? (liquidNeural ? 8 : 4) : (liquidNeural ? 22 : 18)),
+          bottomLeft: Radius.circular(
+            isMine ? (liquidNeural ? 22 : 18) : (liquidNeural ? 8 : 4),
+          ),
+          bottomRight: Radius.circular(
+            isMine ? (liquidNeural ? 8 : 4) : (liquidNeural ? 22 : 18),
+          ),
         ),
         gradient: isMine ? sentGradient : null,
         color: isMine ? null : receivedFill,
         border: Border.all(color: borderColor),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: liquidNeural ? (isDark ? 0.45 : 0.10) : 0.35),
+            color: Colors.black.withValues(
+              alpha: liquidNeural ? (isDark ? 0.45 : 0.10) : 0.35,
+            ),
             blurRadius: liquidNeural ? 14 : 10,
             offset: const Offset(0, 4),
           ),
@@ -93,7 +109,10 @@ class ChatMessageBubble extends StatelessWidget {
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxHeight: 220, maxWidth: 260),
+                constraints: const BoxConstraints(
+                  maxHeight: 220,
+                  maxWidth: 260,
+                ),
                 child: _maybeDevelopPhoto(
                   liquidNeural: liquidNeural,
                   reduceMotion: reduceMotion,
@@ -109,8 +128,10 @@ class ChatMessageBubble extends StatelessWidget {
                         ),
                       ),
                     ),
-                    errorWidget: (context, url, error) =>
-                        const Icon(Icons.broken_image_outlined, color: AppColors.textMuted),
+                    errorWidget: (context, url, error) => const Icon(
+                      Icons.broken_image_outlined,
+                      color: AppColors.textMuted,
+                    ),
                   ),
                 ),
               ),
@@ -124,7 +145,10 @@ class ChatMessageBubble extends StatelessWidget {
                 onTap: () => _openUrl(mediaUrl),
                 borderRadius: BorderRadius.circular(12),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 6,
+                    horizontal: 4,
+                  ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -139,19 +163,25 @@ class ChatMessageBubble extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              message.fileName?.trim().isNotEmpty == true ? message.fileName! : attachmentLabel,
+                              message.fileName?.trim().isNotEmpty == true
+                                  ? message.fileName!
+                                  : attachmentLabel,
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                               style: AppTextStyles.bodyLarge(context).copyWith(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
-                                color: isMine ? Colors.black.withValues(alpha: 0.9) : AppColors.textPrimary,
+                                color: isMine
+                                    ? Colors.black.withValues(alpha: 0.9)
+                                    : AppColors.textPrimary,
                               ),
                             ),
                             Text(
                               openPdfLabel,
                               style: AppTextStyles.caption(context).copyWith(
-                                color: isMine ? Colors.black54 : AppColors.primary,
+                                color: isMine
+                                    ? Colors.black54
+                                    : AppColors.primary,
                               ),
                             ),
                           ],
@@ -191,7 +221,9 @@ class ChatMessageBubble extends StatelessWidget {
               Text(
                 time,
                 style: AppTextStyles.caption(context).copyWith(
-                  color: isMine ? Colors.black.withValues(alpha: 0.45) : AppColors.textMuted,
+                  color: isMine
+                      ? Colors.black.withValues(alpha: 0.45)
+                      : AppColors.textMuted,
                 ),
               ),
               if (message.pending) ...[
@@ -207,7 +239,11 @@ class ChatMessageBubble extends StatelessWidget {
               ],
               if (message.failed) ...[
                 const SizedBox(width: 6),
-                Icon(Icons.error_outline, size: 14, color: isMine ? Colors.black54 : AppColors.error),
+                Icon(
+                  Icons.error_outline,
+                  size: 14,
+                  color: isMine ? Colors.black54 : AppColors.error,
+                ),
               ],
             ],
           ),
@@ -228,15 +264,33 @@ class ChatMessageBubble extends StatelessWidget {
         alignment: isMine ? Alignment.centerRight : Alignment.centerLeft,
         child: isMine
             ? anim
-                .scale(begin: const Offset(0.92, 0.92), curve: Curves.easeOutBack, duration: 280.ms)
-                .moveX(begin: 24, end: 0, duration: 300.ms, curve: Curves.easeOutCubic)
-            : anim
-                .moveX(begin: -18, end: 0, duration: 280.ms, curve: Curves.easeOutExpo),
+                  .scale(
+                    begin: const Offset(0.92, 0.92),
+                    curve: Curves.easeOutBack,
+                    duration: 280.ms,
+                  )
+                  .moveX(
+                    begin: 24,
+                    end: 0,
+                    duration: 300.ms,
+                    curve: Curves.easeOutCubic,
+                  )
+            : anim.moveX(
+                begin: -18,
+                end: 0,
+                duration: 280.ms,
+                curve: Curves.easeOutExpo,
+              ),
       );
     }
     return Align(
       alignment: isMine ? Alignment.centerRight : Alignment.centerLeft,
-      child: anim.moveY(begin: 6, end: 0, duration: 240.ms, curve: Curves.easeOutCubic),
+      child: anim.moveY(
+        begin: 6,
+        end: 0,
+        duration: 240.ms,
+        curve: Curves.easeOutCubic,
+      ),
     );
   }
 
@@ -249,7 +303,12 @@ class ChatMessageBubble extends StatelessWidget {
     return child
         .animate()
         .fadeIn(duration: 380.ms, curve: Curves.easeOut)
-        .blur(begin: const Offset(14, 14), end: Offset.zero, duration: 420.ms, curve: Curves.easeOutCubic);
+        .blur(
+          begin: const Offset(14, 14),
+          end: Offset.zero,
+          duration: 420.ms,
+          curve: Curves.easeOutCubic,
+        );
   }
 
   Future<void> _openUrl(String url) async {

@@ -12,12 +12,12 @@ extension AppSettingsPanelDesignStorage on AppSettingsPanelDesign {
   static const storageValueCorporate = 'corporate';
 
   String get storageValue => switch (this) {
-        AppSettingsPanelDesign.glassLuxury => storageValueGlass,
-        AppSettingsPanelDesign.minimalCorporate => storageValueCorporate,
-      };
+    AppSettingsPanelDesign.glassLuxury => storageValueGlass,
+    AppSettingsPanelDesign.minimalCorporate => storageValueCorporate,
+  };
 
   static AppSettingsPanelDesign fromStorage(String? raw) => switch (raw) {
-        storageValueCorporate => AppSettingsPanelDesign.minimalCorporate,
-        _ => AppSettingsPanelDesign.glassLuxury,
-      };
+    storageValueCorporate => AppSettingsPanelDesign.minimalCorporate,
+    _ => AppSettingsPanelDesign.glassLuxury,
+  };
 }

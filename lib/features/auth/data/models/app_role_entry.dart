@@ -12,8 +12,5 @@ class AppRoleEntry {
     );
   }
 
-  Map<String, dynamic> toJson() => {
-        'app': app,
-        'role': role,
-      };
+  Map<String, dynamic> toJson() => {'app': app, 'role': role};
 }

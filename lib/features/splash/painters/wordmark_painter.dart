@@ -18,10 +18,7 @@ class SplashWordmarkLayout {
 }
 
 class WordmarkPainter extends CustomPainter {
-  WordmarkPainter({
-    required this.layout,
-    required this.progress,
-  });
+  WordmarkPainter({required this.layout, required this.progress});
 
   final SplashWordmarkLayout layout;
   final double progress;
@@ -33,10 +30,7 @@ class WordmarkPainter extends CustomPainter {
     }
 
     final center = size.center(Offset.zero);
-    final textOrigin = Offset(
-      center.dx - layout.width / 2,
-      center.dy + 70,
-    );
+    final textOrigin = Offset(center.dx - layout.width / 2, center.dy + 70);
 
     final revealWidth = layout.width * progress;
     final glowX = textOrigin.dx + revealWidth;

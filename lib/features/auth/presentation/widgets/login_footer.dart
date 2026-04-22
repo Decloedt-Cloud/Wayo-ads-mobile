@@ -40,12 +40,13 @@ class _LoginFooterState extends State<LoginFooter> {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.shield_outlined, size: 14, color: AppColors.textMutedOf(context)),
-            const SizedBox(width: 6),
-            Text(
-              t.login.secure_note,
-              style: AppTextStyles.caption(context),
+            Icon(
+              Icons.shield_outlined,
+              size: 14,
+              color: AppColors.textMutedOf(context),
             ),
+            const SizedBox(width: 6),
+            Text(t.login.secure_note, style: AppTextStyles.caption(context)),
           ],
         ),
         const SizedBox(height: 14),

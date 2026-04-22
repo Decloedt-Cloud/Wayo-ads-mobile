@@ -15,8 +15,9 @@ String _$wayoAdsDioHash() => r'f9acdf7fa414bb1209a9a7e8e5faf300bf33edcf';
 final wayoAdsDioProvider = Provider<Dio>.internal(
   wayoAdsDio,
   name: r'wayoAdsDioProvider',
-  debugGetCreateSourceHash:
-      const bool.fromEnvironment('dart.vm.product') ? null : _$wayoAdsDioHash,
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$wayoAdsDioHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );

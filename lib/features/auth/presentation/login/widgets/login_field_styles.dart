@@ -9,7 +9,9 @@ InputDecoration loginPremiumInputDecoration(
   Widget? suffixIcon,
 }) {
   final isDark = Theme.of(context).brightness == Brightness.dark;
-  final fill = isDark ? const Color(0xFF141414) : AppColors.surfaceElevatedOf(context);
+  final fill = isDark
+      ? const Color(0xFF141414)
+      : AppColors.surfaceElevatedOf(context);
   final border = isDark
       ? Colors.white.withValues(alpha: 0.08)
       : AppColors.borderOf(context);

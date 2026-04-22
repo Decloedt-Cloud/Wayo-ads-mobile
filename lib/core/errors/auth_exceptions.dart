@@ -3,7 +3,9 @@ sealed class AuthException implements Exception {
 }
 
 final class InvalidCredentialsException extends AuthException {
-  const InvalidCredentialsException([this.message = 'These credentials do not match our records.']);
+  const InvalidCredentialsException([
+    this.message = 'These credentials do not match our records.',
+  ]);
   final String message;
   @override
   String toString() => message;
@@ -40,7 +42,9 @@ final class SessionInvalidException extends AuthException {
 
 /// Password reset: no user for this email (HTTP 404).
 final class EmailNotRegisteredException extends AuthException {
-  const EmailNotRegisteredException([this.message = 'No account found for this email.']);
+  const EmailNotRegisteredException([
+    this.message = 'No account found for this email.',
+  ]);
   final String message;
   @override
   String toString() => message;

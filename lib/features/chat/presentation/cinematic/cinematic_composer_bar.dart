@@ -95,7 +95,9 @@ class _CinematicComposerBarState extends State<CinematicComposerBar> {
           builder: (context, scrollController) {
             final sheetCt = CinematicChatTheme.of(context);
             return ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(28),
+              ),
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
                 child: Container(
@@ -328,7 +330,9 @@ class _PremiumInputField extends StatelessWidget {
               child: _CircleIconButton(
                 icon: Icons.add_rounded,
                 tint: ct.textPrimary.withValues(alpha: 0.78),
-                backgroundColor: ct.textPrimary.withValues(alpha: isDark ? 0.08 : 0.06),
+                backgroundColor: ct.textPrimary.withValues(
+                  alpha: isDark ? 0.08 : 0.06,
+                ),
                 onTap: enabled ? onAttach : null,
                 size: 40,
                 iconSize: 22,
@@ -437,9 +441,7 @@ class _PremiumSendButton extends StatelessWidget {
     final ct = CinematicChatTheme.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    final icon = editing
-        ? Icons.check_rounded
-        : Icons.arrow_upward_rounded;
+    final icon = editing ? Icons.check_rounded : Icons.arrow_upward_rounded;
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 220),
@@ -487,9 +489,7 @@ class _PremiumSendButton extends StatelessWidget {
             child: Icon(
               icon,
               size: 22,
-              color: active
-                  ? Colors.white
-                  : ct.muted.withValues(alpha: 0.9),
+              color: active ? Colors.white : ct.muted.withValues(alpha: 0.9),
             ),
           ),
         ),
@@ -606,9 +606,7 @@ class _EditingBanner extends StatelessWidget {
           ],
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border(
-          left: BorderSide(color: ct.amber, width: 3.5),
-        ),
+        border: Border(left: BorderSide(color: ct.amber, width: 3.5)),
       ),
       child: Row(
         children: [

@@ -148,10 +148,7 @@ class _WayoAdsBootstrapState extends State<_WayoAdsBootstrap> {
               body: Center(
                 child: Padding(
                   padding: const EdgeInsets.all(24),
-                  child: Text(
-                    '${snapshot.error}',
-                    textAlign: TextAlign.center,
-                  ),
+                  child: Text('${snapshot.error}', textAlign: TextAlign.center),
                 ),
               ),
             ),
@@ -175,12 +172,12 @@ class _WayoAdsBootstrapState extends State<_WayoAdsBootstrap> {
         return ProviderScope(
           overrides: [
             appPrefsProvider.overrideWithValue(snapshot.data!),
-            crashReporterProvider.overrideWithValue(CrashReporterHolder.instance),
+            crashReporterProvider.overrideWithValue(
+              CrashReporterHolder.instance,
+            ),
           ],
           child: TranslationProvider(
-            child: const RealtimeDashboardWire(
-              child: WayoAdsGoApp(),
-            ),
+            child: const RealtimeDashboardWire(child: WayoAdsGoApp()),
           ),
         );
       },

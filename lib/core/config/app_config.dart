@@ -14,19 +14,30 @@ abstract final class AppConfig {
     'APP_RELEASE',
     defaultValue: 'wayo-ads-go@1.0.0+1',
   );
-  static const String certPinPrimary = String.fromEnvironment('CERT_PIN_PRIMARY');
+  static const String certPinPrimary = String.fromEnvironment(
+    'CERT_PIN_PRIMARY',
+  );
   static const String certPinBackup = String.fromEnvironment('CERT_PIN_BACKUP');
 
   /// Wayo-ads (Next.js) API origin — advertiser dashboard calls.
-  static const String wayoAdsApiBaseUrl = String.fromEnvironment('WAYO_ADS_API_BASE_URL');
+  static const String wayoAdsApiBaseUrl = String.fromEnvironment(
+    'WAYO_ADS_API_BASE_URL',
+  );
 
   /// Laravel Reverb / Pusher-compatible realtime config.
   static const String reverbHost = String.fromEnvironment('REVERB_HOST');
   static const String reverbKey = String.fromEnvironment('REVERB_KEY');
-  static const String reverbPort = String.fromEnvironment('REVERB_PORT', defaultValue: '443');
-  static const String reverbScheme = String.fromEnvironment('REVERB_SCHEME', defaultValue: 'https');
+  static const String reverbPort = String.fromEnvironment(
+    'REVERB_PORT',
+    defaultValue: '443',
+  );
+  static const String reverbScheme = String.fromEnvironment(
+    'REVERB_SCHEME',
+    defaultValue: 'https',
+  );
 
-  static bool get reverbConfigured => reverbKey.isNotEmpty && reverbHost.isNotEmpty;
+  static bool get reverbConfigured =>
+      reverbKey.isNotEmpty && reverbHost.isNotEmpty;
 
   static bool get sentryEnabled => sentryDsn.isNotEmpty;
 

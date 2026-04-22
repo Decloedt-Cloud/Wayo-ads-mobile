@@ -6,10 +6,7 @@ import '../../../../../i18n/strings.g.dart';
 
 /// Hero headline + slow breathing orange halo behind the title block.
 class LoginHeroPremium extends StatefulWidget {
-  const LoginHeroPremium({
-    super.key,
-    required this.reduceMotion,
-  });
+  const LoginHeroPremium({super.key, required this.reduceMotion});
 
   final bool reduceMotion;
 
@@ -55,11 +52,9 @@ class _LoginHeroPremiumState extends State<LoginHeroPremium>
   @override
   Widget build(BuildContext context) {
     final t = context.t;
-    final style = AppTextStyles.displayLarge(context).copyWith(
-      fontSize: 36,
-      height: 1.05,
-      letterSpacing: -0.5,
-    );
+    final style = AppTextStyles.displayLarge(
+      context,
+    ).copyWith(fontSize: 36, height: 1.05, letterSpacing: -0.5);
 
     final headline = Column(
       crossAxisAlignment: CrossAxisAlignment.start,

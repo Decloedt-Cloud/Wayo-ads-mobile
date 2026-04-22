@@ -24,9 +24,7 @@ class HomeScreen extends ConsumerWidget {
     );
 
     if (user == null) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     final theme = Theme.of(context);
@@ -38,7 +36,10 @@ class HomeScreen extends ConsumerWidget {
             onPressed: () {
               ref.read(authNotifierProvider.notifier).logout();
             },
-            icon: AnimatedLogoutIcon(size: 20, color: theme.colorScheme.primary),
+            icon: AnimatedLogoutIcon(
+              size: 20,
+              color: theme.colorScheme.primary,
+            ),
             label: Text(t.home.logout),
             style: TextButton.styleFrom(foregroundColor: AppColors.primary),
           ),
@@ -47,10 +48,7 @@ class HomeScreen extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.all(24),
         children: [
-          Text(
-            t.home.session_title,
-            style: theme.textTheme.titleLarge,
-          ),
+          Text(t.home.session_title, style: theme.textTheme.titleLarge),
           const SizedBox(height: 16),
           ListTile(
             contentPadding: EdgeInsets.zero,
@@ -71,8 +69,8 @@ class HomeScreen extends ConsumerWidget {
                       ),
                     )
                   : (user.name != null && user.name!.isNotEmpty
-                      ? Text(user.name![0].toUpperCase())
-                      : const Icon(Icons.person)),
+                        ? Text(user.name![0].toUpperCase())
+                        : const Icon(Icons.person)),
             ),
             title: Text(user.name ?? t.home.user_fallback),
             subtitle: Text(user.email),

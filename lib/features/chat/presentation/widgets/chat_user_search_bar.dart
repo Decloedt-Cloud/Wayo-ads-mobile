@@ -82,7 +82,9 @@ class _ChatUserSearchBarState extends ConsumerState<ChatUserSearchBar> {
       final me = widget.creds.chatUserId;
       final hidden = widget.hiddenParticipantIds;
       setState(() {
-        _results = rows.where((u) => u.id != me && !hidden.contains(u.id)).toList();
+        _results = rows
+            .where((u) => u.id != me && !hidden.contains(u.id))
+            .toList();
         _loading = false;
       });
     } catch (_) {
@@ -96,7 +98,10 @@ class _ChatUserSearchBarState extends ConsumerState<ChatUserSearchBar> {
 
   void _scheduleSearch(String value) {
     _debounce?.cancel();
-    _debounce = Timer(const Duration(milliseconds: 380), () => _runSearch(value));
+    _debounce = Timer(
+      const Duration(milliseconds: 380),
+      () => _runSearch(value),
+    );
   }
 
   Future<void> _onTapUser(ChatDirectoryUser u) async {
@@ -119,7 +124,9 @@ class _ChatUserSearchBarState extends ConsumerState<ChatUserSearchBar> {
   Widget build(BuildContext context) {
     final t = context.t;
     final scheme = Theme.of(context).colorScheme;
-    final ln = widget.useLiquidNeuralStyle ? LiquidNeuralTheme.of(context) : null;
+    final ln = widget.useLiquidNeuralStyle
+        ? LiquidNeuralTheme.of(context)
+        : null;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -149,8 +156,13 @@ class _ChatUserSearchBarState extends ConsumerState<ChatUserSearchBar> {
                   spreadRadius: 0,
                 ),
               BoxShadow(
-                color: (widget.useLiquidNeuralStyle && ln != null ? ln.plasma : AppColors.primary)
-                    .withValues(alpha: widget.useLiquidNeuralStyle ? 0.14 : 0.12),
+                color:
+                    (widget.useLiquidNeuralStyle && ln != null
+                            ? ln.plasma
+                            : AppColors.primary)
+                        .withValues(
+                          alpha: widget.useLiquidNeuralStyle ? 0.14 : 0.12,
+                        ),
                 blurRadius: 20,
                 offset: const Offset(0, 8),
               ),
@@ -177,142 +189,193 @@ class _ChatUserSearchBarState extends ConsumerState<ChatUserSearchBar> {
                     child: Text(
                       t.chat.search_users_no_results,
                       textAlign: TextAlign.center,
-                      style: AppTextStyles.caption(context).copyWith(color: AppColors.textMutedOf(context)),
+                      style: AppTextStyles.caption(
+                        context,
+                      ).copyWith(color: AppColors.textMutedOf(context)),
                     ),
                   )
                 : _results.isEmpty
-                    ? const SizedBox.shrink(key: ValueKey('loading'))
-                    : Material(
-                        key: const ValueKey('list'),
-                        color: widget.useLiquidNeuralStyle && ln != null
-                            ? ln.avatarPhotoPlate
-                            : const Color(0xFF1A1A1A),
-                        borderRadius: BorderRadius.circular(16),
-                        clipBehavior: Clip.antiAlias,
-                        child: ConstrainedBox(
-                          constraints: const BoxConstraints(maxHeight: 240),
-                          child: ListView.separated(
-                            shrinkWrap: true,
-                            padding: const EdgeInsets.symmetric(vertical: 6),
-                            itemCount: _results.length,
-                            separatorBuilder: (context, _) => Divider(
-                              height: 1,
-                              color: widget.useLiquidNeuralStyle && ln != null
-                                  ? ln.strokeSubtle
-                                  : Colors.white.withValues(alpha: 0.06),
-                            ),
-                            itemBuilder: (context, i) {
-                              final u = _results[i];
-                              final avatarUrl = resolveChatMediaUrl(u.avatar, widget.creds.apiBaseUrl);
-                              final busy = _busyUserId == u.id;
-                              return ListTile(
-                                onTap: busy ? null : () => _onTapUser(u),
-                                leading: SizedBox(
-                                  width: 44,
-                                  height: 44,
-                                  child: ClipOval(
-                                    child: avatarUrl.isEmpty
-                                        ? ColoredBox(
-                                            color: widget.useLiquidNeuralStyle && ln != null
-                                                ? ln.ghostGlassStrong
-                                                : Colors.white.withValues(alpha: 0.08),
-                                            child: Center(
-                                              child: Text(
-                                                _initialLetter(u.name),
-                                                style: AppTextStyles.labelLarge(context),
+                ? const SizedBox.shrink(key: ValueKey('loading'))
+                : Material(
+                    key: const ValueKey('list'),
+                    color: widget.useLiquidNeuralStyle && ln != null
+                        ? ln.avatarPhotoPlate
+                        : const Color(0xFF1A1A1A),
+                    borderRadius: BorderRadius.circular(16),
+                    clipBehavior: Clip.antiAlias,
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxHeight: 240),
+                      child: ListView.separated(
+                        shrinkWrap: true,
+                        padding: const EdgeInsets.symmetric(vertical: 6),
+                        itemCount: _results.length,
+                        separatorBuilder: (context, _) => Divider(
+                          height: 1,
+                          color: widget.useLiquidNeuralStyle && ln != null
+                              ? ln.strokeSubtle
+                              : Colors.white.withValues(alpha: 0.06),
+                        ),
+                        itemBuilder: (context, i) {
+                          final u = _results[i];
+                          final avatarUrl = resolveChatMediaUrl(
+                            u.avatar,
+                            widget.creds.apiBaseUrl,
+                          );
+                          final busy = _busyUserId == u.id;
+                          return ListTile(
+                            onTap: busy ? null : () => _onTapUser(u),
+                            leading: SizedBox(
+                              width: 44,
+                              height: 44,
+                              child: ClipOval(
+                                child: avatarUrl.isEmpty
+                                    ? ColoredBox(
+                                        color:
+                                            widget.useLiquidNeuralStyle &&
+                                                ln != null
+                                            ? ln.ghostGlassStrong
+                                            : Colors.white.withValues(
+                                                alpha: 0.08,
                                               ),
+                                        child: Center(
+                                          child: Text(
+                                            _initialLetter(u.name),
+                                            style: AppTextStyles.labelLarge(
+                                              context,
                                             ),
-                                          )
-                                        : CachedNetworkImage(
-                                            imageUrl: avatarUrl,
-                                            fit: BoxFit.cover,
-                                            placeholder: (context, url) => ColoredBox(
-                                              color: widget.useLiquidNeuralStyle && ln != null
+                                          ),
+                                        ),
+                                      )
+                                    : CachedNetworkImage(
+                                        imageUrl: avatarUrl,
+                                        fit: BoxFit.cover,
+                                        placeholder: (context, url) =>
+                                            ColoredBox(
+                                              color:
+                                                  widget.useLiquidNeuralStyle &&
+                                                      ln != null
                                                   ? ln.ghostGlass
-                                                  : Colors.white.withValues(alpha: 0.06),
+                                                  : Colors.white.withValues(
+                                                      alpha: 0.06,
+                                                    ),
                                               child: const Center(
                                                 child: SizedBox(
                                                   width: 18,
                                                   height: 18,
-                                                  child: CircularProgressIndicator(
-                                                    strokeWidth: 2,
-                                                    color: AppColors.primary,
-                                                  ),
+                                                  child:
+                                                      CircularProgressIndicator(
+                                                        strokeWidth: 2,
+                                                        color:
+                                                            AppColors.primary,
+                                                      ),
                                                 ),
                                               ),
                                             ),
-                                            errorWidget: (context, url, error) => ColoredBox(
-                                              color: widget.useLiquidNeuralStyle && ln != null
+                                        errorWidget: (context, url, error) =>
+                                            ColoredBox(
+                                              color:
+                                                  widget.useLiquidNeuralStyle &&
+                                                      ln != null
                                                   ? ln.ghostGlassStrong
-                                                  : Colors.white.withValues(alpha: 0.08),
+                                                  : Colors.white.withValues(
+                                                      alpha: 0.08,
+                                                    ),
                                               child: Center(
                                                 child: Text(
                                                   _initialLetter(u.name),
-                                                  style: AppTextStyles.labelLarge(context),
+                                                  style:
+                                                      AppTextStyles.labelLarge(
+                                                        context,
+                                                      ),
                                                 ),
                                               ),
                                             ),
+                                      ),
+                              ),
+                            ),
+                            title: Text(
+                              u.name?.trim().isNotEmpty == true
+                                  ? u.name!.trim()
+                                  : t.chat.conversation_unknown,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppTextStyles.labelLarge(
+                                context,
+                              ).copyWith(fontWeight: FontWeight.w700),
+                            ),
+                            subtitle:
+                                u.email != null && u.email!.trim().isNotEmpty
+                                ? Text(
+                                    u.email!.trim(),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: AppTextStyles.caption(context)
+                                        .copyWith(
+                                          color: AppColors.textSecondaryOf(
+                                            context,
                                           ),
-                                  ),
-                                ),
-                                title: Text(
-                                  u.name?.trim().isNotEmpty == true ? u.name!.trim() : t.chat.conversation_unknown,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: AppTextStyles.labelLarge(context).copyWith(fontWeight: FontWeight.w700),
-                                ),
-                                subtitle: u.email != null && u.email!.trim().isNotEmpty
-                                    ? Text(
-                                        u.email!.trim(),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: AppTextStyles.caption(context)
-                                            .copyWith(color: AppColors.textSecondaryOf(context)),
-                                      )
-                                    : null,
-                                trailing: busy
-                                    ? SizedBox(
-                                        width: 24,
-                                        height: 24,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          color: widget.useLiquidNeuralStyle && ln != null
-                                              ? ln.plasma
-                                              : AppColors.primary,
                                         ),
-                                      )
-                                    : Icon(
-                                        Icons.chat_bubble_outline,
-                                        color: (widget.useLiquidNeuralStyle && ln != null
+                                  )
+                                : null,
+                            trailing: busy
+                                ? SizedBox(
+                                    width: 24,
+                                    height: 24,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color:
+                                          widget.useLiquidNeuralStyle &&
+                                              ln != null
+                                          ? ln.plasma
+                                          : AppColors.primary,
+                                    ),
+                                  )
+                                : Icon(
+                                    Icons.chat_bubble_outline,
+                                    color:
+                                        (widget.useLiquidNeuralStyle &&
+                                                    ln != null
                                                 ? ln.plasma
                                                 : scheme.primary)
                                             .withValues(alpha: 0.85),
-                                      ),
-                              );
-                            },
-                          ),
-                        ),
+                                  ),
+                          );
+                        },
                       ),
+                    ),
+                  ),
           ),
         ] else if (_focus.hasFocus) ...[
           const SizedBox(height: 6),
           Text(
             t.chat.search_users_min_hint,
-            style: AppTextStyles.caption(context).copyWith(color: AppColors.textMutedOf(context)),
+            style: AppTextStyles.caption(
+              context,
+            ).copyWith(color: AppColors.textMutedOf(context)),
           ),
         ],
       ],
     );
   }
 
-  Widget _buildSearchField(BuildContext context, Translations t, ColorScheme scheme) {
-    final ln = widget.useLiquidNeuralStyle ? LiquidNeuralTheme.of(context) : null;
-    final accent = widget.useLiquidNeuralStyle && ln != null ? ln.plasma : scheme.primary;
+  Widget _buildSearchField(
+    BuildContext context,
+    Translations t,
+    ColorScheme scheme,
+  ) {
+    final ln = widget.useLiquidNeuralStyle
+        ? LiquidNeuralTheme.of(context)
+        : null;
+    final accent = widget.useLiquidNeuralStyle && ln != null
+        ? ln.plasma
+        : scheme.primary;
     return TextField(
       controller: _controller,
       focusNode: _focus,
       style: AppTextStyles.bodyLarge(context).copyWith(
-        color: widget.useLiquidNeuralStyle && ln != null ? ln.textPrimary : null,
+        color: widget.useLiquidNeuralStyle && ln != null
+            ? ln.textPrimary
+            : null,
       ),
       cursorColor: accent,
       decoration: InputDecoration(
@@ -329,23 +392,29 @@ class _ChatUserSearchBarState extends ConsumerState<ChatUserSearchBar> {
                 child: SizedBox(
                   width: 22,
                   height: 22,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: accent),
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: accent,
+                  ),
                 ),
               )
             : _controller.text.isNotEmpty
-                ? IconButton(
-                    tooltip: MaterialLocalizations.of(context).cancelButtonLabel,
-                    onPressed: () {
-                      _controller.clear();
-                      _debounce?.cancel();
-                      setState(() {
-                        _results = const [];
-                        _lastQuery = '';
-                      });
-                    },
-                    icon: Icon(Icons.close_rounded, color: AppColors.textMutedOf(context)),
-                  )
-                : null,
+            ? IconButton(
+                tooltip: MaterialLocalizations.of(context).cancelButtonLabel,
+                onPressed: () {
+                  _controller.clear();
+                  _debounce?.cancel();
+                  setState(() {
+                    _results = const [];
+                    _lastQuery = '';
+                  });
+                },
+                icon: Icon(
+                  Icons.close_rounded,
+                  color: AppColors.textMutedOf(context),
+                ),
+              )
+            : null,
         border: InputBorder.none,
         contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 14),
       ),

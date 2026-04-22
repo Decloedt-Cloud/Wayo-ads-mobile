@@ -36,9 +36,10 @@ Future<void> showNotificationCenterPopup(
       return FadeTransition(
         opacity: anim,
         child: ScaleTransition(
-          scale: Tween<double>(begin: 0.96, end: 1).animate(
-            CurvedAnimation(parent: anim, curve: Curves.easeOutCubic),
-          ),
+          scale: Tween<double>(
+            begin: 0.96,
+            end: 1,
+          ).animate(CurvedAnimation(parent: anim, curve: Curves.easeOutCubic)),
           alignment: Alignment.topRight,
           child: child,
         ),
@@ -93,11 +94,15 @@ class _NotificationCenterPanel extends ConsumerWidget {
     final async = ref.watch(notificationsListProvider);
     final role = ref.watch(currentWayoAdsAccountRoleProvider);
 
-    final bg = isDark ? const Color(0xFF181818) : AppColors.surfaceElevatedOf(context);
+    final bg = isDark
+        ? const Color(0xFF181818)
+        : AppColors.surfaceElevatedOf(context);
     final border = isDark
         ? const Color(0xFF2A2A2A)
         : AppColors.borderOf(context).withValues(alpha: 0.55);
-    final muted = isDark ? const Color(0xFFA0A0A0) : AppColors.textMutedOf(context);
+    final muted = isDark
+        ? const Color(0xFFA0A0A0)
+        : AppColors.textMutedOf(context);
 
     return Container(
       constraints: const BoxConstraints(maxHeight: 500),
@@ -135,7 +140,9 @@ class _NotificationCenterPanel extends ConsumerWidget {
                   onPressed: () async {
                     await HapticFeedback.selectionClick();
                     try {
-                      await ref.read(notificationsRepositoryProvider).markAllRead();
+                      await ref
+                          .read(notificationsRepositoryProvider)
+                          .markAllRead();
                       ref.invalidate(notificationsListProvider);
                       ref.invalidate(dashboardStreamProvider);
                     } catch (_) {}
@@ -171,7 +178,8 @@ class _NotificationCenterPanel extends ConsumerWidget {
                 return ListView.separated(
                   padding: const EdgeInsets.symmetric(vertical: 4),
                   itemCount: preview.length,
-                  separatorBuilder: (_, __) => Divider(height: 1, color: border.withValues(alpha: 0.6)),
+                  separatorBuilder: (_, __) =>
+                      Divider(height: 1, color: border.withValues(alpha: 0.6)),
                   itemBuilder: (context, i) {
                     final n = preview[i];
                     return _PopupNotificationTile(
@@ -179,25 +187,33 @@ class _NotificationCenterPanel extends ConsumerWidget {
                       muted: muted,
                       onMarkRead: () async {
                         if (n.isRead) return;
-                        await ref.read(notificationsRepositoryProvider).markRead(n.id);
+                        await ref
+                            .read(notificationsRepositoryProvider)
+                            .markRead(n.id);
                         ref.invalidate(notificationsListProvider);
                         ref.invalidate(dashboardStreamProvider);
                       },
                       onDismiss: () async {
                         try {
-                          await ref.read(notificationsRepositoryProvider).dismiss(n.id);
+                          await ref
+                              .read(notificationsRepositoryProvider)
+                              .dismiss(n.id);
                           ref.invalidate(notificationsListProvider);
                           ref.invalidate(dashboardStreamProvider);
                         } catch (_) {}
                       },
-                        onOpenDetail: () async {
+                      onOpenDetail: () async {
                         if (!n.isRead) {
-                          await ref.read(notificationsRepositoryProvider).markRead(n.id);
+                          await ref
+                              .read(notificationsRepositoryProvider)
+                              .markRead(n.id);
                           ref.invalidate(dashboardStreamProvider);
                         }
                         onClose();
                         Future<void>.microtask(() {
-                          ref.read(goRouterProvider).push(_notificationsListUri(role));
+                          ref
+                              .read(goRouterProvider)
+                              .push(_notificationsListUri(role));
                         });
                       },
                     );
@@ -229,7 +245,9 @@ class _NotificationCenterPanel extends ConsumerWidget {
                 side: BorderSide(color: border),
                 backgroundColor: isDark
                     ? const Color(0xFF222222)
-                    : AppColors.surfaceElevatedOf(context).withValues(alpha: 0.6),
+                    : AppColors.surfaceElevatedOf(
+                        context,
+                      ).withValues(alpha: 0.6),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -243,7 +261,10 @@ class _NotificationCenterPanel extends ConsumerWidget {
               },
               child: Text(
                 t.dashboard.notifications_view_all,
-                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+                style: const TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 15,
+                ),
               ),
             ),
           ),
@@ -284,7 +305,9 @@ class _PopupNotificationTile extends StatelessWidget {
     final (icon, iconColor) = _iconFor(item, important);
 
     final dateStr = item.createdAt != null
-        ? DateFormat.yMd(Localizations.localeOf(context).toString()).format(item.createdAt!.toLocal())
+        ? DateFormat.yMd(
+            Localizations.localeOf(context).toString(),
+          ).format(item.createdAt!.toLocal())
         : '';
 
     return InkWell(
@@ -320,7 +343,9 @@ class _PopupNotificationTile extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       color: AppColors.textPrimaryOf(context),
-                      fontWeight: item.isRead ? FontWeight.w600 : FontWeight.w800,
+                      fontWeight: item.isRead
+                          ? FontWeight.w600
+                          : FontWeight.w800,
                       fontSize: 14,
                     ),
                   ),
@@ -330,16 +355,27 @@ class _PopupNotificationTile extends StatelessWidget {
                       item.body,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(color: muted, fontSize: 12.5, height: 1.3),
+                      style: TextStyle(
+                        color: muted,
+                        fontSize: 12.5,
+                        height: 1.3,
+                      ),
                     ),
                   ],
                   if (dateStr.isNotEmpty) ...[
                     const SizedBox(height: 8),
                     Row(
                       children: [
-                        Text(dateStr, style: TextStyle(color: muted, fontSize: 11.5)),
+                        Text(
+                          dateStr,
+                          style: TextStyle(color: muted, fontSize: 11.5),
+                        ),
                         const SizedBox(width: 4),
-                        Icon(Icons.chevron_right_rounded, size: 16, color: muted),
+                        Icon(
+                          Icons.chevron_right_rounded,
+                          size: 16,
+                          color: muted,
+                        ),
                       ],
                     ),
                   ],
@@ -352,19 +388,31 @@ class _PopupNotificationTile extends StatelessWidget {
                 IconButton(
                   visualDensity: VisualDensity.compact,
                   padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                  constraints: const BoxConstraints(
+                    minWidth: 32,
+                    minHeight: 32,
+                  ),
                   icon: Icon(
                     Icons.check_rounded,
                     size: 20,
-                    color: item.isRead ? muted : AppColors.textPrimaryOf(context),
+                    color: item.isRead
+                        ? muted
+                        : AppColors.textPrimaryOf(context),
                   ),
                   onPressed: () => onMarkRead(),
                 ),
                 IconButton(
                   visualDensity: VisualDensity.compact,
                   padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                  icon: Icon(Icons.close_rounded, size: 20, color: AppColors.textPrimaryOf(context)),
+                  constraints: const BoxConstraints(
+                    minWidth: 32,
+                    minHeight: 32,
+                  ),
+                  icon: Icon(
+                    Icons.close_rounded,
+                    size: 20,
+                    color: AppColors.textPrimaryOf(context),
+                  ),
                   onPressed: () => onDismiss(),
                 ),
               ],
@@ -386,10 +434,14 @@ bool _isHighPriority(String? p) {
     return (Icons.warning_amber_rounded, const Color(0xFFFFA500));
   }
   final ty = n.type?.toUpperCase() ?? '';
-  if (ty.contains('CREDENTIALS') || ty.contains('FRAUD') || ty.contains('SUSPICIOUS')) {
+  if (ty.contains('CREDENTIALS') ||
+      ty.contains('FRAUD') ||
+      ty.contains('SUSPICIOUS')) {
     return (Icons.warning_amber_rounded, const Color(0xFFFFA500));
   }
-  if (ty.contains('CAMPAIGN') || ty.contains('CREATOR') || ty.contains('VIDEO')) {
+  if (ty.contains('CAMPAIGN') ||
+      ty.contains('CREATOR') ||
+      ty.contains('VIDEO')) {
     return (Icons.info_outline_rounded, const Color(0xFFF4A237));
   }
   return (Icons.notifications_none_rounded, const Color(0xFFF4A237));

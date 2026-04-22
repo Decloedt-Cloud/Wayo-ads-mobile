@@ -31,9 +31,7 @@ void main() {
           authNotifierProvider.overrideWith(_TestAuth.new),
         ],
         child: TranslationProvider(
-          child: const RealtimeDashboardWire(
-            child: WayoAdsGoApp(),
-          ),
+          child: const RealtimeDashboardWire(child: WayoAdsGoApp()),
         ),
       ),
     );

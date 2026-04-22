@@ -33,21 +33,29 @@ abstract final class AppColors {
 
   static Color textPrimaryOf(BuildContext context) =>
       Theme.of(context).brightness == Brightness.dark
-          ? textPrimary
-          : const Color(0xFF0A0A0A);
+      ? textPrimary
+      : const Color(0xFF0A0A0A);
 
   static Color textSecondaryOf(BuildContext context) =>
-      Theme.of(context).brightness == Brightness.dark ? textSecondary : const Color(0xFF525252);
+      Theme.of(context).brightness == Brightness.dark
+      ? textSecondary
+      : const Color(0xFF525252);
 
   static Color textMutedOf(BuildContext context) =>
-      Theme.of(context).brightness == Brightness.dark ? textMuted : const Color(0xFF737373);
+      Theme.of(context).brightness == Brightness.dark
+      ? textMuted
+      : const Color(0xFF737373);
 
   static Color surfaceOf(BuildContext context) =>
       Theme.of(context).brightness == Brightness.dark ? surface : Colors.white;
 
   static Color surfaceElevatedOf(BuildContext context) =>
-      Theme.of(context).brightness == Brightness.dark ? surfaceElevated : const Color(0xFFF5F5F5);
+      Theme.of(context).brightness == Brightness.dark
+      ? surfaceElevated
+      : const Color(0xFFF5F5F5);
 
   static Color borderOf(BuildContext context) =>
-      Theme.of(context).brightness == Brightness.dark ? border : const Color(0xFFE5E5E5);
+      Theme.of(context).brightness == Brightness.dark
+      ? border
+      : const Color(0xFFE5E5E5);
 }

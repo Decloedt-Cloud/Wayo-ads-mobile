@@ -47,9 +47,7 @@ class AuthRemote {
       final res = await client.post<Map<String, dynamic>>(
         path,
         data: {'refresh_token': refreshToken},
-        options: Options(
-          headers: {'Authorization': 'Bearer $accessToken'},
-        ),
+        options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
       );
       final data = res.data;
       if (data == null) {
@@ -68,10 +66,15 @@ class AuthRemote {
     }
   }
 
-  static Future<Result<AuthResponse>> refreshFromStorage(SecureStorageService storage) async {
+  static Future<Result<AuthResponse>> refreshFromStorage(
+    SecureStorageService storage,
+  ) async {
     final access = await storage.getAccessToken();
     final refreshToken = await storage.getRefreshToken();
-    if (access == null || access.isEmpty || refreshToken == null || refreshToken.isEmpty) {
+    if (access == null ||
+        access.isEmpty ||
+        refreshToken == null ||
+        refreshToken.isEmpty) {
       final b = AuthRuntimeConfig.instance.resolvedDioBaseUrl;
       return Failure(ServerException('Missing tokens ($b)'));
     }

@@ -27,14 +27,18 @@ class ErrorBanner extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(Icons.warning_amber_rounded, color: AppColors.error, size: 22),
+          const Icon(
+            Icons.warning_amber_rounded,
+            color: AppColors.error,
+            size: 22,
+          ),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
               message,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.textPrimaryOf(context),
-                  ),
+                color: AppColors.textPrimaryOf(context),
+              ),
             ),
           ),
           if (onRetry != null && retryLabel != null)

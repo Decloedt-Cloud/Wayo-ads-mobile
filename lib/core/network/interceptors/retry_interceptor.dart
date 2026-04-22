@@ -18,10 +18,7 @@ RetryInterceptor buildWayoRetryInterceptor(
       Duration(seconds: 4),
     ],
     logPrint: logPrint,
-    retryEvaluator: (err, attempt) => wayoRetryEvaluator(
-      err,
-      attempt,
-      excludedPostPaths: excludedPostPaths,
-    ),
+    retryEvaluator: (err, attempt) =>
+        wayoRetryEvaluator(err, attempt, excludedPostPaths: excludedPostPaths),
   );
 }

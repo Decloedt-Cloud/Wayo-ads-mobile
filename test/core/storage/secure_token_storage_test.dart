@@ -10,11 +10,7 @@ void main() {
   test('save / read cycle', () async {
     final storage = SecureTokenStorage();
     final at = DateTime.utc(2030, 1, 1);
-    await storage.save(
-      access: 'a1',
-      refresh: 'r1',
-      expiresAt: at,
-    );
+    await storage.save(access: 'a1', refresh: 'r1', expiresAt: at);
     expect(await storage.readAccess(), 'a1');
     expect(await storage.readRefresh(), 'r1');
     expect(await storage.readExpiry(), at);

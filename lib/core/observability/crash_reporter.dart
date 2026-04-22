@@ -28,7 +28,10 @@ final class NoopCrashReporter implements CrashReporter {
   Future<void> captureException(Object error, [StackTrace? stackTrace]) async {}
 
   @override
-  Future<void> addBreadcrumb(String message, {Map<String, dynamic>? data}) async {}
+  Future<void> addBreadcrumb(
+    String message, {
+    Map<String, dynamic>? data,
+  }) async {}
 
   @override
   Future<void> setUserId(String? hashedId) async {}
@@ -47,12 +50,12 @@ final class SentryCrashReporter implements CrashReporter {
   }
 
   @override
-  Future<void> addBreadcrumb(String message, {Map<String, dynamic>? data}) async {
+  Future<void> addBreadcrumb(
+    String message, {
+    Map<String, dynamic>? data,
+  }) async {
     await Sentry.addBreadcrumb(
-      Breadcrumb(
-        message: message,
-        data: data == null ? null : scrub(data),
-      ),
+      Breadcrumb(message: message, data: data == null ? null : scrub(data)),
     );
   }
 

@@ -66,10 +66,7 @@ class _RealtimeNotificationToastHostState
               headline,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontWeight: FontWeight.w700,
-                fontSize: 15,
-              ),
+              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
             ),
             if (body != null && body.trim().isNotEmpty) ...[
               const SizedBox(height: 4),
@@ -132,7 +129,9 @@ class _RealtimeNotificationToastHostState
   if (n is Map<String, dynamic>) {
     return (
       n['title'] as String? ?? map['title'] as String?,
-      n['message'] as String? ?? n['body'] as String? ?? map['message'] as String?
+      n['message'] as String? ??
+          n['body'] as String? ??
+          map['message'] as String?,
     );
   }
   return (

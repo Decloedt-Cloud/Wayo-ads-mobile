@@ -41,7 +41,8 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
   final _draft = TextEditingController();
   final _header = CinematicHeaderController(title: '');
   final _fabVisible = ValueNotifier<bool>(false);
-  final GlobalKey<CinematicSendBurstState> _burstKey = GlobalKey<CinematicSendBurstState>();
+  final GlobalKey<CinematicSendBurstState> _burstKey =
+      GlobalKey<CinematicSendBurstState>();
   StreamSubscription<ChatRealtimeEvent>? _sub;
   List<ChatMessage> _messages = const [];
   bool _loading = true;
@@ -64,7 +65,9 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
       statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
       statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
       systemNavigationBarColor: ct.bg,
-      systemNavigationBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+      systemNavigationBarIconBrightness: isDark
+          ? Brightness.light
+          : Brightness.dark,
     );
   }
 
@@ -101,7 +104,11 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
         widget.conversationId,
         socketId: () => rt.socketId,
       );
-      await repo.markRead(creds, widget.conversationId, socketId: () => rt.socketId);
+      await repo.markRead(
+        creds,
+        widget.conversationId,
+        socketId: () => rt.socketId,
+      );
       ref.invalidate(chatConversationsProvider);
       if (!mounted) return;
       setState(() {
@@ -109,7 +116,9 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
         _loading = false;
       });
       _seedPeerReadAtFromConversations(creds.chatUserId);
-      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToEnd(animated: false));
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _scrollToEnd(animated: false),
+      );
       _listenRt(creds, repo, rt);
     } catch (e) {
       if (!mounted) return;
@@ -140,11 +149,16 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
     }
   }
 
-  void _listenRt(ChatCredentials creds, ChatRepository repo, ChatRealtimeService rt) {
+  void _listenRt(
+    ChatCredentials creds,
+    ChatRepository repo,
+    ChatRealtimeService rt,
+  ) {
     _sub?.cancel();
     _sub = rt.events.listen((event) {
       if (!mounted) return;
-      if (event is ChatMessageSentEvent && event.conversationId == widget.conversationId) {
+      if (event is ChatMessageSentEvent &&
+          event.conversationId == widget.conversationId) {
         final m = repo.parseRemoteMessage(event.rawMessage);
         if (m.userId == creds.chatUserId) {
           return;
@@ -154,10 +168,13 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
         }
         HapticFeedback.lightImpact();
         setState(() => _messages = [..._messages, m]);
-        WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToEnd(animated: true));
+        WidgetsBinding.instance.addPostFrameCallback(
+          (_) => _scrollToEnd(animated: true),
+        );
         return;
       }
-      if (event is ChatTypingEvent && event.conversationId == widget.conversationId) {
+      if (event is ChatTypingEvent &&
+          event.conversationId == widget.conversationId) {
         _typingTimer?.cancel();
         if (!event.isTyping) {
           setState(() => _typingName = null);
@@ -169,7 +186,8 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
         });
         return;
       }
-      if (event is ChatMessageDeletedEvent && event.conversationId == widget.conversationId) {
+      if (event is ChatMessageDeletedEvent &&
+          event.conversationId == widget.conversationId) {
         setState(() {
           _messages = _messages.where((m) => m.id != event.messageId).toList();
           if (_selectedMessageId == event.messageId) _selectedMessageId = null;
@@ -181,14 +199,16 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
         });
         return;
       }
-      if (event is ChatMessageEditedEvent && event.conversationId == widget.conversationId) {
+      if (event is ChatMessageEditedEvent &&
+          event.conversationId == widget.conversationId) {
         final m = repo.parseRemoteMessage(event.rawMessage);
         setState(() {
           _messages = _messages.map((x) => x.id == m.id ? m : x).toList();
         });
         return;
       }
-      if (event is ChatMessageReadEvent && event.conversationId == widget.conversationId) {
+      if (event is ChatMessageReadEvent &&
+          event.conversationId == widget.conversationId) {
         if (event.readerId == creds.chatUserId) return;
         final parsed = DateTime.tryParse(event.readAt);
         if (parsed == null) return;
@@ -239,7 +259,11 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
     return DateFormat.yMMMd().format(day);
   }
 
-  Future<void> _onSend(ChatCredentials creds, ChatRepository repo, ChatRealtimeService rt) async {
+  Future<void> _onSend(
+    ChatCredentials creds,
+    ChatRepository repo,
+    ChatRealtimeService rt,
+  ) async {
     final text = _draft.text.trim();
     if (text.isEmpty || _sending) return;
     if (chatTextLooksLikePhoneNumber(text)) {
@@ -271,7 +295,9 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
         );
         if (!mounted) return;
         setState(() {
-          _messages = _messages.map((m) => m.id == editingId ? updated : m).toList();
+          _messages = _messages
+              .map((m) => m.id == editingId ? updated : m)
+              .toList();
           _editingMessageId = null;
           _editingOriginalContent = '';
           _draft.clear();
@@ -279,9 +305,9 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
         ref.invalidate(chatConversationsProvider);
       } catch (_) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(context.t.chat.edit_failed)),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(context.t.chat.edit_failed)));
         }
       } finally {
         if (mounted) setState(() => _sending = false);
@@ -305,7 +331,9 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
       _sending = true;
       _draft.clear();
     });
-    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToEnd(animated: true));
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => _scrollToEnd(animated: true),
+    );
     try {
       final sent = await repo.sendTextMessage(
         creds,
@@ -321,7 +349,12 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
     } catch (_) {
       if (!mounted) return;
       setState(() {
-        _messages = _messages.map((m) => m.id == tempId ? m.copyWith(pending: false, failed: true) : m).toList();
+        _messages = _messages
+            .map(
+              (m) =>
+                  m.id == tempId ? m.copyWith(pending: false, failed: true) : m,
+            )
+            .toList();
       });
     } finally {
       if (mounted) setState(() => _sending = false);
@@ -330,9 +363,9 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
 
   void _onEditMessage(ChatMessage m, int myChatUserId) {
     if (m.userId != myChatUserId || m.type != 'text') {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.t.chat.edit_not_allowed)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(context.t.chat.edit_not_allowed)));
       return;
     }
     setState(() {
@@ -364,9 +397,9 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
   ) async {
     final t = context.t;
     if (m.userId != creds.chatUserId) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(t.chat.delete_not_allowed)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(t.chat.delete_not_allowed)));
       return;
     }
 
@@ -376,7 +409,9 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
         final ct = CinematicChatTheme.of(ctx);
         return AlertDialog(
           backgroundColor: ct.surface,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(22),
+          ),
           title: Text(t.chat.delete_confirm_title),
           content: Text(t.chat.delete_confirm_text),
           actions: [
@@ -421,9 +456,9 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
     } catch (_) {
       if (!mounted) return;
       setState(() => _messages = previous);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(t.chat.delete_failed)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(t.chat.delete_failed)));
     }
   }
 
@@ -435,7 +470,11 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
     return null;
   }
 
-  Future<void> _pickAndUpload(ChatCredentials creds, ChatRepository repo, ChatRealtimeService rt) async {
+  Future<void> _pickAndUpload(
+    ChatCredentials creds,
+    ChatRepository repo,
+    ChatRealtimeService rt,
+  ) async {
     final t = context.t;
     const allowed = {'jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'pdf'};
     FilePickerResult? result;
@@ -447,7 +486,9 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
       );
     } on MissingPluginException catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(t.chat.file_picker_restart_hint)));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(t.chat.file_picker_restart_hint)),
+        );
       }
       return;
     }
@@ -459,7 +500,9 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
     }
     if (!allowed.contains(ext)) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(t.chat.attachment_type_not_allowed)));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(t.chat.attachment_type_not_allowed)),
+        );
       }
       return;
     }
@@ -474,7 +517,9 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
     }
     if (bytes == null || bytes.isEmpty) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(t.chat.upload_failed)));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(t.chat.upload_failed)));
       }
       return;
     }
@@ -483,7 +528,9 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
     final maxBytes = isPdf ? 50 * 1024 * 1024 : 10 * 1024 * 1024;
     if (bytes.length > maxBytes) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(t.chat.file_too_large)));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(t.chat.file_too_large)));
       }
       return;
     }
@@ -504,10 +551,14 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
         _phoneError = null;
       });
       ref.invalidate(chatConversationsProvider);
-      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToEnd(animated: true));
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _scrollToEnd(animated: true),
+      );
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(t.chat.upload_failed)));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(t.chat.upload_failed)));
       }
     } finally {
       if (mounted) setState(() => _uploading = false);
@@ -521,7 +572,12 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
     bool typing,
   ) async {
     try {
-      await repo.sendTyping(creds, widget.conversationId, typing, socketId: () => rt.socketId);
+      await repo.sendTyping(
+        creds,
+        widget.conversationId,
+        typing,
+        socketId: () => rt.socketId,
+      );
     } catch (_) {}
   }
 
@@ -533,7 +589,9 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
         : t.chat.thread_fallback_title;
     final reduce = MediaQuery.disableAnimationsOf(context);
     final credsAsync = ref.watch(chatBootstrapProvider);
-    final letter = title.trim().isEmpty ? '?' : String.fromCharCode(title.trim().runes.first).toUpperCase();
+    final letter = title.trim().isEmpty
+        ? '?'
+        : String.fromCharCode(title.trim().runes.first).toUpperCase();
 
     final threadUi = _threadSystemUi(context);
     final chatTheme = CinematicChatTheme.of(context);
@@ -543,7 +601,9 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
         value: threadUi,
         child: Scaffold(
           backgroundColor: chatTheme.bg,
-          body: Center(child: CircularProgressIndicator(color: chatTheme.amber)),
+          body: Center(
+            child: CircularProgressIndicator(color: chatTheme.amber),
+          ),
         ),
       ),
       error: (e, _) => AnnotatedRegion<SystemUiOverlayStyle>(
@@ -569,10 +629,10 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
             final statusLine = typing
                 ? ''
                 : partnerId == null
-                    ? ''
-                    : online
-                        ? t.chat.online
-                        : t.chat.offline;
+                ? ''
+                : online
+                ? t.chat.online
+                : t.chat.offline;
             _header.setPresence(
               title: title,
               statusLine: statusLine,
@@ -580,8 +640,13 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
               partnerOnline: online,
             );
 
-            final partnerPhotoPath = conv?.displayAvatar ?? conv?.partnerAvatarFromParticipants(creds.chatUserId);
-            final partnerAvatarResolved = resolveChatMediaUrl(partnerPhotoPath, creds.apiBaseUrl);
+            final partnerPhotoPath =
+                conv?.displayAvatar ??
+                conv?.partnerAvatarFromParticipants(creds.chatUserId);
+            final partnerAvatarResolved = resolveChatMediaUrl(
+              partnerPhotoPath,
+              creds.apiBaseUrl,
+            );
 
             final messageTiles = _buildMessageWidgets(
               context,
@@ -591,7 +656,8 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
               reduce,
               peerAvatarUrl: partnerAvatarResolved,
             );
-            final listCount = messageTiles.length + (_typingName != null ? 1 : 0);
+            final listCount =
+                messageTiles.length + (_typingName != null ? 1 : 0);
 
             return AnnotatedRegion<SystemUiOverlayStyle>(
               value: threadUi,
@@ -607,7 +673,9 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
                               onNotification: _onScroll,
                               child: CustomScrollView(
                                 controller: _scroll,
-                                physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+                                physics: const BouncingScrollPhysics(
+                                  parent: AlwaysScrollableScrollPhysics(),
+                                ),
                                 slivers: [
                                   SliverPersistentHeader(
                                     pinned: true,
@@ -615,7 +683,9 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
                                       controller: _header,
                                       titleLetter: letter,
                                       onBack: () => context.pop(),
-                                      topSafeInset: MediaQuery.paddingOf(context).top,
+                                      topSafeInset: MediaQuery.paddingOf(
+                                        context,
+                                      ).top,
                                       partnerAvatarUrl: partnerAvatarResolved,
                                     ),
                                   ),
@@ -629,45 +699,66 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
                                     sliver: _loading
                                         ? SliverFillRemaining(
                                             child: Center(
-                                              child: CircularProgressIndicator(color: chatTheme.amber),
+                                              child: CircularProgressIndicator(
+                                                color: chatTheme.amber,
+                                              ),
                                             ),
                                           )
                                         : _error != null
-                                            ? SliverFillRemaining(
-                                                child: Center(
-                                                  child: Padding(
-                                                    padding: const EdgeInsets.all(24),
-                                                    child: Column(
-                                                      mainAxisSize: MainAxisSize.min,
-                                                      children: [
-                                                        Text(_error!, textAlign: TextAlign.center),
-                                                        const SizedBox(height: 12),
-                                                        FilledButton(
-                                                          onPressed: _bootstrap,
-                                                          child: Text(t.dashboard.errors.retry),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
+                                        ? SliverFillRemaining(
+                                            child: Center(
+                                              child: Padding(
+                                                padding: const EdgeInsets.all(
+                                                  24,
                                                 ),
-                                              )
-                                            : SliverList(
-                                                delegate: SliverChildBuilderDelegate(
-                                                  (context, index) {
-                                                    if (index < messageTiles.length) {
-                                                      return messageTiles[index];
-                                                    }
-                                                    return const Padding(
-                                                      padding: EdgeInsets.only(left: 12, bottom: 12),
-                                                      child: Align(
-                                                        alignment: Alignment.centerLeft,
-                                                        child: CinematicTypingDots(),
+                                                child: Column(
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
+                                                  children: [
+                                                    Text(
+                                                      _error!,
+                                                      textAlign:
+                                                          TextAlign.center,
+                                                    ),
+                                                    const SizedBox(height: 12),
+                                                    FilledButton(
+                                                      onPressed: _bootstrap,
+                                                      child: Text(
+                                                        t
+                                                            .dashboard
+                                                            .errors
+                                                            .retry,
                                                       ),
-                                                    );
-                                                  },
-                                                  childCount: listCount,
+                                                    ),
+                                                  ],
                                                 ),
                                               ),
+                                            ),
+                                          )
+                                        : SliverList(
+                                            delegate:
+                                                SliverChildBuilderDelegate((
+                                                  context,
+                                                  index,
+                                                ) {
+                                                  if (index <
+                                                      messageTiles.length) {
+                                                    return messageTiles[index];
+                                                  }
+                                                  return const Padding(
+                                                    padding: EdgeInsets.only(
+                                                      left: 12,
+                                                      bottom: 12,
+                                                    ),
+                                                    child: Align(
+                                                      alignment:
+                                                          Alignment.centerLeft,
+                                                      child:
+                                                          CinematicTypingDots(),
+                                                    ),
+                                                  );
+                                                }, childCount: listCount),
+                                          ),
                                   ),
                                 ],
                               ),
@@ -675,7 +766,8 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
                             ValueListenableBuilder<bool>(
                               valueListenable: _fabVisible,
                               builder: (context, show, _) {
-                                if (!show || _loading || _error != null) return const SizedBox.shrink();
+                                if (!show || _loading || _error != null)
+                                  return const SizedBox.shrink();
                                 return Positioned(
                                   right: 18,
                                   bottom: 18,
@@ -684,8 +776,11 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
                                     backgroundColor: chatTheme.amber,
                                     foregroundColor: Colors.black,
                                     elevation: 8,
-                                    onPressed: () => _scrollToEnd(animated: true),
-                                    child: const Icon(Icons.keyboard_arrow_down_rounded),
+                                    onPressed: () =>
+                                        _scrollToEnd(animated: true),
+                                    child: const Icon(
+                                      Icons.keyboard_arrow_down_rounded,
+                                    ),
                                   ),
                                 );
                               },
@@ -699,7 +794,11 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
                         children: [
                           CinematicComposerBar(
                             controller: _draft,
-                            enabled: !_sending && !_uploading && !_loading && _error == null,
+                            enabled:
+                                !_sending &&
+                                !_uploading &&
+                                !_loading &&
+                                _error == null,
                             reduceMotion: reduce,
                             hint: _editingMessageId != null
                                 ? t.chat.edit_mode_hint
@@ -717,7 +816,9 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
                             onDraftChanged: (s) {
                               setState(() {
                                 _phoneError =
-                                    chatTextLooksLikePhoneNumber(s.trim()) ? t.chat.error_phone : null;
+                                    chatTextLooksLikePhoneNumber(s.trim())
+                                    ? t.chat.error_phone
+                                    : null;
                               });
                               if (_editingMessageId != null) return;
                               _typingQuietTimer?.cancel();
@@ -726,14 +827,22 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
                                 return;
                               }
                               unawaited(_fireTyping(creds, repo, rt, true));
-                              _typingQuietTimer = Timer(const Duration(milliseconds: 1200), () {
-                                unawaited(_fireTyping(creds, repo, rt, false));
-                              });
+                              _typingQuietTimer = Timer(
+                                const Duration(milliseconds: 1200),
+                                () {
+                                  unawaited(
+                                    _fireTyping(creds, repo, rt, false),
+                                  );
+                                },
+                              );
                             },
                             onSend: () => _onSend(creds, repo, rt),
                           ),
                           Padding(
-                            padding: const EdgeInsets.only(right: 24, bottom: 88),
+                            padding: const EdgeInsets.only(
+                              right: 24,
+                              bottom: 88,
+                            ),
                             child: CinematicSendBurst(key: _burstKey),
                           ),
                         ],
@@ -774,7 +883,8 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
       final showFooter = next == null || next.userId != m.userId;
       final isMine = m.userId == creds.chatUserId;
       final createdUtc = DateTime.tryParse(m.createdAt);
-      final isReadByPeer = isMine &&
+      final isReadByPeer =
+          isMine &&
           !m.pending &&
           !m.failed &&
           _peerReadAt != null &&

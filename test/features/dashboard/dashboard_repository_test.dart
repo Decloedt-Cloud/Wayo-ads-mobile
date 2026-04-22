@@ -47,7 +47,10 @@ class _FakeRemote implements DashboardRemote {
   }
 
   @override
-  Future<List<CampaignSummary>> fetchCampaigns({int page = 1, int limit = 10}) async {
+  Future<List<CampaignSummary>> fetchCampaigns({
+    int page = 1,
+    int limit = 10,
+  }) async {
     return campaigns;
   }
 
@@ -55,7 +58,9 @@ class _FakeRemote implements DashboardRemote {
   Future<int> fetchUnreadCount() async => 0;
 
   @override
-  Future<List<NotificationItem>> fetchNotifications({bool unreadOnly = false}) async => const [];
+  Future<List<NotificationItem>> fetchNotifications({
+    bool unreadOnly = false,
+  }) async => const [];
 
   @override
   Future<void> markNotificationRead(String id) async {}
@@ -103,37 +108,40 @@ void main() {
     expect(last.campaigns, isNotEmpty);
   });
 
-  test('merges locked and spent from campaign stats when balance loads', () async {
-    final repo = DashboardRepositoryImpl(
-      remote: _FakeRemote(
-        campaigns: const [
-          CampaignSummary(
-            id: '1',
-            name: 'Running',
-            status: CampaignStatus.active,
-            platform: CampaignPlatform.youtube,
-            creatorsCount: 1,
-            lockedBudgetCents: 300,
-            spentBudgetCents: 50,
-          ),
-          CampaignSummary(
-            id: '2',
-            name: 'Done',
-            status: CampaignStatus.completed,
-            platform: CampaignPlatform.youtube,
-            creatorsCount: 2,
-            lockedBudgetCents: 0,
-            spentBudgetCents: 700,
-          ),
-        ],
-      ),
-      deduplicator: RequestDeduplicator(),
-      rateLimiter: RateLimiter(minInterval: Duration.zero),
-      secureStorage: SecureStorageService(SecureTokenStorage()),
-    );
-    final last = await repo.watchDashboard().first;
-    expect(last.balance?.available, 1);
-    expect(last.balance?.locked, 3.0);
-    expect(last.balance?.spent, 7.0);
-  });
+  test(
+    'merges locked and spent from campaign stats when balance loads',
+    () async {
+      final repo = DashboardRepositoryImpl(
+        remote: _FakeRemote(
+          campaigns: const [
+            CampaignSummary(
+              id: '1',
+              name: 'Running',
+              status: CampaignStatus.active,
+              platform: CampaignPlatform.youtube,
+              creatorsCount: 1,
+              lockedBudgetCents: 300,
+              spentBudgetCents: 50,
+            ),
+            CampaignSummary(
+              id: '2',
+              name: 'Done',
+              status: CampaignStatus.completed,
+              platform: CampaignPlatform.youtube,
+              creatorsCount: 2,
+              lockedBudgetCents: 0,
+              spentBudgetCents: 700,
+            ),
+          ],
+        ),
+        deduplicator: RequestDeduplicator(),
+        rateLimiter: RateLimiter(minInterval: Duration.zero),
+        secureStorage: SecureStorageService(SecureTokenStorage()),
+      );
+      final last = await repo.watchDashboard().first;
+      expect(last.balance?.available, 1);
+      expect(last.balance?.locked, 3.0);
+      expect(last.balance?.spent, 7.0);
+    },
+  );
 }

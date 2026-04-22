@@ -18,7 +18,8 @@ Dio wayoAdsDio(WayoAdsDioRef ref) {
   final storage = ref.watch(secureStorageProvider);
   final runtime = AuthRuntimeConfig.instance;
   final base = runtime.resolvedWayoAdsBaseUrl;
-  if (kDebugMode && runtime.resolvedWayoAdsBaseUrl == runtime.resolvedDioBaseUrl) {
+  if (kDebugMode &&
+      runtime.resolvedWayoAdsBaseUrl == runtime.resolvedDioBaseUrl) {
     debugPrint(
       '[Wayo] Wayo-ads API uses the same base as Auth. Set WAYO_ADS_API_BASE_URL in '
       'dart_defines.json if your Next.js API is on another host (e.g. http://10.0.2.2:3000).',

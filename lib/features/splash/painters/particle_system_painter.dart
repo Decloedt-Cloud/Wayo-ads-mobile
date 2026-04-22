@@ -39,11 +39,8 @@ class ParticleSystem {
       final origin = Offset(originX, center.dy);
 
       final angle = (i / count) * 2 * pi;
-      final target = center +
-          Offset(
-            cos(angle) * logoRadius,
-            sin(angle) * logoRadius,
-          );
+      final target =
+          center + Offset(cos(angle) * logoRadius, sin(angle) * logoRadius);
 
       final burstAngle = _rand.nextDouble() * 2 * pi;
       final burstMagnitude = 80 + _rand.nextDouble() * 140;

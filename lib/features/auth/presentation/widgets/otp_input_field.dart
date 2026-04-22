@@ -6,11 +6,7 @@ import '../../../../core/theme/app_text_styles.dart';
 
 /// Six single-digit fields with auto-advance and [onCompleted] when full.
 class OtpInputField extends StatefulWidget {
-  const OtpInputField({
-    super.key,
-    this.length = 6,
-    required this.onCompleted,
-  });
+  const OtpInputField({super.key, this.length = 6, required this.onCompleted});
 
   final int length;
   final ValueChanged<String> onCompleted;
@@ -79,10 +75,9 @@ class _OtpInputFieldState extends State<OtpInputField> {
             keyboardType: TextInputType.number,
             textAlign: TextAlign.center,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            style: AppTextStyles.headlineMedium(context).copyWith(
-              fontSize: 22,
-              fontWeight: FontWeight.w800,
-            ),
+            style: AppTextStyles.headlineMedium(
+              context,
+            ).copyWith(fontSize: 22, fontWeight: FontWeight.w800),
             decoration: InputDecoration(
               counterText: '',
               filled: true,
@@ -93,7 +88,10 @@ class _OtpInputFieldState extends State<OtpInputField> {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
-                borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+                borderSide: const BorderSide(
+                  color: AppColors.primary,
+                  width: 1.5,
+                ),
               ),
             ),
             onChanged: (v) => _onChanged(i, v),

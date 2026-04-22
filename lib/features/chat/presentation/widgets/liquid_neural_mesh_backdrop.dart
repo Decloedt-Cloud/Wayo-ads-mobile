@@ -11,7 +11,8 @@ class LiquidNeuralMeshBackdrop extends StatefulWidget {
   final Widget child;
 
   @override
-  State<LiquidNeuralMeshBackdrop> createState() => _LiquidNeuralMeshBackdropState();
+  State<LiquidNeuralMeshBackdrop> createState() =>
+      _LiquidNeuralMeshBackdropState();
 }
 
 class _LiquidNeuralMeshBackdropState extends State<LiquidNeuralMeshBackdrop>
@@ -37,10 +38,7 @@ class _LiquidNeuralMeshBackdropState extends State<LiquidNeuralMeshBackdrop>
       animation: _c,
       builder: (context, _) {
         return CustomPaint(
-          painter: _MeshPainter(
-            phase: _c.value,
-            theme: ln,
-          ),
+          painter: _MeshPainter(phase: _c.value, theme: ln),
           child: widget.child,
         );
       },
@@ -75,9 +73,24 @@ class _MeshPainter extends CustomPainter {
       canvas.drawCircle(center, r, p);
     }
 
-    radial(math.sin(t) * 80, math.cos(t * 0.9) * 70, size.shortestSide * 0.5, theme.meshPlasmaAlpha1);
-    radial(math.sin(t * 1.1 + 2) * 100, math.cos(t * 1.3) * 90, size.shortestSide * 0.38, theme.meshPlasmaAlpha2);
-    radial(math.sin(t * 0.85 + 4) * 60, math.cos(t * 1.05 + 1) * 120, size.shortestSide * 0.33, theme.meshPlasmaAlpha3);
+    radial(
+      math.sin(t) * 80,
+      math.cos(t * 0.9) * 70,
+      size.shortestSide * 0.5,
+      theme.meshPlasmaAlpha1,
+    );
+    radial(
+      math.sin(t * 1.1 + 2) * 100,
+      math.cos(t * 1.3) * 90,
+      size.shortestSide * 0.38,
+      theme.meshPlasmaAlpha2,
+    );
+    radial(
+      math.sin(t * 0.85 + 4) * 60,
+      math.cos(t * 1.05 + 1) * 120,
+      size.shortestSide * 0.33,
+      theme.meshPlasmaAlpha3,
+    );
 
     final grain = Paint()..color = theme.meshGrain;
     for (var i = 0; i < 80; i++) {

@@ -33,15 +33,19 @@ class _SignalTypingIndicatorState extends State<SignalTypingIndicator>
     if (MediaQuery.disableAnimationsOf(context)) {
       return const Padding(
         padding: EdgeInsets.symmetric(vertical: 6, horizontal: 12),
-        child: Text('…', style: TextStyle(color: AppColors.textMuted, fontSize: 13)),
+        child: Text(
+          '…',
+          style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+        ),
       );
     }
     return AnimatedBuilder(
       animation: _c,
       builder: (context, _) {
         final t = _c.value * math.pi * 2;
-        final accent =
-            widget.useLiquidPalette ? LiquidNeuralTheme.of(context).plasma : AppColors.primary;
+        final accent = widget.useLiquidPalette
+            ? LiquidNeuralTheme.of(context).plasma
+            : AppColors.primary;
         return Padding(
           padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 10),
           child: Row(
@@ -55,7 +59,9 @@ class _SignalTypingIndicatorState extends State<SignalTypingIndicator>
                 child: Transform.scale(
                   scale: scale,
                   child: Opacity(
-                    opacity: widget.useLiquidPalette ? (0.45 + wave * 0.5) : 1.0,
+                    opacity: widget.useLiquidPalette
+                        ? (0.45 + wave * 0.5)
+                        : 1.0,
                     child: Container(
                       width: 5,
                       height: 5 + wave * 5,

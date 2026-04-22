@@ -17,10 +17,10 @@ abstract final class MoneyFormatter {
   }
 
   static String _symbol(String c) => switch (c.toUpperCase()) {
-        'EUR' => '€',
-        'USD' => r'$',
-        'GBP' => '£',
-        'TND' => 'DT',
-        _ => c,
-      };
+    'EUR' => '€',
+    'USD' => r'$',
+    'GBP' => '£',
+    'TND' => 'DT',
+    _ => c,
+  };
 }

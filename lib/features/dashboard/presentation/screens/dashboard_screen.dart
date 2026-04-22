@@ -31,10 +31,10 @@ import '../widgets/error_banner.dart';
 import '../widgets/notification_center_popup.dart';
 
 String _moneyLocale(AppLocale l) => switch (l) {
-      AppLocale.en => 'en_US',
-      AppLocale.fr => 'fr_FR',
-      AppLocale.ar => 'ar_SA',
-    };
+  AppLocale.en => 'en_US',
+  AppLocale.fr => 'fr_FR',
+  AppLocale.ar => 'ar_SA',
+};
 
 /// Advertiser home — balance, campaigns, premium visuals.
 class DashboardScreen extends ConsumerWidget {
@@ -83,19 +83,24 @@ class DashboardScreen extends ConsumerWidget {
                         ErrorBanner(
                           message: t.dashboard.errors.load_balance,
                           retryLabel: t.dashboard.errors.retry,
-                          onRetry: () => ref.invalidate(dashboardStreamProvider),
+                          onRetry: () =>
+                              ref.invalidate(dashboardStreamProvider),
                         ),
                       if (snap.campaignsError != null)
                         ErrorBanner(
                           message: t.dashboard.errors.load_campaigns,
                           retryLabel: t.dashboard.errors.retry,
-                          onRetry: () => ref.invalidate(dashboardStreamProvider),
+                          onRetry: () =>
+                              ref.invalidate(dashboardStreamProvider),
                         ),
                       _BalanceSection(
                         snapshot: snap,
                         moneyLocale: _moneyLocale(locale),
                       ),
-                      _CampaignsSection(snapshot: snap, isLoading: async.isLoading),
+                      _CampaignsSection(
+                        snapshot: snap,
+                        isLoading: async.isLoading,
+                      ),
                     ],
                   );
                 },
@@ -110,7 +115,9 @@ class DashboardScreen extends ConsumerWidget {
   }
 
   static Future<void> _refresh(WidgetRef ref) async {
-    await ref.read(authNotifierProvider.notifier).refreshProfileFromAuthServer();
+    await ref
+        .read(authNotifierProvider.notifier)
+        .refreshProfileFromAuthServer();
     ref.invalidate(dashboardStreamProvider);
     await ref.read(dashboardStreamProvider.future);
     HapticFeedback.lightImpact();
@@ -142,7 +149,12 @@ class _HeaderState extends ConsumerState<_Header> {
     final unread = snap?.unreadCount ?? 0;
     final t = context.t;
     return Padding(
-      padding: EdgeInsets.fromLTRB(16, MediaQuery.paddingOf(context).top + 8, 16, 8),
+      padding: EdgeInsets.fromLTRB(
+        16,
+        MediaQuery.paddingOf(context).top + 8,
+        16,
+        8,
+      ),
       child: Row(
         children: [
           const WayoLogo(size: 36),
@@ -150,7 +162,9 @@ class _HeaderState extends ConsumerState<_Header> {
           Tooltip(
             message: t.dashboard.refresh,
             child: Material(
-              color: AppColors.surfaceElevatedOf(context).withValues(alpha: 0.5),
+              color: AppColors.surfaceElevatedOf(
+                context,
+              ).withValues(alpha: 0.5),
               shape: const CircleBorder(),
               child: InkWell(
                 customBorder: const CircleBorder(),
@@ -166,7 +180,10 @@ class _HeaderState extends ConsumerState<_Header> {
                             color: AppColors.primary,
                           ),
                         )
-                      : Icon(Icons.refresh_rounded, color: AppColors.textPrimaryOf(context)),
+                      : Icon(
+                          Icons.refresh_rounded,
+                          color: AppColors.textPrimaryOf(context),
+                        ),
                 ),
               ),
             ),
@@ -175,7 +192,9 @@ class _HeaderState extends ConsumerState<_Header> {
           Tooltip(
             message: t.app_settings.title,
             child: Material(
-              color: AppColors.surfaceElevatedOf(context).withValues(alpha: 0.5),
+              color: AppColors.surfaceElevatedOf(
+                context,
+              ).withValues(alpha: 0.5),
               shape: const CircleBorder(),
               child: InkWell(
                 customBorder: const CircleBorder(),
@@ -185,7 +204,10 @@ class _HeaderState extends ConsumerState<_Header> {
                 },
                 child: Padding(
                   padding: const EdgeInsets.all(10),
-                  child: Icon(Icons.tune_rounded, color: AppColors.textPrimaryOf(context)),
+                  child: Icon(
+                    Icons.tune_rounded,
+                    color: AppColors.textPrimaryOf(context),
+                  ),
                 ),
               ),
             ),
@@ -210,13 +232,19 @@ class _HeaderState extends ConsumerState<_Header> {
                 child: Stack(
                   clipBehavior: Clip.none,
                   children: [
-                    Icon(Icons.notifications_none_rounded, color: AppColors.textPrimaryOf(context)),
+                    Icon(
+                      Icons.notifications_none_rounded,
+                      color: AppColors.textPrimaryOf(context),
+                    ),
                     if (unread > 0)
                       Positioned(
                         right: -8,
                         top: -6,
                         child: Container(
-                          constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+                          constraints: const BoxConstraints(
+                            minWidth: 18,
+                            minHeight: 18,
+                          ),
                           padding: const EdgeInsets.symmetric(horizontal: 4),
                           decoration: BoxDecoration(
                             color: AppColors.error,
@@ -243,7 +271,9 @@ class _HeaderState extends ConsumerState<_Header> {
           Tooltip(
             message: t.home.logout,
             child: Material(
-              color: AppColors.surfaceElevatedOf(context).withValues(alpha: 0.5),
+              color: AppColors.surfaceElevatedOf(
+                context,
+              ).withValues(alpha: 0.5),
               shape: const CircleBorder(),
               child: InkWell(
                 customBorder: const CircleBorder(),
@@ -253,10 +283,7 @@ class _HeaderState extends ConsumerState<_Header> {
                 },
                 child: Padding(
                   padding: const EdgeInsets.all(10),
-                  child: AnimatedLogoutIcon(
-                    size: 22,
-                    color: AppColors.primary,
-                  ),
+                  child: AnimatedLogoutIcon(size: 22, color: AppColors.primary),
                 ),
               ),
             ),
@@ -297,7 +324,8 @@ class _AvatarBubble extends StatelessWidget {
                         fit: BoxFit.cover,
                         memCacheWidth: 120,
                         memCacheHeight: 120,
-                        errorWidget: (context, url, _) => _InitialsAvatar(initials: initials),
+                        errorWidget: (context, url, _) =>
+                            _InitialsAvatar(initials: initials),
                       )
                     : _InitialsAvatar(initials: initials),
               ),
@@ -313,7 +341,10 @@ class _AvatarBubble extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: AppColors.error,
                   shape: BoxShape.circle,
-                  border: Border.all(color: Theme.of(context).scaffoldBackgroundColor, width: 2),
+                  border: Border.all(
+                    color: Theme.of(context).scaffoldBackgroundColor,
+                    width: 2,
+                  ),
                 ),
               ),
             ),
@@ -373,9 +404,9 @@ class _WelcomeBlock extends ConsumerWidget {
           const SizedBox(height: 4),
           Text(
             roleLine,
-            style: AppTextStyles.caption(context).copyWith(
-              color: AppColors.textSecondaryOf(context),
-            ),
+            style: AppTextStyles.caption(
+              context,
+            ).copyWith(color: AppColors.textSecondaryOf(context)),
           ),
         ],
         const SizedBox(height: 6),
@@ -401,49 +432,52 @@ class _BalanceSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(t.dashboard.balance.title, style: AppTextStyles.headlineMedium(context)),
+          Text(
+            t.dashboard.balance.title,
+            style: AppTextStyles.headlineMedium(context),
+          ),
           const SizedBox(height: 12),
           Skeletonizer(
             enabled: loading,
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: _BalanceCard(
-                        label: t.dashboard.balance.available,
-                        amount: b?.available ?? 0,
-                        currency: b?.currency ?? 'EUR',
-                        moneyLocale: moneyLocale,
-                        accent: const Color(0xFF10B981),
-                        icon: Icons.account_balance_wallet_outlined,
-                        shimmer: loading,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: _BalanceCard(
-                        label: t.dashboard.balance.locked,
-                        amount: b?.locked ?? 0,
-                        currency: b?.currency ?? 'EUR',
-                        moneyLocale: moneyLocale,
-                        accent: AppColors.primary,
-                        icon: Icons.lock_outline_rounded,
-                        shimmer: loading,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: _BalanceCard(
-                        label: t.dashboard.balance.spent,
-                        amount: b?.spent ?? 0,
-                        currency: b?.currency ?? 'EUR',
-                        moneyLocale: moneyLocale,
-                        accent: const Color(0xFF8B5CF6),
-                        icon: Icons.trending_down_rounded,
-                        shimmer: loading,
-                      ),
-                    ),
-                  ],
+            child: Row(
+              children: [
+                Expanded(
+                  child: _BalanceCard(
+                    label: t.dashboard.balance.available,
+                    amount: b?.available ?? 0,
+                    currency: b?.currency ?? 'EUR',
+                    moneyLocale: moneyLocale,
+                    accent: const Color(0xFF10B981),
+                    icon: Icons.account_balance_wallet_outlined,
+                    shimmer: loading,
+                  ),
                 ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _BalanceCard(
+                    label: t.dashboard.balance.locked,
+                    amount: b?.locked ?? 0,
+                    currency: b?.currency ?? 'EUR',
+                    moneyLocale: moneyLocale,
+                    accent: AppColors.primary,
+                    icon: Icons.lock_outline_rounded,
+                    shimmer: loading,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _BalanceCard(
+                    label: t.dashboard.balance.spent,
+                    amount: b?.spent ?? 0,
+                    currency: b?.currency ?? 'EUR',
+                    moneyLocale: moneyLocale,
+                    accent: const Color(0xFF8B5CF6),
+                    icon: Icons.trending_down_rounded,
+                    shimmer: loading,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -473,7 +507,11 @@ class _BalanceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final text = MoneyFormatter.format(amount, currency: currency, locale: moneyLocale);
+    final text = MoneyFormatter.format(
+      amount,
+      currency: currency,
+      locale: moneyLocale,
+    );
     Widget card = ClipRRect(
       borderRadius: BorderRadius.circular(20),
       child: BackdropFilter(
@@ -481,7 +519,9 @@ class _BalanceCard extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.04),
+            color: (isDark ? Colors.white : Colors.black).withValues(
+              alpha: 0.04,
+            ),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(color: AppColors.borderOf(context)),
           ),
@@ -494,8 +534,8 @@ class _BalanceCard extends StatelessWidget {
                     child: Text(
                       label,
                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            color: AppColors.textSecondaryOf(context),
-                          ),
+                        color: AppColors.textSecondaryOf(context),
+                      ),
                     ),
                   ),
                   Container(
@@ -514,10 +554,10 @@ class _BalanceCard extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 15,
-                      color: AppColors.textPrimaryOf(context),
-                    ),
+                  fontWeight: FontWeight.w800,
+                  fontSize: 15,
+                  color: AppColors.textPrimaryOf(context),
+                ),
               ),
             ],
           ),
@@ -555,9 +595,15 @@ class _CampaignsSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(t.dashboard.campaigns.title, style: AppTextStyles.headlineMedium(context)),
+          Text(
+            t.dashboard.campaigns.title,
+            style: AppTextStyles.headlineMedium(context),
+          ),
           const SizedBox(height: 4),
-          Text(t.dashboard.campaigns.subtitle, style: AppTextStyles.bodyLarge(context)),
+          Text(
+            t.dashboard.campaigns.subtitle,
+            style: AppTextStyles.bodyLarge(context),
+          ),
           const SizedBox(height: 16),
           if (loading)
             Skeletonizer(
@@ -646,7 +692,8 @@ class _CampaignTile extends StatelessWidget {
                             fit: BoxFit.cover,
                             memCacheWidth: 120,
                             memCacheHeight: 120,
-                            errorWidget: (context, url, _) => _PlatformIcon(platform: c.platform),
+                            errorWidget: (context, url, _) =>
+                                _PlatformIcon(platform: c.platform),
                           )
                         : SizedBox(
                             width: 56,
@@ -664,7 +711,8 @@ class _CampaignTile extends StatelessWidget {
                         c.name,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(
                               fontWeight: FontWeight.w700,
                               color: AppColors.textPrimaryOf(context),
                             ),
@@ -673,7 +721,10 @@ class _CampaignTile extends StatelessWidget {
                       Row(
                         children: [
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
                             decoration: BoxDecoration(
                               color: statusColor.withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(20),
@@ -689,9 +740,12 @@ class _CampaignTile extends StatelessWidget {
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            t.dashboard.campaigns.creators
-                                .replaceAll('{count}', '${c.creatorsCount}'),
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            t.dashboard.campaigns.creators.replaceAll(
+                              '{count}',
+                              '${c.creatorsCount}',
+                            ),
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
                                   color: AppColors.textMutedOf(context),
                                 ),
                           ),
@@ -700,7 +754,10 @@ class _CampaignTile extends StatelessWidget {
                     ],
                   ),
                 ),
-                Icon(Icons.chevron_right_rounded, color: AppColors.textMutedOf(context)),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  color: AppColors.textMutedOf(context),
+                ),
               ],
             ),
           ),
@@ -747,9 +804,18 @@ class _EmptyCampaigns extends StatelessWidget {
     final t = context.t;
     return Column(
       children: [
-        Icon(Icons.folder_open_rounded, size: 72, color: AppColors.textMutedOf(context))
+        Icon(
+              Icons.folder_open_rounded,
+              size: 72,
+              color: AppColors.textMutedOf(context),
+            )
             .animate()
-            .moveY(begin: 6, end: 0, duration: 900.ms, curve: Curves.easeOutCubic)
+            .moveY(
+              begin: 6,
+              end: 0,
+              duration: 900.ms,
+              curve: Curves.easeOutCubic,
+            )
             .fadeIn(),
         const SizedBox(height: 12),
         Text(

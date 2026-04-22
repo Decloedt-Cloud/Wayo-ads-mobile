@@ -14,13 +14,16 @@ abstract interface class AdvertiserCampaignsRemote {
   Future<Map<String, dynamic>> fetchCampaignDetailJson(String id);
 }
 
-final class AdvertiserCampaignsRemoteDatasource implements AdvertiserCampaignsRemote {
+final class AdvertiserCampaignsRemoteDatasource
+    implements AdvertiserCampaignsRemote {
   AdvertiserCampaignsRemoteDatasource(this._dio);
 
   final Dio _dio;
 
   @override
-  Future<List<AdvertiserCampaign>> fetchAdvertiserCampaigns({int limit = 100}) async {
+  Future<List<AdvertiserCampaign>> fetchAdvertiserCampaigns({
+    int limit = 100,
+  }) async {
     final res = await _dio.get<Map<String, dynamic>>(
       AuthRuntimeConfig.instance.wayoAdsRequestPath(ApiEndpoints.campaigns),
       queryParameters: <String, dynamic>{
@@ -38,7 +41,9 @@ final class AdvertiserCampaignsRemoteDatasource implements AdvertiserCampaignsRe
     }
     dynamic list = data['campaigns'];
     if (list is! List<dynamic>) {
-      list = data['data'] is List<dynamic> ? data['data'] as List<dynamic> : const [];
+      list = data['data'] is List<dynamic>
+          ? data['data'] as List<dynamic>
+          : const [];
     }
     return list.map((e) => _parseListItem(e as Map<String, dynamic>)).toList();
   }
@@ -46,7 +51,9 @@ final class AdvertiserCampaignsRemoteDatasource implements AdvertiserCampaignsRe
   @override
   Future<Map<String, dynamic>> fetchCampaignDetailJson(String id) async {
     final res = await _dio.get<Map<String, dynamic>>(
-      AuthRuntimeConfig.instance.wayoAdsRequestPath(ApiEndpoints.campaignDetail(id)),
+      AuthRuntimeConfig.instance.wayoAdsRequestPath(
+        ApiEndpoints.campaignDetail(id),
+      ),
     );
     final data = res.data;
     if (data == null) {
@@ -64,11 +71,14 @@ final class AdvertiserCampaignsRemoteDatasource implements AdvertiserCampaignsRe
     final platformStr = _primaryPlatformKey(m);
     final total = _parseCents(m['totalBudgetCents'] ?? m['totalBudget']);
     final spent = _parseCents(m['spentBudget'] ?? m['spentBudgetCents']);
-    final remaining = _parseCents(m['remainingBudget'] ?? m['remainingBudgetCents']);
+    final remaining = _parseCents(
+      m['remainingBudget'] ?? m['remainingBudgetCents'],
+    );
     final locked = _parseCents(m['lockedBudget'] ?? m['lockedBudgetCents']);
     final cpc = _parseCents(m['cpcCents']);
     final views = (m['validViews'] as num?)?.toInt() ?? 0;
-    final creators = (m['approvedCreators'] as num?)?.toInt() ??
+    final creators =
+        (m['approvedCreators'] as num?)?.toInt() ??
         (m['approved_creators'] as num?)?.toInt() ??
         0;
     return AdvertiserCampaign(

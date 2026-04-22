@@ -19,7 +19,8 @@ abstract final class ApiEndpoints {
   static const String notificationsMarkRead = 'api/notifications/read';
 
   /// POST (no body) — [POST /api/notifications/mark-all-read](Wayo-ads).
-  static const String notificationsMarkAllRead = 'api/notifications/mark-all-read';
+  static const String notificationsMarkAllRead =
+      'api/notifications/mark-all-read';
 
   /// POST body: `{ "notificationId": "<id>" }` — [POST /api/notifications/dismiss](Wayo-ads).
   static const String notificationsDismiss = 'api/notifications/dismiss';

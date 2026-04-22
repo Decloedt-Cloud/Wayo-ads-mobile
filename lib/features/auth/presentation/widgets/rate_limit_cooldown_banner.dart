@@ -25,7 +25,8 @@ class RateLimitCooldownBanner extends StatefulWidget {
   final RateLimitBannerVariant variant;
 
   @override
-  State<RateLimitCooldownBanner> createState() => _RateLimitCooldownBannerState();
+  State<RateLimitCooldownBanner> createState() =>
+      _RateLimitCooldownBannerState();
 }
 
 class _RateLimitCooldownBannerState extends State<RateLimitCooldownBanner>
@@ -86,109 +87,119 @@ class _RateLimitCooldownBannerState extends State<RateLimitCooldownBanner>
     final progress = 1 - (_secondsLeft.clamp(0, total) / total);
     final title = switch (widget.variant) {
       RateLimitBannerVariant.login => t.login.rate_limit_title,
-      RateLimitBannerVariant.passwordReset => t.forgot_password.rate_limit_title,
+      RateLimitBannerVariant.passwordReset =>
+        t.forgot_password.rate_limit_title,
     };
     final body = switch (widget.variant) {
       RateLimitBannerVariant.login => t.login.rate_limit_body,
       RateLimitBannerVariant.passwordReset => t.forgot_password.rate_limit_body,
     };
     final remaining = switch (widget.variant) {
-      RateLimitBannerVariant.login =>
-        t.login.rate_limit_remaining(seconds: _secondsLeft),
+      RateLimitBannerVariant.login => t.login.rate_limit_remaining(
+        seconds: _secondsLeft,
+      ),
       RateLimitBannerVariant.passwordReset =>
         t.forgot_password.rate_limit_remaining(seconds: _secondsLeft),
     };
 
     return Material(
-      color: AppColors.surfaceElevatedOf(context),
-      borderRadius: BorderRadius.circular(18),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            SizedBox(
-              width: 92,
-              height: 92,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  AnimatedBuilder(
-                    animation: _spin,
-                    builder: (context, child) {
-                      return CustomPaint(
-                        size: const Size(92, 92),
-                        painter: _OrbitLoaderPainter(
-                          rotation: _spin.value * 2 * math.pi,
+          color: AppColors.surfaceElevatedOf(context),
+          borderRadius: BorderRadius.circular(18),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                SizedBox(
+                  width: 92,
+                  height: 92,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      AnimatedBuilder(
+                        animation: _spin,
+                        builder: (context, child) {
+                          return CustomPaint(
+                            size: const Size(92, 92),
+                            painter: _OrbitLoaderPainter(
+                              rotation: _spin.value * 2 * math.pi,
+                              color: AppColors.primary,
+                            ),
+                          );
+                        },
+                      ),
+                      SizedBox(
+                        width: 76,
+                        height: 76,
+                        child: CircularProgressIndicator(
+                          value: progress.clamp(0.02, 1.0),
+                          strokeWidth: 3.5,
+                          strokeCap: StrokeCap.round,
+                          backgroundColor: AppColors.primary.withValues(
+                            alpha: 0.12,
+                          ),
                           color: AppColors.primary,
                         ),
-                      );
-                    },
-                  ),
-                  SizedBox(
-                    width: 76,
-                    height: 76,
-                    child: CircularProgressIndicator(
-                      value: progress.clamp(0.02, 1.0),
-                      strokeWidth: 3.5,
-                      strokeCap: StrokeCap.round,
-                      backgroundColor: AppColors.primary.withValues(alpha: 0.12),
-                      color: AppColors.primary,
-                    ),
-                  ),
-                  Text(
-                    '$_secondsLeft',
-                    style: AppTextStyles.headlineMedium(context).copyWith(
-                      fontSize: 30,
-                      fontWeight: FontWeight.w900,
-                      color: AppColors.textPrimaryOf(context),
-                      height: 1,
-                    ),
-                  )
-                      .animate(key: ValueKey(_secondsLeft))
-                      .scale(
-                        duration: 200.ms,
-                        begin: const Offset(0.82, 0.82),
-                        end: const Offset(1, 1),
-                        curve: Curves.easeOutBack,
                       ),
-                ],
-              ),
+                      Text(
+                            '$_secondsLeft',
+                            style: AppTextStyles.headlineMedium(context)
+                                .copyWith(
+                                  fontSize: 30,
+                                  fontWeight: FontWeight.w900,
+                                  color: AppColors.textPrimaryOf(context),
+                                  height: 1,
+                                ),
+                          )
+                          .animate(key: ValueKey(_secondsLeft))
+                          .scale(
+                            duration: 200.ms,
+                            begin: const Offset(0.82, 0.82),
+                            end: const Offset(1, 1),
+                            curve: Curves.easeOutBack,
+                          ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: AppTextStyles.labelLarge(context).copyWith(
+                          color: AppColors.primary,
+                          letterSpacing: 0.6,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        body,
+                        style: AppTextStyles.bodyLarge(
+                          context,
+                        ).copyWith(fontSize: 14),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        remaining,
+                        style: AppTextStyles.bodyLarge(context).copyWith(
+                          fontSize: 13,
+                          color: AppColors.textSecondaryOf(context),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: AppTextStyles.labelLarge(context).copyWith(
-                      color: AppColors.primary,
-                      letterSpacing: 0.6,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    body,
-                    style: AppTextStyles.bodyLarge(context).copyWith(fontSize: 14),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    remaining,
-                    style: AppTextStyles.bodyLarge(context).copyWith(
-                      fontSize: 13,
-                      color: AppColors.textSecondaryOf(context),
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    ).animate().fadeIn(duration: 380.ms).slideY(begin: 0.06, curve: Curves.easeOutCubic);
+          ),
+        )
+        .animate()
+        .fadeIn(duration: 380.ms)
+        .slideY(begin: 0.06, curve: Curves.easeOutCubic);
   }
 }
 

@@ -15,10 +15,10 @@ import '../../domain/entities/campaign_status.dart';
 import '../widgets/error_banner.dart';
 
 String _moneyLocale(AppLocale l) => switch (l) {
-      AppLocale.en => 'en_US',
-      AppLocale.fr => 'fr_FR',
-      AppLocale.ar => 'ar_SA',
-    };
+  AppLocale.en => 'en_US',
+  AppLocale.fr => 'fr_FR',
+  AppLocale.ar => 'ar_SA',
+};
 
 /// Read-only campaign detail (Wayo-ads `GET /api/campaigns/:id`). No edit actions.
 class CampaignDetailScreen extends ConsumerWidget {
@@ -59,12 +59,14 @@ class CampaignDetailScreen extends ConsumerWidget {
             context.pop();
           },
         ),
-        title: Text(async.maybeWhen(
-          data: (m) => (m['title'] as String?)?.trim().isNotEmpty == true
-              ? m['title'] as String
-              : (title ?? t.advertiser_campaigns.detail.fallback_title),
-          orElse: () => title ?? t.advertiser_campaigns.detail.fallback_title,
-        )),
+        title: Text(
+          async.maybeWhen(
+            data: (m) => (m['title'] as String?)?.trim().isNotEmpty == true
+                ? m['title'] as String
+                : (title ?? t.advertiser_campaigns.detail.fallback_title),
+            orElse: () => title ?? t.advertiser_campaigns.detail.fallback_title,
+          ),
+        ),
       ),
       body: async.when(
         data: (json) => _DetailContent(
@@ -81,7 +83,8 @@ class CampaignDetailScreen extends ConsumerWidget {
             ErrorBanner(
               message: msg(e),
               retryLabel: t.dashboard.errors.retry,
-              onRetry: () => ref.invalidate(advertiserCampaignDetailProvider(id)),
+              onRetry: () =>
+                  ref.invalidate(advertiserCampaignDetailProvider(id)),
             ),
           ],
         ),
@@ -143,13 +146,19 @@ class _DetailContent extends StatelessWidget {
       return int.tryParse('$v') ?? 0;
     }
 
-    final total = f != null ? cents('totalBudgetCents') : rootCents('totalBudgetCents');
-    final remaining = f != null ? cents('remainingBudgetCents') : rootCents('remainingBudget');
-    final spent = f != null ? cents('spentBudgetCents') : rootCents('spentBudget');
+    final total = f != null
+        ? cents('totalBudgetCents')
+        : rootCents('totalBudgetCents');
+    final remaining = f != null
+        ? cents('remainingBudgetCents')
+        : rootCents('remainingBudget');
+    final spent = f != null
+        ? cents('spentBudgetCents')
+        : rootCents('spentBudget');
     // Prefer nested finance.cpcCents; otherwise root; default 0 (never "—" in UI).
     int cpcCents() {
       if (f != null) {
-        final c = f!['cpcCents'] ?? f!['cpc'];
+        final c = f['cpcCents'] ?? f['cpc'];
         if (c is int) {
           return c;
         }
@@ -162,7 +171,8 @@ class _DetailContent extends StatelessWidget {
 
     final cpcRoot = cpcCents();
 
-    final thumb = heroCoverUrl ??
+    final thumb =
+        heroCoverUrl ??
         _firstAssetUrl(json['assets']) ??
         (json['coverUrl'] as String?);
 
@@ -180,7 +190,8 @@ class _DetailContent extends StatelessWidget {
                     imageUrl: thumb,
                     fit: BoxFit.cover,
                     memCacheWidth: 800,
-                    errorWidget: (context, url, error) => _coverFallback(context),
+                    errorWidget: (context, url, error) =>
+                        _coverFallback(context),
                   )
                 : _coverFallback(context),
           ),
@@ -289,7 +300,11 @@ class _DetailContent extends StatelessWidget {
   Widget _coverFallback(BuildContext context) {
     return ColoredBox(
       color: AppColors.surfaceElevatedOf(context),
-      child: Icon(Icons.campaign_outlined, size: 48, color: AppColors.textMutedOf(context)),
+      child: Icon(
+        Icons.campaign_outlined,
+        size: 48,
+        color: AppColors.textMutedOf(context),
+      ),
     );
   }
 }
@@ -442,9 +457,13 @@ class _MetricsCard extends StatelessWidget {
       width: double.infinity,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(22),
-        color: AppColors.surfaceElevatedOf(context).withValues(alpha: isDark ? 0.92 : 0.98),
+        color: AppColors.surfaceElevatedOf(
+          context,
+        ).withValues(alpha: isDark ? 0.92 : 0.98),
         border: Border.all(
-          color: AppColors.borderOf(context).withValues(alpha: isDark ? 0.5 : 0.65),
+          color: AppColors.borderOf(
+            context,
+          ).withValues(alpha: isDark ? 0.5 : 0.65),
         ),
         boxShadow: [
           BoxShadow(
@@ -474,7 +493,9 @@ class _MetricDivider extends StatelessWidget {
       child: Divider(
         height: 1,
         thickness: 0.5,
-        color: AppColors.borderOf(context).withValues(alpha: isDark ? 0.4 : 0.7),
+        color: AppColors.borderOf(
+          context,
+        ).withValues(alpha: isDark ? 0.4 : 0.7),
       ),
     );
   }
@@ -525,9 +546,9 @@ class _MetricTile extends StatelessWidget {
           const SizedBox(width: 8),
           Text(
             value,
-            style: AppTextStyles.labelLarge(context).copyWith(
-              fontWeight: FontWeight.w800,
-            ),
+            style: AppTextStyles.labelLarge(
+              context,
+            ).copyWith(fontWeight: FontWeight.w800),
           ),
         ],
       ),

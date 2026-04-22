@@ -20,9 +20,13 @@ class _SequentialStatusAdapter implements HttpClientAdapter {
     callCount++;
     final idx = callCount - 1;
     final code = idx < statuses.length ? statuses[idx] : statuses.last;
-    return ResponseBody.fromString('{}', code, headers: {
-      Headers.contentTypeHeader: ['application/json'],
-    });
+    return ResponseBody.fromString(
+      '{}',
+      code,
+      headers: {
+        Headers.contentTypeHeader: ['application/json'],
+      },
+    );
   }
 
   @override
@@ -64,15 +68,18 @@ void main() {
       expect(await wayoRetryEvaluator(err, 1), isFalse);
     });
 
-    test('POST api/auth/login with 500 is not retryable (suffix rule)', () async {
-      final ro = RequestOptions(
-        baseUrl: 'https://example.com/',
-        path: 'api/auth/login',
-        method: 'POST',
-      );
-      final err = _badResponse(requestOptions: ro, status: 500);
-      expect(await wayoRetryEvaluator(err, 1), isFalse);
-    });
+    test(
+      'POST api/auth/login with 500 is not retryable (suffix rule)',
+      () async {
+        final ro = RequestOptions(
+          baseUrl: 'https://example.com/',
+          path: 'api/auth/login',
+          method: 'POST',
+        );
+        final err = _badResponse(requestOptions: ro, status: 500);
+        expect(await wayoRetryEvaluator(err, 1), isFalse);
+      },
+    );
   });
 
   group('RetryInterceptor + MockAdapter', () {
@@ -86,10 +93,7 @@ void main() {
       );
       dio.httpClientAdapter = adapter;
       dio.interceptors.add(buildWayoRetryInterceptor(dio));
-      await expectLater(
-        dio.get<Object>('/ping'),
-        throwsA(isA<DioException>()),
-      );
+      await expectLater(dio.get<Object>('/ping'), throwsA(isA<DioException>()));
       expect(adapter.callCount, 4);
     });
 
@@ -103,20 +107,13 @@ void main() {
       );
       dio.httpClientAdapter = adapter;
       dio.interceptors.add(buildWayoRetryInterceptor(dio));
-      await expectLater(
-        dio.get<Object>('/ping'),
-        throwsA(isA<DioException>()),
-      );
+      await expectLater(dio.get<Object>('/ping'), throwsA(isA<DioException>()));
       expect(adapter.callCount, 1);
     });
 
     test('503 then 200 succeeds after one retry', () async {
       final adapter = _SequentialStatusAdapter([503, 200]);
-      final dio = Dio(
-        BaseOptions(
-          baseUrl: 'https://example.com/',
-        ),
-      );
+      final dio = Dio(BaseOptions(baseUrl: 'https://example.com/'));
       dio.httpClientAdapter = adapter;
       dio.interceptors.add(buildWayoRetryInterceptor(dio));
       final res = await dio.get<Object>('/ping');

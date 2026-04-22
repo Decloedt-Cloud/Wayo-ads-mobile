@@ -5,21 +5,36 @@ void main() {
   group('AppSettingsPanelDesignStorage', () {
     test('fromStorage maps persisted values', () {
       expect(
-        AppSettingsPanelDesignStorage.fromStorage(AppSettingsPanelDesignStorage.storageValueCorporate),
+        AppSettingsPanelDesignStorage.fromStorage(
+          AppSettingsPanelDesignStorage.storageValueCorporate,
+        ),
         AppSettingsPanelDesign.minimalCorporate,
       );
-      expect(AppSettingsPanelDesignStorage.fromStorage(null), AppSettingsPanelDesign.glassLuxury);
-      expect(AppSettingsPanelDesignStorage.fromStorage(''), AppSettingsPanelDesign.glassLuxury);
-      expect(AppSettingsPanelDesignStorage.fromStorage('unknown'), AppSettingsPanelDesign.glassLuxury);
+      expect(
+        AppSettingsPanelDesignStorage.fromStorage(null),
+        AppSettingsPanelDesign.glassLuxury,
+      );
+      expect(
+        AppSettingsPanelDesignStorage.fromStorage(''),
+        AppSettingsPanelDesign.glassLuxury,
+      );
+      expect(
+        AppSettingsPanelDesignStorage.fromStorage('unknown'),
+        AppSettingsPanelDesign.glassLuxury,
+      );
     });
 
     test('storageValue round-trips', () {
       expect(
-        AppSettingsPanelDesignStorage.fromStorage(AppSettingsPanelDesign.glassLuxury.storageValue),
+        AppSettingsPanelDesignStorage.fromStorage(
+          AppSettingsPanelDesign.glassLuxury.storageValue,
+        ),
         AppSettingsPanelDesign.glassLuxury,
       );
       expect(
-        AppSettingsPanelDesignStorage.fromStorage(AppSettingsPanelDesign.minimalCorporate.storageValue),
+        AppSettingsPanelDesignStorage.fromStorage(
+          AppSettingsPanelDesign.minimalCorporate.storageValue,
+        ),
         AppSettingsPanelDesign.minimalCorporate,
       );
     });

@@ -58,16 +58,15 @@ class _NewPasswordScreenState extends ConsumerState<NewPasswordScreen> {
   Future<void> _submit(Translations t) async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
     if (_pwdCtrl.text != _confirmCtrl.text) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(t.validation.mismatch)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(t.validation.mismatch)));
       return;
     }
     HapticFeedback.mediumImpact();
-    await ref.read(forgotPasswordControllerProvider.notifier).resetPassword(
-          resetToken: widget.resetToken,
-          password: _pwdCtrl.text,
-        );
+    await ref
+        .read(forgotPasswordControllerProvider.notifier)
+        .resetPassword(resetToken: widget.resetToken, password: _pwdCtrl.text);
   }
 
   RateLimitedException? _rateLimit(ForgotPasswordState s) {
@@ -86,7 +85,10 @@ class _NewPasswordScreenState extends ConsumerState<NewPasswordScreen> {
       return const SizedBox.shrink();
     }
 
-    ref.listen<ForgotPasswordState>(forgotPasswordControllerProvider, (prev, next) {
+    ref.listen<ForgotPasswordState>(forgotPasswordControllerProvider, (
+      prev,
+      next,
+    ) {
       if (next is FpSuccess && prev is FpLoading) {
         ref.read(forgotPasswordControllerProvider.notifier).reset();
         ScaffoldMessenger.of(context).showSnackBar(
@@ -123,7 +125,9 @@ class _NewPasswordScreenState extends ConsumerState<NewPasswordScreen> {
                       const SizedBox(height: 8),
                       Text(
                         t.reset_password.title,
-                        style: AppTextStyles.displayLarge(context).copyWith(fontSize: 32, height: 1.1),
+                        style: AppTextStyles.displayLarge(
+                          context,
+                        ).copyWith(fontSize: 32, height: 1.1),
                       ).animate().fadeIn(duration: 450.ms),
                       const SizedBox(height: 12),
                       Text(
@@ -133,15 +137,21 @@ class _NewPasswordScreenState extends ConsumerState<NewPasswordScreen> {
                       AnimatedPadding(
                         duration: const Duration(milliseconds: 220),
                         curve: Curves.easeOut,
-                        padding: EdgeInsets.only(top: rate != null ? 16 : 0, bottom: rate != null ? 16 : 0),
+                        padding: EdgeInsets.only(
+                          top: rate != null ? 16 : 0,
+                          bottom: rate != null ? 16 : 0,
+                        ),
                         child: rate == null
                             ? const SizedBox.shrink()
                             : RateLimitCooldownBanner(
                                 key: ValueKey(rate.retryAfterSeconds),
                                 initialSeconds: rate.retryAfterSeconds,
                                 variant: RateLimitBannerVariant.passwordReset,
-                                onComplete: () =>
-                                    ref.read(forgotPasswordControllerProvider.notifier).clearError(),
+                                onComplete: () => ref
+                                    .read(
+                                      forgotPasswordControllerProvider.notifier,
+                                    )
+                                    .clearError(),
                               ),
                       ),
                       const SizedBox(height: 24),
@@ -153,15 +163,18 @@ class _NewPasswordScreenState extends ConsumerState<NewPasswordScreen> {
                             controller: _pwdCtrl,
                             obscureText: _obscure1,
                             validator: (v) => _validatePassword(v, t),
-                            style: AppTextStyles.bodyLarge(context).copyWith(
-                              color: AppColors.textPrimaryOf(context),
-                            ),
+                            style: AppTextStyles.bodyLarge(
+                              context,
+                            ).copyWith(color: AppColors.textPrimaryOf(context)),
                             decoration: InputDecoration(
                               labelText: t.reset_password.new_password,
                               suffixIcon: IconButton(
-                                onPressed: () => setState(() => _obscure1 = !_obscure1),
+                                onPressed: () =>
+                                    setState(() => _obscure1 = !_obscure1),
                                 icon: Icon(
-                                  _obscure1 ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                                  _obscure1
+                                      ? Icons.visibility_outlined
+                                      : Icons.visibility_off_outlined,
                                   color: AppColors.textSecondaryOf(context),
                                 ),
                               ),
@@ -180,15 +193,18 @@ class _NewPasswordScreenState extends ConsumerState<NewPasswordScreen> {
                             controller: _confirmCtrl,
                             obscureText: _obscure2,
                             validator: (v) => _validatePassword(v, t),
-                            style: AppTextStyles.bodyLarge(context).copyWith(
-                              color: AppColors.textPrimaryOf(context),
-                            ),
+                            style: AppTextStyles.bodyLarge(
+                              context,
+                            ).copyWith(color: AppColors.textPrimaryOf(context)),
                             decoration: InputDecoration(
                               labelText: t.reset_password.confirm_password,
                               suffixIcon: IconButton(
-                                onPressed: () => setState(() => _obscure2 = !_obscure2),
+                                onPressed: () =>
+                                    setState(() => _obscure2 = !_obscure2),
                                 icon: Icon(
-                                  _obscure2 ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                                  _obscure2
+                                      ? Icons.visibility_outlined
+                                      : Icons.visibility_off_outlined,
                                   color: AppColors.textSecondaryOf(context),
                                 ),
                               ),

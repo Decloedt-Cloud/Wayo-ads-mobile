@@ -16,7 +16,10 @@ import '../models/login_request.dart';
 part 'auth_repository.g.dart';
 
 abstract class IAuthRepository {
-  Future<Result<AuthResponse>> login({required String email, required String password});
+  Future<Result<AuthResponse>> login({
+    required String email,
+    required String password,
+  });
   Future<Result<AuthResponse>> loginWithGoogle({required String idToken});
   Future<Result<AuthResponse>> refresh({required String refreshToken});
 
@@ -37,14 +40,17 @@ IAuthRepository authRepository(AuthRepositoryRef ref) {
 // TODO(dev): confirm Auth_Wayo JSON error format and HTTP codes for login/logout edge cases.
 class AuthRepositoryImpl implements IAuthRepository {
   AuthRepositoryImpl({required Dio dio, required SecureStorageService storage})
-      : _dio = dio,
-        _storage = storage;
+    : _dio = dio,
+      _storage = storage;
 
   final Dio _dio;
   final SecureStorageService _storage;
 
   @override
-  Future<Result<AuthResponse>> login({required String email, required String password}) async {
+  Future<Result<AuthResponse>> login({
+    required String email,
+    required String password,
+  }) async {
     try {
       final path = AuthRuntimeConfig.instance.authHttpPath('login');
       final loginOptions = Options(extra: {kSkipAuthInjection: true})
@@ -77,7 +83,9 @@ class AuthRepositoryImpl implements IAuthRepository {
   }
 
   @override
-  Future<Result<AuthResponse>> loginWithGoogle({required String idToken}) async {
+  Future<Result<AuthResponse>> loginWithGoogle({
+    required String idToken,
+  }) async {
     try {
       final cfg = AuthRuntimeConfig.instance;
       final body = <String, dynamic>{

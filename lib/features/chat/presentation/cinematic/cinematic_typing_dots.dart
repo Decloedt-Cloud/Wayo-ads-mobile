@@ -11,7 +11,8 @@ class CinematicTypingDots extends StatefulWidget {
   State<CinematicTypingDots> createState() => _CinematicTypingDotsState();
 }
 
-class _CinematicTypingDotsState extends State<CinematicTypingDots> with TickerProviderStateMixin {
+class _CinematicTypingDotsState extends State<CinematicTypingDots>
+    with TickerProviderStateMixin {
   late final List<AnimationController> _c = List.generate(
     3,
     (i) => AnimationController(
@@ -46,10 +47,7 @@ class _CinematicTypingDotsState extends State<CinematicTypingDots> with TickerPr
       duration: const Duration(milliseconds: 200),
       curve: Curves.easeOutCubic,
       builder: (context, scale, child) {
-        return Transform.scale(
-          scale: scale,
-          child: child,
-        );
+        return Transform.scale(scale: scale, child: child);
       },
       child: Container(
         decoration: BoxDecoration(
@@ -62,11 +60,16 @@ class _CinematicTypingDotsState extends State<CinematicTypingDots> with TickerPr
             bottomLeft: Radius.circular(6),
             bottomRight: Radius.circular(22),
           ),
-          border: Border.all(color: ct.borderSoft.withValues(alpha: 0.5), width: 0.6),
+          border: Border.all(
+            color: ct.borderSoft.withValues(alpha: 0.5),
+            width: 0.6,
+          ),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(
-                alpha: Theme.of(context).brightness == Brightness.dark ? 0.22 : 0.04,
+                alpha: Theme.of(context).brightness == Brightness.dark
+                    ? 0.22
+                    : 0.04,
               ),
               blurRadius: 10,
               offset: const Offset(0, 3),

@@ -11,10 +11,7 @@ import 'session_expired_exception.dart';
 
 /// Injects Bearer tokens, refreshes once on 401, and queues concurrent refresh attempts.
 class AuthInterceptor extends QueuedInterceptor {
-  AuthInterceptor({
-    required this.storage,
-    required this.dio,
-  });
+  AuthInterceptor({required this.storage, required this.dio});
 
   final SecureStorageService storage;
   final Dio dio;
@@ -22,7 +19,10 @@ class AuthInterceptor extends QueuedInterceptor {
   static Completer<void>? _refreshCompleter;
 
   @override
-  Future<void> onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
+  Future<void> onRequest(
+    RequestOptions options,
+    RequestInterceptorHandler handler,
+  ) async {
     if (options.extra[kSkipAuthInjection] == true) {
       return handler.next(options);
     }
@@ -34,14 +34,18 @@ class AuthInterceptor extends QueuedInterceptor {
   }
 
   @override
-  Future<void> onError(DioException err, ErrorInterceptorHandler handler) async {
+  Future<void> onError(
+    DioException err,
+    ErrorInterceptorHandler handler,
+  ) async {
     final status = err.response?.statusCode;
     if (status != 401) {
       return handler.next(err);
     }
 
     final req = err.requestOptions;
-    if (req.extra[kSkipAuthInjection] == true || req.extra[kAuthRetry] == true) {
+    if (req.extra[kSkipAuthInjection] == true ||
+        req.extra[kAuthRetry] == true) {
       return handler.next(err);
     }
 

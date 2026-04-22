@@ -27,6 +27,7 @@ final class AuthRuntimeConfig {
   String _certPinPrimary = '';
   String _certPinBackup = '';
   String _wayoAdsApiBaseUrl = '';
+
   /// Optional override for chat-service HTTP base (Laravel). When set, replaces
   /// `apiBaseUrl` from Wayo-ads `/api/chat/token` — use `http://10.0.2.2:PORT` on Android emulator.
   String _chatServiceApiBaseUrl = '';
@@ -94,7 +95,9 @@ final class AuthRuntimeConfig {
     if (c.isNotEmpty) {
       return '$c/';
     }
-    final shared = _trimSlash(resolvedDioBaseUrl.replaceAll(RegExp(r'/+$'), ''));
+    final shared = _trimSlash(
+      resolvedDioBaseUrl.replaceAll(RegExp(r'/+$'), ''),
+    );
     if (shared.isNotEmpty) {
       return '$shared/';
     }
@@ -127,13 +130,16 @@ final class AuthRuntimeConfig {
     return '$b/$p';
   }
 
-  String get reverbHost => _reverbHost.isNotEmpty ? _reverbHost : AppConfig.reverbHost;
-  String get reverbKey => _reverbKey.isNotEmpty ? _reverbKey : AppConfig.reverbKey;
-  String get reverbPort => _reverbPort.isNotEmpty ? _reverbPort : AppConfig.reverbPort;
-  String get reverbScheme => _reverbScheme.isNotEmpty ? _reverbScheme : AppConfig.reverbScheme;
+  String get reverbHost =>
+      _reverbHost.isNotEmpty ? _reverbHost : AppConfig.reverbHost;
+  String get reverbKey =>
+      _reverbKey.isNotEmpty ? _reverbKey : AppConfig.reverbKey;
+  String get reverbPort =>
+      _reverbPort.isNotEmpty ? _reverbPort : AppConfig.reverbPort;
+  String get reverbScheme =>
+      _reverbScheme.isNotEmpty ? _reverbScheme : AppConfig.reverbScheme;
 
-  bool get reverbConfigured =>
-      reverbKey.isNotEmpty && reverbHost.isNotEmpty;
+  bool get reverbConfigured => reverbKey.isNotEmpty && reverbHost.isNotEmpty;
 
   /// Normalized base URL for Dio (trailing `/`).
   String get resolvedDioBaseUrl {
@@ -195,7 +201,10 @@ final class AuthRuntimeConfig {
       overlay('AUTH_WAYO_BASE_URL', (v) => i._authWayoBaseUrl = v);
       overlay('AUTH_BASE_URL', (v) => i._authBaseUrl = v);
       overlay('API_BASE_URL', (v) => i._apiBaseUrl = v);
-      overlay('AUTH_GOOGLE_SERVER_CLIENT_ID', (v) => i._googleServerClientId = v);
+      overlay(
+        'AUTH_GOOGLE_SERVER_CLIENT_ID',
+        (v) => i._googleServerClientId = v,
+      );
       overlay('WAYO_ADS_APP_KEY', (v) => i._wayoAdsAppKey = v);
       overlay('AUTH_APP_NAME', (v) => i._authAppName = v);
       overlay('SENTRY_DSN', (v) => i._overlaySentryDsn = v);
@@ -215,7 +224,9 @@ final class AuthRuntimeConfig {
       overlay('REVERB_SCHEME', (v) => i._reverbScheme = v);
     } catch (e, st) {
       if (kDebugMode) {
-        debugPrint('AuthRuntimeConfig: dart_defines.json asset missing or invalid ($e)');
+        debugPrint(
+          'AuthRuntimeConfig: dart_defines.json asset missing or invalid ($e)',
+        );
         debugPrintStack(stackTrace: st);
       }
     }

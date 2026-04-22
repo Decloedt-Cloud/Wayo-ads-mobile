@@ -52,12 +52,12 @@ class LiquidNeuralTheme {
   }
 
   List<BoxShadow> plasmaGlow({double blur = 28, double alpha = 0.22}) => [
-        BoxShadow(
-          color: plasma.withValues(alpha: alpha),
-          blurRadius: blur,
-          spreadRadius: 0,
-        ),
-      ];
+    BoxShadow(
+      color: plasma.withValues(alpha: alpha),
+      blurRadius: blur,
+      spreadRadius: 0,
+    ),
+  ];
 
   static const Color _plasma = Color(0xFFFF6B00);
   static const Color _amberGlow = Color(0xFFFF9A3C);

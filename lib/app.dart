@@ -33,8 +33,9 @@ class WayoAdsGoApp extends ConsumerWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      builder: (context, child) =>
-          RealtimeNotificationToastHost(child: child ?? const SizedBox.shrink()),
+      builder: (context, child) => RealtimeNotificationToastHost(
+        child: child ?? const SizedBox.shrink(),
+      ),
     );
   }
 }

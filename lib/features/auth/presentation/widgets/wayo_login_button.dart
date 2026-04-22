@@ -16,6 +16,7 @@ class WayoLoginButton extends StatefulWidget {
 
   final VoidCallback onPressed;
   final bool isLoading;
+
   /// When false, the button is non-interactive and shows no loading spinner (unless [isLoading]).
   final bool enabled;
   final String label;
@@ -38,8 +39,9 @@ class _WayoLoginButtonState extends State<WayoLoginButton> {
     final tapDisabled = widget.isLoading || !widget.enabled;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final rtl = Directionality.of(context) == TextDirection.rtl;
-    final arrowIcon =
-        rtl ? Icons.arrow_back_rounded : Icons.arrow_forward_rounded;
+    final arrowIcon = rtl
+        ? Icons.arrow_back_rounded
+        : Icons.arrow_forward_rounded;
 
     return Semantics(
       button: true,
@@ -90,7 +92,8 @@ class _WayoLoginButtonState extends State<WayoLoginButton> {
               child: Stack(
                 alignment: Alignment.center,
                 children: [
-                  if (!visuallyBusy) const Positioned.fill(child: _ShimmerSweep()),
+                  if (!visuallyBusy)
+                    const Positioned.fill(child: _ShimmerSweep()),
                   AnimatedSwitcher(
                     duration: const Duration(milliseconds: 200),
                     child: visuallyBusy
@@ -100,7 +103,9 @@ class _WayoLoginButtonState extends State<WayoLoginButton> {
                             width: 22,
                             child: CircularProgressIndicator(
                               strokeWidth: 2.4,
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
                             ),
                           )
                         : Row(
@@ -109,17 +114,12 @@ class _WayoLoginButtonState extends State<WayoLoginButton> {
                             children: [
                               Text(
                                 widget.label,
-                                style: AppTextStyles.labelLarge(context).copyWith(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                ),
+                                style: AppTextStyles.labelLarge(
+                                  context,
+                                ).copyWith(color: Colors.white, fontSize: 16),
                               ),
                               const SizedBox(width: 10),
-                              Icon(
-                                arrowIcon,
-                                color: Colors.white,
-                                size: 20,
-                              ),
+                              Icon(arrowIcon, color: Colors.white, size: 20),
                             ],
                           ),
                   ),
@@ -139,25 +139,26 @@ class _ShimmerSweep extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return IgnorePointer(
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.centerLeft,
-            end: Alignment.centerRight,
-            colors: [
-              Colors.white.withValues(alpha: 0),
-              Colors.white.withValues(alpha: 0.18),
-              Colors.white.withValues(alpha: 0),
-            ],
-            stops: const [0.3, 0.5, 0.7],
-          ),
-        ),
-      )
-          .animate(onPlay: (c) => c.repeat())
-          .shimmer(
-            duration: 2200.ms,
-            color: Colors.white.withValues(alpha: 0.15),
-          ),
+      child:
+          DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                    colors: [
+                      Colors.white.withValues(alpha: 0),
+                      Colors.white.withValues(alpha: 0.18),
+                      Colors.white.withValues(alpha: 0),
+                    ],
+                    stops: const [0.3, 0.5, 0.7],
+                  ),
+                ),
+              )
+              .animate(onPlay: (c) => c.repeat())
+              .shimmer(
+                duration: 2200.ms,
+                color: Colors.white.withValues(alpha: 0.15),
+              ),
     );
   }
 }

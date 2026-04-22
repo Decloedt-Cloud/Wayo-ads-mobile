@@ -25,7 +25,8 @@ class LiquidNeuralPlasmaAvatar extends StatefulWidget {
   final String imageUrl;
 
   @override
-  State<LiquidNeuralPlasmaAvatar> createState() => _LiquidNeuralPlasmaAvatarState();
+  State<LiquidNeuralPlasmaAvatar> createState() =>
+      _LiquidNeuralPlasmaAvatarState();
 }
 
 class _LiquidNeuralPlasmaAvatarState extends State<LiquidNeuralPlasmaAvatar>
@@ -75,16 +76,15 @@ class _LiquidNeuralPlasmaAvatarState extends State<LiquidNeuralPlasmaAvatar>
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               gradient: widget.imageUrl.isEmpty
-                  ? (widget.unread
-                      ? ln.sentBubble
-                      : ln.avatarMutedGradient)
+                  ? (widget.unread ? ln.sentBubble : ln.avatarMutedGradient)
                   : null,
               color: widget.imageUrl.isNotEmpty ? ln.avatarPhotoPlate : null,
               border: Border.all(color: ln.avatarBorder),
               boxShadow: [
                 BoxShadow(
-                  color: (widget.unread ? ln.plasma : Colors.black)
-                      .withValues(alpha: widget.unread ? 0.35 : (isDark ? 0.5 : 0.12)),
+                  color: (widget.unread ? ln.plasma : Colors.black).withValues(
+                    alpha: widget.unread ? 0.35 : (isDark ? 0.5 : 0.12),
+                  ),
                   blurRadius: widget.unread ? 16 : 10,
                 ),
               ],
@@ -100,7 +100,9 @@ class _LiquidNeuralPlasmaAvatarState extends State<LiquidNeuralPlasmaAvatar>
                       child: Text(
                         widget.letter,
                         style: TextStyle(
-                          color: widget.unread ? Colors.black54 : ln.textPrimary,
+                          color: widget.unread
+                              ? Colors.black54
+                              : ln.textPrimary,
                           fontWeight: FontWeight.w800,
                           fontSize: 17,
                         ),
@@ -135,7 +137,10 @@ class _LiquidNeuralPlasmaAvatarState extends State<LiquidNeuralPlasmaAvatar>
     );
 
     if (widget.heroTag != null) {
-      return Hero(tag: widget.heroTag!, child: Material(color: Colors.transparent, child: core));
+      return Hero(
+        tag: widget.heroTag!,
+        child: Material(color: Colors.transparent, child: core),
+      );
     }
     return core;
   }
@@ -193,7 +198,8 @@ class _PulsingOnlineDot extends StatefulWidget {
   State<_PulsingOnlineDot> createState() => _PulsingOnlineDotState();
 }
 
-class _PulsingOnlineDotState extends State<_PulsingOnlineDot> with SingleTickerProviderStateMixin {
+class _PulsingOnlineDotState extends State<_PulsingOnlineDot>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _c = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 1100),
@@ -233,7 +239,9 @@ class _PulsingOnlineDotState extends State<_PulsingOnlineDot> with SingleTickerP
               border: Border.all(color: widget.borderColor, width: 2),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF34C759).withValues(alpha: 0.45 + 0.2 * _c.value),
+                  color: const Color(
+                    0xFF34C759,
+                  ).withValues(alpha: 0.45 + 0.2 * _c.value),
                   blurRadius: 6 + 4 * _c.value,
                 ),
               ],

@@ -12,7 +12,9 @@ final appPrefsProvider = Provider<AppPrefs>(
 
 /// Initialized in [main] via [ProviderScope] override.
 final crashReporterProvider = Provider<CrashReporter>(
-  (_) => throw UnimplementedError('Override crashReporterProvider in ProviderScope'),
+  (_) => throw UnimplementedError(
+    'Override crashReporterProvider in ProviderScope',
+  ),
 );
 
 const _kThemeKey = 'app.theme_mode';
@@ -45,8 +47,9 @@ class ThemeModeNotifier extends StateNotifier<ThemeMode> {
   }
 }
 
-final themeModeProvider =
-    StateNotifierProvider<ThemeModeNotifier, ThemeMode>((ref) {
+final themeModeProvider = StateNotifierProvider<ThemeModeNotifier, ThemeMode>((
+  ref,
+) {
   return ThemeModeNotifier(ref.watch(appPrefsProvider));
 });
 

@@ -45,7 +45,9 @@ final dashboardRepositoryProvider = Provider<DashboardRepository>((ref) {
   );
 });
 
-final notificationsRepositoryProvider = Provider<NotificationsRepository>((ref) {
+final notificationsRepositoryProvider = Provider<NotificationsRepository>((
+  ref,
+) {
   return NotificationsRepository(
     remote: ref.watch(dashboardRemoteDatasourceProvider),
     deduplicator: ref.watch(requestDeduplicatorProvider),
@@ -61,8 +63,8 @@ final dashboardStreamProvider = StreamProvider<DashboardSnapshot>((ref) {
 
 final notificationsListProvider =
     FutureProvider.autoDispose<List<NotificationItem>>((ref) {
-  return ref.watch(notificationsRepositoryProvider).fetchNotifications();
-});
+      return ref.watch(notificationsRepositoryProvider).fetchNotifications();
+    });
 
 final wayoReverbRealtimeProvider = Provider<WayoReverbRealtime>((ref) {
   final rt = WayoReverbRealtime(ref.watch(secureStorageProvider));
@@ -76,7 +78,8 @@ final wayoReverbRealtimeProvider = Provider<WayoReverbRealtime>((ref) {
 bool _isNotificationCreatedRealtimeEvent(String name) {
   final n = name.toLowerCase();
   if (n == 'notification.created') return true;
-  if (n == 'usernotificationcreated' || n.endsWith('.usernotificationcreated')) {
+  if (n == 'usernotificationcreated' ||
+      n.endsWith('.usernotificationcreated')) {
     return true;
   }
   if (n.contains('notification') && n.contains('created')) return true;

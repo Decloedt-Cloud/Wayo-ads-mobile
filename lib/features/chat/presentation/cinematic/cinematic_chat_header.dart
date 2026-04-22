@@ -46,7 +46,6 @@ class CinematicHeaderController extends ChangeNotifier {
     }
     if (dirty) notifyListeners();
   }
-
 }
 
 /// ━━━ [2] HEADER SIGNATURE ━━━
@@ -78,8 +77,13 @@ class CinematicChatHeaderDelegate extends SliverPersistentHeaderDelegate {
   double get maxExtent => 108 + topSafeInset;
 
   @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
     final t = (shrinkOffset / (maxExtent - minExtent)).clamp(0.0, 1.0);
+
     /// Hauteur exacte imposée par le sliver (obligatoire pour [pinned: true] : sinon
     /// `layoutExtent` > `paintExtent` et le [CustomScrollView] ne layout plus).
     final extent = (maxExtent - shrinkOffset).clamp(minExtent, maxExtent);
@@ -104,7 +108,10 @@ class CinematicChatHeaderDelegate extends SliverPersistentHeaderDelegate {
                     children: [
                       IconButton(
                         onPressed: onBack,
-                        icon: Icon(Icons.arrow_back_ios_new_rounded, color: ct.textPrimary),
+                        icon: Icon(
+                          Icons.arrow_back_ios_new_rounded,
+                          color: ct.textPrimary,
+                        ),
                       ),
                       _AvatarRing(
                         letter: titleLetter,
@@ -176,7 +183,8 @@ class _AvatarRing extends StatefulWidget {
   State<_AvatarRing> createState() => _AvatarRingState();
 }
 
-class _AvatarRingState extends State<_AvatarRing> with SingleTickerProviderStateMixin {
+class _AvatarRingState extends State<_AvatarRing>
+    with SingleTickerProviderStateMixin {
   AnimationController? _spin;
 
   @override
@@ -193,7 +201,10 @@ class _AvatarRingState extends State<_AvatarRing> with SingleTickerProviderState
 
   void _syncSpin() {
     if (widget.typing) {
-      _spin ??= AnimationController(vsync: this, duration: const Duration(seconds: 60))..repeat();
+      _spin ??= AnimationController(
+        vsync: this,
+        duration: const Duration(seconds: 60),
+      )..repeat();
     } else {
       _spin?.dispose();
       _spin = null;
@@ -260,10 +271,7 @@ class _AvatarRingState extends State<_AvatarRing> with SingleTickerProviderState
     );
 
     final ring = _spin != null
-        ? RotationTransition(
-            turns: _spin!,
-            child: ringPaint,
-          )
+        ? RotationTransition(turns: _spin!, child: ringPaint)
         : ringPaint;
 
     return SizedBox(
@@ -318,7 +326,9 @@ class _StatusPill extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(99),
-        color: ct.textPrimary.withValues(alpha: Theme.of(context).brightness == Brightness.dark ? 0.06 : 0.08),
+        color: ct.textPrimary.withValues(
+          alpha: Theme.of(context).brightness == Brightness.dark ? 0.06 : 0.08,
+        ),
         border: Border.all(color: border.withValues(alpha: typing ? 0.9 : 0.4)),
         boxShadow: typing
             ? [
@@ -339,8 +349,8 @@ class _StatusPill extends StatelessWidget {
           color: typing
               ? ct.amber
               : online
-                  ? const Color(0xFF34C759)
-                  : ct.muted,
+              ? const Color(0xFF34C759)
+              : ct.muted,
         ),
       ),
     );

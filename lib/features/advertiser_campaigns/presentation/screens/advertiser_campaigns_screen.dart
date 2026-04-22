@@ -16,10 +16,10 @@ import '../providers/advertiser_campaigns_providers.dart';
 import '../widgets/advertiser_campaign_card.dart';
 
 String _moneyLocale(AppLocale l) => switch (l) {
-      AppLocale.en => 'en_US',
-      AppLocale.fr => 'fr_FR',
-      AppLocale.ar => 'ar_SA',
-    };
+  AppLocale.en => 'en_US',
+  AppLocale.fr => 'fr_FR',
+  AppLocale.ar => 'ar_SA',
+};
 
 /// Page background: premium dark gradient or light surfaces (not hard-coded black).
 BoxDecoration _campaignsPageBackground(BuildContext context) {
@@ -30,10 +30,7 @@ BoxDecoration _campaignsPageBackground(BuildContext context) {
       gradient: LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
-        colors: [
-          AppColors.black,
-          AppColors.surface,
-        ],
+        colors: [AppColors.black, AppColors.surface],
       ),
     );
   }
@@ -41,10 +38,7 @@ BoxDecoration _campaignsPageBackground(BuildContext context) {
     gradient: LinearGradient(
       begin: Alignment.topCenter,
       end: Alignment.bottomCenter,
-      colors: [
-        scheme.surface,
-        scheme.surfaceContainerLow,
-      ],
+      colors: [scheme.surface, scheme.surfaceContainerLow],
     ),
   );
 }
@@ -58,7 +52,8 @@ class AdvertiserCampaignsScreen extends ConsumerStatefulWidget {
       _AdvertiserCampaignsScreenState();
 }
 
-class _AdvertiserCampaignsScreenState extends ConsumerState<AdvertiserCampaignsScreen> {
+class _AdvertiserCampaignsScreenState
+    extends ConsumerState<AdvertiserCampaignsScreen> {
   final _searchCtrl = TextEditingController();
   Timer? _debounce;
 
@@ -96,8 +91,9 @@ class _AdvertiserCampaignsScreenState extends ConsumerState<AdvertiserCampaignsS
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      backgroundColor:
-          isDark ? Colors.transparent : Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: isDark
+          ? Colors.transparent
+          : Theme.of(context).scaffoldBackgroundColor,
       body: DecoratedBox(
         decoration: _campaignsPageBackground(context),
         child: SafeArea(
@@ -116,7 +112,10 @@ class _AdvertiserCampaignsScreenState extends ConsumerState<AdvertiserCampaignsS
               onClearSearch: () {
                 _debounce?.cancel();
                 _searchCtrl.clear();
-                ref.read(advertiserCampaignsSearchQueryProvider.notifier).state = '';
+                ref
+                        .read(advertiserCampaignsSearchQueryProvider.notifier)
+                        .state =
+                    '';
                 setState(() {});
               },
               onRefresh: () async {
@@ -245,7 +244,9 @@ class _Body extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = context.t;
-    final duration = reduceMotion ? Duration.zero : const Duration(milliseconds: 220);
+    final duration = reduceMotion
+        ? Duration.zero
+        : const Duration(milliseconds: 220);
     return RefreshIndicator(
       color: AppColors.primary,
       onRefresh: onRefresh,
@@ -290,34 +291,29 @@ class _Body extends StatelessWidget {
           if (filtered.isEmpty)
             SliverFillRemaining(
               hasScrollBody: false,
-              child: _EmptyState(
-                hasSearch: searchQ.trim().isNotEmpty,
-              ),
+              child: _EmptyState(hasSearch: searchQ.trim().isNotEmpty),
             )
           else
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 120),
               sliver: SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, i) {
-                    final c = filtered[i];
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: AdvertiserCampaignCard(
-                        campaign: c,
-                        moneyLocale: moneyLocale,
-                        onTap: () => context.push(
-                          '/campaigns/${c.id}',
-                          extra: <String, String?>{
-                            'coverUrl': c.coverUrl,
-                            'title': c.name,
-                          },
-                        ),
+                delegate: SliverChildBuilderDelegate((context, i) {
+                  final c = filtered[i];
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: AdvertiserCampaignCard(
+                      campaign: c,
+                      moneyLocale: moneyLocale,
+                      onTap: () => context.push(
+                        '/campaigns/${c.id}',
+                        extra: <String, String?>{
+                          'coverUrl': c.coverUrl,
+                          'title': c.name,
+                        },
                       ),
-                    );
-                  },
-                  childCount: filtered.length,
-                ),
+                    ),
+                  );
+                }, childCount: filtered.length),
               ),
             ),
         ],
@@ -424,9 +420,13 @@ class _TabPill extends StatelessWidget {
         curve: Curves.easeOutCubic,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(11),
-          color: selected ? AppColors.primary.withValues(alpha: 0.22) : Colors.transparent,
+          color: selected
+              ? AppColors.primary.withValues(alpha: 0.22)
+              : Colors.transparent,
           border: Border.all(
-            color: selected ? AppColors.primary.withValues(alpha: 0.55) : Colors.transparent,
+            color: selected
+                ? AppColors.primary.withValues(alpha: 0.55)
+                : Colors.transparent,
           ),
         ),
         child: Material(
@@ -493,7 +493,8 @@ class _CountChips extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           _Chip(
-            label: '${t.advertiser_campaigns.tabs.completed} (${counts.completed})',
+            label:
+                '${t.advertiser_campaigns.tabs.completed} (${counts.completed})',
             selected: selected == AdvertiserCampaignsTab.completed,
             duration: duration,
             onTap: () => onSelect(AdvertiserCampaignsTab.completed),
@@ -536,7 +537,9 @@ class _Chip extends StatelessWidget {
               style: TextStyle(
                 fontWeight: FontWeight.w600,
                 fontSize: 12,
-                color: selected ? AppColors.primary : AppColors.textSecondaryOf(context),
+                color: selected
+                    ? AppColors.primary
+                    : AppColors.textSecondaryOf(context),
               ),
             ),
           ),
@@ -570,12 +573,18 @@ class _SearchField extends StatelessWidget {
       decoration: InputDecoration(
         hintText: t.advertiser_campaigns.search_placeholder,
         hintStyle: TextStyle(color: AppColors.textMutedOf(context)),
-        prefixIcon: Icon(Icons.search_rounded, color: AppColors.textMutedOf(context)),
+        prefixIcon: Icon(
+          Icons.search_rounded,
+          color: AppColors.textMutedOf(context),
+        ),
         suffixIcon: hasText
             ? IconButton(
                 tooltip: MaterialLocalizations.of(context).deleteButtonTooltip,
                 onPressed: onClear,
-                icon: Icon(Icons.close_rounded, color: AppColors.textMutedOf(context)),
+                icon: Icon(
+                  Icons.close_rounded,
+                  color: AppColors.textMutedOf(context),
+                ),
               )
             : null,
         filled: true,
@@ -625,7 +634,9 @@ class _EmptyState extends StatelessWidget {
                   ? t.advertiser_campaigns.empty.search
                   : t.advertiser_campaigns.empty.none,
               textAlign: TextAlign.center,
-              style: AppTextStyles.headlineMedium(context).copyWith(fontSize: 20),
+              style: AppTextStyles.headlineMedium(
+                context,
+              ).copyWith(fontSize: 20),
             ),
             const SizedBox(height: 8),
             Text(

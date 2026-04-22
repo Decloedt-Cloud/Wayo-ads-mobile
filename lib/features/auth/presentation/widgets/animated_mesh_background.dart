@@ -119,9 +119,12 @@ class _MeshPainter extends CustomPainter {
 
     for (final blob in blobs) {
       final paint = Paint()
-        ..shader = RadialGradient(
-          colors: [blob.color, blob.color.withValues(alpha: 0)],
-        ).createShader(Rect.fromCircle(center: blob.center, radius: blob.radius))
+        ..shader =
+            RadialGradient(
+              colors: [blob.color, blob.color.withValues(alpha: 0)],
+            ).createShader(
+              Rect.fromCircle(center: blob.center, radius: blob.radius),
+            )
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 80);
       canvas.drawCircle(blob.center, blob.radius, paint);
     }

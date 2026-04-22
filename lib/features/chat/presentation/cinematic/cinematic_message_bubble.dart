@@ -40,6 +40,7 @@ class CinematicMessageBubble extends StatefulWidget {
   final bool showTimestampFooter;
   final String attachmentLabel;
   final String openPdfLabel;
+
   /// Conversation [display_avatar] résolu — repli si le message n’a pas `user.avatar`.
   final String peerAvatarUrl;
 
@@ -115,8 +116,8 @@ class _CinematicMessageBubbleState extends State<CinematicMessageBubble> {
       color: isMine
           ? null
           : (isDark
-              ? ct.surface.withValues(alpha: 0.92)
-              : Colors.white.withValues(alpha: 0.94)),
+                ? ct.surface.withValues(alpha: 0.92)
+                : Colors.white.withValues(alpha: 0.94)),
       border: Border.all(
         color: isMine
             ? Colors.white.withValues(alpha: 0.18)
@@ -154,13 +155,21 @@ class _CinematicMessageBubbleState extends State<CinematicMessageBubble> {
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxHeight: 220, maxWidth: 260),
+                constraints: const BoxConstraints(
+                  maxHeight: 220,
+                  maxWidth: 260,
+                ),
                 child: CachedNetworkImage(
                   imageUrl: mediaUrl,
                   fit: BoxFit.cover,
                   placeholder: (context, url) => SizedBox(
                     height: 120,
-                    child: Center(child: CircularProgressIndicator(strokeWidth: 2, color: ct.amber)),
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: ct.amber,
+                      ),
+                    ),
                   ),
                   errorWidget: (context, url, error) =>
                       Icon(Icons.broken_image_outlined, color: ct.muted),
@@ -187,13 +196,17 @@ class _CinematicMessageBubbleState extends State<CinematicMessageBubble> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            m.fileName?.trim().isNotEmpty == true ? m.fileName! : widget.attachmentLabel,
+                            m.fileName?.trim().isNotEmpty == true
+                                ? m.fileName!
+                                : widget.attachmentLabel,
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             style: GoogleFonts.inter(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
-                              color: isMine ? Colors.black.withValues(alpha: 0.9) : ct.textPrimary,
+                              color: isMine
+                                  ? Colors.black.withValues(alpha: 0.9)
+                                  : ct.textPrimary,
                             ),
                           ),
                           Text(
@@ -211,33 +224,34 @@ class _CinematicMessageBubbleState extends State<CinematicMessageBubble> {
               ),
             ),
           if (isFile && text.isNotEmpty) const SizedBox(height: 8),
-          if (text.isNotEmpty) ...(() {
-            final parsed = _parseReplyQuote(text);
-            return [
-              if (parsed.quote != null) ...[
-                _ReplyQuoteBlock(
-                  quote: parsed.quote!,
-                  isMine: isMine,
-                  amber: ct.amber,
-                  textPrimary: ct.textPrimary,
-                  muted: ct.muted,
-                  isDark: isDark,
-                ),
-                if (parsed.body.isNotEmpty) const SizedBox(height: 8),
-              ],
-              if (parsed.body.isNotEmpty)
-                Text(
-                  parsed.body,
-                  style: GoogleFonts.inter(
-                    fontSize: 15,
-                    height: 1.4,
-                    letterSpacing: -0.1,
-                    color: isMine ? Colors.white : ct.textPrimary,
-                    fontWeight: FontWeight.w400,
+          if (text.isNotEmpty)
+            ...(() {
+              final parsed = _parseReplyQuote(text);
+              return [
+                if (parsed.quote != null) ...[
+                  _ReplyQuoteBlock(
+                    quote: parsed.quote!,
+                    isMine: isMine,
+                    amber: ct.amber,
+                    textPrimary: ct.textPrimary,
+                    muted: ct.muted,
+                    isDark: isDark,
                   ),
-                ),
-            ];
-          }())
+                  if (parsed.body.isNotEmpty) const SizedBox(height: 8),
+                ],
+                if (parsed.body.isNotEmpty)
+                  Text(
+                    parsed.body,
+                    style: GoogleFonts.inter(
+                      fontSize: 15,
+                      height: 1.4,
+                      letterSpacing: -0.1,
+                      color: isMine ? Colors.white : ct.textPrimary,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+              ];
+            }())
           else if (!isImage && !isFile)
             Text(
               '[${m.type}]',
@@ -297,7 +311,9 @@ class _CinematicMessageBubbleState extends State<CinematicMessageBubble> {
 
     final bubbleCore = Container(
       margin: const EdgeInsets.symmetric(vertical: 3, horizontal: 12),
-      constraints: BoxConstraints(maxWidth: MediaQuery.sizeOf(context).width * 0.78),
+      constraints: BoxConstraints(
+        maxWidth: MediaQuery.sizeOf(context).width * 0.78,
+      ),
       decoration: bubbleDecoration,
       child: ClipRRect(
         borderRadius: bubbleRadius,
@@ -374,7 +390,9 @@ class _CinematicMessageBubbleState extends State<CinematicMessageBubble> {
         : const SizedBox.shrink();
 
     final column = Column(
-      crossAxisAlignment: isMine ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+      crossAxisAlignment: isMine
+          ? CrossAxisAlignment.end
+          : CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
         bubbleStack,
@@ -386,7 +404,11 @@ class _CinematicMessageBubbleState extends State<CinematicMessageBubble> {
         ),
         if (widget.showTimestampFooter)
           Padding(
-            padding: EdgeInsets.only(left: isMine ? 0 : 16, right: isMine ? 16 : 0, top: 2),
+            padding: EdgeInsets.only(
+              left: isMine ? 0 : 16,
+              right: isMine ? 16 : 0,
+              top: 2,
+            ),
             child: Text(
               _timeLabel(),
               style: GoogleFonts.inter(fontSize: 10, color: ct.muted),
@@ -397,7 +419,10 @@ class _CinematicMessageBubbleState extends State<CinematicMessageBubble> {
 
     final peerPhoto = !isMine
         ? () {
-            final fromMsg = resolveChatMediaUrl(m.user?.avatar, widget.apiBaseUrl);
+            final fromMsg = resolveChatMediaUrl(
+              m.user?.avatar,
+              widget.apiBaseUrl,
+            );
             if (fromMsg.isNotEmpty) return fromMsg;
             return widget.peerAvatarUrl;
           }()
@@ -412,13 +437,13 @@ class _CinematicMessageBubbleState extends State<CinematicMessageBubble> {
               if (peerPhoto.isNotEmpty)
                 Padding(
                   padding: const EdgeInsets.only(left: 4, right: 6, bottom: 6),
-                  child: _CinematicPeerBubbleAvatar(url: peerPhoto, diameter: 30),
+                  child: _CinematicPeerBubbleAvatar(
+                    url: peerPhoto,
+                    diameter: 30,
+                  ),
                 ),
               Flexible(
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: column,
-                ),
+                child: Align(alignment: Alignment.centerLeft, child: column),
               ),
             ],
           );
@@ -428,7 +453,12 @@ class _CinematicMessageBubbleState extends State<CinematicMessageBubble> {
     return aligned
         .animate()
         .fade(duration: 320.ms, curve: Curves.easeOut)
-        .slideY(begin: 24 / MediaQuery.sizeOf(context).height, end: 0, duration: 320.ms, curve: Curves.easeOutBack);
+        .slideY(
+          begin: 24 / MediaQuery.sizeOf(context).height,
+          end: 0,
+          duration: 320.ms,
+          curve: Curves.easeOutBack,
+        );
   }
 }
 
@@ -460,7 +490,10 @@ class _CinematicPeerBubbleAvatar extends StatelessWidget {
               child: SizedBox(
                 width: 14,
                 height: 14,
-                child: CircularProgressIndicator(strokeWidth: 1.5, color: ct.amber),
+                child: CircularProgressIndicator(
+                  strokeWidth: 1.5,
+                  color: ct.amber,
+                ),
               ),
             ),
           ),
@@ -689,17 +722,13 @@ class _ReplyQuoteBlock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final barColor = isMine
-        ? Colors.white.withValues(alpha: 0.95)
-        : amber;
+    final barColor = isMine ? Colors.white.withValues(alpha: 0.95) : amber;
     final surface = isMine
         ? Colors.white.withValues(alpha: 0.16)
         : (isDark
-            ? Colors.white.withValues(alpha: 0.05)
-            : amber.withValues(alpha: 0.08));
-    final labelColor = isMine
-        ? Colors.white.withValues(alpha: 0.95)
-        : amber;
+              ? Colors.white.withValues(alpha: 0.05)
+              : amber.withValues(alpha: 0.08));
+    final labelColor = isMine ? Colors.white.withValues(alpha: 0.95) : amber;
     final textColor = isMine
         ? Colors.white.withValues(alpha: 0.9)
         : textPrimary.withValues(alpha: 0.85);

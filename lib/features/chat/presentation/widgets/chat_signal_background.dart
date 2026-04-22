@@ -31,10 +31,7 @@ class _ChatSignalBackgroundState extends State<ChatSignalBackground>
   Widget build(BuildContext context) {
     final reduce = MediaQuery.disableAnimationsOf(context);
     if (reduce) {
-      return ColoredBox(
-        color: AppColors.black,
-        child: widget.child,
-      );
+      return ColoredBox(color: AppColors.black, child: widget.child);
     }
     return AnimatedBuilder(
       animation: _c,
@@ -60,16 +57,14 @@ class _SignalMeshPainter extends CustomPainter {
       ..shader = LinearGradient(
         begin: Alignment(-0.2 + phase * 0.15, -0.3),
         end: Alignment(1.1, 1.0),
-        colors: const [
-          Color(0xFF070707),
-          Color(0xFF0E0E0E),
-          Color(0xFF0A0A0A),
-        ],
+        colors: const [Color(0xFF070707), Color(0xFF0E0E0E), Color(0xFF0A0A0A)],
       ).createShader(rect);
     canvas.drawRect(rect, base);
 
     final glow = Paint()
-      ..color = AppColors.primary.withValues(alpha: 0.045 + 0.02 * math.sin(phase * math.pi * 2))
+      ..color = AppColors.primary.withValues(
+        alpha: 0.045 + 0.02 * math.sin(phase * math.pi * 2),
+      )
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 48);
 
     canvas.drawCircle(Offset(size.width * 0.82, size.height * 0.12), 120, glow);
@@ -82,13 +77,22 @@ class _SignalMeshPainter extends CustomPainter {
     const step = 42.0;
     final ox = phase * step * 0.35;
     for (double x = -step; x < size.width + step; x += step) {
-      canvas.drawLine(Offset(x + ox, 0), Offset(x + ox + step * 0.25, size.height), grid);
+      canvas.drawLine(
+        Offset(x + ox, 0),
+        Offset(x + ox + step * 0.25, size.height),
+        grid,
+      );
     }
     for (double y = -step; y < size.height + step; y += step) {
-      canvas.drawLine(Offset(0, y - ox * 0.2), Offset(size.width, y - ox * 0.2 + step * 0.15), grid);
+      canvas.drawLine(
+        Offset(0, y - ox * 0.2),
+        Offset(size.width, y - ox * 0.2 + step * 0.15),
+        grid,
+      );
     }
   }
 
   @override
-  bool shouldRepaint(covariant _SignalMeshPainter oldDelegate) => oldDelegate.phase != phase;
+  bool shouldRepaint(covariant _SignalMeshPainter oldDelegate) =>
+      oldDelegate.phase != phase;
 }

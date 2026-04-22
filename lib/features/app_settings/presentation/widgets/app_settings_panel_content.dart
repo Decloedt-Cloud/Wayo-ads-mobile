@@ -11,10 +11,7 @@ import '../../../auth/presentation/providers/current_account_providers.dart';
 import '../../../../i18n/strings.g.dart';
 
 class AppSettingsPanelContent extends ConsumerWidget {
-  const AppSettingsPanelContent({
-    super.key,
-    required this.onClose,
-  });
+  const AppSettingsPanelContent({super.key, required this.onClose});
 
   final VoidCallback onClose;
 
@@ -43,46 +40,58 @@ class AppSettingsPanelContent extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _SectionTitle(icon: Icons.palette_outlined, text: t.app_settings.section_appearance)
+                _SectionTitle(
+                      icon: Icons.palette_outlined,
+                      text: t.app_settings.section_appearance,
+                    )
                     .animate()
                     .fadeIn(duration: 220.ms)
                     .slideX(begin: 0.04, curve: Curves.easeOutCubic),
                 const SizedBox(height: 10),
                 _AppearanceCard(
-                  themeMode: themeMode,
-                  onThemeChanged: (m) {
-                    HapticFeedback.selectionClick();
-                    ref.read(themeModeProvider.notifier).set(m);
-                  },
-                ).animate().fadeIn(delay: 40.ms, duration: 260.ms).slideY(begin: 0.03),
+                      themeMode: themeMode,
+                      onThemeChanged: (m) {
+                        HapticFeedback.selectionClick();
+                        ref.read(themeModeProvider.notifier).set(m);
+                      },
+                    )
+                    .animate()
+                    .fadeIn(delay: 40.ms, duration: 260.ms)
+                    .slideY(begin: 0.03),
                 const SizedBox(height: 8),
                 Text(
                   t.app_settings.theme_hint,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        height: 1.35,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
+                    height: 1.35,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
                 const SizedBox(height: 22),
-                _SectionTitle(icon: Icons.language_rounded, text: t.app_settings.section_language)
+                _SectionTitle(
+                      icon: Icons.language_rounded,
+                      text: t.app_settings.section_language,
+                    )
                     .animate()
                     .fadeIn(delay: 60.ms, duration: 220.ms)
                     .slideX(begin: 0.04, curve: Curves.easeOutCubic),
                 const SizedBox(height: 10),
                 _LanguageColumn(
-                  selected: locale,
-                  onSelect: (l) {
-                    HapticFeedback.lightImpact();
-                    ref.read(localeProvider.notifier).set(l);
-                  },
-                ).animate().fadeIn(delay: 90.ms, duration: 260.ms).slideY(begin: 0.03),
+                      selected: locale,
+                      onSelect: (l) {
+                        HapticFeedback.lightImpact();
+                        ref.read(localeProvider.notifier).set(l);
+                      },
+                    )
+                    .animate()
+                    .fadeIn(delay: 90.ms, duration: 260.ms)
+                    .slideY(begin: 0.03),
                 const SizedBox(height: 8),
                 Text(
                   t.app_settings.language_hint,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        height: 1.35,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
+                    height: 1.35,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -123,12 +132,16 @@ class _GlassLuxuryShell extends StatelessWidget {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  scheme.surfaceContainerHigh.withValues(alpha: isDark ? 0.55 : 0.72),
+                  scheme.surfaceContainerHigh.withValues(
+                    alpha: isDark ? 0.55 : 0.72,
+                  ),
                   scheme.surface.withValues(alpha: isDark ? 0.42 : 0.88),
                 ],
               ),
               border: Border.all(
-                color: scheme.outlineVariant.withValues(alpha: isDark ? 0.35 : 0.5),
+                color: scheme.outlineVariant.withValues(
+                  alpha: isDark ? 0.35 : 0.5,
+                ),
               ),
               boxShadow: [
                 BoxShadow(
@@ -162,9 +175,9 @@ class _SectionTitle extends StatelessWidget {
         Text(
           text,
           style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.2,
-              ),
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.2,
+          ),
         ),
       ],
     );
@@ -204,14 +217,16 @@ class _PanelHeader extends StatelessWidget {
                 Text(
                   t.app_settings.title,
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -0.2,
-                      ),
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.2,
+                  ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   t.app_settings.subtitle,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(color: subtle, height: 1.2),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: subtle, height: 1.2),
                 ),
                 if (email != null && email!.isNotEmpty) ...[
                   const SizedBox(height: 6),
@@ -220,9 +235,9 @@ class _PanelHeader extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                          color: scheme.onSurfaceVariant,
-                          fontWeight: FontWeight.w500,
-                        ),
+                      color: scheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ],
               ],
@@ -252,10 +267,14 @@ class _Avatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final letter = label.isNotEmpty ? String.fromCharCode(label.runes.first).toUpperCase() : '?';
+    final letter = label.isNotEmpty
+        ? String.fromCharCode(label.runes.first).toUpperCase()
+        : '?';
     final raw = avatarUrl?.trim();
     final networkUrl =
-        raw != null && (raw.startsWith('http://') || raw.startsWith('https://')) ? raw : null;
+        raw != null && (raw.startsWith('http://') || raw.startsWith('https://'))
+        ? raw
+        : null;
 
     return Container(
       width: 52,
@@ -271,19 +290,32 @@ class _Avatar extends StatelessWidget {
               imageUrl: networkUrl,
               fit: BoxFit.cover,
               placeholder: (BuildContext context, String _) => Center(
-                child: Text(letter, style: TextStyle(fontWeight: FontWeight.w800, color: scheme.onPrimaryContainer)),
+                child: Text(
+                  letter,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w800,
+                    color: scheme.onPrimaryContainer,
+                  ),
+                ),
               ),
-              errorWidget: (BuildContext context, String _, Object error) => Center(
-                child: Text(letter, style: TextStyle(fontWeight: FontWeight.w800, color: scheme.onPrimaryContainer)),
-              ),
+              errorWidget: (BuildContext context, String _, Object error) =>
+                  Center(
+                    child: Text(
+                      letter,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        color: scheme.onPrimaryContainer,
+                      ),
+                    ),
+                  ),
             )
           : Center(
               child: Text(
                 letter,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      color: scheme.onPrimaryContainer,
-                    ),
+                  fontWeight: FontWeight.w800,
+                  color: scheme.onPrimaryContainer,
+                ),
               ),
             ),
     );
@@ -297,10 +329,9 @@ class _SegmentedThemeLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final style = Theme.of(context).textTheme.labelMedium?.copyWith(
-          fontWeight: FontWeight.w600,
-          height: 1.1,
-        );
+    final style = Theme.of(
+      context,
+    ).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w600, height: 1.1);
     return FittedBox(
       fit: BoxFit.scaleDown,
       alignment: Alignment.center,
@@ -342,7 +373,9 @@ class _AppearanceCard extends StatelessWidget {
               visualDensity: VisualDensity.compact,
               minimumSize: WidgetStateProperty.all(const Size(44, 44)),
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              padding: WidgetStateProperty.all(const EdgeInsets.symmetric(horizontal: 4, vertical: 8)),
+              padding: WidgetStateProperty.all(
+                const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+              ),
             ),
             segments: [
               ButtonSegment(
@@ -371,10 +404,7 @@ class _AppearanceCard extends StatelessWidget {
 }
 
 class _LanguageColumn extends StatelessWidget {
-  const _LanguageColumn({
-    required this.selected,
-    required this.onSelect,
-  });
+  const _LanguageColumn({required this.selected, required this.onSelect});
 
   final AppLocale selected;
   final ValueChanged<AppLocale> onSelect;
@@ -443,15 +473,17 @@ class _LanguageTile extends StatelessWidget {
                   height: 40,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: scheme.primaryContainer.withValues(alpha: selected ? 1 : 0.55),
+                    color: scheme.primaryContainer.withValues(
+                      alpha: selected ? 1 : 0.55,
+                    ),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
                     scriptHint,
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: scheme.onPrimaryContainer,
-                        ),
+                      fontWeight: FontWeight.w700,
+                      color: scheme.onPrimaryContainer,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -459,8 +491,8 @@ class _LanguageTile extends StatelessWidget {
                   child: Text(
                     label,
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
                 AnimatedOpacity(
@@ -469,7 +501,11 @@ class _LanguageTile extends StatelessWidget {
                   curve: Curves.easeOutCubic,
                   child: IgnorePointer(
                     ignoring: !selected,
-                    child: Icon(Icons.check_circle_rounded, color: scheme.primary, size: 22),
+                    child: Icon(
+                      Icons.check_circle_rounded,
+                      color: scheme.primary,
+                      size: 22,
+                    ),
                   ),
                 ),
               ],

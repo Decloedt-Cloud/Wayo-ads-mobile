@@ -24,5 +24,13 @@ final class NotificationItem extends Equatable {
   final String? type;
 
   @override
-  List<Object?> get props => [id, title, body, isRead, createdAt, priority, type];
+  List<Object?> get props => [
+    id,
+    title,
+    body,
+    isRead,
+    createdAt,
+    priority,
+    type,
+  ];
 }

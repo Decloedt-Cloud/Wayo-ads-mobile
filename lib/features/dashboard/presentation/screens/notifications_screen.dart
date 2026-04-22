@@ -90,7 +90,9 @@ class NotificationsScreen extends ConsumerWidget {
                   onTap: () async {
                     HapticFeedback.lightImpact();
                     if (!n.isRead) {
-                      await ref.read(notificationsRepositoryProvider).markRead(n.id);
+                      await ref
+                          .read(notificationsRepositoryProvider)
+                          .markRead(n.id);
                       ref.invalidate(notificationsListProvider);
                       ref.invalidate(dashboardStreamProvider);
                     }
@@ -100,17 +102,17 @@ class NotificationsScreen extends ConsumerWidget {
             );
           },
           loading: () => const Skeletonizer(
-                enabled: true,
-                child: Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Column(
-                    children: [
-                      ListTile(title: Text('x'), subtitle: Text('y')),
-                      ListTile(title: Text('x'), subtitle: Text('y')),
-                    ],
-                  ),
-                ),
+            enabled: true,
+            child: Padding(
+              padding: EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  ListTile(title: Text('x'), subtitle: Text('y')),
+                  ListTile(title: Text('x'), subtitle: Text('y')),
+                ],
               ),
+            ),
+          ),
           error: (e, _) => Center(child: Text('$e')),
         ),
       ),
@@ -172,7 +174,9 @@ class _NotificationTile extends StatelessWidget {
                     Text(
                       item.title,
                       style: TextStyle(
-                        fontWeight: item.isRead ? FontWeight.w600 : FontWeight.w800,
+                        fontWeight: item.isRead
+                            ? FontWeight.w600
+                            : FontWeight.w800,
                         color: AppColors.textPrimaryOf(context),
                         fontSize: 15,
                       ),

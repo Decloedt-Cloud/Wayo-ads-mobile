@@ -45,7 +45,9 @@ class ChatComposerBar extends StatelessWidget {
                 padding: const EdgeInsets.only(bottom: 6, left: 4),
                 child: Text(
                   errorText!,
-                  style: AppTextStyles.caption(context).copyWith(color: AppColors.error),
+                  style: AppTextStyles.caption(
+                    context,
+                  ).copyWith(color: AppColors.error),
                 ),
               ),
             Row(
@@ -94,7 +96,10 @@ class ChatComposerBar extends StatelessWidget {
                       fillColor: liquidNeural
                           ? ln!.ghostGlassStrong
                           : const Color(0xFF141414),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(22),
                         borderSide: BorderSide(
@@ -122,7 +127,10 @@ class ChatComposerBar extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 10),
-                _SendFab(onTap: enabled ? onSend : null, liquidNeural: liquidNeural),
+                _SendFab(
+                  onTap: enabled ? onSend : null,
+                  liquidNeural: liquidNeural,
+                ),
               ],
             ),
           ],
@@ -148,7 +156,9 @@ class _SendFab extends StatelessWidget {
     final child = Material(
       color: fill,
       shape: const CircleBorder(),
-      shadowColor: liquidNeural && active ? ln!.plasma.withValues(alpha: 0.45) : null,
+      shadowColor: liquidNeural && active
+          ? ln!.plasma.withValues(alpha: 0.45)
+          : null,
       elevation: liquidNeural && active ? 8 : 0,
       child: InkWell(
         customBorder: const CircleBorder(),

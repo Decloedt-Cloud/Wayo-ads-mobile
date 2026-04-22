@@ -52,18 +52,18 @@ final class AdvertiserCampaign extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        name,
-        status,
-        platform,
-        totalBudgetCents,
-        remainingBudgetCents,
-        spentBudgetCents,
-        lockedBudgetCents,
-        cpcCents,
-        validViews,
-        approvedCreators,
-        coverUrl,
-        currency,
-      ];
+    id,
+    name,
+    status,
+    platform,
+    totalBudgetCents,
+    remainingBudgetCents,
+    spentBudgetCents,
+    lockedBudgetCents,
+    cpcCents,
+    validViews,
+    approvedCreators,
+    coverUrl,
+    currency,
+  ];
 }

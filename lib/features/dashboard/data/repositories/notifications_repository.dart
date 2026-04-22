@@ -9,9 +9,9 @@ final class NotificationsRepository {
     required DashboardRemote remote,
     required RequestDeduplicator deduplicator,
     required RateLimiter rateLimiter,
-  })  : _remote = remote,
-        _deduplicator = deduplicator,
-        _rate = rateLimiter;
+  }) : _remote = remote,
+       _deduplicator = deduplicator,
+       _rate = rateLimiter;
 
   final DashboardRemote _remote;
   final RequestDeduplicator _deduplicator;
@@ -21,7 +21,9 @@ final class NotificationsRepository {
   ///
   /// We **do not** throttle with an empty return: Reverb can invalidate several times
   /// in a row; returning `[]` would clear the UI and look like "realtime is broken".
-  Future<List<NotificationItem>> fetchNotifications({bool unreadOnly = false}) async {
+  Future<List<NotificationItem>> fetchNotifications({
+    bool unreadOnly = false,
+  }) async {
     if (_rate.canCall('notifications_list')) {
       _rate.mark('notifications_list');
     }

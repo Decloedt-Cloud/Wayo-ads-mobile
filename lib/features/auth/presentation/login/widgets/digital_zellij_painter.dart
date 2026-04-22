@@ -54,8 +54,17 @@ List<ZellijCell> buildZellijCells(Size size) {
     }
   }
 
-  sprinkle(Rect.fromLTWH(size.width * 0.52, -20, size.width * 0.5, size.height * 0.48));
-  sprinkle(Rect.fromLTWH(-12, size.height * 0.56, size.width * 0.46, size.height * 0.48));
+  sprinkle(
+    Rect.fromLTWH(size.width * 0.52, -20, size.width * 0.5, size.height * 0.48),
+  );
+  sprinkle(
+    Rect.fromLTWH(
+      -12,
+      size.height * 0.56,
+      size.width * 0.46,
+      size.height * 0.48,
+    ),
+  );
 
   return cells;
 }
@@ -93,24 +102,38 @@ class DigitalZellijPainter extends CustomPainter {
       final p = c.center.translate(ox, oy);
 
       final breath = 0.45 + 0.55 * math.sin(t * _kTau * 0.35 + c.phase);
-      final chain = ((c.seed + t * 5) % 1.0 < 0.04 && chainWave > 0.35) ? 1.35 : 1.0;
+      final chain = ((c.seed + t * 5) % 1.0 < 0.04 && chainWave > 0.35)
+          ? 1.35
+          : 1.0;
       final a = (0.045 + 0.11 * breath * chain * vis).clamp(0.03, maxA);
 
       if (c.kind == 0) {
         base.color = AppColors.primary.withValues(alpha: a);
         canvas.drawRRect(
           RRect.fromRectAndRadius(
-            Rect.fromCenter(center: p, width: c.halfExtent * 2, height: c.halfExtent * 2),
+            Rect.fromCenter(
+              center: p,
+              width: c.halfExtent * 2,
+              height: c.halfExtent * 2,
+            ),
             const Radius.circular(2.5),
           ),
           base,
         );
       } else if (c.kind == 1) {
-        final strokeColor = isLight ? AppColors.primaryDeep : AppColors.primarySoft;
-        stroke.color = strokeColor.withValues(alpha: a * (isLight ? 1.05 : 0.95));
+        final strokeColor = isLight
+            ? AppColors.primaryDeep
+            : AppColors.primarySoft;
+        stroke.color = strokeColor.withValues(
+          alpha: a * (isLight ? 1.05 : 0.95),
+        );
         canvas.drawRRect(
           RRect.fromRectAndRadius(
-            Rect.fromCenter(center: p, width: c.halfExtent * 2, height: c.halfExtent * 2),
+            Rect.fromCenter(
+              center: p,
+              width: c.halfExtent * 2,
+              height: c.halfExtent * 2,
+            ),
             const Radius.circular(2),
           ),
           stroke,
@@ -122,7 +145,8 @@ class DigitalZellijPainter extends CustomPainter {
           ..lineTo(p.dx, p.dy + c.halfExtent * 1.15)
           ..lineTo(p.dx - c.halfExtent * 1.15, p.dy)
           ..close();
-        stroke.color = (isLight ? AppColors.primaryDeep : AppColors.primary).withValues(alpha: a * 1.1);
+        stroke.color = (isLight ? AppColors.primaryDeep : AppColors.primary)
+            .withValues(alpha: a * 1.1);
         canvas.drawPath(path, stroke);
       }
     }

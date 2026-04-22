@@ -17,20 +17,20 @@ class LiquidNeuralBlobClipper extends CustomClipper<Path> {
     final tr = 22.0 + rnd.nextDouble() * 10;
     final br = 16.0 + rnd.nextDouble() * 8;
     final bl = 20.0 + rnd.nextDouble() * 8;
-    return Path()
-      ..addRRect(
-        RRect.fromRectAndCorners(
-          Rect.fromLTWH(0, 0, size.width, size.height),
-          topLeft: Radius.circular(tl),
-          topRight: Radius.circular(tr),
-          bottomRight: Radius.circular(br),
-          bottomLeft: Radius.circular(bl),
-        ),
-      );
+    return Path()..addRRect(
+      RRect.fromRectAndCorners(
+        Rect.fromLTWH(0, 0, size.width, size.height),
+        topLeft: Radius.circular(tl),
+        topRight: Radius.circular(tr),
+        bottomRight: Radius.circular(br),
+        bottomLeft: Radius.circular(bl),
+      ),
+    );
   }
 
   @override
-  bool shouldReclip(covariant LiquidNeuralBlobClipper oldClipper) => oldClipper.seed != seed;
+  bool shouldReclip(covariant LiquidNeuralBlobClipper oldClipper) =>
+      oldClipper.seed != seed;
 }
 
 /// Expanding ring pulse (neural pulse signature). Re-run when [pulseToken] increments.
@@ -90,7 +90,9 @@ class _LiquidNeuralPulseLayerState extends State<LiquidNeuralPulseLayer>
             child: AnimatedBuilder(
               animation: _c,
               builder: (context, _) {
-                if (_c.value == 0 && widget.pulseToken == 0) return const SizedBox.shrink();
+                if (_c.value == 0 && widget.pulseToken == 0) {
+                  return const SizedBox.shrink();
+                }
                 return CustomPaint(
                   painter: _PulsePainter(
                     progress: Curves.easeOut.transform(_c.value),
@@ -114,7 +116,9 @@ class _PulsePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    if (progress <= 0) return;
+    if (progress <= 0) {
+      return;
+    }
     final cx = size.width * 0.22;
     final cy = size.height * 0.5;
     final maxR = size.shortestSide * 0.95;

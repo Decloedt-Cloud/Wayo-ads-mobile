@@ -86,14 +86,14 @@ class AppUser {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'email': email,
-        if (name != null) 'name': name,
-        if (avatar != null) 'avatar': avatar,
-        'wayo_ads_role': wayoAdsRole.name,
-        if (_apiRoleForWayoAds() != null) 'app_role': _apiRoleForWayoAds(),
-        'app_roles': appRoles.map((e) => e.toJson()).toList(),
-      };
+    'id': id,
+    'email': email,
+    if (name != null) 'name': name,
+    if (avatar != null) 'avatar': avatar,
+    'wayo_ads_role': wayoAdsRole.name,
+    if (_apiRoleForWayoAds() != null) 'app_role': _apiRoleForWayoAds(),
+    'app_roles': appRoles.map((e) => e.toJson()).toList(),
+  };
 
   /// Persisted shape compatible with Auth_Wayo (`CREATOR` / `ADVERTISER`).
   String? _apiRoleForWayoAds() {

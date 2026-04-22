@@ -60,10 +60,11 @@ jobs:
       # ── 7. Format check ──────────────────────────────────────
       - name: Check formatting
         run: |
-          dart format --output=none --set-exit-if-changed . \
-            --exclude="**/*.g.dart" \
-            --exclude="**/*.freezed.dart" \
-            --exclude="**/*.gen.dart"
+          find lib test -name "*.dart" \
+            ! -name "*.g.dart" \
+            ! -name "*.freezed.dart" \
+            ! -name "*.gen.dart" \
+            | xargs dart format --output=none --set-exit-if-changed
 
       # ── 8. Analyze ───────────────────────────────────────────
       - name: Flutter analyze

@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/connectivity/connectivity_providers.dart';
 import '../../data/chat_repository.dart';
 import '../../data/chat_realtime_service.dart';
 import '../../domain/chat_conversation.dart';
@@ -10,7 +11,10 @@ import '../../domain/chat_message.dart';
 final chatRealtimeServiceProvider = Provider.autoDispose<ChatRealtimeService>((
   ref,
 ) {
-  final s = ChatRealtimeService();
+  final connectivity = ref.read(connectivityServiceProvider);
+  final s = ChatRealtimeService(
+    onConnectionError: connectivity.reportRemoteFailure,
+  );
   ref.keepAlive();
   ref.onDispose(s.dispose);
   return s;

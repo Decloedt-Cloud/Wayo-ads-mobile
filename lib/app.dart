@@ -8,6 +8,7 @@ import 'core/ui/root_scaffold_messenger_key.dart';
 import 'features/dashboard/presentation/widgets/realtime_notification_toast_host.dart';
 import 'i18n/strings.g.dart';
 import 'router/app_router.dart';
+import 'shared/widgets/connectivity_overlay.dart';
 
 class WayoAdsGoApp extends ConsumerWidget {
   const WayoAdsGoApp({super.key});
@@ -33,8 +34,10 @@ class WayoAdsGoApp extends ConsumerWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      builder: (context, child) => RealtimeNotificationToastHost(
-        child: child ?? const SizedBox.shrink(),
+      builder: (context, child) => ConnectivityOverlay(
+        child: RealtimeNotificationToastHost(
+          child: child ?? const SizedBox.shrink(),
+        ),
       ),
     );
   }

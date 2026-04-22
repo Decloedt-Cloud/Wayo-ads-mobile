@@ -68,7 +68,13 @@ final class ChatMessageEditedEvent extends ChatRealtimeEvent {
 
 /// Laravel Reverb / Pusher client for **chat-service** only (separate from [WayoReverbRealtime] singleton).
 final class ChatRealtimeService {
-  ChatRealtimeService();
+  ChatRealtimeService({this.onConnectionError});
+
+  /// Hook called whenever the WebSocket/Pusher layer reports a connection
+  /// error (typically DNS / TCP / handshake failure). Wired by the Riverpod
+  /// provider to `ConnectivityService.reportRemoteFailure` so the offline
+  /// popup appears within ~1 s instead of waiting for the periodic probe.
+  final void Function(Object error)? onConnectionError;
 
   /// Chat-service user ids currently seen on `presence-global.{appId}` (same as Wayo-ads `ChatPresenceContext`).
   final ValueNotifier<Set<int>> onlineChatUserIds = ValueNotifier<Set<int>>(
@@ -128,6 +134,9 @@ final class ChatRealtimeService {
         if (kDebugMode) {
           debugPrint('[ChatRealtime] connection error: $exception');
         }
+        try {
+          onConnectionError?.call(exception);
+        } catch (_) {}
         Future<void>.delayed(const Duration(seconds: 2), refresh);
       },
     );

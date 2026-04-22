@@ -50,6 +50,9 @@ class TranslationsFr extends Translations {
 
   // Translations
   @override
+  late final _TranslationsConnectivityFr connectivity =
+      _TranslationsConnectivityFr._(_root);
+  @override
   late final _TranslationsLoginFr login = _TranslationsLoginFr._(_root);
   @override
   late final _TranslationsForgotPasswordFr forgot_password =
@@ -86,6 +89,37 @@ class TranslationsFr extends Translations {
   @override
   late final _TranslationsAppSettingsFr app_settings =
       _TranslationsAppSettingsFr._(_root);
+}
+
+// Path: connectivity
+class _TranslationsConnectivityFr extends TranslationsConnectivityEn {
+  _TranslationsConnectivityFr._(TranslationsFr root)
+    : this._root = root,
+      super.internal(root);
+
+  final TranslationsFr _root; // ignore: unused_field
+
+  // Translations
+  @override
+  String get offline_title => 'Aucune connexion Internet';
+  @override
+  String get offline_subtitle => 'Vérifiez votre réseau puis réessayez.';
+  @override
+  String get reconnecting_title => 'Reconnexion…';
+  @override
+  String get reconnecting_subtitle =>
+      'Nous essayons de rétablir votre connexion.';
+  @override
+  String get weak_title => 'Connexion faible';
+  @override
+  String get weak_subtitle =>
+      'Certaines actions peuvent être plus lentes que d’habitude.';
+  @override
+  String get restored => 'Connexion rétablie';
+  @override
+  String get action_retry => 'Réessayer';
+  @override
+  String get action_settings => 'Réglages';
 }
 
 // Path: login
@@ -884,6 +918,24 @@ class _TranslationsAdvertiserCampaignsDetailFr
 extension on TranslationsFr {
   dynamic _flatMapFunction(String path) {
     switch (path) {
+      case 'connectivity.offline_title':
+        return 'Aucune connexion Internet';
+      case 'connectivity.offline_subtitle':
+        return 'Vérifiez votre réseau puis réessayez.';
+      case 'connectivity.reconnecting_title':
+        return 'Reconnexion…';
+      case 'connectivity.reconnecting_subtitle':
+        return 'Nous essayons de rétablir votre connexion.';
+      case 'connectivity.weak_title':
+        return 'Connexion faible';
+      case 'connectivity.weak_subtitle':
+        return 'Certaines actions peuvent être plus lentes que d’habitude.';
+      case 'connectivity.restored':
+        return 'Connexion rétablie';
+      case 'connectivity.action_retry':
+        return 'Réessayer';
+      case 'connectivity.action_settings':
+        return 'Réglages';
       case 'login.brand':
         return 'Wayo Ads';
       case 'login.headline_line1':

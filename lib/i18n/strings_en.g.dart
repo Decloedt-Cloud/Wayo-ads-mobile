@@ -46,6 +46,8 @@ class Translations implements BaseTranslations<AppLocale, Translations> {
   late final Translations _root = this; // ignore: unused_field
 
   // Translations
+  late final TranslationsConnectivityEn connectivity =
+      TranslationsConnectivityEn.internal(_root);
   late final TranslationsLoginEn login = TranslationsLoginEn.internal(_root);
   late final TranslationsForgotPasswordEn forgot_password =
       TranslationsForgotPasswordEn.internal(_root);
@@ -67,6 +69,24 @@ class Translations implements BaseTranslations<AppLocale, Translations> {
       TranslationsPrivacyPolicyEn.internal(_root);
   late final TranslationsAppSettingsEn app_settings =
       TranslationsAppSettingsEn.internal(_root);
+}
+
+// Path: connectivity
+class TranslationsConnectivityEn {
+  TranslationsConnectivityEn.internal(this._root);
+
+  final Translations _root; // ignore: unused_field
+
+  // Translations
+  String get offline_title => 'No Internet Connection';
+  String get offline_subtitle => 'Please check your network and try again.';
+  String get reconnecting_title => 'Reconnecting…';
+  String get reconnecting_subtitle => 'Trying to restore your connection.';
+  String get weak_title => 'Weak connection';
+  String get weak_subtitle => 'Some actions may be slower than usual.';
+  String get restored => 'Connection restored';
+  String get action_retry => 'Retry';
+  String get action_settings => 'Settings';
 }
 
 // Path: login
@@ -564,6 +584,24 @@ class TranslationsAdvertiserCampaignsDetailEn {
 extension on Translations {
   dynamic _flatMapFunction(String path) {
     switch (path) {
+      case 'connectivity.offline_title':
+        return 'No Internet Connection';
+      case 'connectivity.offline_subtitle':
+        return 'Please check your network and try again.';
+      case 'connectivity.reconnecting_title':
+        return 'Reconnecting…';
+      case 'connectivity.reconnecting_subtitle':
+        return 'Trying to restore your connection.';
+      case 'connectivity.weak_title':
+        return 'Weak connection';
+      case 'connectivity.weak_subtitle':
+        return 'Some actions may be slower than usual.';
+      case 'connectivity.restored':
+        return 'Connection restored';
+      case 'connectivity.action_retry':
+        return 'Retry';
+      case 'connectivity.action_settings':
+        return 'Settings';
       case 'login.brand':
         return 'Wayo Ads';
       case 'login.headline_line1':

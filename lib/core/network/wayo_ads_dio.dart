@@ -4,6 +4,8 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:sentry_dio/sentry_dio.dart';
 
 import '../config/auth_runtime_config.dart';
+import '../connectivity/connectivity_providers.dart';
+import '../connectivity/connectivity_reporter_interceptor.dart';
 import '../storage/secure_storage.dart';
 import 'auth_interceptor.dart';
 import 'interceptors/certificate_pinning.dart';
@@ -46,6 +48,9 @@ Dio wayoAdsDio(WayoAdsDioRef ref) {
       client,
       logPrint: kDebugMode ? (m) => debugPrint(m) : null,
     ),
+  );
+  client.interceptors.add(
+    ConnectivityReporterInterceptor(ref.read(connectivityServiceProvider)),
   );
   if (kDebugMode) {
     client.interceptors.add(WayoLoggingInterceptor());

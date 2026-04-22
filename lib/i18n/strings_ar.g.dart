@@ -50,6 +50,9 @@ class TranslationsAr extends Translations {
 
   // Translations
   @override
+  late final _TranslationsConnectivityAr connectivity =
+      _TranslationsConnectivityAr._(_root);
+  @override
   late final _TranslationsLoginAr login = _TranslationsLoginAr._(_root);
   @override
   late final _TranslationsForgotPasswordAr forgot_password =
@@ -86,6 +89,35 @@ class TranslationsAr extends Translations {
   @override
   late final _TranslationsAppSettingsAr app_settings =
       _TranslationsAppSettingsAr._(_root);
+}
+
+// Path: connectivity
+class _TranslationsConnectivityAr extends TranslationsConnectivityEn {
+  _TranslationsConnectivityAr._(TranslationsAr root)
+    : this._root = root,
+      super.internal(root);
+
+  final TranslationsAr _root; // ignore: unused_field
+
+  // Translations
+  @override
+  String get offline_title => 'لا يوجد اتصال بالإنترنت';
+  @override
+  String get offline_subtitle => 'يرجى التحقق من الشبكة ثم المحاولة مرة أخرى.';
+  @override
+  String get reconnecting_title => 'إعادة الاتصال…';
+  @override
+  String get reconnecting_subtitle => 'جاري محاولة استعادة الاتصال.';
+  @override
+  String get weak_title => 'اتصال ضعيف';
+  @override
+  String get weak_subtitle => 'قد تكون بعض الإجراءات أبطأ من المعتاد.';
+  @override
+  String get restored => 'تم استعادة الاتصال';
+  @override
+  String get action_retry => 'إعادة المحاولة';
+  @override
+  String get action_settings => 'الإعدادات';
 }
 
 // Path: login
@@ -870,6 +902,24 @@ class _TranslationsAdvertiserCampaignsDetailAr
 extension on TranslationsAr {
   dynamic _flatMapFunction(String path) {
     switch (path) {
+      case 'connectivity.offline_title':
+        return 'لا يوجد اتصال بالإنترنت';
+      case 'connectivity.offline_subtitle':
+        return 'يرجى التحقق من الشبكة ثم المحاولة مرة أخرى.';
+      case 'connectivity.reconnecting_title':
+        return 'إعادة الاتصال…';
+      case 'connectivity.reconnecting_subtitle':
+        return 'جاري محاولة استعادة الاتصال.';
+      case 'connectivity.weak_title':
+        return 'اتصال ضعيف';
+      case 'connectivity.weak_subtitle':
+        return 'قد تكون بعض الإجراءات أبطأ من المعتاد.';
+      case 'connectivity.restored':
+        return 'تم استعادة الاتصال';
+      case 'connectivity.action_retry':
+        return 'إعادة المحاولة';
+      case 'connectivity.action_settings':
+        return 'الإعدادات';
       case 'login.brand':
         return 'وايو أدز';
       case 'login.headline_line1':

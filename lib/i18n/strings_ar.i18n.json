@@ -1,4 +1,15 @@
 {
+  "connectivity": {
+    "offline_title": "لا يوجد اتصال بالإنترنت",
+    "offline_subtitle": "يرجى التحقق من الشبكة ثم المحاولة مرة أخرى.",
+    "reconnecting_title": "إعادة الاتصال…",
+    "reconnecting_subtitle": "جاري محاولة استعادة الاتصال.",
+    "weak_title": "اتصال ضعيف",
+    "weak_subtitle": "قد تكون بعض الإجراءات أبطأ من المعتاد.",
+    "restored": "تم استعادة الاتصال",
+    "action_retry": "إعادة المحاولة",
+    "action_settings": "الإعدادات"
+  },
   "login": {
     "brand": "وايو أدز",
     "headline_line1": "مرحبًا بك",

@@ -1,4 +1,15 @@
 {
+  "connectivity": {
+    "offline_title": "No Internet Connection",
+    "offline_subtitle": "Please check your network and try again.",
+    "reconnecting_title": "Reconnecting…",
+    "reconnecting_subtitle": "Trying to restore your connection.",
+    "weak_title": "Weak connection",
+    "weak_subtitle": "Some actions may be slower than usual.",
+    "restored": "Connection restored",
+    "action_retry": "Retry",
+    "action_settings": "Settings"
+  },
   "login": {
     "brand": "Wayo Ads",
     "headline_line1": "Welcome",

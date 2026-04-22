@@ -217,10 +217,9 @@ class _OfflineCardState extends State<_OfflineCard> {
                     ? t.connectivity.reconnecting_title
                     : t.connectivity.offline_title,
                 textAlign: TextAlign.center,
-                style: AppTextStyles.headlineMedium(context).copyWith(
-                  fontSize: 22,
-                  height: 1.25,
-                ),
+                style: AppTextStyles.headlineMedium(
+                  context,
+                ).copyWith(fontSize: 22, height: 1.25),
               ),
               const SizedBox(height: 8),
               Text(
@@ -370,83 +369,86 @@ class _WeakBanner extends StatelessWidget {
     const amber = Color(0xFFF4A237);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return ClipRRect(
-      borderRadius: BorderRadius.circular(18),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          decoration: BoxDecoration(
-            color: (isDark ? const Color(0xFF1A1A1A) : Colors.white)
-                .withValues(alpha: 0.92),
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(
-              color: amber.withValues(alpha: 0.45),
-              width: 1,
+          borderRadius: BorderRadius.circular(18),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                color: (isDark ? const Color(0xFF1A1A1A) : Colors.white)
+                    .withValues(alpha: 0.92),
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(
+                  color: amber.withValues(alpha: 0.45),
+                  width: 1,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: amber.withValues(alpha: 0.18),
+                    blurRadius: 24,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 34,
+                    height: 34,
+                    decoration: BoxDecoration(
+                      color: amber.withValues(alpha: 0.16),
+                      shape: BoxShape.circle,
+                    ),
+                    alignment: Alignment.center,
+                    child: const Icon(
+                      Icons.signal_cellular_alt_2_bar_rounded,
+                      color: amber,
+                      size: 18,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          t.connectivity.weak_title,
+                          style: TextStyle(
+                            color: AppColors.textPrimaryOf(context),
+                            fontWeight: FontWeight.w800,
+                            fontSize: 13.5,
+                            height: 1.2,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          t.connectivity.weak_subtitle,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: AppColors.textSecondaryOf(context),
+                            fontWeight: FontWeight.w500,
+                            fontSize: 12,
+                            height: 1.3,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
-            boxShadow: [
-              BoxShadow(
-                color: amber.withValues(alpha: 0.18),
-                blurRadius: 24,
-                offset: const Offset(0, 10),
-              ),
-            ],
           ),
-          child: Row(
-            children: [
-              Container(
-                width: 34,
-                height: 34,
-                decoration: BoxDecoration(
-                  color: amber.withValues(alpha: 0.16),
-                  shape: BoxShape.circle,
-                ),
-                alignment: Alignment.center,
-                child: const Icon(
-                  Icons.signal_cellular_alt_2_bar_rounded,
-                  color: amber,
-                  size: 18,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      t.connectivity.weak_title,
-                      style: TextStyle(
-                        color: AppColors.textPrimaryOf(context),
-                        fontWeight: FontWeight.w800,
-                        fontSize: 13.5,
-                        height: 1.2,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      t.connectivity.weak_subtitle,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: AppColors.textSecondaryOf(context),
-                        fontWeight: FontWeight.w500,
-                        fontSize: 12,
-                        height: 1.3,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    ).animate().slideY(
-      begin: -0.25,
-      end: 0,
-      duration: 260.ms,
-      curve: Curves.easeOutCubic,
-    ).fadeIn(duration: 220.ms);
+        )
+        .animate()
+        .slideY(
+          begin: -0.25,
+          end: 0,
+          duration: 260.ms,
+          curve: Curves.easeOutCubic,
+        )
+        .fadeIn(duration: 220.ms);
   }
 }
 
@@ -475,64 +477,64 @@ class _RestoredToastState extends State<_RestoredToast> {
     final t = context.t;
     const green = AppColors.success;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-      child: Center(
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(20),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-            child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 12,
-              ),
-              decoration: BoxDecoration(
-                color: AppColors.surfaceElevatedOf(
-                  context,
-                ).withValues(alpha: 0.94),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: green.withValues(alpha: 0.4)),
-                boxShadow: [
-                  BoxShadow(
-                    color: green.withValues(alpha: 0.22),
-                    blurRadius: 28,
-                    offset: const Offset(0, 12),
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          child: Center(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
                   ),
-                ],
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 30,
-                    height: 30,
-                    decoration: BoxDecoration(
-                      color: green.withValues(alpha: 0.16),
-                      shape: BoxShape.circle,
-                    ),
-                    alignment: Alignment.center,
-                    child: const Icon(
-                      Icons.check_rounded,
-                      color: green,
-                      size: 18,
-                    ),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceElevatedOf(
+                      context,
+                    ).withValues(alpha: 0.94),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: green.withValues(alpha: 0.4)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: green.withValues(alpha: 0.22),
+                        blurRadius: 28,
+                        offset: const Offset(0, 12),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 10),
-                  Text(
-                    t.connectivity.restored,
-                    style: TextStyle(
-                      color: AppColors.textPrimaryOf(context),
-                      fontWeight: FontWeight.w800,
-                      fontSize: 14,
-                    ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 30,
+                        height: 30,
+                        decoration: BoxDecoration(
+                          color: green.withValues(alpha: 0.16),
+                          shape: BoxShape.circle,
+                        ),
+                        alignment: Alignment.center,
+                        child: const Icon(
+                          Icons.check_rounded,
+                          color: green,
+                          size: 18,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Text(
+                        t.connectivity.restored,
+                        style: TextStyle(
+                          color: AppColors.textPrimaryOf(context),
+                          fontWeight: FontWeight.w800,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
           ),
-        ),
-      ),
-    )
+        )
         .animate()
         .slideY(
           begin: 0.4,
@@ -558,10 +560,7 @@ Future<void> _openNetworkSettings() async {
   ];
   for (final uri in candidates) {
     try {
-      final ok = await launchUrl(
-        uri,
-        mode: LaunchMode.externalApplication,
-      );
+      final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
       if (ok) return;
     } catch (_) {
       continue;

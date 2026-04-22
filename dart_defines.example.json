@@ -11,7 +11,7 @@
   "WAYO_ADS_APP_KEY": "REPLACE",
   "WAYO_ADS_API_BASE_URL": "https://ads.wayo.local",
   "CHAT_SERVICE_API_BASE_URL": "https://wayochat.wayo.ac",
-  "_comment_ads": "Local same PC: Auth http://127.0.0.1:8000, Next http://127.0.0.1:3000. Android emulator: 10.0.2.2:8000 and :3000. If WAYO_ADS_API_BASE_URL unset, app uses Auth base.",
+  "_comment_ads": "Local: same PC (Auth 127.0.0.1:8000, Next :3000) or Android emulator 10.0.2.2. Production mobile: WAYO_ADS_API_BASE_URL=https://ads.wayo.agency (see dart_defines.prod.json). If WAYO_ADS_API_BASE_URL unset, app uses Auth base.",
   "_comment_chat": "Laravel chat-service (DB, Sanctum, conversations, uploads). Production: https://wayochat.wayo.ac — must match Wayo-ads CHAT_SERVICE_API_URL. Leave \"\" to use only bootstrap apiBaseUrl; Android debug rewrites localhost→10.0.2.2.",
   "REVERB_HOST": "reverb.wayo.local",
   "REVERB_KEY": "your_reverb_key",

@@ -1,5 +1,4 @@
-import 'dart:math' as math;
-import 'dart:ui';
+import 'dart:ui' show ImageFilter;
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -25,9 +24,13 @@ class CinematicMessageBubble extends StatefulWidget {
     required this.showTimestampFooter,
     this.attachmentLabel = 'Attachment',
     this.openPdfLabel = 'Open PDF',
-    this.onReplyInsert,
-    this.onReactAppend,
     this.peerAvatarUrl = '',
+    this.isReadByPeer = false,
+    this.selected = false,
+    this.onSelect,
+    this.onDismissSelection,
+    this.onEditRequest,
+    this.onDeleteRequest,
   });
 
   final ChatMessage message;
@@ -37,19 +40,31 @@ class CinematicMessageBubble extends StatefulWidget {
   final bool showTimestampFooter;
   final String attachmentLabel;
   final String openPdfLabel;
-  final ValueChanged<String>? onReplyInsert;
-  final ValueChanged<String>? onReactAppend;
-
   /// Conversation [display_avatar] résolu — repli si le message n’a pas `user.avatar`.
   final String peerAvatarUrl;
+
+  /// Double-check "seen" state (only meaningful for [isMine] messages).
+  final bool isReadByPeer;
+
+  /// Currently selected (tapped) bubble → shows the inline Update / Delete bar
+  /// below the bubble.
+  final bool selected;
+  final VoidCallback? onSelect;
+  final VoidCallback? onDismissSelection;
+
+  /// Tap the "edit" pill in the inline bar — thread screen switches composer to
+  /// edit mode.
+  final VoidCallback? onEditRequest;
+
+  /// Tap the "delete" pill in the inline bar — thread screen opens the
+  /// confirmation dialog.
+  final VoidCallback? onDeleteRequest;
 
   @override
   State<CinematicMessageBubble> createState() => _CinematicMessageBubbleState();
 }
 
 class _CinematicMessageBubbleState extends State<CinematicMessageBubble> {
-  double _dragDx = 0;
-
   String _timeLabel() {
     try {
       final d = DateTime.parse(widget.message.createdAt).toLocal();
@@ -67,144 +82,6 @@ class _CinematicMessageBubbleState extends State<CinematicMessageBubble> {
     }
   }
 
-  void _showGlassMenu(BuildContext context) {
-    final t = context.t;
-    final m = widget.message;
-    HapticFeedback.selectionClick();
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (ctx) {
-        final sheetTheme = CinematicChatTheme.of(ctx);
-        return ClipRRect(
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(22)),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-            child: Container(
-              color: sheetTheme.surface.withValues(alpha: 0.96),
-              padding: EdgeInsets.fromLTRB(16, 12, 16, 12 + MediaQuery.paddingOf(ctx).bottom),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _menuTile(ctx, Icons.reply_rounded, t.chat.bubble_reply, () {
-                    Navigator.pop(ctx);
-                    widget.onReplyInsert?.call('> ${m.content}\n\n');
-                  }),
-                  _menuTile(ctx, Icons.copy_rounded, t.chat.bubble_copy, () async {
-                    Navigator.pop(ctx);
-                    await Clipboard.setData(ClipboardData(text: m.content));
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(t.chat.bubble_copied)));
-                    }
-                  }),
-                  _menuTile(ctx, Icons.emoji_emotions_outlined, t.chat.bubble_react, () {
-                    Navigator.pop(ctx);
-                    _pickEmojiFan(context);
-                  }),
-                  _menuTile(ctx, Icons.delete_outline_rounded, t.chat.bubble_delete, () {
-                    Navigator.pop(ctx);
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(t.chat.bubble_delete_unavailable)));
-                  }),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _menuTile(BuildContext ctx, IconData icon, String label, VoidCallback onTap) {
-    final ct = CinematicChatTheme.of(ctx);
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-          child: Row(
-            children: [
-              Icon(icon, color: ct.amber, size: 22),
-              const SizedBox(width: 14),
-              Text(label, style: GoogleFonts.inter(fontSize: 16, color: ct.textPrimary)),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _pickEmojiFan(BuildContext context) {
-    final overlay = Overlay.of(context);
-    const emojis = ['❤️', '👍', '🔥', '😂', '🙏', '✨'];
-    late OverlayEntry entry;
-    final overlayTheme = CinematicChatTheme.of(context);
-    entry = OverlayEntry(
-      builder: (ctx) {
-        return Stack(
-          children: [
-            Positioned.fill(
-              child: GestureDetector(
-                onTap: () => entry.remove(),
-                behavior: HitTestBehavior.opaque,
-                child: Container(color: Colors.black26),
-              ),
-            ),
-            Center(
-              child: TweenAnimationBuilder<double>(
-                tween: Tween(begin: 0, end: 1),
-                duration: const Duration(milliseconds: 420),
-                curve: Curves.easeOutBack,
-                builder: (context, v, _) {
-                  return SizedBox(
-                    width: 220,
-                    height: 120,
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: List.generate(emojis.length, (i) {
-                        final angle = -0.55 + i * 0.22;
-                        final dist = 52.0 * v;
-                        return Transform.translate(
-                          offset: Offset(
-                            math.cos(angle) * dist,
-                            math.sin(angle) * dist - 10,
-                          ),
-                          child: Opacity(
-                            opacity: v,
-                            child: Material(
-                              color: overlayTheme.surface,
-                              shape: const CircleBorder(),
-                              child: InkWell(
-                                customBorder: const CircleBorder(),
-                                onTap: () {
-                                  widget.onReactAppend?.call('${emojis[i]} ');
-                                  entry.remove();
-                                },
-                                child: Padding(
-                                  padding: const EdgeInsets.all(10),
-                                  child: Text(emojis[i], style: const TextStyle(fontSize: 22)),
-                                ),
-                              ),
-                            ),
-                          ),
-                        );
-                      }),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ],
-        );
-      },
-    );
-    overlay.insert(entry);
-    Future<void>.delayed(const Duration(seconds: 4), () {
-      if (entry.mounted) entry.remove();
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     final ct = CinematicChatTheme.of(context);
@@ -216,34 +93,60 @@ class _CinematicMessageBubbleState extends State<CinematicMessageBubble> {
     final isFile = m.type == 'file' && mediaUrl.isNotEmpty;
     final text = m.content.trim();
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final bubbleRadius = isMine
+        ? const BorderRadius.only(
+            topLeft: Radius.circular(22),
+            topRight: Radius.circular(22),
+            bottomLeft: Radius.circular(22),
+            bottomRight: Radius.circular(6),
+          )
+        : const BorderRadius.only(
+            topLeft: Radius.circular(22),
+            topRight: Radius.circular(22),
+            bottomLeft: Radius.circular(6),
+            bottomRight: Radius.circular(22),
+          );
+
     final bubbleDecoration = BoxDecoration(
-      borderRadius: isMine
-          ? const BorderRadius.only(
-              topLeft: Radius.circular(22),
-              topRight: Radius.circular(22),
-              bottomLeft: Radius.circular(22),
-              bottomRight: Radius.circular(4),
-            )
-          : const BorderRadius.only(
-              topLeft: Radius.circular(22),
-              topRight: Radius.circular(22),
-              bottomLeft: Radius.circular(4),
-              bottomRight: Radius.circular(22),
-            ),
+      borderRadius: bubbleRadius,
       gradient: isMine ? ct.sentBubble : null,
-      color: isMine ? null : ct.surface,
+      color: isMine
+          ? null
+          : (isDark
+              ? ct.surface.withValues(alpha: 0.92)
+              : Colors.white.withValues(alpha: 0.94)),
       border: Border.all(
-        color: isMine ? Colors.white.withValues(alpha: 0.08) : ct.borderSoft,
-        width: 0.5,
+        color: isMine
+            ? Colors.white.withValues(alpha: 0.18)
+            : ct.borderSoft.withValues(alpha: isDark ? 0.55 : 0.5),
+        width: 0.6,
       ),
-      boxShadow: isMine ? ct.sentGlow : null,
+      boxShadow: isMine
+          ? [
+              BoxShadow(
+                color: ct.amber.withValues(alpha: isDark ? 0.28 : 0.22),
+                blurRadius: 18,
+                offset: const Offset(0, 6),
+              ),
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.08),
+                blurRadius: 4,
+                offset: const Offset(0, 1),
+              ),
+            ]
+          : [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: isDark ? 0.22 : 0.04),
+                blurRadius: 10,
+                offset: const Offset(0, 3),
+              ),
+            ],
     );
 
-    final bubbleCore = Container(
-      margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 12),
+    final bubbleContent = Padding(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      constraints: BoxConstraints(maxWidth: MediaQuery.sizeOf(context).width * 0.78),
-      decoration: bubbleDecoration,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -308,84 +211,179 @@ class _CinematicMessageBubbleState extends State<CinematicMessageBubble> {
               ),
             ),
           if (isFile && text.isNotEmpty) const SizedBox(height: 8),
-          if (text.isNotEmpty)
-            Text(
-              text,
-              style: GoogleFonts.inter(
-                fontSize: 15,
-                height: 1.45,
-                color: isMine ? Colors.white : ct.textPrimary,
-              ),
-            )
+          if (text.isNotEmpty) ...(() {
+            final parsed = _parseReplyQuote(text);
+            return [
+              if (parsed.quote != null) ...[
+                _ReplyQuoteBlock(
+                  quote: parsed.quote!,
+                  isMine: isMine,
+                  amber: ct.amber,
+                  textPrimary: ct.textPrimary,
+                  muted: ct.muted,
+                  isDark: isDark,
+                ),
+                if (parsed.body.isNotEmpty) const SizedBox(height: 8),
+              ],
+              if (parsed.body.isNotEmpty)
+                Text(
+                  parsed.body,
+                  style: GoogleFonts.inter(
+                    fontSize: 15,
+                    height: 1.4,
+                    letterSpacing: -0.1,
+                    color: isMine ? Colors.white : ct.textPrimary,
+                    fontWeight: FontWeight.w400,
+                  ),
+                ),
+            ];
+          }())
           else if (!isImage && !isFile)
             Text(
               '[${m.type}]',
-              style: GoogleFonts.inter(fontSize: 14, color: isMine ? Colors.black54 : ct.muted),
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                color: isMine ? Colors.white.withValues(alpha: 0.7) : ct.muted,
+              ),
             ),
           if (isMine) ...[
-            const SizedBox(height: 6),
+            const SizedBox(height: 4),
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
+                if (m.isEdited || (m.editedAt?.isNotEmpty ?? false))
+                  Padding(
+                    padding: const EdgeInsets.only(right: 6),
+                    child: Text(
+                      context.t.chat.edited,
+                      style: GoogleFonts.inter(
+                        fontSize: 10,
+                        fontStyle: FontStyle.italic,
+                        color: Colors.white.withValues(alpha: 0.72),
+                      ),
+                    ),
+                  ),
                 Text(
                   _timeLabel(),
-                  style: GoogleFonts.inter(fontSize: 10, color: Colors.black54),
+                  style: GoogleFonts.inter(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.white.withValues(alpha: 0.82),
+                    letterSpacing: 0.2,
+                  ),
                 ),
                 const SizedBox(width: 6),
-                _ReceiptSwitcher(pending: m.pending, failed: m.failed),
+                _ReceiptSwitcher(
+                  pending: m.pending,
+                  failed: m.failed,
+                  seen: widget.isReadByPeer,
+                ),
               ],
+            ),
+          ] else if (m.isEdited || (m.editedAt?.isNotEmpty ?? false)) ...[
+            const SizedBox(height: 2),
+            Text(
+              context.t.chat.edited,
+              style: GoogleFonts.inter(
+                fontSize: 10,
+                fontStyle: FontStyle.italic,
+                color: ct.muted,
+              ),
             ),
           ],
         ],
       ),
     );
 
-    final bubbleStack = GestureDetector(
-      onHorizontalDragUpdate: (d) {
-        if (!isMine) return;
-        setState(() => _dragDx = (_dragDx + d.delta.dx).clamp(0.0, 72.0));
-      },
-      onHorizontalDragEnd: (_) {
-        if (_dragDx > 36) {
-          widget.onReplyInsert?.call('> ${m.content}\n\n');
-          HapticFeedback.lightImpact();
-        }
-        setState(() => _dragDx = 0);
-      },
-      onLongPress: () => _showGlassMenu(context),
-      onDoubleTap: () {
-        HapticFeedback.selectionClick();
-        _pickEmojiFan(context);
-      },
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          if (_dragDx > 4 && isMine)
-            Positioned(
-              left: -3,
-              top: 8,
-              bottom: 8,
-              child: Container(
-                width: 3,
-                decoration: BoxDecoration(
-                  color: ct.amber,
-                  borderRadius: BorderRadius.circular(2),
+    final bubbleCore = Container(
+      margin: const EdgeInsets.symmetric(vertical: 3, horizontal: 12),
+      constraints: BoxConstraints(maxWidth: MediaQuery.sizeOf(context).width * 0.78),
+      decoration: bubbleDecoration,
+      child: ClipRRect(
+        borderRadius: bubbleRadius,
+        child: Stack(
+          children: [
+            // Inner gloss highlight — top light sheen for premium look.
+            if (isMine)
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                height: 28,
+                child: IgnorePointer(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.white.withValues(alpha: 0.22),
+                          Colors.white.withValues(alpha: 0.0),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
               ),
-            ),
-          Transform.translate(
-            offset: Offset(isMine ? _dragDx * 0.15 : 0, 0),
-            child: bubbleCore,
-          ),
-        ],
+            bubbleContent,
+          ],
+        ),
       ),
     );
+
+    final canEdit = isMine && m.type == 'text' && !m.pending && !m.failed;
+    final canDelete = isMine && !m.pending;
+
+    final bubbleStack = GestureDetector(
+      onTap: () {
+        if (isMine && !m.pending && !m.failed && (canEdit || canDelete)) {
+          HapticFeedback.selectionClick();
+          if (widget.selected) {
+            widget.onDismissSelection?.call();
+          } else {
+            widget.onSelect?.call();
+          }
+        }
+      },
+      child: AnimatedScale(
+        scale: widget.selected ? 0.985 : 1.0,
+        duration: const Duration(milliseconds: 160),
+        curve: Curves.easeOut,
+        child: bubbleCore,
+      ),
+    );
+
+    final actionBar = widget.selected && isMine && (canEdit || canDelete)
+        ? Padding(
+            padding: const EdgeInsets.only(right: 12, top: 6),
+            child: _CinematicActionBar(
+              showEdit: canEdit,
+              showDelete: canDelete,
+              editLabel: context.t.chat.bubble_update,
+              deleteLabel: context.t.chat.bubble_delete,
+              onEdit: () {
+                widget.onDismissSelection?.call();
+                widget.onEditRequest?.call();
+              },
+              onDelete: () {
+                widget.onDismissSelection?.call();
+                widget.onDeleteRequest?.call();
+              },
+            ),
+          )
+        : const SizedBox.shrink();
 
     final column = Column(
       crossAxisAlignment: isMine ? CrossAxisAlignment.end : CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
         bubbleStack,
+        AnimatedSize(
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOutCubic,
+          alignment: Alignment.topRight,
+          child: actionBar,
+        ),
         if (widget.showTimestampFooter)
           Padding(
             padding: EdgeInsets.only(left: isMine ? 0 : 16, right: isMine ? 16 : 0, top: 2),
@@ -477,16 +475,20 @@ class _CinematicPeerBubbleAvatar extends StatelessWidget {
   }
 }
 
-/// ━━━ [9] RECEIPTS (simplifié) ━━━
+/// ━━━ [9] RECEIPTS (pending → sent → delivered → seen) ━━━
 class _ReceiptSwitcher extends StatelessWidget {
-  const _ReceiptSwitcher({required this.pending, required this.failed});
+  const _ReceiptSwitcher({
+    required this.pending,
+    required this.failed,
+    required this.seen,
+  });
 
   final bool pending;
   final bool failed;
+  final bool seen;
 
   @override
   Widget build(BuildContext context) {
-    final ct = CinematicChatTheme.of(context);
     if (failed) {
       return const Icon(Icons.error_outline, size: 14, color: Colors.black54);
     }
@@ -500,6 +502,10 @@ class _ReceiptSwitcher extends StatelessWidget {
         ),
       );
     }
+    // Mine-bubble foreground is dark-on-amber; use near-black for "delivered"
+    // and a bright cyan-ish blue for "seen" (WhatsApp-style feedback).
+    const seenColor = Color(0xFF2B9CE6);
+    final deliveredColor = Colors.black.withValues(alpha: 0.55);
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 220),
       transitionBuilder: (child, anim) => FadeTransition(
@@ -508,9 +514,267 @@ class _ReceiptSwitcher extends StatelessWidget {
       ),
       child: Icon(
         Icons.done_all_rounded,
-        key: const ValueKey('done'),
-        size: 14,
-        color: ct.amber.withValues(alpha: 0.95),
+        key: ValueKey(seen ? 'seen' : 'delivered'),
+        size: 16,
+        color: seen ? seenColor : deliveredColor,
+      ),
+    );
+  }
+}
+
+/// ━━━ Tap-to-edit / Tap-to-delete — horizontal glass action bar ━━━
+class _CinematicActionBar extends StatelessWidget {
+  const _CinematicActionBar({
+    required this.showEdit,
+    required this.showDelete,
+    required this.editLabel,
+    required this.deleteLabel,
+    required this.onEdit,
+    required this.onDelete,
+  });
+
+  final bool showEdit;
+  final bool showDelete;
+  final String editLabel;
+  final String deleteLabel;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    final ct = CinematicChatTheme.of(context);
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(22),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+        child: Container(
+          decoration: BoxDecoration(
+            color: ct.surface.withValues(alpha: 0.88),
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(
+              color: ct.amber.withValues(alpha: 0.35),
+              width: 0.8,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.12),
+                blurRadius: 14,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (showEdit)
+                _ActionChip(
+                  icon: Icons.edit_rounded,
+                  label: editLabel,
+                  tint: ct.amber,
+                  onTap: onEdit,
+                ),
+              if (showEdit && showDelete)
+                Container(
+                  height: 22,
+                  width: 1,
+                  margin: const EdgeInsets.symmetric(horizontal: 2),
+                  color: ct.borderSoft.withValues(alpha: 0.6),
+                ),
+              if (showDelete)
+                _ActionChip(
+                  icon: Icons.delete_outline_rounded,
+                  label: deleteLabel,
+                  tint: const Color(0xFFEF4444),
+                  onTap: onDelete,
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ActionChip extends StatelessWidget {
+  const _ActionChip({
+    required this.icon,
+    required this.label,
+    required this.tint,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final Color tint;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final ct = CinematicChatTheme.of(context);
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(18),
+      child: InkWell(
+        onTap: () {
+          HapticFeedback.selectionClick();
+          onTap();
+        },
+        borderRadius: BorderRadius.circular(18),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 18, color: tint),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: ct.textPrimary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ParsedReply {
+  const _ParsedReply({this.quote, required this.body});
+  final String? quote;
+  final String body;
+}
+
+_ParsedReply _parseReplyQuote(String raw) {
+  if (!raw.startsWith('>')) {
+    return _ParsedReply(body: raw);
+  }
+  final lines = raw.split('\n');
+  final quoteLines = <String>[];
+  var i = 0;
+  while (i < lines.length && lines[i].startsWith('>')) {
+    quoteLines.add(lines[i].replaceFirst(RegExp(r'^>\s?'), ''));
+    i++;
+  }
+  while (i < lines.length && lines[i].trim().isEmpty) {
+    i++;
+  }
+  final body = lines.sublist(i).join('\n').trim();
+  final quote = quoteLines.join('\n').trim();
+  if (quote.isEmpty) return _ParsedReply(body: raw);
+  return _ParsedReply(quote: quote, body: body);
+}
+
+class _ReplyQuoteBlock extends StatelessWidget {
+  const _ReplyQuoteBlock({
+    required this.quote,
+    required this.isMine,
+    required this.amber,
+    required this.textPrimary,
+    required this.muted,
+    required this.isDark,
+  });
+
+  final String quote;
+  final bool isMine;
+  final Color amber;
+  final Color textPrimary;
+  final Color muted;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    final barColor = isMine
+        ? Colors.white.withValues(alpha: 0.95)
+        : amber;
+    final surface = isMine
+        ? Colors.white.withValues(alpha: 0.16)
+        : (isDark
+            ? Colors.white.withValues(alpha: 0.05)
+            : amber.withValues(alpha: 0.08));
+    final labelColor = isMine
+        ? Colors.white.withValues(alpha: 0.95)
+        : amber;
+    final textColor = isMine
+        ? Colors.white.withValues(alpha: 0.9)
+        : textPrimary.withValues(alpha: 0.85);
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        decoration: BoxDecoration(
+          color: surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: (isMine ? Colors.white : amber).withValues(alpha: 0.18),
+            width: 0.6,
+          ),
+        ),
+        child: IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Container(
+                width: 3,
+                decoration: BoxDecoration(
+                  color: barColor,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(12),
+                    bottomLeft: Radius.circular(12),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(10, 7, 12, 7),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.reply_rounded,
+                            size: 13,
+                            color: labelColor,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            context.t.chat.bubble_reply.toUpperCase(),
+                            style: GoogleFonts.inter(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.8,
+                              color: labelColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        quote,
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          height: 1.3,
+                          color: textColor,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

@@ -25,6 +25,10 @@ abstract interface class DashboardRemote {
   Future<int> fetchUnreadCount();
 
   Future<void> markNotificationRead(String id);
+
+  Future<void> markAllNotificationsRead();
+
+  Future<void> dismissNotification(String id);
 }
 
 final class DashboardRemoteDatasource implements DashboardRemote {
@@ -144,7 +148,7 @@ final class DashboardRemoteDatasource implements DashboardRemote {
 
   @override
   Future<List<NotificationItem>> fetchNotifications({bool unreadOnly = false}) async {
-    final qp = <String, dynamic>{'limit': 50};
+    final qp = <String, dynamic>{'limit': 100};
     if (unreadOnly) {
       qp['status'] = 'UNREAD';
     }
@@ -173,6 +177,8 @@ final class DashboardRemoteDatasource implements DashboardRemote {
         body: m['message'] as String? ?? m['body'] as String? ?? '',
         isRead: isRead,
         createdAt: _parseDateTime(m['createdAt'] ?? m['created_at']),
+        priority: m['priority'] as String?,
+        type: m['type'] as String?,
       );
     }).toList();
   }
@@ -205,6 +211,22 @@ final class DashboardRemoteDatasource implements DashboardRemote {
   Future<void> markNotificationRead(String id) async {
     await _adsDio.post<Map<String, dynamic>>(
       AuthRuntimeConfig.instance.wayoAdsRequestPath(ApiEndpoints.notificationsMarkRead),
+      data: <String, dynamic>{'notificationId': id},
+    );
+  }
+
+  @override
+  Future<void> markAllNotificationsRead() async {
+    await _adsDio.post<Map<String, dynamic>>(
+      AuthRuntimeConfig.instance.wayoAdsRequestPath(ApiEndpoints.notificationsMarkAllRead),
+      data: <String, dynamic>{},
+    );
+  }
+
+  @override
+  Future<void> dismissNotification(String id) async {
+    await _adsDio.post<Map<String, dynamic>>(
+      AuthRuntimeConfig.instance.wayoAdsRequestPath(ApiEndpoints.notificationsDismiss),
       data: <String, dynamic>{'notificationId': id},
     );
   }

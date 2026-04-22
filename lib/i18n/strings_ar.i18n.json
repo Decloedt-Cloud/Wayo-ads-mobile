@@ -97,7 +97,13 @@
     },
     "notifications_title": "الإشعارات",
     "notifications_empty": "لا إشعارات",
-    "theme_toggle_tooltip": "التبديل بين الوضع الفاتح والداكن"
+    "notification_incoming": "إشعار جديد",
+    "notification_view": "عرض",
+    "notifications_mark_all_read": "تعليم الكل كمقروء",
+    "notifications_view_all": "عرض كل الإشعارات",
+    "notifications_important": "مهم",
+    "theme_toggle_tooltip": "التبديل بين الوضع الفاتح والداكن",
+    "refresh": "تحديث لوحة التحكم"
   },
   "advertiser_campaigns": {
     "title": "الحملات",
@@ -182,8 +188,23 @@
     "bubble_copy": "نسخ",
     "bubble_react": "تفاعل",
     "bubble_delete": "حذف",
+    "bubble_update": "تعديل",
     "bubble_delete_unavailable": "حذف الرسائل من التطبيق غير متاح بعد.",
     "bubble_copied": "تم النسخ إلى الحافظة",
+    "edited": "معدَّل",
+    "seen": "تمت القراءة",
+    "delivered": "تم التسليم",
+    "edit_mode_title": "تعديل الرسالة",
+    "edit_mode_cancel": "إلغاء",
+    "edit_mode_hint": "حدّث رسالتك…",
+    "edit_failed": "تعذّر تعديل الرسالة. حاول مرة أخرى.",
+    "edit_not_allowed": "يمكن تعديل رسائلك النصية فقط.",
+    "delete_failed": "تعذّر حذف الرسالة. حاول مرة أخرى.",
+    "delete_not_allowed": "يمكنك حذف رسائلك الخاصة فقط.",
+    "delete_confirm_title": "حذف هذه الرسالة؟",
+    "delete_confirm_text": "لا يمكن التراجع عن هذا الإجراء.",
+    "delete_confirm_cta": "حذف",
+    "delete_confirm_cancel": "إلغاء",
     "scroll_to_latest": "الأحدث"
   },
   "common": {

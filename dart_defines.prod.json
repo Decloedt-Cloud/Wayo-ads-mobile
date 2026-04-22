@@ -7,6 +7,6 @@
   "AUTH_OAUTH_REDIRECT_URI": "com.wayo.wayoadsgo:/oauthredirect",
   "AUTH_GOOGLE_SERVER_CLIENT_ID": "748602924455-5dmaapq41i6jrfa35qgh34dp68upqh30.apps.googleusercontent.com",
   "WAYO_ADS_APP_KEY": "oxz2HNCvFTGROqMw3KyAp9cV7qH5XxbquyJn6wrhRyk=",
-  "WAYO_ADS_API_BASE_URL": "https://preprodauth.wayo.ac",
+  "WAYO_ADS_API_BASE_URL": "https://ads.wayo.agency",
   "CHAT_SERVICE_API_BASE_URL": "https://wayochat.wayo.ac"
 }

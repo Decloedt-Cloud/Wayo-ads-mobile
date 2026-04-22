@@ -1,8 +1,6 @@
 import 'dart:async';
-import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -10,7 +8,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_text_styles.dart';
 import '../../../../i18n/strings.g.dart';
 import '../../data/chat_media_utils.dart';
 import '../../data/chat_repository.dart';
@@ -20,12 +17,12 @@ import '../../domain/chat_credentials.dart';
 import '../../domain/chat_directory_user.dart';
 import '../providers/chat_providers.dart';
 import '../theme/liquid_neural_palette.dart';
+import '../theme/premium_chat_tokens.dart';
 import '../widgets/chat_user_search_bar.dart';
 import '../widgets/liquid_neural_mesh_backdrop.dart';
 import '../widgets/liquid_neural_organic_shapes.dart';
-import '../widgets/liquid_neural_plasma_avatar.dart';
-import '../widgets/liquid_neural_unread_badge.dart';
-import '../widgets/signal_typing_indicator.dart';
+import '../widgets/premium_conversation_card.dart';
+import '../widgets/premium_inbox_header.dart';
 
 class ChatInboxScreen extends ConsumerStatefulWidget {
   const ChatInboxScreen({super.key});
@@ -156,15 +153,6 @@ class _ChatInboxScreenState extends ConsumerState<ChatInboxScreen> {
     context.push('/chat/thread/${conv.id}', extra: conv.title(t.chat.conversation_unknown));
   }
 
-  double _gravityScale(int index, double listViewportHeight) {
-    const itemH = 96.0;
-    if (!_scroll.hasClients || listViewportHeight <= 0) return 1.0;
-    final anchor = _scroll.offset + listViewportHeight * 0.48;
-    final itemCenter = index * itemH + itemH * 0.5;
-    final dist = (itemCenter - anchor).abs();
-    return (1.03 - (dist / 260).clamp(0.0, 1.0) * 0.06).clamp(0.97, 1.03);
-  }
-
   @override
   Widget build(BuildContext context) {
     final t = context.t;
@@ -174,55 +162,67 @@ class _ChatInboxScreenState extends ConsumerState<ChatInboxScreen> {
 
     final reduce = MediaQuery.disableAnimationsOf(context);
     final ln = LiquidNeuralTheme.of(context);
+    final p = PremiumChatTokens.of(context);
     final async = ref.watch(chatConversationsProvider);
     final myChatUserId = ref.watch(chatBootstrapProvider).value?.chatUserId;
     final rt = ref.watch(chatRealtimeServiceProvider);
 
     return Scaffold(
-      backgroundColor: ln.canvas,
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        foregroundColor: ln.textPrimary,
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      backgroundColor: p.surfaceBase,
+      body: LiquidNeuralMeshBackdrop(
+        child: Stack(
+          fit: StackFit.expand,
           children: [
-            Text(
-              t.chat.inbox_title,
-              style: GoogleFonts.spaceGrotesk(
-                fontSize: 26,
-                fontWeight: FontWeight.w700,
-                color: ln.textPrimary,
-                letterSpacing: -0.5,
+            // ─── Warm ambient orbs for a luxurious depth layer ───
+            Positioned(
+              top: -120,
+              right: -80,
+              child: IgnorePointer(
+                child: Container(
+                  width: 360,
+                  height: 360,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(
+                      colors: [
+                        p.ambientOrbWarm,
+                        p.ambientOrbWarm.withValues(alpha: 0),
+                      ],
+                    ),
+                  ),
+                ),
               ),
             ),
-            if (!reduce)
-              Text(
-                t.chat.inbox_subtitle,
-                style: GoogleFonts.spaceGrotesk(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: ln.textSecondary,
-                  height: 1.2,
+            Positioned(
+              bottom: -160,
+              left: -80,
+              child: IgnorePointer(
+                child: Container(
+                  width: 360,
+                  height: 360,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(
+                      colors: [
+                        p.accentWarm.withValues(alpha: p.isDark ? 0.18 : 0.1),
+                        p.accentWarm.withValues(alpha: 0),
+                      ],
+                    ),
+                  ),
                 ),
-              ).animate().fadeIn(delay: 600.ms, duration: 400.ms),
-            if (reduce)
-              Text(
-                t.chat.inbox_subtitle,
-                style: AppTextStyles.caption(context).copyWith(color: ln.textSecondary),
               ),
-          ],
-        ),
-      ),
-      body: LiquidNeuralMeshBackdrop(
-        child: SafeArea(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-                child: ref.watch(chatBootstrapProvider).when(
+            ),
+            SafeArea(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  PremiumInboxHeader(
+                    title: t.chat.inbox_title,
+                    subtitle: t.chat.inbox_subtitle,
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                    child: ref.watch(chatBootstrapProvider).when(
                       data: (creds) => ChatUserSearchBar(
                         creds: creds,
                         useLiquidNeuralStyle: true,
@@ -260,7 +260,6 @@ class _ChatInboxScreenState extends ConsumerState<ChatInboxScreen> {
                         final onlineIds = rt.onlineChatUserIds.value;
                         return LayoutBuilder(
                           builder: (context, constraints) {
-                            final vh = constraints.maxHeight;
                             return RefreshIndicator(
                               color: ln.plasma,
                               onRefresh: () async {
@@ -280,145 +279,48 @@ class _ChatInboxScreenState extends ConsumerState<ChatInboxScreen> {
                                   final typingName = _typingUserByConv[c.id];
                                   final isTyping = typingName != null;
                                   final time = _sidebarTime(context, c.updatedAt ?? c.lastMessage?.createdAt);
-                                  final unread = c.unreadCount > 0;
                                   final partnerId =
                                       myChatUserId == null ? null : c.partnerChatUserId(myChatUserId);
                                   final partnerOnline =
                                       partnerId != null && onlineIds.contains(partnerId);
                                   final letter = _firstLetter(title);
                                   final pulseTok = _pulseTokenByConv[c.id] ?? 0;
-                                  final scale = reduce ? 1.0 : _gravityScale(index, vh);
                                   final rowAvatarPath = c.displayAvatar ??
                                       (myChatUserId != null ? c.partnerAvatarFromParticipants(myChatUserId) : null);
                                   final rowAvatarUrl = creds == null
                                       ? ''
                                       : resolveChatMediaUrl(rowAvatarPath, creds.apiBaseUrl);
 
-                                  Widget inner = Padding(
-                                    padding: const EdgeInsets.symmetric(vertical: 6),
-                                    child: LiquidNeuralPulseLayer(
-                                      pulseToken: pulseTok,
-                                      child: ClipPath(
-                                        clipper: LiquidNeuralBlobClipper(seed: c.id),
-                                        child: BackdropFilter(
-                                          filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
-                                          child: Material(
-                                            color: ln.textPrimary.withValues(alpha: 0.04),
-                                            child: InkWell(
-                                              splashColor: ln.plasma.withValues(alpha: 0.18),
-                                              highlightColor: ln.textPrimary.withValues(alpha: 0.04),
-                                              onTap: () {
-                                                HapticFeedback.lightImpact();
-                                                context.push('/chat/thread/${c.id}', extra: title);
-                                              },
-                                              child: Ink(
-                                                decoration: BoxDecoration(
-                                                  gradient: ln.cardSheen,
-                                                ),
-                                                child: Padding(
-                                                  padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
-                                                  child: Row(
-                                                    children: [
-                                                      LiquidNeuralPlasmaAvatar(
-                                                        letter: letter,
-                                                        unread: unread,
-                                                        online: partnerOnline,
-                                                        imageUrl: rowAvatarUrl,
-                                                      ),
-                                                      const SizedBox(width: 14),
-                                                      Expanded(
-                                                        child: Column(
-                                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                                          children: [
-                                                            Row(
-                                                              children: [
-                                                                Expanded(
-                                                                  child: Text(
-                                                                    title,
-                                                                    maxLines: 1,
-                                                                    overflow: TextOverflow.ellipsis,
-                                                                    style: GoogleFonts.spaceGrotesk(
-                                                                      fontSize: 16,
-                                                                      fontWeight: FontWeight.w700,
-                                                                      color: ln.textPrimary,
-                                                                    ),
-                                                                  ),
-                                                                ),
-                                                                Text(
-                                                                  time,
-                                                                  style: GoogleFonts.spaceGrotesk(
-                                                                    fontSize: 11,
-                                                                    fontWeight: FontWeight.w500,
-                                                                    color: ln.textSecondary,
-                                                                  ),
-                                                                ),
-                                                              ],
-                                                            ),
-                                                            const SizedBox(height: 6),
-                                                            isTyping
-                                                                ? Row(
-                                                                    crossAxisAlignment: CrossAxisAlignment.center,
-                                                                    children: [
-                                                                      const SignalTypingIndicator(
-                                                                        useLiquidPalette: true,
-                                                                      ),
-                                                                      const SizedBox(width: 6),
-                                                                      Expanded(
-                                                                        child: Text(
-                                                                          typingName.isNotEmpty
-                                                                              ? '$typingName · ${t.chat.typing_status}'
-                                                                              : t.chat.typing_status,
-                                                                          maxLines: 2,
-                                                                          overflow: TextOverflow.ellipsis,
-                                                                          style: GoogleFonts.spaceGrotesk(
-                                                                            fontSize: 13,
-                                                                            fontWeight: FontWeight.w600,
-                                                                            color: ln.plasma,
-                                                                          ),
-                                                                        ),
-                                                                      ),
-                                                                    ],
-                                                                  )
-                                                                : Text(
-                                                                    last,
-                                                                    maxLines: 2,
-                                                                    overflow: TextOverflow.ellipsis,
-                                                                    style: GoogleFonts.spaceGrotesk(
-                                                                      fontSize: 13,
-                                                                      fontWeight: FontWeight.w500,
-                                                                      color: ln.textSecondary,
-                                                                      height: 1.35,
-                                                                    ),
-                                                                  ),
-                                                          ],
-                                                        ),
-                                                      ),
-                                                      if (unread) ...[
-                                                        const SizedBox(width: 8),
-                                                        LiquidNeuralUnreadBadge(count: c.unreadCount),
-                                                      ],
-                                                    ],
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ),
+                                  Widget inner = LiquidNeuralPulseLayer(
+                                    pulseToken: pulseTok,
+                                    child: PremiumConversationCard(
+                                      title: title,
+                                      preview: last,
+                                      time: time,
+                                      initial: letter,
+                                      avatarUrl: rowAvatarUrl,
+                                      unreadCount: c.unreadCount,
+                                      online: partnerOnline,
+                                      typing: isTyping,
+                                      typingName: typingName,
+                                      onTap: () {
+                                        context.push(
+                                          '/chat/thread/${c.id}',
+                                          extra: title,
+                                        );
+                                      },
                                     ),
-                                  );
-
-                                  inner = Transform.scale(
-                                    scale: scale,
-                                    alignment: Alignment.center,
-                                    child: inner,
                                   );
 
                                   if (!reduce) {
                                     inner = inner
                                         .animate(delay: (index * 80).ms)
                                         .fadeIn(duration: 380.ms, curve: Curves.easeOutCubic)
-                                        .slideX(begin: 0.14, duration: 420.ms, curve: Curves.easeOutCubic);
+                                        .slideX(
+                                          begin: 0.14,
+                                          duration: 420.ms,
+                                          curve: Curves.easeOutCubic,
+                                        );
                                   }
 
                                   return Dismissible(
@@ -428,7 +330,9 @@ class _ChatInboxScreenState extends ConsumerState<ChatInboxScreen> {
                                           dir == DismissDirection.startToEnd) {
                                         if (context.mounted) {
                                           ScaffoldMessenger.of(context).showSnackBar(
-                                            SnackBar(content: Text(t.chat.inbox_swipe_soon)),
+                                            SnackBar(
+                                              content: Text(t.chat.inbox_swipe_soon),
+                                            ),
                                           );
                                         }
                                       }
@@ -436,28 +340,36 @@ class _ChatInboxScreenState extends ConsumerState<ChatInboxScreen> {
                                     },
                                     background: Container(
                                       alignment: Alignment.centerLeft,
-                                      padding: const EdgeInsets.only(left: 22),
+                                      padding: const EdgeInsets.only(left: 26),
                                       margin: const EdgeInsets.symmetric(vertical: 6),
                                       decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(26),
+                                        borderRadius: BorderRadius.circular(p.radiusXL),
                                         gradient: LinearGradient(
+                                          begin: Alignment.centerLeft,
+                                          end: Alignment.centerRight,
                                           colors: [
-                                            ln.amberGlow.withValues(alpha: 0.35),
-                                            ln.plasma.withValues(alpha: 0.12),
+                                            p.accentWarm.withValues(alpha: 0.9),
+                                            p.accentWarm.withValues(alpha: 0.35),
                                           ],
                                         ),
                                       ),
-                                      child: const Icon(Icons.push_pin_rounded, color: Colors.white),
+                                      child: const Icon(
+                                        Icons.push_pin_rounded,
+                                        color: Colors.white,
+                                      ),
                                     ),
                                     secondaryBackground: Container(
                                       alignment: Alignment.centerRight,
-                                      padding: const EdgeInsets.only(right: 22),
+                                      padding: const EdgeInsets.only(right: 26),
                                       margin: const EdgeInsets.symmetric(vertical: 6),
                                       decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(26),
-                                        color: AppColors.error.withValues(alpha: 0.45),
+                                        borderRadius: BorderRadius.circular(p.radiusXL),
+                                        color: AppColors.error.withValues(alpha: 0.55),
                                       ),
-                                      child: const Icon(Icons.delete_outline_rounded, color: Colors.white),
+                                      child: const Icon(
+                                        Icons.delete_outline_rounded,
+                                        color: Colors.white,
+                                      ),
                                     ),
                                     child: inner,
                                   );
@@ -471,8 +383,10 @@ class _ChatInboxScreenState extends ConsumerState<ChatInboxScreen> {
                   },
                 ),
               ),
-            ],
-          ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -540,38 +454,10 @@ class _ChatEmpty extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ln = LiquidNeuralTheme.of(context);
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.chat_bubble_outline, size: 52, color: ln.textSecondary),
-            const SizedBox(height: 16),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: GoogleFonts.spaceGrotesk(
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-                color: ln.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              hint,
-              textAlign: TextAlign.center,
-              style: GoogleFonts.spaceGrotesk(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: ln.textSecondary,
-                height: 1.4,
-              ),
-            ),
-          ],
-        ),
-      ),
+    return PremiumStateCard(
+      icon: Icons.forum_rounded,
+      title: message,
+      message: hint,
     );
   }
 }
@@ -584,31 +470,36 @@ class _ChatError extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ln = LiquidNeuralTheme.of(context);
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: GoogleFonts.spaceGrotesk(
-                fontSize: 15,
-                color: ln.textSecondary,
+    final p = PremiumChatTokens.of(context);
+    return PremiumStateCard(
+      icon: Icons.error_outline_rounded,
+      title: context.t.dashboard.errors.retry,
+      message: message,
+      action: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(p.radiusLG),
+          gradient: p.accentGradient,
+          boxShadow: p.warmGlow,
+        ),
+        child: Material(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(p.radiusLG),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(p.radiusLG),
+            onTap: onRetry,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+              child: Text(
+                context.t.dashboard.errors.retry,
+                style: GoogleFonts.inter(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14,
+                  letterSpacing: 0.2,
+                ),
               ),
             ),
-            const SizedBox(height: 16),
-            FilledButton(
-              onPressed: onRetry,
-              style: FilledButton.styleFrom(
-                backgroundColor: ln.plasma,
-                foregroundColor: Colors.black,
-              ),
-              child: Text(context.t.dashboard.errors.retry),
-            ),
-          ],
+          ),
         ),
       ),
     );

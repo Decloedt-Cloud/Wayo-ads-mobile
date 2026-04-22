@@ -97,7 +97,13 @@
     },
     "notifications_title": "Notifications",
     "notifications_empty": "No notifications",
-    "theme_toggle_tooltip": "Switch between light and dark theme"
+    "notification_incoming": "New notification",
+    "notification_view": "View",
+    "notifications_mark_all_read": "Mark all read",
+    "notifications_view_all": "View all notifications",
+    "notifications_important": "Important",
+    "theme_toggle_tooltip": "Switch between light and dark theme",
+    "refresh": "Refresh dashboard"
   },
   "advertiser_campaigns": {
     "title": "Campaigns",
@@ -182,8 +188,23 @@
     "bubble_copy": "Copy",
     "bubble_react": "React",
     "bubble_delete": "Delete",
+    "bubble_update": "Edit",
     "bubble_delete_unavailable": "Deleting messages from the app is not available yet.",
     "bubble_copied": "Copied to clipboard",
+    "edited": "edited",
+    "seen": "Seen",
+    "delivered": "Delivered",
+    "edit_mode_title": "Editing message",
+    "edit_mode_cancel": "Cancel",
+    "edit_mode_hint": "Update your message…",
+    "edit_failed": "Could not update the message. Try again.",
+    "edit_not_allowed": "Only your own text messages can be edited.",
+    "delete_failed": "Could not delete the message. Try again.",
+    "delete_not_allowed": "You can only delete your own messages.",
+    "delete_confirm_title": "Delete this message?",
+    "delete_confirm_text": "This action cannot be undone.",
+    "delete_confirm_cta": "Delete",
+    "delete_confirm_cancel": "Cancel",
     "scroll_to_latest": "Latest"
   },
   "common": {

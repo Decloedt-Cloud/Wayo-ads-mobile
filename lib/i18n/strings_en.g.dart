@@ -183,7 +183,13 @@ class TranslationsDashboardEn {
 	late final TranslationsDashboardErrorsEn errors = TranslationsDashboardErrorsEn.internal(_root);
 	String get notifications_title => 'Notifications';
 	String get notifications_empty => 'No notifications';
+	String get notification_incoming => 'New notification';
+	String get notification_view => 'View';
+	String get notifications_mark_all_read => 'Mark all read';
+	String get notifications_view_all => 'View all notifications';
+	String get notifications_important => 'Important';
 	String get theme_toggle_tooltip => 'Switch between light and dark theme';
+	String get refresh => 'Refresh dashboard';
 }
 
 // Path: advertiser_campaigns
@@ -258,8 +264,23 @@ class TranslationsChatEn {
 	String get bubble_copy => 'Copy';
 	String get bubble_react => 'React';
 	String get bubble_delete => 'Delete';
+	String get bubble_update => 'Edit';
 	String get bubble_delete_unavailable => 'Deleting messages from the app is not available yet.';
 	String get bubble_copied => 'Copied to clipboard';
+	String get edited => 'edited';
+	String get seen => 'Seen';
+	String get delivered => 'Delivered';
+	String get edit_mode_title => 'Editing message';
+	String get edit_mode_cancel => 'Cancel';
+	String get edit_mode_hint => 'Update your message…';
+	String get edit_failed => 'Could not update the message. Try again.';
+	String get edit_not_allowed => 'Only your own text messages can be edited.';
+	String get delete_failed => 'Could not delete the message. Try again.';
+	String get delete_not_allowed => 'You can only delete your own messages.';
+	String get delete_confirm_title => 'Delete this message?';
+	String get delete_confirm_text => 'This action cannot be undone.';
+	String get delete_confirm_cta => 'Delete';
+	String get delete_confirm_cancel => 'Cancel';
 	String get scroll_to_latest => 'Latest';
 }
 
@@ -562,7 +583,13 @@ extension on Translations {
 			case 'dashboard.errors.retry': return 'Retry';
 			case 'dashboard.notifications_title': return 'Notifications';
 			case 'dashboard.notifications_empty': return 'No notifications';
+			case 'dashboard.notification_incoming': return 'New notification';
+			case 'dashboard.notification_view': return 'View';
+			case 'dashboard.notifications_mark_all_read': return 'Mark all read';
+			case 'dashboard.notifications_view_all': return 'View all notifications';
+			case 'dashboard.notifications_important': return 'Important';
 			case 'dashboard.theme_toggle_tooltip': return 'Switch between light and dark theme';
+			case 'dashboard.refresh': return 'Refresh dashboard';
 			case 'advertiser_campaigns.title': return 'Campaigns';
 			case 'advertiser_campaigns.subtitle': return 'Track your campaign performance — read only.';
 			case 'advertiser_campaigns.tabs.active': return 'Active';
@@ -629,8 +656,23 @@ extension on Translations {
 			case 'chat.bubble_copy': return 'Copy';
 			case 'chat.bubble_react': return 'React';
 			case 'chat.bubble_delete': return 'Delete';
+			case 'chat.bubble_update': return 'Edit';
 			case 'chat.bubble_delete_unavailable': return 'Deleting messages from the app is not available yet.';
 			case 'chat.bubble_copied': return 'Copied to clipboard';
+			case 'chat.edited': return 'edited';
+			case 'chat.seen': return 'Seen';
+			case 'chat.delivered': return 'Delivered';
+			case 'chat.edit_mode_title': return 'Editing message';
+			case 'chat.edit_mode_cancel': return 'Cancel';
+			case 'chat.edit_mode_hint': return 'Update your message…';
+			case 'chat.edit_failed': return 'Could not update the message. Try again.';
+			case 'chat.edit_not_allowed': return 'Only your own text messages can be edited.';
+			case 'chat.delete_failed': return 'Could not delete the message. Try again.';
+			case 'chat.delete_not_allowed': return 'You can only delete your own messages.';
+			case 'chat.delete_confirm_title': return 'Delete this message?';
+			case 'chat.delete_confirm_text': return 'This action cannot be undone.';
+			case 'chat.delete_confirm_cta': return 'Delete';
+			case 'chat.delete_confirm_cancel': return 'Cancel';
 			case 'chat.scroll_to_latest': return 'Latest';
 			case 'common.language': return 'Language';
 			case 'common.theme': return 'Theme';

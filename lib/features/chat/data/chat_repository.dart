@@ -321,6 +321,44 @@ final class ChatRepository {
     await dio.post<Map<String, dynamic>>('api/v1/conversations/$conversationId/read');
   }
 
+  /// `PUT /api/v1/conversations/{id}/messages/{messageId}` — owner edits text content.
+  Future<ChatMessage> updateTextMessage(
+    ChatCredentials c,
+    int conversationId,
+    int messageId, {
+    required String content,
+    String type = 'text',
+    String? Function()? socketId,
+  }) async {
+    final dio = _chatDio(c, socketId: socketId);
+    final res = await dio.put<Map<String, dynamic>>(
+      'api/v1/conversations/$conversationId/messages/$messageId',
+      data: <String, dynamic>{'content': content, 'type': type},
+    );
+    final data = res.data;
+    if (data == null || data['success'] != true) {
+      throw ServerException(data?['message'] as String? ?? 'Update failed');
+    }
+    final msg = data['data'];
+    if (msg is! Map<String, dynamic>) {
+      throw const ServerException('Invalid update response');
+    }
+    return _parseMessage(msg);
+  }
+
+  /// `DELETE /api/v1/conversations/{id}/messages/{messageId}` — owner removes their message.
+  Future<void> deleteMessage(
+    ChatCredentials c,
+    int conversationId,
+    int messageId, {
+    String? Function()? socketId,
+  }) async {
+    final dio = _chatDio(c, socketId: socketId);
+    await dio.delete<Map<String, dynamic>>(
+      'api/v1/conversations/$conversationId/messages/$messageId',
+    );
+  }
+
   Future<void> sendTyping(
     ChatCredentials c,
     int conversationId,

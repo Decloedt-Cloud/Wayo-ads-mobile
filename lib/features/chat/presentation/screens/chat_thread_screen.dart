@@ -52,6 +52,10 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
   Timer? _typingQuietTimer;
   String? _phoneError;
   bool _uploading = false;
+  DateTime? _peerReadAt;
+  int? _selectedMessageId;
+  int? _editingMessageId;
+  String _editingOriginalContent = '';
 
   SystemUiOverlayStyle _threadSystemUi(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -104,6 +108,7 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
         _messages = rows;
         _loading = false;
       });
+      _seedPeerReadAtFromConversations(creds.chatUserId);
       WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToEnd(animated: false));
       _listenRt(creds, repo, rt);
     } catch (e) {
@@ -112,6 +117,26 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
         _loading = false;
         _error = ChatRepository.mapError(e).toString();
       });
+    }
+  }
+
+  void _seedPeerReadAtFromConversations(int myChatUserId) {
+    final convList = ref.read(chatConversationsProvider).valueOrNull;
+    final conv = _findConversation(convList);
+    final parts = conv?.participants;
+    if (parts == null) return;
+    DateTime? best;
+    for (final p in parts) {
+      final uid = p.user?.id ?? p.userId;
+      if (uid == myChatUserId) continue;
+      final raw = p.lastReadAt;
+      if (raw == null || raw.isEmpty) continue;
+      final parsed = DateTime.tryParse(raw);
+      if (parsed == null) continue;
+      if (best == null || parsed.isAfter(best)) best = parsed;
+    }
+    if (best != null && (_peerReadAt == null || best.isAfter(_peerReadAt!))) {
+      if (mounted) setState(() => _peerReadAt = best);
     }
   }
 
@@ -147,6 +172,12 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
       if (event is ChatMessageDeletedEvent && event.conversationId == widget.conversationId) {
         setState(() {
           _messages = _messages.where((m) => m.id != event.messageId).toList();
+          if (_selectedMessageId == event.messageId) _selectedMessageId = null;
+          if (_editingMessageId == event.messageId) {
+            _editingMessageId = null;
+            _editingOriginalContent = '';
+            _draft.clear();
+          }
         });
         return;
       }
@@ -155,6 +186,15 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
         setState(() {
           _messages = _messages.map((x) => x.id == m.id ? m : x).toList();
         });
+        return;
+      }
+      if (event is ChatMessageReadEvent && event.conversationId == widget.conversationId) {
+        if (event.readerId == creds.chatUserId) return;
+        final parsed = DateTime.tryParse(event.readAt);
+        if (parsed == null) return;
+        if (_peerReadAt == null || parsed.isAfter(_peerReadAt!)) {
+          setState(() => _peerReadAt = parsed);
+        }
         return;
       }
     });
@@ -207,6 +247,48 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
       return;
     }
     setState(() => _phoneError = null);
+
+    // ── Edit mode: PUT /messages/{id}
+    final editingId = _editingMessageId;
+    if (editingId != null) {
+      if (text == _editingOriginalContent) {
+        setState(() {
+          _editingMessageId = null;
+          _editingOriginalContent = '';
+          _draft.clear();
+        });
+        return;
+      }
+      HapticFeedback.mediumImpact();
+      setState(() => _sending = true);
+      try {
+        final updated = await repo.updateTextMessage(
+          creds,
+          widget.conversationId,
+          editingId,
+          content: text,
+          socketId: () => rt.socketId,
+        );
+        if (!mounted) return;
+        setState(() {
+          _messages = _messages.map((m) => m.id == editingId ? updated : m).toList();
+          _editingMessageId = null;
+          _editingOriginalContent = '';
+          _draft.clear();
+        });
+        ref.invalidate(chatConversationsProvider);
+      } catch (_) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(context.t.chat.edit_failed)),
+          );
+        }
+      } finally {
+        if (mounted) setState(() => _sending = false);
+      }
+      return;
+    }
+
     HapticFeedback.mediumImpact();
     final tempId = -DateTime.now().millisecondsSinceEpoch;
     final optimistic = ChatMessage(
@@ -243,6 +325,105 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
       });
     } finally {
       if (mounted) setState(() => _sending = false);
+    }
+  }
+
+  void _onEditMessage(ChatMessage m, int myChatUserId) {
+    if (m.userId != myChatUserId || m.type != 'text') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.t.chat.edit_not_allowed)),
+      );
+      return;
+    }
+    setState(() {
+      _selectedMessageId = null;
+      _editingMessageId = m.id;
+      _editingOriginalContent = m.content;
+      _draft.text = m.content;
+      _draft.selection = TextSelection.fromPosition(
+        TextPosition(offset: _draft.text.length),
+      );
+      _phoneError = null;
+    });
+  }
+
+  void _cancelEdit() {
+    setState(() {
+      _editingMessageId = null;
+      _editingOriginalContent = '';
+      _draft.clear();
+      _phoneError = null;
+    });
+  }
+
+  Future<void> _onDeleteMessage(
+    ChatMessage m,
+    ChatCredentials creds,
+    ChatRepository repo,
+    ChatRealtimeService rt,
+  ) async {
+    final t = context.t;
+    if (m.userId != creds.chatUserId) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(t.chat.delete_not_allowed)),
+      );
+      return;
+    }
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) {
+        final ct = CinematicChatTheme.of(ctx);
+        return AlertDialog(
+          backgroundColor: ct.surface,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+          title: Text(t.chat.delete_confirm_title),
+          content: Text(t.chat.delete_confirm_text),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: Text(t.chat.delete_confirm_cancel),
+            ),
+            FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: const Color(0xFFEF4444),
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () => Navigator.of(ctx).pop(true),
+              child: Text(t.chat.delete_confirm_cta),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true) return;
+    if (!mounted) return;
+
+    final previous = _messages;
+    setState(() {
+      _messages = _messages.where((x) => x.id != m.id).toList();
+      if (_selectedMessageId == m.id) _selectedMessageId = null;
+      if (_editingMessageId == m.id) {
+        _editingMessageId = null;
+        _editingOriginalContent = '';
+        _draft.clear();
+      }
+    });
+    try {
+      await repo.deleteMessage(
+        creds,
+        widget.conversationId,
+        m.id,
+        socketId: () => rt.socketId,
+      );
+      ref.invalidate(chatConversationsProvider);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _messages = previous);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(t.chat.delete_failed)),
+      );
     }
   }
 
@@ -405,6 +586,8 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
             final messageTiles = _buildMessageWidgets(
               context,
               creds,
+              repo,
+              rt,
               reduce,
               peerAvatarUrl: partnerAvatarResolved,
             );
@@ -518,15 +701,25 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
                             controller: _draft,
                             enabled: !_sending && !_uploading && !_loading && _error == null,
                             reduceMotion: reduce,
-                            hint: t.chat.composer_hint,
+                            hint: _editingMessageId != null
+                                ? t.chat.edit_mode_hint
+                                : t.chat.composer_hint,
                             errorText: _phoneError,
-                            onAttach: () => _pickAndUpload(creds, repo, rt),
+                            editing: _editingMessageId != null,
+                            editingTitle: t.chat.edit_mode_title,
+                            editingPreview: _editingOriginalContent,
+                            editingCancelLabel: t.chat.edit_mode_cancel,
+                            onCancelEdit: _cancelEdit,
+                            onAttach: _editingMessageId != null
+                                ? null
+                                : () => _pickAndUpload(creds, repo, rt),
                             onSendBurst: () => _burstKey.currentState?.play(),
                             onDraftChanged: (s) {
                               setState(() {
                                 _phoneError =
                                     chatTextLooksLikePhoneNumber(s.trim()) ? t.chat.error_phone : null;
                               });
+                              if (_editingMessageId != null) return;
                               _typingQuietTimer?.cancel();
                               if (s.trim().isEmpty) {
                                 unawaited(_fireTyping(creds, repo, rt, false));
@@ -559,6 +752,8 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
   List<Widget> _buildMessageWidgets(
     BuildContext context,
     ChatCredentials creds,
+    ChatRepository repo,
+    ChatRealtimeService rt,
     bool reduce, {
     required String peerAvatarUrl,
   }) {
@@ -577,22 +772,35 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
       }
       final next = i + 1 < _messages.length ? _messages[i + 1] : null;
       final showFooter = next == null || next.userId != m.userId;
+      final isMine = m.userId == creds.chatUserId;
+      final createdUtc = DateTime.tryParse(m.createdAt);
+      final isReadByPeer = isMine &&
+          !m.pending &&
+          !m.failed &&
+          _peerReadAt != null &&
+          createdUtc != null &&
+          !createdUtc.isAfter(_peerReadAt!);
       out.add(
         CinematicMessageBubble(
+          key: ValueKey('msg-${m.id}'),
           message: m,
-          isMine: m.userId == creds.chatUserId,
+          isMine: isMine,
           reduceMotion: reduce,
           apiBaseUrl: creds.apiBaseUrl,
           showTimestampFooter: showFooter,
           peerAvatarUrl: peerAvatarUrl,
           attachmentLabel: t.chat.attachment,
           openPdfLabel: t.chat.open_file,
-          onReplyInsert: (prefix) {
-            setState(() => _draft.text = prefix + _draft.text);
+          isReadByPeer: isReadByPeer,
+          selected: _selectedMessageId == m.id,
+          onSelect: () => setState(() => _selectedMessageId = m.id),
+          onDismissSelection: () {
+            if (_selectedMessageId == m.id) {
+              setState(() => _selectedMessageId = null);
+            }
           },
-          onReactAppend: (emoji) {
-            setState(() => _draft.text = _draft.text + emoji);
-          },
+          onEditRequest: () => _onEditMessage(m, creds.chatUserId),
+          onDeleteRequest: () => _onDeleteMessage(m, creds, repo, rt),
         ),
       );
     }

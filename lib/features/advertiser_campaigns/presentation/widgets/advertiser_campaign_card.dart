@@ -3,9 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../../core/format/money_formatter.dart';
+import '../../../../core/network/wayo_ads_public_url.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../i18n/strings.g.dart';
+import '../../../creator_campaigns/domain/creator_browse_campaign.dart';
 import '../../../dashboard/domain/entities/campaign_platform.dart';
 import '../../../dashboard/domain/entities/campaign_status.dart';
 import '../../domain/advertiser_campaign.dart';
@@ -51,7 +53,10 @@ class AdvertiserCampaignCard extends StatelessWidget {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _Thumb(url: c.coverUrl),
+                    _Thumb(
+                      coverUrl: normalizeWayoAdsMediaUrl(c.coverUrl),
+                      brandLogoUrl: resolveWayoAdsPublicUrl(c.brandLogoUrl),
+                    ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
@@ -72,6 +77,7 @@ class AdvertiserCampaignCard extends StatelessWidget {
                             crossAxisAlignment: WrapCrossAlignment.center,
                             children: [
                               _StatusBadge(status: c.status),
+                              _CampaignKindPill(type: c.campaignType, t: t),
                               _PlatformPill(platform: c.platform, t: t),
                             ],
                           ),
@@ -167,28 +173,58 @@ class AdvertiserCampaignCard extends StatelessWidget {
 }
 
 class _Thumb extends StatelessWidget {
-  const _Thumb({this.url});
+  const _Thumb({this.coverUrl, this.brandLogoUrl});
 
-  final String? url;
+  final String? coverUrl;
+
+  /// Absolute URL for brand mark (optional).
+  final String? brandLogoUrl;
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
-      child: SizedBox(
-        width: 56,
-        height: 56,
-        child: url != null && url!.isNotEmpty
-            ? CachedNetworkImage(
-                imageUrl: url!,
-                fit: BoxFit.cover,
-                memCacheWidth: 120,
-                memCacheHeight: 120,
-                errorWidget: (context, url, error) => _placeholder(context),
-              )
-            : _placeholder(context),
-      ),
-    );
+    Widget tile(String? url) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: SizedBox(
+          width: 56,
+          height: 56,
+          child: url != null && url.isNotEmpty
+              ? CachedNetworkImage(
+                  imageUrl: url,
+                  fit: BoxFit.cover,
+                  memCacheWidth: 120,
+                  memCacheHeight: 120,
+                  errorWidget: (context, url, error) => _placeholder(context),
+                )
+              : _placeholder(context),
+        ),
+      );
+    }
+
+    final logo = brandLogoUrl;
+
+    if (logo != null && logo.isNotEmpty) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Material(
+          color: Colors.transparent,
+          child: SizedBox(
+            width: 56,
+            height: 56,
+            child: CachedNetworkImage(
+              imageUrl: logo,
+              fit: BoxFit.contain,
+              color: null,
+              memCacheWidth: 120,
+              memCacheHeight: 120,
+              errorWidget: (context, url, error) => tile(coverUrl),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return tile(coverUrl);
   }
 
   Widget _placeholder(BuildContext context) {
@@ -250,6 +286,39 @@ class _StatusBadge extends StatelessWidget {
           fontSize: 11,
           fontWeight: FontWeight.w800,
           letterSpacing: 0.3,
+        ),
+      ),
+    );
+  }
+}
+
+class _CampaignKindPill extends StatelessWidget {
+  const _CampaignKindPill({required this.type, required this.t});
+
+  final CreatorCampaignType type;
+  final Translations t;
+
+  @override
+  Widget build(BuildContext context) {
+    final label = switch (type) {
+      CreatorCampaignType.link => t.creator.campaigns.type_link,
+      CreatorCampaignType.video => t.creator.campaigns.type_video,
+      CreatorCampaignType.shorts => t.creator.campaigns.type_shorts,
+      CreatorCampaignType.unknown => '—',
+    };
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.35)),
+        color: AppColors.primary.withValues(alpha: 0.08),
+      ),
+      child: Text(
+        label,
+        style: AppTextStyles.caption(context).copyWith(
+          color: AppColors.primary,
+          fontWeight: FontWeight.w800,
+          fontSize: 11,
         ),
       ),
     );

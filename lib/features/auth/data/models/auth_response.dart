@@ -23,9 +23,17 @@ class AuthResponse {
       payload = Map<String, dynamic>.from(json['data'] as Map<String, dynamic>);
     }
 
-    final userRaw = payload['user'];
-    if (userRaw is! Map<String, dynamic>) {
+    final userRaw0 = payload['user'];
+    if (userRaw0 is! Map<String, dynamic>) {
       throw FormatException('AuthResponse: missing user object');
+    }
+    final userRaw = Map<String, dynamic>.from(userRaw0);
+    if (!userRaw.containsKey('pending_onboarding')) {
+      if (payload['pending_onboarding'] is List) {
+        userRaw['pending_onboarding'] = payload['pending_onboarding'];
+      } else if (json['pending_onboarding'] is List) {
+        userRaw['pending_onboarding'] = json['pending_onboarding'];
+      }
     }
 
     final refresh = payload['refresh_token'];

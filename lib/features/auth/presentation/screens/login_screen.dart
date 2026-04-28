@@ -15,6 +15,7 @@ import '../../../../shared/widgets/language_switcher.dart';
 import '../../../../shared/widgets/theme_toggle_button.dart';
 import '../../data/google_sign_in_facade.dart';
 import '../../domain/auth_notifier.dart';
+import '../../domain/onboarding_gate.dart';
 import '../login/widgets/animated_digital_zellij_background.dart';
 import '../login/widgets/login_field_styles.dart';
 import '../login/widgets/login_hero_premium.dart';
@@ -82,6 +83,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       if (!context.mounted) {
         return;
       }
+      if (ref.read(authNotifierProvider).hasError) {
+        return;
+      }
+      _goAfterLogin(context, ref);
     } finally {
       if (mounted) {
         _submitInProgress = false;
@@ -121,10 +126,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         return;
       }
       await ref.read(authNotifierProvider.notifier).loginWithGoogle(idToken);
+      if (!context.mounted) return;
+      if (ref.read(authNotifierProvider).hasError) return;
+      _goAfterLogin(context, ref);
     } on PlatformException catch (e) {
       if (!mounted) return;
       final msg = GoogleSignInFacade.looksLikeStaleChannel(e)
           ? t.login.google_channel_restart
+          : GoogleSignInFacade.isAndroidDeveloperConfigError(e)
+          ? t.login.google_android_oauth_misconfigured
           : (e.message?.isNotEmpty == true
                 ? e.message!
                 : t.login.google_failed);
@@ -133,11 +143,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       if (!mounted) return;
       final msg = GoogleSignInFacade.looksLikeStaleChannel(e)
           ? t.login.google_channel_restart
+          : GoogleSignInFacade.isAndroidDeveloperConfigError(e)
+          ? t.login.google_android_oauth_misconfigured
           : t.login.google_failed;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
     } finally {
       if (mounted) setState(() => _googleSigningIn = false);
     }
+  }
+
+  void _goAfterLogin(BuildContext context, WidgetRef ref) {
+    if (!context.mounted) return;
+    final s = ref.read(authNotifierProvider).valueOrNull;
+    if (s is! AuthAuthenticated) return;
+    final next = onboardingRedirectPath(s.user);
+    context.go(next ?? '/dashboard');
   }
 
   SystemUiOverlayStyle _overlayFor(Brightness b) {

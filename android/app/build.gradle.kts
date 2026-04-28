@@ -37,10 +37,23 @@ android {
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("debug")
+            // Keep R8/minification on (Flutter default) but point it at our
+            // custom rules so Stripe's optional PushProvisioning classes don't
+            // make the build fail.
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
         }
     }
 }
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    // flutter_stripe requires AppCompat/MaterialComponents for its Activity theme.
+    implementation("androidx.appcompat:appcompat:1.7.0")
+    implementation("com.google.android.material:material:1.12.0")
 }

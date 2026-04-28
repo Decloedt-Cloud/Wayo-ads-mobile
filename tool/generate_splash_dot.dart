@@ -3,7 +3,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-/// Writes `assets/splash/wayo_dot.png` (192×192, orange #F47A1F circle, transparent bg).
+/// Writes `assets/splash/wayo_dot_icon.png` (192×192, orange #F47A1F circle, transparent bg).
 void main() {
   const w = 192;
   const h = 192;
@@ -29,7 +29,7 @@ void main() {
       }
     }
   }
-  final path = 'assets/splash/wayo_dot.png';
+  final path = 'assets/splash/wayo_dot_icon.png';
   File(path).writeAsBytesSync(_encodePng(w, h, rgba));
   print('Wrote $path');
 }

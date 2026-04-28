@@ -648,16 +648,17 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
               creds.apiBaseUrl,
             );
 
-            final messageTiles = _buildMessageWidgets(
+            final messageTiles = _buildMessageTiles(
               context,
-              creds,
-              repo,
-              rt,
-              reduce,
+              creds: creds,
+              repo: repo,
+              rt: rt,
+              reduce: reduce,
               peerAvatarUrl: partnerAvatarResolved,
             );
             final listCount =
                 messageTiles.length + (_typingName != null ? 1 : 0);
+            final bottomPad = 8.0 + MediaQuery.paddingOf(context).bottom;
 
             return AnnotatedRegion<SystemUiOverlayStyle>(
               value: threadUi,
@@ -689,77 +690,83 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
                                       partnerAvatarUrl: partnerAvatarResolved,
                                     ),
                                   ),
-                                  SliverPadding(
-                                    padding: EdgeInsets.fromLTRB(
-                                      0,
-                                      4,
-                                      0,
-                                      8 + MediaQuery.paddingOf(context).bottom,
-                                    ),
-                                    sliver: _loading
-                                        ? SliverFillRemaining(
-                                            child: Center(
-                                              child: CircularProgressIndicator(
-                                                color: chatTheme.amber,
-                                              ),
-                                            ),
-                                          )
-                                        : _error != null
-                                        ? SliverFillRemaining(
-                                            child: Center(
-                                              child: Padding(
-                                                padding: const EdgeInsets.all(
-                                                  24,
-                                                ),
-                                                child: Column(
-                                                  mainAxisSize:
-                                                      MainAxisSize.min,
-                                                  children: [
-                                                    Text(
-                                                      _error!,
-                                                      textAlign:
-                                                          TextAlign.center,
-                                                    ),
-                                                    const SizedBox(height: 12),
-                                                    FilledButton(
-                                                      onPressed: _bootstrap,
-                                                      child: Text(
-                                                        t
-                                                            .dashboard
-                                                            .errors
-                                                            .retry,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            ),
-                                          )
-                                        : SliverList(
-                                            delegate:
-                                                SliverChildBuilderDelegate((
-                                                  context,
-                                                  index,
-                                                ) {
-                                                  if (index <
-                                                      messageTiles.length) {
-                                                    return messageTiles[index];
-                                                  }
-                                                  return const Padding(
-                                                    padding: EdgeInsets.only(
-                                                      left: 12,
-                                                      bottom: 12,
-                                                    ),
-                                                    child: Align(
-                                                      alignment:
-                                                          Alignment.centerLeft,
-                                                      child:
-                                                          CinematicTypingDots(),
-                                                    ),
-                                                  );
-                                                }, childCount: listCount),
+                                  if (_loading)
+                                    SliverPadding(
+                                      padding: EdgeInsets.fromLTRB(
+                                        0,
+                                        4,
+                                        0,
+                                        bottomPad,
+                                      ),
+                                      sliver: SliverFillRemaining(
+                                        child: Center(
+                                          child: CircularProgressIndicator(
+                                            color: chatTheme.amber,
                                           ),
-                                  ),
+                                        ),
+                                      ),
+                                    )
+                                  else if (_error != null)
+                                    SliverPadding(
+                                      padding: EdgeInsets.fromLTRB(
+                                        0,
+                                        4,
+                                        0,
+                                        bottomPad,
+                                      ),
+                                      sliver: SliverFillRemaining(
+                                        child: Center(
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(24),
+                                            child: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Text(
+                                                  _error!,
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                                const SizedBox(height: 12),
+                                                FilledButton(
+                                                  onPressed: _bootstrap,
+                                                  child: Text(
+                                                    t.dashboard.errors.retry,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    )
+                                  else
+                                    SliverPadding(
+                                      padding: EdgeInsets.fromLTRB(
+                                        0,
+                                        4,
+                                        0,
+                                        bottomPad,
+                                      ),
+                                      sliver: SliverList(
+                                        delegate: SliverChildBuilderDelegate((
+                                          context,
+                                          index,
+                                        ) {
+                                          if (index < messageTiles.length) {
+                                            return messageTiles[index];
+                                          }
+                                          return const Padding(
+                                            padding: EdgeInsets.only(
+                                              left: 12,
+                                              bottom: 12,
+                                            ),
+                                            child: Align(
+                                              alignment: Alignment.centerLeft,
+                                              child: CinematicTypingDots(),
+                                            ),
+                                          );
+                                        }, childCount: listCount),
+                                      ),
+                                    ),
                                 ],
                               ),
                             ),
@@ -859,12 +866,14 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
     );
   }
 
-  List<Widget> _buildMessageWidgets(
-    BuildContext context,
-    ChatCredentials creds,
-    ChatRepository repo,
-    ChatRealtimeService rt,
-    bool reduce, {
+  /// Date pills scroll with messages (not pinned) — avoids stacked sticky headers
+  /// when several days are in one conversation.
+  List<Widget> _buildMessageTiles(
+    BuildContext context, {
+    required ChatCredentials creds,
+    required ChatRepository repo,
+    required ChatRealtimeService rt,
+    required bool reduce,
     required String peerAvatarUrl,
   }) {
     final t = context.t;
@@ -881,40 +890,64 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
         }
       }
       final next = i + 1 < _messages.length ? _messages[i + 1] : null;
-      final showFooter = next == null || next.userId != m.userId;
-      final isMine = m.userId == creds.chatUserId;
-      final createdUtc = DateTime.tryParse(m.createdAt);
-      final isReadByPeer =
-          isMine &&
-          !m.pending &&
-          !m.failed &&
-          _peerReadAt != null &&
-          createdUtc != null &&
-          !createdUtc.isAfter(_peerReadAt!);
       out.add(
-        CinematicMessageBubble(
-          key: ValueKey('msg-${m.id}'),
-          message: m,
-          isMine: isMine,
-          reduceMotion: reduce,
-          apiBaseUrl: creds.apiBaseUrl,
-          showTimestampFooter: showFooter,
+        _buildMessageBubble(
+          context,
+          m: m,
+          next: next,
+          creds: creds,
+          repo: repo,
+          rt: rt,
+          reduce: reduce,
           peerAvatarUrl: peerAvatarUrl,
-          attachmentLabel: t.chat.attachment,
-          openPdfLabel: t.chat.open_file,
-          isReadByPeer: isReadByPeer,
-          selected: _selectedMessageId == m.id,
-          onSelect: () => setState(() => _selectedMessageId = m.id),
-          onDismissSelection: () {
-            if (_selectedMessageId == m.id) {
-              setState(() => _selectedMessageId = null);
-            }
-          },
-          onEditRequest: () => _onEditMessage(m, creds.chatUserId),
-          onDeleteRequest: () => _onDeleteMessage(m, creds, repo, rt),
         ),
       );
     }
     return out;
+  }
+
+  Widget _buildMessageBubble(
+    BuildContext context, {
+    required ChatMessage m,
+    required ChatMessage? next,
+    required ChatCredentials creds,
+    required ChatRepository repo,
+    required ChatRealtimeService rt,
+    required bool reduce,
+    required String peerAvatarUrl,
+  }) {
+    final t = context.t;
+    final showGroupFooter = next == null || next.userId != m.userId;
+    final isMine = m.userId == creds.chatUserId;
+    final createdUtc = DateTime.tryParse(m.createdAt);
+    final isReadByPeer =
+        isMine &&
+        !m.pending &&
+        !m.failed &&
+        _peerReadAt != null &&
+        createdUtc != null &&
+        !createdUtc.isAfter(_peerReadAt!);
+    return CinematicMessageBubble(
+      key: ValueKey('msg-${m.id}'),
+      message: m,
+      isMine: isMine,
+      reduceMotion: reduce,
+      apiBaseUrl: creds.apiBaseUrl,
+      // Time for own bubbles is already inside the bubble; avoid duplicate + stray band.
+      showTimestampFooter: !isMine && showGroupFooter,
+      peerAvatarUrl: peerAvatarUrl,
+      attachmentLabel: t.chat.attachment,
+      openPdfLabel: t.chat.open_file,
+      isReadByPeer: isReadByPeer,
+      selected: _selectedMessageId == m.id,
+      onSelect: () => setState(() => _selectedMessageId = m.id),
+      onDismissSelection: () {
+        if (_selectedMessageId == m.id) {
+          setState(() => _selectedMessageId = null);
+        }
+      },
+      onEditRequest: () => _onEditMessage(m, creds.chatUserId),
+      onDeleteRequest: () => _onDeleteMessage(m, creds, repo, rt),
+    );
   }
 }

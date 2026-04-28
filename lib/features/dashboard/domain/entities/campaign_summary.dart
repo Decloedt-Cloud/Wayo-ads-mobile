@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+import '../../../creator_campaigns/domain/creator_browse_campaign.dart';
 import 'campaign_platform.dart';
 import 'campaign_status.dart';
 
@@ -11,6 +12,8 @@ final class CampaignSummary extends Equatable {
     required this.platform,
     required this.creatorsCount,
     this.coverUrl,
+    this.brandLogoUrl,
+    required this.campaignType,
     this.createdAt,
     this.lockedBudgetCents = 0,
     this.spentBudgetCents = 0,
@@ -22,6 +25,12 @@ final class CampaignSummary extends Equatable {
   final CampaignPlatform platform;
   final int creatorsCount;
   final String? coverUrl;
+
+  /// Wayo-ads `brandLogoUrl` when the advertiser uploaded a logo.
+  final String? brandLogoUrl;
+
+  final CreatorCampaignType campaignType;
+
   final DateTime? createdAt;
 
   /// Locked campaign budget (cents), from Wayo-ads budget lock / list API.
@@ -38,6 +47,8 @@ final class CampaignSummary extends Equatable {
     platform,
     creatorsCount,
     coverUrl,
+    brandLogoUrl,
+    campaignType,
     createdAt,
     lockedBudgetCents,
     spentBudgetCents,

@@ -23,6 +23,10 @@ class WayoBottomNav extends StatefulWidget {
     required this.notificationUnread,
     required this.chatUnread,
     required this.campaignsAttentionCount,
+    this.dashboardTabKey,
+    this.campaignsTabKey,
+    this.walletTabKey,
+    this.chatTabKey,
   });
 
   final StatefulNavigationShell navigationShell;
@@ -31,6 +35,14 @@ class WayoBottomNav extends StatefulWidget {
 
   /// Brouillons / campagnes à traiter (badge rouge sur l’onglet Campagnes).
   final int campaignsAttentionCount;
+
+  /// Optional [GlobalKey]s used by the first-login coach-mark tour to locate
+  /// each bottom-nav tab. Attached on the tab's outer tappable so the
+  /// TutorialCoachMark overlay highlights the whole pill, not just the icon.
+  final GlobalKey? dashboardTabKey;
+  final GlobalKey? campaignsTabKey;
+  final GlobalKey? walletTabKey;
+  final GlobalKey? chatTabKey;
 
   @override
   State<WayoBottomNav> createState() => _WayoBottomNavState();
@@ -209,6 +221,7 @@ class _WayoBottomNavState extends State<WayoBottomNav>
                                     Row(
                                       children: [
                                         _TabEntry(
+                                          tabKey: widget.dashboardTabKey,
                                           selected: idx == 0,
                                           label: t.nav.dashboard,
                                           iconSelected: Icons.dashboard_rounded,
@@ -229,6 +242,7 @@ class _WayoBottomNavState extends State<WayoBottomNav>
                                           ),
                                         ),
                                         _TabEntry(
+                                          tabKey: widget.campaignsTabKey,
                                           selected: idx == 1,
                                           label: t.nav.campaigns,
                                           iconSelected: Icons.work_rounded,
@@ -247,6 +261,7 @@ class _WayoBottomNavState extends State<WayoBottomNav>
                                           ),
                                         ),
                                         _TabEntry(
+                                          tabKey: widget.walletTabKey,
                                           selected: idx == 2,
                                           label: t.nav.wallet,
                                           iconSelected: Icons
@@ -264,6 +279,7 @@ class _WayoBottomNavState extends State<WayoBottomNav>
                                           ),
                                         ),
                                         _TabEntry(
+                                          tabKey: widget.chatTabKey,
                                           selected: idx == 3,
                                           label: t.nav.chat,
                                           iconSelected:
@@ -372,6 +388,7 @@ class _TabEntry extends StatelessWidget {
     required this.onHighlight,
     this.badge,
     this.showRedDot = false,
+    this.tabKey,
   });
 
   final bool selected;
@@ -386,6 +403,9 @@ class _TabEntry extends StatelessWidget {
   final int? badge;
   final bool showRedDot;
 
+  /// Coach-mark anchor (see [WayoBottomNav.dashboardTabKey] and siblings).
+  final GlobalKey? tabKey;
+
   @override
   Widget build(BuildContext context) {
     final iconColor = selected ? Colors.white : accent;
@@ -394,6 +414,7 @@ class _TabEntry extends StatelessWidget {
 
     return Expanded(
       child: Material(
+        key: tabKey,
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,

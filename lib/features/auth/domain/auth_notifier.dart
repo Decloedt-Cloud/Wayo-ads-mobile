@@ -10,9 +10,11 @@ import '../../../core/storage/secure_storage.dart';
 import '../../chat/presentation/providers/chat_providers.dart';
 import '../../dashboard/data/dashboard_hive_store.dart';
 import '../../dashboard/presentation/providers/dashboard_state_providers.dart';
+import '../data/google_sign_in_facade.dart';
 import '../data/models/app_user.dart';
 import '../data/models/auth_response.dart';
 import '../data/repositories/auth_repository.dart';
+import 'wayo_ads_account_role.dart';
 
 part 'auth_notifier.g.dart';
 
@@ -59,27 +61,30 @@ class AuthNotifier extends _$AuthNotifier {
       return const AuthUnauthenticated();
     }
 
+    AppUser? existingUser;
+    try {
+      final map = jsonDecode(userJson) as Map<String, dynamic>;
+      existingUser = AppUser.fromJson(map);
+    } catch (_) {
+      await storage.clearAll();
+      return const AuthUnauthenticated();
+    }
+
     final expired = await storage.isTokenExpired();
     if (expired) {
       final refreshed = await AuthRemote.refreshFromStorage(storage);
       switch (refreshed) {
         case Success(:final data):
-          await _persistAuth(storage, data);
-          return AuthAuthenticated(data.user);
+          final merged = _preserveExistingRoleIfNeeded(existingUser, data.user);
+          await _persistAuthWithUser(storage, data, merged);
+          return AuthAuthenticated(merged);
         case Failure():
           await storage.clearAll();
           return const AuthUnauthenticated();
       }
     }
 
-    try {
-      final map = jsonDecode(userJson) as Map<String, dynamic>;
-      final user = AppUser.fromJson(map);
-      return AuthAuthenticated(user);
-    } catch (_) {
-      await storage.clearAll();
-      return const AuthUnauthenticated();
-    }
+    return AuthAuthenticated(existingUser);
   }
 
   Future<void> login(String email, String password) async {
@@ -97,7 +102,7 @@ class AuthNotifier extends _$AuthNotifier {
           await _persistAuth(ref.read(secureStorageProvider), data);
           invalidateChatProviders(ref);
           try {
-            await ref.read(chatBootstrapProvider.future);
+            await _bootstrapChatAfterLogin();
           } catch (_) {}
           state = AsyncValue.data(AuthAuthenticated(data.user));
           await refreshProfileFromAuthServer();
@@ -125,7 +130,7 @@ class AuthNotifier extends _$AuthNotifier {
           await _persistAuth(ref.read(secureStorageProvider), data);
           invalidateChatProviders(ref);
           try {
-            await ref.read(chatBootstrapProvider.future);
+            await _bootstrapChatAfterLogin();
           } catch (_) {}
           state = AsyncValue.data(AuthAuthenticated(data.user));
           await refreshProfileFromAuthServer();
@@ -138,6 +143,13 @@ class AuthNotifier extends _$AuthNotifier {
     }
   }
 
+  /// Lets Auth / Wayo-ads persist the session before [GET /api/chat/token] to avoid
+  /// transient 500s right after password or Google sign-in.
+  Future<void> _bootstrapChatAfterLogin() async {
+    await Future<void>.delayed(const Duration(milliseconds: 450));
+    await ref.read(chatBootstrapProvider.future);
+  }
+
   /// Clears a failed login state (e.g. after rate-limit cooldown ends).
   void clearLoginError() {
     if (!state.hasError) return;
@@ -145,19 +157,45 @@ class AuthNotifier extends _$AuthNotifier {
   }
 
   /// Reloads profile + roles from Auth_Wayo `GET /api/auth/user` (keeps tokens).
+  ///
+  /// If Auth_Wayo returns no role but the current user already has one (e.g. saved
+  /// via Wayo-ads fallback), the existing role is preserved. This handles the case
+  /// where the role is stored only in Wayo-ads and Auth_Wayo doesn't know about it.
   Future<void> refreshProfileFromAuthServer() async {
     final s = state.valueOrNull;
     if (s is! AuthAuthenticated) {
       return;
     }
+    final currentUser = s.user;
     final result = await ref.read(authRepositoryProvider).fetchCurrentUser();
     switch (result) {
       case Success(:final data):
-        await _persistUserOnly(data);
+        final merged = _preserveExistingRoleIfNeeded(currentUser, data);
+        await _persistUserOnly(merged);
       case Failure():
         break;
     }
   }
+
+  /// If [freshUser] has no role but [currentUser] does, keep the existing role.
+  /// This prevents losing a role that was saved only in Wayo-ads (not Auth_Wayo).
+  AppUser _preserveExistingRoleIfNeeded(
+    AppUser currentUser,
+    AppUser freshUser,
+  ) {
+    if (freshUser.wayoAdsRole != WayoAdsAccountRole.unknown) {
+      return freshUser;
+    }
+    if (currentUser.wayoAdsRole == WayoAdsAccountRole.unknown) {
+      return freshUser;
+    }
+    return freshUser.withWayoAdsRolePatchedFromApiString(
+      currentUser.wayoAdsRole.name.toUpperCase(),
+    );
+  }
+
+  /// After onboarding API returns an updated [AppUser] (role / email verification).
+  Future<void> applyOnboardingUser(AppUser user) => _persistUserOnly(user);
 
   Future<void> _persistUserOnly(AppUser user) async {
     await ref
@@ -176,6 +214,7 @@ class AuthNotifier extends _$AuthNotifier {
     await ref.read(secureStorageProvider).clearAll();
     state = const AsyncValue.data(AuthUnauthenticated());
     _invalidateDashboardAndChatProviders();
+    await GoogleSignInFacade.signOutFromGoogle();
   }
 
   void forceLogout() {
@@ -187,6 +226,7 @@ class AuthNotifier extends _$AuthNotifier {
     await DashboardHiveStore.clearAll();
     await ref.read(secureStorageProvider).clearAll();
     _invalidateDashboardAndChatProviders();
+    await GoogleSignInFacade.signOutFromGoogle();
   }
 
   /// Dashboard tiles only — chat is reset separately on login (see [login] / [loginWithGoogle]).
@@ -212,6 +252,22 @@ class AuthNotifier extends _$AuthNotifier {
     );
     // Warm read: some devices briefly return null on the first interceptor read
     // right after parallel secure-storage writes.
+    await storage.getAccessToken();
+  }
+
+  /// Like [_persistAuth] but uses a custom [user] instead of [auth.user].
+  /// Used when preserving the existing role during token refresh.
+  Future<void> _persistAuthWithUser(
+    SecureStorageService storage,
+    AuthResponse auth,
+    AppUser user,
+  ) async {
+    await storage.saveAuthSession(
+      accessToken: auth.accessToken,
+      refreshToken: auth.refreshToken,
+      expiresIn: auth.expiresIn,
+      userJson: user.toJson(),
+    );
     await storage.getAccessToken();
   }
 }

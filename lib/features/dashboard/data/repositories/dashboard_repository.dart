@@ -14,6 +14,7 @@ import '../../domain/entities/campaign_platform.dart';
 import '../../domain/entities/campaign_status.dart';
 import '../../domain/entities/campaign_summary.dart';
 import '../../domain/entities/user_profile.dart';
+import '../../../creator_campaigns/domain/creator_browse_campaign.dart';
 
 /// Cached + fresh dashboard payload with isolated section errors (no global crash).
 final class DashboardSnapshot extends Equatable {
@@ -294,6 +295,10 @@ final class DashboardRepositoryImpl implements DashboardRepository {
   }
 
   CampaignSummary _campaignFromJson(Map<String, dynamic> c) {
+    final ctRaw = c['campaignType'];
+    final campaignType = ctRaw is String && ctRaw.trim().isNotEmpty
+        ? CreatorCampaignType.fromStoredName(ctRaw as String?)
+        : CreatorCampaignType.unknown;
     return CampaignSummary(
       id: c['id'] as String,
       name: c['name'] as String,
@@ -301,6 +306,8 @@ final class DashboardRepositoryImpl implements DashboardRepository {
       platform: CampaignPlatform.fromString(c['platform'] as String?),
       creatorsCount: (c['creatorsCount'] as num).toInt(),
       coverUrl: c['coverUrl'] as String?,
+      brandLogoUrl: c['brandLogoUrl'] as String?,
+      campaignType: campaignType,
       createdAt: c['createdAt'] == null
           ? null
           : DateTime.tryParse(c['createdAt'] as String),
@@ -371,6 +378,8 @@ final class DashboardRepositoryImpl implements DashboardRepository {
               'platform': c.platform.name,
               'creatorsCount': c.creatorsCount,
               'coverUrl': c.coverUrl,
+              'brandLogoUrl': c.brandLogoUrl,
+              'campaignType': c.campaignType.name,
               'createdAt': c.createdAt?.toIso8601String(),
               'lockedBudgetCents': c.lockedBudgetCents,
               'spentBudgetCents': c.spentBudgetCents,

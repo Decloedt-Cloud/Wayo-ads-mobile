@@ -10,7 +10,6 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../theme/liquid_neural_palette.dart';
 import '../../../../i18n/strings.g.dart';
 import '../../data/chat_media_utils.dart';
-import '../../data/chat_repository.dart';
 import '../../domain/chat_credentials.dart';
 import '../../domain/chat_directory_user.dart';
 import '../providers/chat_providers.dart';
@@ -65,22 +64,36 @@ class _ChatUserSearchBarState extends ConsumerState<ChatUserSearchBar> {
   Future<void> _runSearch(String raw) async {
     final q = raw.trim();
     _lastQuery = q;
+
     if (q.length < 2) {
-      if (mounted) setState(() => _results = const []);
+      if (mounted) {
+        setState(() {
+          _results = const [];
+          _loading = false;
+        });
+      }
       return;
     }
-    if (mounted) setState(() => _loading = true);
+
+    if (mounted) {
+      setState(() => _loading = true);
+    }
+
     try {
       final repo = ref.read(chatRepositoryProvider);
       final rt = ref.read(chatRealtimeServiceProvider);
+
       final rows = await repo.searchUsers(
         widget.creds,
         q,
         socketId: () => rt.socketId,
       );
+
       if (!mounted || _lastQuery != q) return;
+
       final me = widget.creds.chatUserId;
       final hidden = widget.hiddenParticipantIds;
+
       setState(() {
         _results = rows
             .where((u) => u.id != me && !hidden.contains(u.id))
@@ -109,14 +122,18 @@ class _ChatUserSearchBarState extends ConsumerState<ChatUserSearchBar> {
     try {
       await widget.onUserSelected(u);
       if (!mounted) return;
+
       _controller.clear();
       _focus.unfocus();
+
       setState(() {
         _results = const [];
         _lastQuery = '';
       });
     } finally {
-      if (mounted) setState(() => _busyUserId = null);
+      if (mounted) {
+        setState(() => _busyUserId = null);
+      }
     }
   }
 
@@ -144,27 +161,19 @@ class _ChatUserSearchBarState extends ConsumerState<ChatUserSearchBar> {
                   ),
             border: Border.all(
               color: widget.useLiquidNeuralStyle && ln != null
-                  ? (_focus.hasFocus ? ln.plasmaStrokeFocus : ln.plasmaStroke)
-                  : Colors.white.withValues(alpha: 0.1),
-              width: widget.useLiquidNeuralStyle && _focus.hasFocus ? 1.4 : 1,
+                  ? ln.plasmaStroke.withValues(alpha: 0.55)
+                  : Colors.white.withValues(alpha: 0.10),
+              width: 1,
             ),
             boxShadow: [
-              if (widget.useLiquidNeuralStyle && _focus.hasFocus && ln != null)
-                BoxShadow(
-                  color: ln.plasma.withValues(alpha: 0.35),
-                  blurRadius: 28,
-                  spreadRadius: 0,
-                ),
               BoxShadow(
                 color:
                     (widget.useLiquidNeuralStyle && ln != null
                             ? ln.plasma
                             : AppColors.primary)
-                        .withValues(
-                          alpha: widget.useLiquidNeuralStyle ? 0.14 : 0.12,
-                        ),
-                blurRadius: 20,
-                offset: const Offset(0, 8),
+                        .withValues(alpha: 0.08),
+                blurRadius: 14,
+                offset: const Offset(0, 6),
               ),
             ],
           ),
@@ -178,6 +187,7 @@ class _ChatUserSearchBarState extends ConsumerState<ChatUserSearchBar> {
                 )
               : _buildSearchField(context, t, scheme),
         ),
+
         if (_controller.text.trim().length >= 2) ...[
           const SizedBox(height: 8),
           AnimatedSwitcher(
@@ -222,6 +232,7 @@ class _ChatUserSearchBarState extends ConsumerState<ChatUserSearchBar> {
                             widget.creds.apiBaseUrl,
                           );
                           final busy = _busyUserId == u.id;
+
                           return ListTile(
                             onTap: busy ? null : () => _onTapUser(u),
                             leading: SizedBox(
@@ -326,18 +337,17 @@ class _ChatUserSearchBarState extends ConsumerState<ChatUserSearchBar> {
                                       color:
                                           widget.useLiquidNeuralStyle &&
                                               ln != null
-                                          ? ln.plasma
-                                          : AppColors.primary,
+                                          ? ln.textSecondary
+                                          : AppColors.textMutedOf(context),
                                     ),
                                   )
                                 : Icon(
                                     Icons.chat_bubble_outline,
                                     color:
-                                        (widget.useLiquidNeuralStyle &&
-                                                    ln != null
-                                                ? ln.plasma
-                                                : scheme.primary)
-                                            .withValues(alpha: 0.85),
+                                        widget.useLiquidNeuralStyle &&
+                                            ln != null
+                                        ? ln.textSecondary
+                                        : AppColors.textMutedOf(context),
                                   ),
                           );
                         },
@@ -366,9 +376,11 @@ class _ChatUserSearchBarState extends ConsumerState<ChatUserSearchBar> {
     final ln = widget.useLiquidNeuralStyle
         ? LiquidNeuralTheme.of(context)
         : null;
+
     final accent = widget.useLiquidNeuralStyle && ln != null
-        ? ln.plasma
-        : scheme.primary;
+        ? ln.textSecondary
+        : AppColors.textMutedOf(context);
+
     return TextField(
       controller: _controller,
       focusNode: _focus,
@@ -407,6 +419,7 @@ class _ChatUserSearchBarState extends ConsumerState<ChatUserSearchBar> {
                   setState(() {
                     _results = const [];
                     _lastQuery = '';
+                    _loading = false;
                   });
                 },
                 icon: Icon(
@@ -416,6 +429,9 @@ class _ChatUserSearchBarState extends ConsumerState<ChatUserSearchBar> {
               )
             : null,
         border: InputBorder.none,
+        enabledBorder: InputBorder.none,
+        focusedBorder: InputBorder.none,
+        disabledBorder: InputBorder.none,
         contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 14),
       ),
       onChanged: (v) {

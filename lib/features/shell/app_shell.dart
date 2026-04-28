@@ -2,19 +2,107 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/providers/app_providers.dart';
+import '../auth/domain/auth_notifier.dart';
+import '../auth/domain/wayo_ads_account_role.dart';
 import '../chat/presentation/providers/chat_providers.dart';
 import '../dashboard/domain/entities/campaign_status.dart';
 import '../dashboard/presentation/providers/dashboard_state_providers.dart';
+import '../onboarding/presentation/shell_tutorial_controller.dart';
 import 'widgets/wayo_bottom_nav.dart';
 
-/// Main shell with bottom navigation (Dashboard, Campaigns, Chat).
-class AppShell extends ConsumerWidget {
+/// Main shell with bottom navigation (Dashboard, Campaigns, Wallet, Chat).
+///
+/// Owns the [GlobalKey]s used by the first-login coach-mark tour so both the
+/// navigation bar and the tour anchor to the same widget tree. The tour runs
+/// **at most once per (user, role)** via [ShellTutorialController].
+class AppShell extends ConsumerStatefulWidget {
   const AppShell({super.key, required this.navigationShell});
 
   final StatefulNavigationShell navigationShell;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AppShell> createState() => _AppShellState();
+}
+
+class _AppShellState extends ConsumerState<AppShell> {
+  // One GlobalKey per bottom-nav branch. They identify the tab pills for the
+  // coach-mark tour; recreating them here (not inside the bottom nav) keeps
+  // a stable identity across bottom-nav rebuilds.
+  final GlobalKey _dashboardKey = GlobalKey(debugLabel: 'shell.tab.dashboard');
+  final GlobalKey _campaignsKey = GlobalKey(debugLabel: 'shell.tab.campaigns');
+  final GlobalKey _walletKey = GlobalKey(debugLabel: 'shell.tab.wallet');
+  final GlobalKey _chatKey = GlobalKey(debugLabel: 'shell.tab.chat');
+
+  bool _tutorialTriggered = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _maybeShowTutorial();
+    });
+  }
+
+  /// Runs the shell coach-mark tour once per (user, role).
+  ///
+  /// We trigger from `postFrameCallback` (first paint) **and** re-check on
+  /// role changes — covers the case where the user signs in with the wrong
+  /// role first and the auth bounces through a loading state before the
+  /// final role is known.
+  void _maybeShowTutorial() {
+    if (!mounted || _tutorialTriggered) return;
+    final auth = ref.read(authNotifierProvider).valueOrNull;
+    if (auth is! AuthAuthenticated) return;
+
+    final role = auth.user.wayoAdsRole;
+    if (role == WayoAdsAccountRole.unknown) return;
+
+    final prefs = ref.read(appPrefsProvider);
+    if (ShellTutorialController.instance.hasSeen(
+      prefs: prefs,
+      userId: auth.user.id,
+      role: role,
+    )) {
+      _tutorialTriggered = true;
+      return;
+    }
+
+    _tutorialTriggered = true;
+    // One more frame so the bottom nav has a rendered context — the coach
+    // mark package relies on `GlobalKey.currentContext` to locate targets.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ShellTutorialController.instance.maybeShow(
+        context: context,
+        prefs: prefs,
+        userId: auth.user.id,
+        role: role,
+        keys: {
+          ShellTutorialTarget.dashboard: _dashboardKey,
+          ShellTutorialTarget.campaigns: _campaignsKey,
+          ShellTutorialTarget.wallet: _walletKey,
+          ShellTutorialTarget.chat: _chatKey,
+        },
+      );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // React to role / auth transitions so the tour triggers after the role
+    // is resolved, even if the user landed on `/dashboard` before it was.
+    ref.listen<AsyncValue<AuthState>>(authNotifierProvider, (prev, next) {
+      next.whenData((s) {
+        if (s is AuthAuthenticated &&
+            s.user.wayoAdsRole != WayoAdsAccountRole.unknown) {
+          WidgetsBinding.instance.addPostFrameCallback(
+            (_) => _maybeShowTutorial(),
+          );
+        }
+      });
+    });
+
     final notificationUnread = ref.watch(
       dashboardStreamProvider.select(
         (async) => async.valueOrNull?.unreadCount ?? 0,
@@ -38,12 +126,16 @@ class AppShell extends ConsumerWidget {
 
     return Scaffold(
       extendBody: true,
-      body: SizedBox.expand(child: navigationShell),
+      body: SizedBox.expand(child: widget.navigationShell),
       bottomNavigationBar: WayoBottomNav(
-        navigationShell: navigationShell,
+        navigationShell: widget.navigationShell,
         notificationUnread: notificationUnread,
         chatUnread: chatUnread,
         campaignsAttentionCount: campaignsAttentionCount,
+        dashboardTabKey: _dashboardKey,
+        campaignsTabKey: _campaignsKey,
+        walletTabKey: _walletKey,
+        chatTabKey: _chatKey,
       ),
     );
   }

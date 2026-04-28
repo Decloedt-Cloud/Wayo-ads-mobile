@@ -49,6 +49,8 @@ class Translations implements BaseTranslations<AppLocale, Translations> {
   late final TranslationsConnectivityEn connectivity =
       TranslationsConnectivityEn.internal(_root);
   late final TranslationsLoginEn login = TranslationsLoginEn.internal(_root);
+  late final TranslationsVerifyEmailEn verify_email =
+      TranslationsVerifyEmailEn.internal(_root);
   late final TranslationsForgotPasswordEn forgot_password =
       TranslationsForgotPasswordEn.internal(_root);
   late final TranslationsOtpEn otp = TranslationsOtpEn.internal(_root);
@@ -62,6 +64,11 @@ class Translations implements BaseTranslations<AppLocale, Translations> {
   late final TranslationsAdvertiserCampaignsEn advertiser_campaigns =
       TranslationsAdvertiserCampaignsEn.internal(_root);
   late final TranslationsNavEn nav = TranslationsNavEn.internal(_root);
+  late final TranslationsCreatorEn creator = TranslationsCreatorEn.internal(
+    _root,
+  );
+  late final TranslationsAdvertiserWalletEn advertiser_wallet =
+      TranslationsAdvertiserWalletEn.internal(_root);
   late final TranslationsChatEn chat = TranslationsChatEn.internal(_root);
   late final TranslationsCommonEn common = TranslationsCommonEn.internal(_root);
   late final TranslationsErrorsEn errors = TranslationsErrorsEn.internal(_root);
@@ -69,6 +76,8 @@ class Translations implements BaseTranslations<AppLocale, Translations> {
       TranslationsPrivacyPolicyEn.internal(_root);
   late final TranslationsAppSettingsEn app_settings =
       TranslationsAppSettingsEn.internal(_root);
+  late final TranslationsOnboardingEn onboarding =
+      TranslationsOnboardingEn.internal(_root);
 }
 
 // Path: connectivity
@@ -130,6 +139,26 @@ class TranslationsLoginEn {
   String get google_failed => 'Google sign-in failed. Try again.';
   String get google_channel_restart =>
       'Google Sign-In lost connection to Android (often after hot restart). Stop the app completely, then Run again — do not use hot restart.';
+  String get google_android_oauth_misconfigured =>
+      'Google could not verify this app (code 10). In Google Cloud Console, open the same project as your Web client, create an Android OAuth client with package ma.wayo.wayoadsgo and your debug (or release) keystore SHA-1, then wait a few minutes and try again.';
+}
+
+// Path: verify_email
+class TranslationsVerifyEmailEn {
+  TranslationsVerifyEmailEn.internal(this._root);
+
+  final Translations _root; // ignore: unused_field
+
+  // Translations
+  String get title => 'Confirm your email';
+  String get subtitle =>
+      'Wayo ID needs a verified address (same step as on the website). Open the link we sent to:';
+  String get check_again => 'I\'ve confirmed — continue';
+  String get open_mail => 'Open email app';
+  String get still_pending =>
+      'Still waiting for verification. Check your inbox or spam, then try again.';
+  String get open_mail_failed => 'Could not open the email app.';
+  String get sign_out => 'Sign out';
 }
 
 // Path: forgot_password
@@ -237,6 +266,12 @@ class TranslationsDashboardEn {
   String get notifications_mark_all_read => 'Mark all read';
   String get notifications_view_all => 'View all notifications';
   String get notifications_important => 'Important';
+  String get application_approve => 'Approve';
+  String get application_reject => 'Reject';
+  String get application_approved => 'Application approved';
+  String get application_rejected => 'Application rejected';
+  String get application_action_failed =>
+      'Could not update the application. Try again.';
   String get theme_toggle_tooltip => 'Switch between light and dark theme';
   String get refresh => 'Refresh dashboard';
 }
@@ -263,6 +298,8 @@ class TranslationsAdvertiserCampaignsEn {
       TranslationsAdvertiserCampaignsPlatformEn.internal(_root);
   late final TranslationsAdvertiserCampaignsDetailEn detail =
       TranslationsAdvertiserCampaignsDetailEn.internal(_root);
+  late final TranslationsAdvertiserCampaignsApplicationsEn applications =
+      TranslationsAdvertiserCampaignsApplicationsEn.internal(_root);
 }
 
 // Path: nav
@@ -277,6 +314,74 @@ class TranslationsNavEn {
   String get analytics => 'Analytics';
   String get wallet => 'Wallet';
   String get chat => 'Chat';
+}
+
+// Path: creator
+class TranslationsCreatorEn {
+  TranslationsCreatorEn.internal(this._root);
+
+  final Translations _root; // ignore: unused_field
+
+  // Translations
+  late final TranslationsCreatorDashboardEn dashboard =
+      TranslationsCreatorDashboardEn.internal(_root);
+  late final TranslationsCreatorWalletEn wallet =
+      TranslationsCreatorWalletEn.internal(_root);
+  late final TranslationsCreatorCampaignsEn campaigns =
+      TranslationsCreatorCampaignsEn.internal(_root);
+  late final TranslationsCreatorStatsEn stats =
+      TranslationsCreatorStatsEn.internal(_root);
+  late final TranslationsCreatorApplicationsEn applications =
+      TranslationsCreatorApplicationsEn.internal(_root);
+  late final TranslationsCreatorBusinessEn business =
+      TranslationsCreatorBusinessEn.internal(_root);
+}
+
+// Path: advertiser_wallet
+class TranslationsAdvertiserWalletEn {
+  TranslationsAdvertiserWalletEn.internal(this._root);
+
+  final Translations _root; // ignore: unused_field
+
+  // Translations
+  String get hero_title => 'Your balance';
+  String get hero_subtitle =>
+      'Add funds to run campaigns. Payments are processed securely by Stripe. Apple Pay (iOS) and Google Pay (Android) are available when supported.';
+  String get available => 'Available';
+  String get pending => 'Pending';
+  String get add_funds => 'Add funds';
+  String get amount_label => 'Amount';
+  String get quick_50 => '€50';
+  String get quick_100 => '€100';
+  String get quick_250 => '€250';
+  String get min_deposit => 'Minimum deposit is 0.50 in your currency.';
+  String get test_pay => 'Simulate payment (dev)';
+  String get test_hint =>
+      'Test mode: no real card. Tops up your dev wallet for QA.';
+  String get pay_secure => 'Pay with card, Apple Pay or Google Pay';
+  String get pay_with_card => 'Pay with card';
+  String get pay_with_apple => 'Pay with Apple Pay';
+  String get pay_with_google => 'Pay with Google Pay';
+  String get or => 'or';
+  String get stripe_unavailable =>
+      'Top-ups are not available: payment is not configured on the server.';
+  String get tx_title => 'Recent activity';
+  String get tx_empty => 'No transactions yet';
+  String get tx_deposit => 'Deposit';
+  String get tx_withdrawal => 'Withdrawal';
+  String get tx_other => 'Transaction';
+  String get success => 'Balance updated';
+  String get failed => 'Could not add funds. Try again.';
+  String get in_progress => 'Processing…';
+  String get save_card => 'Save this card for next time';
+  String get save_card_hint =>
+      'For card payments only. Works with your server when supported.';
+  String get saved_card_title => 'Saved card';
+  String get saved_card_generic => 'Card saved for this device';
+  String tx_page({required Object current, required Object total}) =>
+      'Page ${current} of ${total}';
+  String get tx_prev => 'Previous';
+  String get tx_next => 'Next';
 }
 
 // Path: chat
@@ -460,6 +565,34 @@ class TranslationsAppSettingsEn {
   String get lang_ar => 'العربية';
 }
 
+// Path: onboarding
+class TranslationsOnboardingEn {
+  TranslationsOnboardingEn.internal(this._root);
+
+  final Translations _root; // ignore: unused_field
+
+  // Translations
+  String get role_gate_title => 'Choose your profile';
+  String get role_gate_subtitle =>
+      'Same step as on the Wayo Ads website before you can use the app.';
+  String get role_creator_cta => 'Creator';
+  String get role_creator_desc =>
+      'Browse campaigns, apply, and collaborate with brands.';
+  String get role_advertiser_cta => 'Advertiser';
+  String get role_advertiser_desc =>
+      'Launch campaigns and manage creators from your dashboard.';
+  String get email_code_title => 'Verify your email';
+  String email_code_subtitle({required Object email}) =>
+      'Enter the 6-digit code we sent to ${email}.';
+  String get skip => 'Skip';
+  String get next => 'Next';
+  String get done => 'Got it';
+  late final TranslationsOnboardingAdvertiserEn advertiser =
+      TranslationsOnboardingAdvertiserEn.internal(_root);
+  late final TranslationsOnboardingCreatorEn creator =
+      TranslationsOnboardingCreatorEn.internal(_root);
+}
+
 // Path: dashboard.balance
 class TranslationsDashboardBalanceEn {
   TranslationsDashboardBalanceEn.internal(this._root);
@@ -508,6 +641,7 @@ class TranslationsAdvertiserCampaignsTabsEn {
 
   // Translations
   String get active => 'Active';
+  String get draft => 'Draft';
   String get paused => 'Paused';
   String get completed => 'Completed';
 }
@@ -534,6 +668,7 @@ class TranslationsAdvertiserCampaignsCardEn {
   // Translations
   String get budget_total => 'Budget';
   String get remaining => 'Remaining';
+  String get locked => 'Locked';
   String get spent => 'Spent';
   String get cpc => 'CPC';
   String get valid_engagements => '{count} validated views';
@@ -576,7 +711,346 @@ class TranslationsAdvertiserCampaignsDetailEn {
   String get fallback_title => 'Campaign';
   String get metrics_title => 'Performance';
   String get valid_views => 'Validated views';
+  String get valid_clicks => 'Valid clicks';
   String get approved_creators => 'Approved creators';
+  String get platform_label => 'Platform';
+  String get campaign_type_label => 'Campaign type';
+}
+
+// Path: advertiser_campaigns.applications
+class TranslationsAdvertiserCampaignsApplicationsEn {
+  TranslationsAdvertiserCampaignsApplicationsEn.internal(this._root);
+
+  final Translations _root; // ignore: unused_field
+
+  // Translations
+  String get title => 'Creator Applications';
+  String pending_badge({required Object count}) => '${count} pending';
+  String get subtitle => 'Review and approve or reject creator applications';
+  String get empty_title => 'No applications yet';
+  String get empty_subtitle =>
+      'When creators apply to this campaign, they will appear here.';
+  String get load_error => 'Could not load applications';
+  String trust_score({required Object score}) => 'Trust: ${score}';
+  String get approve_button => 'Approve';
+  String get reject_button => 'Reject';
+  String get approved_status => 'Approved';
+  String get rejected_status => 'Rejected';
+}
+
+// Path: creator.dashboard
+class TranslationsCreatorDashboardEn {
+  TranslationsCreatorDashboardEn.internal(this._root);
+
+  final Translations _root; // ignore: unused_field
+
+  // Translations
+  String get title => 'Creator Studio';
+  String get subtitle =>
+      'Track your stats, applications and earnings in real time.';
+  String get coming_soon_title => 'Your creator dashboard';
+  String get coming_soon_subtitle =>
+      'Stats, analytics and active applications will appear here. Real-time updates are wired up — no refresh needed.';
+}
+
+// Path: creator.wallet
+class TranslationsCreatorWalletEn {
+  TranslationsCreatorWalletEn.internal(this._root);
+
+  final Translations _root; // ignore: unused_field
+
+  // Translations
+  String get coming_soon_title => 'Your earnings';
+  String get coming_soon_subtitle =>
+      'Available balance, pending payouts and Stripe payout history will show up here.';
+  String get connect_stripe_title => 'Connect Stripe';
+  String get connect_stripe_subtitle =>
+      'Link your bank account securely via Stripe to enable payouts. We never store your financial details.';
+  String get withdraw_title => 'Request a payout';
+  String get withdraw_subtitle =>
+      'Withdraw your available balance to your connected Stripe account.';
+  String get available_balance => 'Available';
+  String get pending_balance => 'Pending';
+  String get total_earned => 'Total earned';
+  String get load_error => 'Couldn\'t load your wallet';
+  String get withdraw_button => 'Withdraw';
+  String get withdraw_sheet_title => 'Request a payout';
+  String get withdraw_sheet_subtitle =>
+      'Available balance: {available}. Funds will be sent to your connected Stripe account.';
+  String get withdraw_amount_label => 'Amount';
+  String get withdraw_submit => 'Confirm withdrawal';
+  String get withdraw_submitting => 'Processing…';
+  String get withdraw_max => 'Max';
+  String get withdraw_success => 'Withdrawal request submitted.';
+  String get withdraw_secure_footer =>
+      'Secure payout — processed by Stripe. We never see your bank details.';
+  String get withdraw_error_invalid => 'Enter a valid amount.';
+  String get withdraw_error_min => 'Minimum withdrawal is {min}.';
+  String get withdraw_error_insufficient => 'Insufficient available balance.';
+  String get withdraw_reason_business_info =>
+      'Finalize your business information before connecting a payout account.';
+  String get withdraw_reason_stripe => 'Connect Stripe to enable withdrawals.';
+  String get withdraw_reason_stripe_incomplete =>
+      'Finish Stripe onboarding to enable withdrawals.';
+  String get withdraw_reason_payouts_disabled =>
+      'Your Stripe account isn\'t cleared for payouts yet.';
+  String get withdraw_reason_below_min => 'Minimum withdrawal is {min}.';
+  String get cancel_action => 'Cancel request';
+  String get cancel_in_progress => 'Cancelling…';
+  String get cancel_dialog_title => 'Cancel this withdrawal?';
+  String get cancel_dialog_message =>
+      'The pending payout will be cancelled and the funds returned to your available balance.';
+  String get cancel_dialog_yes => 'Cancel withdrawal';
+  String get cancel_dialog_no => 'Keep it';
+  String get cancel_success => 'Withdrawal cancelled and funds restored.';
+  String get stripe_connected => 'Connected';
+  String get stripe_onboarding_required_pill => 'Action required';
+  String get stripe_connect_action => 'Connect Stripe';
+  String get stripe_complete_action => 'Finish onboarding';
+  String get stripe_open_dashboard => 'Open Stripe dashboard';
+  String get stripe_error =>
+      'Something went wrong with Stripe. Please try again.';
+  String get stripe_card_title_disconnected => 'Connect Stripe';
+  String get stripe_card_subtitle_disconnected =>
+      'Link your bank account securely via Stripe to receive payouts.';
+  String get stripe_card_title_incomplete => 'Finish your onboarding';
+  String get stripe_card_subtitle_incomplete =>
+      'Stripe still needs a few details before payouts can be enabled.';
+  String get stripe_card_title_connected => 'Stripe is connected';
+  String get stripe_card_subtitle_connected =>
+      'Your Stripe Express account is active. Payouts land in your bank.';
+  String get history_title => 'Payout history';
+  String get history_empty => 'No withdrawals yet — they will appear here.';
+  String get history_load_error => 'Couldn\'t load your payout history.';
+  String get history_status_pending => 'Pending';
+  String get history_status_processing => 'Processing';
+  String get history_status_succeeded => 'Paid';
+  String get history_status_failed => 'Failed';
+  String get history_status_cancelled => 'Cancelled';
+  String get conditions_title => 'Withdrawal conditions';
+  String get conditions_subtitle => 'Good to know before you request a payout.';
+  String get conditions_min_label => 'Minimum withdrawal';
+  String get conditions_fee_label => 'Fee';
+  String conditions_fee_value({required Object percent}) =>
+      '${percent} (ex VAT)';
+  String get conditions_processing_label => 'Processing time';
+  String get conditions_processing_value => '2–5 business days';
+}
+
+// Path: creator.campaigns
+class TranslationsCreatorCampaignsEn {
+  TranslationsCreatorCampaignsEn.internal(this._root);
+
+  final Translations _root; // ignore: unused_field
+
+  // Translations
+  String get browse_title => 'Browse campaigns';
+  String get browse_subtitle =>
+      'Find campaigns that match your audience and apply in one tap.';
+  String get applications_title => 'My applications';
+  String get applications_subtitle =>
+      'Track the status of campaigns you\'ve applied to — approved, pending or rejected.';
+  String get submit_title => 'Submit a post';
+  String get submit_subtitle =>
+      'Once approved, share a public video URL so the advertiser can review it.';
+  String get details_title => 'Campaign details';
+  String get application_title => 'My application';
+  String get load_error => 'Couldn\'t load campaigns.';
+  String get empty_title => 'No campaigns right now';
+  String get empty_subtitle =>
+      'New campaigns show up here the moment advertisers launch them.';
+  String get description_title => 'Brief';
+  String get requirements_title => 'Requirements';
+  String get assets_title => 'Brand assets';
+  String get assets_subtitle => 'Download the brief, logos and footage.';
+  String get type_link => 'Link';
+  String get type_video => 'Video';
+  String get type_shorts => 'Shorts';
+  String get reward_cpm_label => 'CPM';
+  String get reward_cpc_label => 'Payout per click';
+  String get reward_per_view_label => 'Payout per view';
+  String reward_per_view({required Object amount}) => '${amount} / view';
+  String reward_per_click({required Object amount}) => '${amount} / click';
+  String get budget_remaining_label => 'Remaining budget';
+  String requirement_platform({required Object platform}) =>
+      'Post on ${platform} only';
+  String requirement_min_duration({required Object minutes}) =>
+      'Minimum duration: ${minutes} min';
+  String requirement_shorts_max({required Object seconds}) =>
+      'Shorts up to ${seconds} s';
+  String get requirement_vertical => 'Vertical format (9:16) required';
+  String get requirement_none => 'No specific requirements.';
+  String get apply_cta => 'Apply to this campaign';
+  String get apply_title => 'Apply';
+  String get apply_message_label => 'Pitch (optional)';
+  String get apply_message_hint =>
+      'Tell the advertiser why you\'re a great fit…';
+  String get apply_submit => 'Send application';
+  String get apply_in_progress => 'Sending…';
+  String get apply_error =>
+      'Could not send your application. Please try again.';
+  String get apply_success =>
+      'Application sent — you\'ll be notified when it\'s reviewed.';
+  String get apply_pending_title => 'Application under review';
+  String get apply_pending_subtitle =>
+      'We\'ll notify you the moment the advertiser responds.';
+  String get open_application_cta => 'Open my application';
+  String get chat_with_advertiser => 'Chat with advertiser';
+  String get status_banner_approved_title => 'You\'re approved!';
+  String get status_banner_approved_subtitle =>
+      'You can now submit your video and chat with the advertiser.';
+  String get status_banner_pending_title => 'Waiting on advertiser';
+  String get status_banner_pending_subtitle =>
+      'Your pitch is in review — we\'ll ping you here when it\'s decided.';
+  String get status_banner_rejected_title => 'Not selected this time';
+  String get status_banner_rejected_subtitle =>
+      'Keep an eye on the Campaigns tab — new briefs ship every week.';
+  String get my_submissions_title => 'My submissions';
+  String get my_submissions_empty_approved =>
+      'No video submitted yet. Upload one to start earning.';
+  String get my_submissions_empty_pending =>
+      'Submissions unlock once your application is approved.';
+  String get submit_cta => 'Submit a post';
+  String get submit_platform_label => 'Platform';
+  String get submit_url_label => 'Public video URL';
+  String get submit_url_hint => 'https://youtube.com/watch?v=…';
+  String get submit_url_required => 'Please paste the video URL.';
+  String get submit_url_invalid => 'Enter a valid public URL.';
+  String get submit_url_youtube_only =>
+      'Only YouTube URLs are supported right now.';
+  String get submit_in_progress => 'Submitting…';
+  String get submit_footer =>
+      'Your video stays public during the campaign so we can validate views.';
+  String get submit_error => 'Could not submit your video. Please try again.';
+  String get submit_success =>
+      'Video submitted — advertiser will review it shortly.';
+  String get submit_blocked_limit =>
+      'You\'ve already submitted for this campaign. Wait for the review.';
+  String get submission_status_pending => 'In review';
+  String get submission_status_approved => 'Approved';
+  String get submission_status_rejected => 'Rejected';
+  String get submission_status_flagged => 'Flagged';
+  String submission_views({required Object views}) =>
+      '${views} validated views';
+}
+
+// Path: creator.stats
+class TranslationsCreatorStatsEn {
+  TranslationsCreatorStatsEn.internal(this._root);
+
+  final Translations _root; // ignore: unused_field
+
+  // Translations
+  String get earnings_title => 'Total earnings';
+  String get pending => 'Pending';
+  String get validated_views => 'Validated views';
+  String get validation_rate => 'Validation rate';
+  String get approved_campaigns => 'Approved campaigns';
+}
+
+// Path: creator.applications
+class TranslationsCreatorApplicationsEn {
+  TranslationsCreatorApplicationsEn.internal(this._root);
+
+  final Translations _root; // ignore: unused_field
+
+  // Translations
+  String get section_title => 'Active applications';
+  String get empty_title => 'No applications yet';
+  String get empty_subtitle =>
+      'Browse the Campaigns tab and apply to the ones that match your audience.';
+  String get load_error => 'Couldn\'t load your applications';
+  String get status_pending => 'Pending';
+  String get status_approved => 'Approved';
+  String get status_rejected => 'Rejected';
+  String get status_withdrawn => 'Withdrawn';
+  String get status_unknown => '—';
+}
+
+// Path: creator.business
+class TranslationsCreatorBusinessEn {
+  TranslationsCreatorBusinessEn.internal(this._root);
+
+  final Translations _root; // ignore: unused_field
+
+  // Translations
+  String get cta_title => 'Finalize your business information';
+  String get cta_subtitle =>
+      'Required before connecting your bank account so we can route your payouts correctly.';
+  String get cta_required_pill => 'REQUIRED';
+  String get cta_button => 'Finalize your Business Information';
+  String get dialog_title => 'Business information';
+  String get dialog_subtitle =>
+      'Provide a few legal details so Stripe can onboard your account and settle payouts.';
+  String get section_type => 'Account type';
+  String get section_company => 'Company';
+  String get section_address => 'Address';
+  String get section_stripe => 'Payout country & currency';
+  String get type_personal_title => 'Individual';
+  String get type_personal_subtitle => 'I receive payouts as a private person.';
+  String get type_sole_title => 'Sole proprietor';
+  String get type_sole_subtitle => 'I run my own freelance business.';
+  String get type_company_title => 'Registered company';
+  String get type_company_subtitle =>
+      'I operate under a registered legal entity.';
+  String get company_name => 'Company name';
+  String get vat_number => 'VAT number';
+  String get address_line1 => 'Address line 1';
+  String get address_line2 => 'Address line 2 (optional)';
+  String get city => 'City';
+  String get postal_code => 'Postal code';
+  String get state_region => 'State / Region (optional)';
+  String get country => 'Country';
+  String get currency => 'Payout currency';
+  String get error_required => 'Required';
+  String get save_and_continue => 'Save & continue';
+  String get submitting => 'Saving…';
+  String get footer_info =>
+      'This information is shared with Stripe to enable your payout account. We never see your banking details.';
+  String get save_error =>
+      'We couldn\'t save your business info. Please try again.';
+}
+
+// Path: onboarding.advertiser
+class TranslationsOnboardingAdvertiserEn {
+  TranslationsOnboardingAdvertiserEn.internal(this._root);
+
+  final Translations _root; // ignore: unused_field
+
+  // Translations
+  String get dashboard_title => 'Your dashboard';
+  String get dashboard_subtitle =>
+      'Track balance, active campaigns and notifications — all updates land here in real time.';
+  String get campaigns_title => 'Campaigns';
+  String get campaigns_subtitle =>
+      'Create new campaigns, review applications and monitor performance in one place.';
+  String get wallet_title => 'Wallet';
+  String get wallet_subtitle =>
+      'Top up your budget, view invoices and spending history — secured by Stripe.';
+  String get chat_title => 'Chat';
+  String get chat_subtitle =>
+      'Talk to your creators once a campaign is approved. Conversations stay in sync across devices.';
+}
+
+// Path: onboarding.creator
+class TranslationsOnboardingCreatorEn {
+  TranslationsOnboardingCreatorEn.internal(this._root);
+
+  final Translations _root; // ignore: unused_field
+
+  // Translations
+  String get dashboard_title => 'Creator dashboard';
+  String get dashboard_subtitle =>
+      'Your KPIs, active applications and earnings refresh automatically — no need to pull to refresh.';
+  String get campaigns_title => 'Browse & apply';
+  String get campaigns_subtitle =>
+      'Discover eligible campaigns, apply in one tap and follow your application status live.';
+  String get wallet_title => 'Earnings & payouts';
+  String get wallet_subtitle =>
+      'See your balance, request payouts via Stripe Connect and review past withdrawals.';
+  String get chat_title => 'Talk to advertisers';
+  String get chat_subtitle =>
+      'Once approved, the chat opens with your advertiser to align on deliverables.';
 }
 
 /// Flat map(s) containing all translations.
@@ -660,6 +1134,22 @@ extension on Translations {
         return 'Google sign-in failed. Try again.';
       case 'login.google_channel_restart':
         return 'Google Sign-In lost connection to Android (often after hot restart). Stop the app completely, then Run again — do not use hot restart.';
+      case 'login.google_android_oauth_misconfigured':
+        return 'Google could not verify this app (code 10). In Google Cloud Console, open the same project as your Web client, create an Android OAuth client with package ma.wayo.wayoadsgo and your debug (or release) keystore SHA-1, then wait a few minutes and try again.';
+      case 'verify_email.title':
+        return 'Confirm your email';
+      case 'verify_email.subtitle':
+        return 'Wayo ID needs a verified address (same step as on the website). Open the link we sent to:';
+      case 'verify_email.check_again':
+        return 'I\'ve confirmed — continue';
+      case 'verify_email.open_mail':
+        return 'Open email app';
+      case 'verify_email.still_pending':
+        return 'Still waiting for verification. Check your inbox or spam, then try again.';
+      case 'verify_email.open_mail_failed':
+        return 'Could not open the email app.';
+      case 'verify_email.sign_out':
+        return 'Sign out';
       case 'forgot_password.title':
         return 'Reset\npassword';
       case 'forgot_password.subtitle':
@@ -770,6 +1260,16 @@ extension on Translations {
         return 'View all notifications';
       case 'dashboard.notifications_important':
         return 'Important';
+      case 'dashboard.application_approve':
+        return 'Approve';
+      case 'dashboard.application_reject':
+        return 'Reject';
+      case 'dashboard.application_approved':
+        return 'Application approved';
+      case 'dashboard.application_rejected':
+        return 'Application rejected';
+      case 'dashboard.application_action_failed':
+        return 'Could not update the application. Try again.';
       case 'dashboard.theme_toggle_tooltip':
         return 'Switch between light and dark theme';
       case 'dashboard.refresh':
@@ -780,6 +1280,8 @@ extension on Translations {
         return 'Track your campaign performance — read only.';
       case 'advertiser_campaigns.tabs.active':
         return 'Active';
+      case 'advertiser_campaigns.tabs.draft':
+        return 'Draft';
       case 'advertiser_campaigns.tabs.paused':
         return 'Paused';
       case 'advertiser_campaigns.tabs.completed':
@@ -798,6 +1300,8 @@ extension on Translations {
         return 'Budget';
       case 'advertiser_campaigns.card.remaining':
         return 'Remaining';
+      case 'advertiser_campaigns.card.locked':
+        return 'Locked';
       case 'advertiser_campaigns.card.spent':
         return 'Spent';
       case 'advertiser_campaigns.card.cpc':
@@ -828,8 +1332,36 @@ extension on Translations {
         return 'Performance';
       case 'advertiser_campaigns.detail.valid_views':
         return 'Validated views';
+      case 'advertiser_campaigns.detail.valid_clicks':
+        return 'Valid clicks';
       case 'advertiser_campaigns.detail.approved_creators':
         return 'Approved creators';
+      case 'advertiser_campaigns.detail.platform_label':
+        return 'Platform';
+      case 'advertiser_campaigns.detail.campaign_type_label':
+        return 'Campaign type';
+      case 'advertiser_campaigns.applications.title':
+        return 'Creator Applications';
+      case 'advertiser_campaigns.applications.pending_badge':
+        return ({required Object count}) => '${count} pending';
+      case 'advertiser_campaigns.applications.subtitle':
+        return 'Review and approve or reject creator applications';
+      case 'advertiser_campaigns.applications.empty_title':
+        return 'No applications yet';
+      case 'advertiser_campaigns.applications.empty_subtitle':
+        return 'When creators apply to this campaign, they will appear here.';
+      case 'advertiser_campaigns.applications.load_error':
+        return 'Could not load applications';
+      case 'advertiser_campaigns.applications.trust_score':
+        return ({required Object score}) => 'Trust: ${score}';
+      case 'advertiser_campaigns.applications.approve_button':
+        return 'Approve';
+      case 'advertiser_campaigns.applications.reject_button':
+        return 'Reject';
+      case 'advertiser_campaigns.applications.approved_status':
+        return 'Approved';
+      case 'advertiser_campaigns.applications.rejected_status':
+        return 'Rejected';
       case 'nav.dashboard':
         return 'Dashboard';
       case 'nav.campaigns':
@@ -840,6 +1372,426 @@ extension on Translations {
         return 'Wallet';
       case 'nav.chat':
         return 'Chat';
+      case 'creator.dashboard.title':
+        return 'Creator Studio';
+      case 'creator.dashboard.subtitle':
+        return 'Track your stats, applications and earnings in real time.';
+      case 'creator.dashboard.coming_soon_title':
+        return 'Your creator dashboard';
+      case 'creator.dashboard.coming_soon_subtitle':
+        return 'Stats, analytics and active applications will appear here. Real-time updates are wired up — no refresh needed.';
+      case 'creator.wallet.coming_soon_title':
+        return 'Your earnings';
+      case 'creator.wallet.coming_soon_subtitle':
+        return 'Available balance, pending payouts and Stripe payout history will show up here.';
+      case 'creator.wallet.connect_stripe_title':
+        return 'Connect Stripe';
+      case 'creator.wallet.connect_stripe_subtitle':
+        return 'Link your bank account securely via Stripe to enable payouts. We never store your financial details.';
+      case 'creator.wallet.withdraw_title':
+        return 'Request a payout';
+      case 'creator.wallet.withdraw_subtitle':
+        return 'Withdraw your available balance to your connected Stripe account.';
+      case 'creator.wallet.available_balance':
+        return 'Available';
+      case 'creator.wallet.pending_balance':
+        return 'Pending';
+      case 'creator.wallet.total_earned':
+        return 'Total earned';
+      case 'creator.wallet.load_error':
+        return 'Couldn\'t load your wallet';
+      case 'creator.wallet.withdraw_button':
+        return 'Withdraw';
+      case 'creator.wallet.withdraw_sheet_title':
+        return 'Request a payout';
+      case 'creator.wallet.withdraw_sheet_subtitle':
+        return 'Available balance: {available}. Funds will be sent to your connected Stripe account.';
+      case 'creator.wallet.withdraw_amount_label':
+        return 'Amount';
+      case 'creator.wallet.withdraw_submit':
+        return 'Confirm withdrawal';
+      case 'creator.wallet.withdraw_submitting':
+        return 'Processing…';
+      case 'creator.wallet.withdraw_max':
+        return 'Max';
+      case 'creator.wallet.withdraw_success':
+        return 'Withdrawal request submitted.';
+      case 'creator.wallet.withdraw_secure_footer':
+        return 'Secure payout — processed by Stripe. We never see your bank details.';
+      case 'creator.wallet.withdraw_error_invalid':
+        return 'Enter a valid amount.';
+      case 'creator.wallet.withdraw_error_min':
+        return 'Minimum withdrawal is {min}.';
+      case 'creator.wallet.withdraw_error_insufficient':
+        return 'Insufficient available balance.';
+      case 'creator.wallet.withdraw_reason_business_info':
+        return 'Finalize your business information before connecting a payout account.';
+      case 'creator.wallet.withdraw_reason_stripe':
+        return 'Connect Stripe to enable withdrawals.';
+      case 'creator.wallet.withdraw_reason_stripe_incomplete':
+        return 'Finish Stripe onboarding to enable withdrawals.';
+      case 'creator.wallet.withdraw_reason_payouts_disabled':
+        return 'Your Stripe account isn\'t cleared for payouts yet.';
+      case 'creator.wallet.withdraw_reason_below_min':
+        return 'Minimum withdrawal is {min}.';
+      case 'creator.wallet.cancel_action':
+        return 'Cancel request';
+      case 'creator.wallet.cancel_in_progress':
+        return 'Cancelling…';
+      case 'creator.wallet.cancel_dialog_title':
+        return 'Cancel this withdrawal?';
+      case 'creator.wallet.cancel_dialog_message':
+        return 'The pending payout will be cancelled and the funds returned to your available balance.';
+      case 'creator.wallet.cancel_dialog_yes':
+        return 'Cancel withdrawal';
+      case 'creator.wallet.cancel_dialog_no':
+        return 'Keep it';
+      case 'creator.wallet.cancel_success':
+        return 'Withdrawal cancelled and funds restored.';
+      case 'creator.wallet.stripe_connected':
+        return 'Connected';
+      case 'creator.wallet.stripe_onboarding_required_pill':
+        return 'Action required';
+      case 'creator.wallet.stripe_connect_action':
+        return 'Connect Stripe';
+      case 'creator.wallet.stripe_complete_action':
+        return 'Finish onboarding';
+      case 'creator.wallet.stripe_open_dashboard':
+        return 'Open Stripe dashboard';
+      case 'creator.wallet.stripe_error':
+        return 'Something went wrong with Stripe. Please try again.';
+      case 'creator.wallet.stripe_card_title_disconnected':
+        return 'Connect Stripe';
+      case 'creator.wallet.stripe_card_subtitle_disconnected':
+        return 'Link your bank account securely via Stripe to receive payouts.';
+      case 'creator.wallet.stripe_card_title_incomplete':
+        return 'Finish your onboarding';
+      case 'creator.wallet.stripe_card_subtitle_incomplete':
+        return 'Stripe still needs a few details before payouts can be enabled.';
+      case 'creator.wallet.stripe_card_title_connected':
+        return 'Stripe is connected';
+      case 'creator.wallet.stripe_card_subtitle_connected':
+        return 'Your Stripe Express account is active. Payouts land in your bank.';
+      case 'creator.wallet.history_title':
+        return 'Payout history';
+      case 'creator.wallet.history_empty':
+        return 'No withdrawals yet — they will appear here.';
+      case 'creator.wallet.history_load_error':
+        return 'Couldn\'t load your payout history.';
+      case 'creator.wallet.history_status_pending':
+        return 'Pending';
+      case 'creator.wallet.history_status_processing':
+        return 'Processing';
+      case 'creator.wallet.history_status_succeeded':
+        return 'Paid';
+      case 'creator.wallet.history_status_failed':
+        return 'Failed';
+      case 'creator.wallet.history_status_cancelled':
+        return 'Cancelled';
+      case 'creator.wallet.conditions_title':
+        return 'Withdrawal conditions';
+      case 'creator.wallet.conditions_subtitle':
+        return 'Good to know before you request a payout.';
+      case 'creator.wallet.conditions_min_label':
+        return 'Minimum withdrawal';
+      case 'creator.wallet.conditions_fee_label':
+        return 'Fee';
+      case 'creator.wallet.conditions_fee_value':
+        return ({required Object percent}) => '${percent} (ex VAT)';
+      case 'creator.wallet.conditions_processing_label':
+        return 'Processing time';
+      case 'creator.wallet.conditions_processing_value':
+        return '2–5 business days';
+      case 'creator.campaigns.browse_title':
+        return 'Browse campaigns';
+      case 'creator.campaigns.browse_subtitle':
+        return 'Find campaigns that match your audience and apply in one tap.';
+      case 'creator.campaigns.applications_title':
+        return 'My applications';
+      case 'creator.campaigns.applications_subtitle':
+        return 'Track the status of campaigns you\'ve applied to — approved, pending or rejected.';
+      case 'creator.campaigns.submit_title':
+        return 'Submit a post';
+      case 'creator.campaigns.submit_subtitle':
+        return 'Once approved, share a public video URL so the advertiser can review it.';
+      case 'creator.campaigns.details_title':
+        return 'Campaign details';
+      case 'creator.campaigns.application_title':
+        return 'My application';
+      case 'creator.campaigns.load_error':
+        return 'Couldn\'t load campaigns.';
+      case 'creator.campaigns.empty_title':
+        return 'No campaigns right now';
+      case 'creator.campaigns.empty_subtitle':
+        return 'New campaigns show up here the moment advertisers launch them.';
+      case 'creator.campaigns.description_title':
+        return 'Brief';
+      case 'creator.campaigns.requirements_title':
+        return 'Requirements';
+      case 'creator.campaigns.assets_title':
+        return 'Brand assets';
+      case 'creator.campaigns.assets_subtitle':
+        return 'Download the brief, logos and footage.';
+      case 'creator.campaigns.type_link':
+        return 'Link';
+      case 'creator.campaigns.type_video':
+        return 'Video';
+      case 'creator.campaigns.type_shorts':
+        return 'Shorts';
+      case 'creator.campaigns.reward_cpm_label':
+        return 'CPM';
+      case 'creator.campaigns.reward_cpc_label':
+        return 'Payout per click';
+      case 'creator.campaigns.reward_per_view_label':
+        return 'Payout per view';
+      case 'creator.campaigns.reward_per_view':
+        return ({required Object amount}) => '${amount} / view';
+      case 'creator.campaigns.reward_per_click':
+        return ({required Object amount}) => '${amount} / click';
+      case 'creator.campaigns.budget_remaining_label':
+        return 'Remaining budget';
+      case 'creator.campaigns.requirement_platform':
+        return ({required Object platform}) => 'Post on ${platform} only';
+      case 'creator.campaigns.requirement_min_duration':
+        return ({required Object minutes}) =>
+            'Minimum duration: ${minutes} min';
+      case 'creator.campaigns.requirement_shorts_max':
+        return ({required Object seconds}) => 'Shorts up to ${seconds} s';
+      case 'creator.campaigns.requirement_vertical':
+        return 'Vertical format (9:16) required';
+      case 'creator.campaigns.requirement_none':
+        return 'No specific requirements.';
+      case 'creator.campaigns.apply_cta':
+        return 'Apply to this campaign';
+      case 'creator.campaigns.apply_title':
+        return 'Apply';
+      case 'creator.campaigns.apply_message_label':
+        return 'Pitch (optional)';
+      case 'creator.campaigns.apply_message_hint':
+        return 'Tell the advertiser why you\'re a great fit…';
+      case 'creator.campaigns.apply_submit':
+        return 'Send application';
+      case 'creator.campaigns.apply_in_progress':
+        return 'Sending…';
+      case 'creator.campaigns.apply_error':
+        return 'Could not send your application. Please try again.';
+      case 'creator.campaigns.apply_success':
+        return 'Application sent — you\'ll be notified when it\'s reviewed.';
+      case 'creator.campaigns.apply_pending_title':
+        return 'Application under review';
+      case 'creator.campaigns.apply_pending_subtitle':
+        return 'We\'ll notify you the moment the advertiser responds.';
+      case 'creator.campaigns.open_application_cta':
+        return 'Open my application';
+      case 'creator.campaigns.chat_with_advertiser':
+        return 'Chat with advertiser';
+      case 'creator.campaigns.status_banner_approved_title':
+        return 'You\'re approved!';
+      case 'creator.campaigns.status_banner_approved_subtitle':
+        return 'You can now submit your video and chat with the advertiser.';
+      case 'creator.campaigns.status_banner_pending_title':
+        return 'Waiting on advertiser';
+      case 'creator.campaigns.status_banner_pending_subtitle':
+        return 'Your pitch is in review — we\'ll ping you here when it\'s decided.';
+      case 'creator.campaigns.status_banner_rejected_title':
+        return 'Not selected this time';
+      case 'creator.campaigns.status_banner_rejected_subtitle':
+        return 'Keep an eye on the Campaigns tab — new briefs ship every week.';
+      case 'creator.campaigns.my_submissions_title':
+        return 'My submissions';
+      case 'creator.campaigns.my_submissions_empty_approved':
+        return 'No video submitted yet. Upload one to start earning.';
+      case 'creator.campaigns.my_submissions_empty_pending':
+        return 'Submissions unlock once your application is approved.';
+      case 'creator.campaigns.submit_cta':
+        return 'Submit a post';
+      case 'creator.campaigns.submit_platform_label':
+        return 'Platform';
+      case 'creator.campaigns.submit_url_label':
+        return 'Public video URL';
+      case 'creator.campaigns.submit_url_hint':
+        return 'https://youtube.com/watch?v=…';
+      case 'creator.campaigns.submit_url_required':
+        return 'Please paste the video URL.';
+      case 'creator.campaigns.submit_url_invalid':
+        return 'Enter a valid public URL.';
+      case 'creator.campaigns.submit_url_youtube_only':
+        return 'Only YouTube URLs are supported right now.';
+      case 'creator.campaigns.submit_in_progress':
+        return 'Submitting…';
+      case 'creator.campaigns.submit_footer':
+        return 'Your video stays public during the campaign so we can validate views.';
+      case 'creator.campaigns.submit_error':
+        return 'Could not submit your video. Please try again.';
+      case 'creator.campaigns.submit_success':
+        return 'Video submitted — advertiser will review it shortly.';
+      case 'creator.campaigns.submit_blocked_limit':
+        return 'You\'ve already submitted for this campaign. Wait for the review.';
+      case 'creator.campaigns.submission_status_pending':
+        return 'In review';
+      case 'creator.campaigns.submission_status_approved':
+        return 'Approved';
+      case 'creator.campaigns.submission_status_rejected':
+        return 'Rejected';
+      case 'creator.campaigns.submission_status_flagged':
+        return 'Flagged';
+      case 'creator.campaigns.submission_views':
+        return ({required Object views}) => '${views} validated views';
+      case 'creator.stats.earnings_title':
+        return 'Total earnings';
+      case 'creator.stats.pending':
+        return 'Pending';
+      case 'creator.stats.validated_views':
+        return 'Validated views';
+      case 'creator.stats.validation_rate':
+        return 'Validation rate';
+      case 'creator.stats.approved_campaigns':
+        return 'Approved campaigns';
+      case 'creator.applications.section_title':
+        return 'Active applications';
+      case 'creator.applications.empty_title':
+        return 'No applications yet';
+      case 'creator.applications.empty_subtitle':
+        return 'Browse the Campaigns tab and apply to the ones that match your audience.';
+      case 'creator.applications.load_error':
+        return 'Couldn\'t load your applications';
+      case 'creator.applications.status_pending':
+        return 'Pending';
+      case 'creator.applications.status_approved':
+        return 'Approved';
+      case 'creator.applications.status_rejected':
+        return 'Rejected';
+      case 'creator.applications.status_withdrawn':
+        return 'Withdrawn';
+      case 'creator.applications.status_unknown':
+        return '—';
+      case 'creator.business.cta_title':
+        return 'Finalize your business information';
+      case 'creator.business.cta_subtitle':
+        return 'Required before connecting your bank account so we can route your payouts correctly.';
+      case 'creator.business.cta_required_pill':
+        return 'REQUIRED';
+      case 'creator.business.cta_button':
+        return 'Finalize your Business Information';
+      case 'creator.business.dialog_title':
+        return 'Business information';
+      case 'creator.business.dialog_subtitle':
+        return 'Provide a few legal details so Stripe can onboard your account and settle payouts.';
+      case 'creator.business.section_type':
+        return 'Account type';
+      case 'creator.business.section_company':
+        return 'Company';
+      case 'creator.business.section_address':
+        return 'Address';
+      case 'creator.business.section_stripe':
+        return 'Payout country & currency';
+      case 'creator.business.type_personal_title':
+        return 'Individual';
+      case 'creator.business.type_personal_subtitle':
+        return 'I receive payouts as a private person.';
+      case 'creator.business.type_sole_title':
+        return 'Sole proprietor';
+      case 'creator.business.type_sole_subtitle':
+        return 'I run my own freelance business.';
+      case 'creator.business.type_company_title':
+        return 'Registered company';
+      case 'creator.business.type_company_subtitle':
+        return 'I operate under a registered legal entity.';
+      case 'creator.business.company_name':
+        return 'Company name';
+      case 'creator.business.vat_number':
+        return 'VAT number';
+      case 'creator.business.address_line1':
+        return 'Address line 1';
+      case 'creator.business.address_line2':
+        return 'Address line 2 (optional)';
+      case 'creator.business.city':
+        return 'City';
+      case 'creator.business.postal_code':
+        return 'Postal code';
+      case 'creator.business.state_region':
+        return 'State / Region (optional)';
+      case 'creator.business.country':
+        return 'Country';
+      case 'creator.business.currency':
+        return 'Payout currency';
+      case 'creator.business.error_required':
+        return 'Required';
+      case 'creator.business.save_and_continue':
+        return 'Save & continue';
+      case 'creator.business.submitting':
+        return 'Saving…';
+      case 'creator.business.footer_info':
+        return 'This information is shared with Stripe to enable your payout account. We never see your banking details.';
+      case 'creator.business.save_error':
+        return 'We couldn\'t save your business info. Please try again.';
+      case 'advertiser_wallet.hero_title':
+        return 'Your balance';
+      case 'advertiser_wallet.hero_subtitle':
+        return 'Add funds to run campaigns. Payments are processed securely by Stripe. Apple Pay (iOS) and Google Pay (Android) are available when supported.';
+      case 'advertiser_wallet.available':
+        return 'Available';
+      case 'advertiser_wallet.pending':
+        return 'Pending';
+      case 'advertiser_wallet.add_funds':
+        return 'Add funds';
+      case 'advertiser_wallet.amount_label':
+        return 'Amount';
+      case 'advertiser_wallet.quick_50':
+        return '€50';
+      case 'advertiser_wallet.quick_100':
+        return '€100';
+      case 'advertiser_wallet.quick_250':
+        return '€250';
+      case 'advertiser_wallet.min_deposit':
+        return 'Minimum deposit is 0.50 in your currency.';
+      case 'advertiser_wallet.test_pay':
+        return 'Simulate payment (dev)';
+      case 'advertiser_wallet.test_hint':
+        return 'Test mode: no real card. Tops up your dev wallet for QA.';
+      case 'advertiser_wallet.pay_secure':
+        return 'Pay with card, Apple Pay or Google Pay';
+      case 'advertiser_wallet.pay_with_card':
+        return 'Pay with card';
+      case 'advertiser_wallet.pay_with_apple':
+        return 'Pay with Apple Pay';
+      case 'advertiser_wallet.pay_with_google':
+        return 'Pay with Google Pay';
+      case 'advertiser_wallet.or':
+        return 'or';
+      case 'advertiser_wallet.stripe_unavailable':
+        return 'Top-ups are not available: payment is not configured on the server.';
+      case 'advertiser_wallet.tx_title':
+        return 'Recent activity';
+      case 'advertiser_wallet.tx_empty':
+        return 'No transactions yet';
+      case 'advertiser_wallet.tx_deposit':
+        return 'Deposit';
+      case 'advertiser_wallet.tx_withdrawal':
+        return 'Withdrawal';
+      case 'advertiser_wallet.tx_other':
+        return 'Transaction';
+      case 'advertiser_wallet.success':
+        return 'Balance updated';
+      case 'advertiser_wallet.failed':
+        return 'Could not add funds. Try again.';
+      case 'advertiser_wallet.in_progress':
+        return 'Processing…';
+      case 'advertiser_wallet.save_card':
+        return 'Save this card for next time';
+      case 'advertiser_wallet.save_card_hint':
+        return 'For card payments only. Works with your server when supported.';
+      case 'advertiser_wallet.saved_card_title':
+        return 'Saved card';
+      case 'advertiser_wallet.saved_card_generic':
+        return 'Card saved for this device';
+      case 'advertiser_wallet.tx_page':
+        return ({required Object current, required Object total}) =>
+            'Page ${current} of ${total}';
+      case 'advertiser_wallet.tx_prev':
+        return 'Previous';
+      case 'advertiser_wallet.tx_next':
+        return 'Next';
       case 'chat.inbox_title':
         return 'Messages';
       case 'chat.inbox_subtitle':
@@ -1062,6 +2014,61 @@ extension on Translations {
         return 'Français';
       case 'app_settings.lang_ar':
         return 'العربية';
+      case 'onboarding.role_gate_title':
+        return 'Choose your profile';
+      case 'onboarding.role_gate_subtitle':
+        return 'Same step as on the Wayo Ads website before you can use the app.';
+      case 'onboarding.role_creator_cta':
+        return 'Creator';
+      case 'onboarding.role_creator_desc':
+        return 'Browse campaigns, apply, and collaborate with brands.';
+      case 'onboarding.role_advertiser_cta':
+        return 'Advertiser';
+      case 'onboarding.role_advertiser_desc':
+        return 'Launch campaigns and manage creators from your dashboard.';
+      case 'onboarding.email_code_title':
+        return 'Verify your email';
+      case 'onboarding.email_code_subtitle':
+        return ({required Object email}) =>
+            'Enter the 6-digit code we sent to ${email}.';
+      case 'onboarding.skip':
+        return 'Skip';
+      case 'onboarding.next':
+        return 'Next';
+      case 'onboarding.done':
+        return 'Got it';
+      case 'onboarding.advertiser.dashboard_title':
+        return 'Your dashboard';
+      case 'onboarding.advertiser.dashboard_subtitle':
+        return 'Track balance, active campaigns and notifications — all updates land here in real time.';
+      case 'onboarding.advertiser.campaigns_title':
+        return 'Campaigns';
+      case 'onboarding.advertiser.campaigns_subtitle':
+        return 'Create new campaigns, review applications and monitor performance in one place.';
+      case 'onboarding.advertiser.wallet_title':
+        return 'Wallet';
+      case 'onboarding.advertiser.wallet_subtitle':
+        return 'Top up your budget, view invoices and spending history — secured by Stripe.';
+      case 'onboarding.advertiser.chat_title':
+        return 'Chat';
+      case 'onboarding.advertiser.chat_subtitle':
+        return 'Talk to your creators once a campaign is approved. Conversations stay in sync across devices.';
+      case 'onboarding.creator.dashboard_title':
+        return 'Creator dashboard';
+      case 'onboarding.creator.dashboard_subtitle':
+        return 'Your KPIs, active applications and earnings refresh automatically — no need to pull to refresh.';
+      case 'onboarding.creator.campaigns_title':
+        return 'Browse & apply';
+      case 'onboarding.creator.campaigns_subtitle':
+        return 'Discover eligible campaigns, apply in one tap and follow your application status live.';
+      case 'onboarding.creator.wallet_title':
+        return 'Earnings & payouts';
+      case 'onboarding.creator.wallet_subtitle':
+        return 'See your balance, request payouts via Stripe Connect and review past withdrawals.';
+      case 'onboarding.creator.chat_title':
+        return 'Talk to advertisers';
+      case 'onboarding.creator.chat_subtitle':
+        return 'Once approved, the chat opens with your advertiser to align on deliverables.';
       default:
         return null;
     }

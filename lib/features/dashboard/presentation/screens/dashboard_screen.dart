@@ -7,10 +7,10 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:go_router/go_router.dart';
-import 'package:shimmer/shimmer.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../../../core/format/money_formatter.dart';
+import '../../../../core/network/wayo_ads_public_url.dart';
 import '../../../../core/providers/app_providers.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -26,7 +26,7 @@ import '../../domain/entities/campaign_status.dart';
 import '../../domain/entities/campaign_summary.dart';
 import '../../../../shared/widgets/animated_logout_icon.dart';
 import '../../../app_settings/presentation/widgets/app_settings_side_panel.dart';
-import '../widgets/animated_gradient_border.dart';
+import '../../../creator_campaigns/domain/creator_browse_campaign.dart';
 import '../widgets/error_banner.dart';
 import '../widgets/notification_center_popup.dart';
 
@@ -130,18 +130,6 @@ class _Header extends ConsumerStatefulWidget {
 }
 
 class _HeaderState extends ConsumerState<_Header> {
-  bool _refreshing = false;
-
-  Future<void> _onRefreshTap() async {
-    if (_refreshing) return;
-    setState(() => _refreshing = true);
-    try {
-      await DashboardScreen._refresh(ref);
-    } finally {
-      if (mounted) setState(() => _refreshing = false);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final async = ref.watch(dashboardStreamProvider);
@@ -160,81 +148,57 @@ class _HeaderState extends ConsumerState<_Header> {
           const WayoLogo(size: 36),
           const Spacer(),
           Tooltip(
-            message: t.dashboard.refresh,
-            child: Material(
-              color: AppColors.surfaceElevatedOf(
-                context,
-              ).withValues(alpha: 0.5),
-              shape: const CircleBorder(),
-              child: InkWell(
-                customBorder: const CircleBorder(),
-                onTap: _onRefreshTap,
-                child: Padding(
-                  padding: const EdgeInsets.all(10),
-                  child: _refreshing
-                      ? SizedBox(
-                          width: 22,
-                          height: 22,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: AppColors.primary,
-                          ),
-                        )
-                      : Icon(
-                          Icons.refresh_rounded,
-                          color: AppColors.textPrimaryOf(context),
-                        ),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Tooltip(
             message: t.app_settings.title,
             child: Material(
               color: AppColors.surfaceElevatedOf(
                 context,
-              ).withValues(alpha: 0.5),
+              ).withValues(alpha: 0.65),
               shape: const CircleBorder(),
+              elevation: 0,
               child: InkWell(
                 customBorder: const CircleBorder(),
                 onTap: () {
                   HapticFeedback.lightImpact();
                   showAppSettingsSidePanel(context);
                 },
-                child: Padding(
-                  padding: const EdgeInsets.all(10),
-                  child: Icon(
-                    Icons.tune_rounded,
-                    color: AppColors.textPrimaryOf(context),
+                child: Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: AppColors.primary.withValues(alpha: 0.45),
+                      width: 1,
+                    ),
                   ),
+                  padding: const EdgeInsets.all(10),
+                  child: Icon(Icons.tune_rounded, color: AppColors.primary),
                 ),
               ),
             ),
           ),
           const SizedBox(width: 8),
-          _AvatarBubble(
-            imageUrl: snap?.user?.avatarUrl,
-            label: snap?.user?.displayFirstName ?? snap?.user?.email ?? '',
-            hasUnreadNotifications: unread > 0,
-          ),
-          const SizedBox(width: 12),
           Material(
-            color: AppColors.surfaceElevatedOf(context).withValues(alpha: 0.5),
+            color: AppColors.surfaceElevatedOf(context).withValues(alpha: 0.65),
             shape: const CircleBorder(),
             child: InkWell(
               customBorder: const CircleBorder(),
               onTap: () {
                 showNotificationCenterPopup(context, ref);
               },
-              child: Padding(
+              child: Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: AppColors.primary.withValues(alpha: 0.45),
+                    width: 1,
+                  ),
+                ),
                 padding: const EdgeInsets.all(10),
                 child: Stack(
                   clipBehavior: Clip.none,
                   children: [
                     Icon(
                       Icons.notifications_none_rounded,
-                      color: AppColors.textPrimaryOf(context),
+                      color: AppColors.primary,
                     ),
                     if (unread > 0)
                       Positioned(
@@ -273,7 +237,7 @@ class _HeaderState extends ConsumerState<_Header> {
             child: Material(
               color: AppColors.surfaceElevatedOf(
                 context,
-              ).withValues(alpha: 0.5),
+              ).withValues(alpha: 0.65),
               shape: const CircleBorder(),
               child: InkWell(
                 customBorder: const CircleBorder(),
@@ -281,7 +245,14 @@ class _HeaderState extends ConsumerState<_Header> {
                   HapticFeedback.lightImpact();
                   ref.read(authNotifierProvider.notifier).logout();
                 },
-                child: Padding(
+                child: Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: AppColors.primary.withValues(alpha: 0.45),
+                      width: 1,
+                    ),
+                  ),
                   padding: const EdgeInsets.all(10),
                   child: AnimatedLogoutIcon(size: 22, color: AppColors.primary),
                 ),
@@ -289,88 +260,6 @@ class _HeaderState extends ConsumerState<_Header> {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _AvatarBubble extends StatelessWidget {
-  const _AvatarBubble({
-    required this.imageUrl,
-    required this.label,
-    this.hasUnreadNotifications = false,
-  });
-
-  final String? imageUrl;
-  final String label;
-  final bool hasUnreadNotifications;
-
-  @override
-  Widget build(BuildContext context) {
-    final initials = label.isNotEmpty ? label[0].toUpperCase() : '?';
-    return RepaintBoundary(
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          AnimatedGradientBorder(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(22),
-              child: SizedBox(
-                width: 44,
-                height: 44,
-                child: imageUrl != null && imageUrl!.isNotEmpty
-                    ? CachedNetworkImage(
-                        imageUrl: imageUrl!,
-                        fit: BoxFit.cover,
-                        memCacheWidth: 120,
-                        memCacheHeight: 120,
-                        errorWidget: (context, url, _) =>
-                            _InitialsAvatar(initials: initials),
-                      )
-                    : _InitialsAvatar(initials: initials),
-              ),
-            ),
-          ),
-          if (hasUnreadNotifications)
-            Positioned(
-              right: -2,
-              top: -2,
-              child: Container(
-                width: 12,
-                height: 12,
-                decoration: BoxDecoration(
-                  color: AppColors.error,
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: Theme.of(context).scaffoldBackgroundColor,
-                    width: 2,
-                  ),
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-class _InitialsAvatar extends StatelessWidget {
-  const _InitialsAvatar({required this.initials});
-
-  final String initials;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      alignment: Alignment.center,
-      decoration: const BoxDecoration(gradient: AppColors.primaryGradient),
-      child: Text(
-        initials,
-        style: const TextStyle(
-          color: Colors.white,
-          fontWeight: FontWeight.w800,
-          fontSize: 16,
-        ),
       ),
     );
   }
@@ -389,29 +278,79 @@ class _WelcomeBlock extends ConsumerWidget {
         ? t.dashboard.welcome_fallback
         : t.dashboard.welcome.replaceAll('{name}', name);
     final role = ref.watch(currentWayoAdsAccountRoleProvider);
-    final roleLine = switch (role) {
+    final roleLabel = switch (role) {
       WayoAdsAccountRole.creator => t.dashboard.account_creator,
       WayoAdsAccountRole.advertiser => t.dashboard.account_advertiser,
-      _ => null,
+      _ => t.dashboard.account_advertiser,
     };
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(t.dashboard.title, style: AppTextStyles.displayLarge(context)),
         const SizedBox(height: 6),
         Text(welcome, style: AppTextStyles.headlineMedium(context)),
-        if (roleLine != null) ...[
-          const SizedBox(height: 4),
+        const SizedBox(height: 8),
+        _AdvertiserRolePill(label: roleLabel),
+        const SizedBox(height: 6),
+        Container(
+          padding: const EdgeInsets.symmetric(vertical: 2),
+          decoration: BoxDecoration(
+            border: Border(
+              left: BorderSide(
+                color: AppColors.primary.withValues(
+                  alpha: isDark ? 0.85 : 0.95,
+                ),
+                width: 3,
+              ),
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.only(left: 12),
+            child: Text(
+              t.dashboard.subtitle,
+              style: AppTextStyles.bodyLarge(context).copyWith(
+                color: AppColors.textSecondaryOf(context),
+                height: 1.35,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _AdvertiserRolePill extends StatelessWidget {
+  const _AdvertiserRolePill({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.55)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.campaign_outlined, size: 12, color: AppColors.primary),
+          const SizedBox(width: 6),
           Text(
-            roleLine,
-            style: AppTextStyles.caption(
-              context,
-            ).copyWith(color: AppColors.textSecondaryOf(context)),
+            label,
+            style: TextStyle(
+              color: AppColors.primary,
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.2,
+            ),
           ),
         ],
-        const SizedBox(height: 6),
-        Text(t.dashboard.subtitle, style: AppTextStyles.bodyLarge(context)),
-      ],
+      ),
     );
   }
 }
@@ -428,52 +367,137 @@ class _BalanceSection extends StatelessWidget {
     final b = snapshot.balance;
     final loading = b == null && snapshot.balanceError == null;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
             t.dashboard.balance.title,
-            style: AppTextStyles.headlineMedium(context),
+            style: AppTextStyles.headlineMedium(
+              context,
+            ).copyWith(fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 12),
-          Skeletonizer(
-            enabled: loading,
-            child: Row(
+          if (loading)
+            const _BalanceSectionSkeleton()
+          else
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Expanded(
-                  child: _BalanceCard(
-                    label: t.dashboard.balance.available,
-                    amount: b?.available ?? 0,
-                    currency: b?.currency ?? 'EUR',
-                    moneyLocale: moneyLocale,
-                    accent: const Color(0xFF10B981),
-                    icon: Icons.account_balance_wallet_outlined,
-                    shimmer: loading,
-                  ),
+                _AdvertiserWalletHero(
+                  snapshot: snapshot,
+                  moneyLocale: moneyLocale,
                 ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: _BalanceCard(
-                    label: t.dashboard.balance.locked,
-                    amount: b?.locked ?? 0,
-                    currency: b?.currency ?? 'EUR',
-                    moneyLocale: moneyLocale,
-                    accent: AppColors.primary,
-                    icon: Icons.lock_outline_rounded,
-                    shimmer: loading,
-                  ),
+                const SizedBox(height: 12),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: _AdvertiserMiniStatCard(
+                        label: t.dashboard.balance.locked,
+                        value: MoneyFormatter.format(
+                          b?.locked ?? 0,
+                          currency: b?.currency ?? 'EUR',
+                          locale: moneyLocale,
+                        ),
+                        accent: AppColors.primaryDeep,
+                        icon: Icons.lock_outline_rounded,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _AdvertiserMiniStatCard(
+                        label: t.dashboard.balance.spent,
+                        value: MoneyFormatter.format(
+                          b?.spent ?? 0,
+                          currency: b?.currency ?? 'EUR',
+                          locale: moneyLocale,
+                        ),
+                        accent: AppColors.primarySoft,
+                        icon: Icons.trending_down_rounded,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _AdvertiserMiniStatCard(
+                        label: t.nav.campaigns,
+                        value: '${snapshot.campaigns.length}',
+                        accent: AppColors.primary,
+                        icon: Icons.grid_view_rounded,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: _BalanceCard(
-                    label: t.dashboard.balance.spent,
-                    amount: b?.spent ?? 0,
-                    currency: b?.currency ?? 'EUR',
-                    moneyLocale: moneyLocale,
-                    accent: const Color(0xFF8B5CF6),
-                    icon: Icons.trending_down_rounded,
-                    shimmer: loading,
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AdvertiserWalletHero extends StatelessWidget {
+  const _AdvertiserWalletHero({
+    required this.snapshot,
+    required this.moneyLocale,
+  });
+
+  final DashboardSnapshot snapshot;
+  final String moneyLocale;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.t;
+    final b = snapshot.balance;
+    if (b == null) return const SizedBox.shrink();
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(24),
+      child: Stack(
+        children: [
+          const Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(gradient: AppColors.primaryGradient),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      Icons.account_balance_wallet_rounded,
+                      color: Colors.white.withValues(alpha: 0.92),
+                      size: 18,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        t.dashboard.balance.available,
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.92),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  MoneyFormatter.format(
+                    b.available,
+                    currency: b.currency,
+                    locale: moneyLocale,
+                  ),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 30,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.6,
+                    height: 1.1,
                   ),
                 ),
               ],
@@ -485,45 +509,37 @@ class _BalanceSection extends StatelessWidget {
   }
 }
 
-class _BalanceCard extends StatelessWidget {
-  const _BalanceCard({
+class _AdvertiserMiniStatCard extends StatelessWidget {
+  const _AdvertiserMiniStatCard({
     required this.label,
-    required this.amount,
-    required this.currency,
-    required this.moneyLocale,
+    required this.value,
     required this.accent,
     required this.icon,
-    required this.shimmer,
   });
 
   final String label;
-  final double amount;
-  final String currency;
-  final String moneyLocale;
+  final String value;
   final Color accent;
   final IconData icon;
-  final bool shimmer;
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final text = MoneyFormatter.format(
-      amount,
-      currency: currency,
-      locale: moneyLocale,
-    );
-    Widget card = ClipRRect(
-      borderRadius: BorderRadius.circular(20),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(18),
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+        filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
         child: Container(
-          padding: const EdgeInsets.all(14),
+          padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: (isDark ? Colors.white : Colors.black).withValues(
-              alpha: 0.04,
+            color: (isDark ? AppColors.black : Colors.black).withValues(
+              alpha: isDark ? 0.35 : 0.04,
             ),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: AppColors.borderOf(context)),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: AppColors.primary.withValues(alpha: isDark ? 0.38 : 0.22),
+              width: 1,
+            ),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -533,47 +549,84 @@ class _BalanceCard extends StatelessWidget {
                   Expanded(
                     child: Text(
                       label,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
                         color: AppColors.textSecondaryOf(context),
+                        height: 1.15,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.all(8),
+                    padding: const EdgeInsets.all(6),
                     decoration: BoxDecoration(
-                      color: accent.withValues(alpha: 0.15),
+                      color: accent.withValues(alpha: 0.22),
                       shape: BoxShape.circle,
+                      border: Border.all(
+                        color: accent.withValues(alpha: 0.45),
+                        width: 0.5,
+                      ),
                     ),
-                    child: Icon(icon, color: accent, size: 18),
+                    child: Icon(icon, color: accent, size: 14),
                   ),
                 ],
               ),
               const SizedBox(height: 10),
               Text(
-                text,
+                value,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  fontSize: 15,
-                  color: AppColors.textPrimaryOf(context),
-                ),
+                style: AppTextStyles.headlineMedium(
+                  context,
+                ).copyWith(fontSize: 15, fontWeight: FontWeight.w800),
               ),
             ],
           ),
         ),
       ),
     );
-    card = AnimatedGradientBorder(child: card);
-    if (shimmer) {
-      card = Shimmer.fromColors(
-        baseColor: Colors.white.withValues(alpha: 0.02),
-        highlightColor: accent.withValues(alpha: 0.12),
-        period: const Duration(seconds: 2),
-        child: card,
-      );
-    }
-    return RepaintBoundary(child: card);
+  }
+}
+
+class _BalanceSectionSkeleton extends StatelessWidget {
+  const _BalanceSectionSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Skeletonizer(
+      enabled: true,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            height: 124,
+            decoration: BoxDecoration(
+              color: AppColors.surfaceElevatedOf(context),
+              borderRadius: BorderRadius.circular(24),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: List.generate(
+              3,
+              (i) => Expanded(
+                child: Padding(
+                  padding: EdgeInsets.only(right: i == 2 ? 0 : 10),
+                  child: Container(
+                    height: 96,
+                    decoration: BoxDecoration(
+                      color: AppColors.surfaceElevatedOf(context),
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -597,12 +650,16 @@ class _CampaignsSection extends StatelessWidget {
         children: [
           Text(
             t.dashboard.campaigns.title,
-            style: AppTextStyles.headlineMedium(context),
+            style: AppTextStyles.headlineMedium(
+              context,
+            ).copyWith(fontWeight: FontWeight.w800),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 6),
           Text(
             t.dashboard.campaigns.subtitle,
-            style: AppTextStyles.bodyLarge(context),
+            style: AppTextStyles.bodyLarge(
+              context,
+            ).copyWith(color: AppColors.textSecondaryOf(context), height: 1.35),
           ),
           const SizedBox(height: 16),
           if (loading)
@@ -617,7 +674,10 @@ class _CampaignsSection extends StatelessWidget {
                       height: 88,
                       decoration: BoxDecoration(
                         color: AppColors.surfaceElevatedOf(context),
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(
+                          color: AppColors.primary.withValues(alpha: 0.2),
+                        ),
                       ),
                     ),
                   ),
@@ -666,41 +726,55 @@ class _CampaignTile extends StatelessWidget {
     return RepaintBoundary(
       child: Material(
         color: AppColors.surfaceElevatedOf(context),
-        borderRadius: BorderRadius.circular(16),
+        elevation: 0,
+        shadowColor: Colors.black.withValues(alpha: 0.35),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(18),
+          side: BorderSide(
+            color: AppColors.primary.withValues(alpha: 0.35),
+            width: 1,
+          ),
+        ),
         child: InkWell(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(18),
           onTap: () {
             HapticFeedback.lightImpact();
             context.push(
               '/campaigns/${c.id}',
-              extra: <String, String?>{'coverUrl': c.coverUrl, 'title': c.name},
+              extra: <String, String?>{
+                'coverUrl': c.coverUrl,
+                'brandLogoUrl': c.brandLogoUrl,
+                'title': c.name,
+              },
             );
           },
           child: Padding(
             padding: const EdgeInsets.all(14),
             child: Row(
               children: [
-                Hero(
-                  tag: 'campaign_cover_${c.id}',
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: c.coverUrl != null && c.coverUrl!.isNotEmpty
-                        ? CachedNetworkImage(
-                            imageUrl: c.coverUrl!,
-                            width: 56,
-                            height: 56,
-                            fit: BoxFit.cover,
-                            memCacheWidth: 120,
-                            memCacheHeight: 120,
-                            errorWidget: (context, url, _) =>
-                                _PlatformIcon(platform: c.platform),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: () {
+                    final logo = resolveWayoAdsPublicUrl(c.brandLogoUrl);
+                    final hasLogo = logo != null && logo.isNotEmpty;
+                    return hasLogo
+                        ? Material(
+                            color: Colors.transparent,
+                            child: SizedBox(
+                              width: 56,
+                              height: 56,
+                              child: CachedNetworkImage(
+                                imageUrl: logo,
+                                fit: BoxFit.contain,
+                                memCacheWidth: 120,
+                                memCacheHeight: 120,
+                                errorWidget: (context, url, _) =>
+                                    _coverThumb(c),
+                              ),
+                            ),
                           )
-                        : SizedBox(
-                            width: 56,
-                            height: 56,
-                            child: _PlatformIcon(platform: c.platform),
-                          ),
-                  ),
+                        : _coverThumb(c);
+                  }(),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -718,7 +792,10 @@ class _CampaignTile extends StatelessWidget {
                             ),
                       ),
                       const SizedBox(height: 6),
-                      Row(
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 6,
+                        crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
                           Container(
                             padding: const EdgeInsets.symmetric(
@@ -738,7 +815,22 @@ class _CampaignTile extends StatelessWidget {
                               ),
                             ),
                           ),
-                          const SizedBox(width: 8),
+                          Text(
+                            switch (c.campaignType) {
+                              CreatorCampaignType.link =>
+                                t.creator.campaigns.type_link,
+                              CreatorCampaignType.video =>
+                                t.creator.campaigns.type_video,
+                              CreatorCampaignType.shorts =>
+                                t.creator.campaigns.type_shorts,
+                              CreatorCampaignType.unknown => '—',
+                            },
+                            style: Theme.of(context).textTheme.labelMedium
+                                ?.copyWith(
+                                  color: AppColors.textSecondaryOf(context),
+                                  fontWeight: FontWeight.w700,
+                                ),
+                          ),
                           Text(
                             t.dashboard.campaigns.creators.replaceAll(
                               '{count}',
@@ -754,15 +846,31 @@ class _CampaignTile extends StatelessWidget {
                     ],
                   ),
                 ),
-                Icon(
-                  Icons.chevron_right_rounded,
-                  color: AppColors.textMutedOf(context),
-                ),
+                Icon(Icons.chevron_right_rounded, color: AppColors.primary),
               ],
             ),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _coverThumb(CampaignSummary c) {
+    if (c.coverUrl != null && c.coverUrl!.isNotEmpty) {
+      return CachedNetworkImage(
+        imageUrl: c.coverUrl!,
+        width: 56,
+        height: 56,
+        fit: BoxFit.cover,
+        memCacheWidth: 120,
+        memCacheHeight: 120,
+        errorWidget: (context, url, _) => _PlatformIcon(platform: c.platform),
+      );
+    }
+    return SizedBox(
+      width: 56,
+      height: 56,
+      child: _PlatformIcon(platform: c.platform),
     );
   }
 
@@ -791,7 +899,7 @@ class _PlatformIcon extends StatelessWidget {
       CampaignPlatform.unknown => Icons.campaign_outlined,
     };
     return Container(
-      color: AppColors.surfaceOf(context),
+      color: AppColors.black.withValues(alpha: 0.2),
       alignment: Alignment.center,
       child: Icon(icon, color: AppColors.primary, size: 28),
     );
@@ -807,7 +915,7 @@ class _EmptyCampaigns extends StatelessWidget {
         Icon(
               Icons.folder_open_rounded,
               size: 72,
-              color: AppColors.textMutedOf(context),
+              color: AppColors.primary.withValues(alpha: 0.75),
             )
             .animate()
             .moveY(

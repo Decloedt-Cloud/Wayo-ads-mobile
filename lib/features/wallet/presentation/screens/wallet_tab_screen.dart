@@ -10,9 +10,11 @@ import '../../../../i18n/strings.g.dart';
 import '../../../auth/domain/auth_notifier.dart';
 import '../../../auth/domain/wayo_ads_account_role.dart';
 import '../../../auth/presentation/providers/current_account_providers.dart';
+import '../../../creator_wallet/presentation/screens/creator_wallet_tab_screen.dart';
 import '../../../dashboard/data/repositories/dashboard_repository.dart';
 import '../../../dashboard/presentation/providers/dashboard_state_providers.dart';
 import '../../../dashboard/presentation/widgets/error_banner.dart';
+import '../widgets/advertiser_wallet_tab_content.dart';
 
 String _moneyLocale(AppLocale l) => switch (l) {
   AppLocale.en => 'en_US',
@@ -20,8 +22,8 @@ String _moneyLocale(AppLocale l) => switch (l) {
   AppLocale.ar => 'ar_SA',
 };
 
-/// Wallet tab — balance from Wayo-ads `/api/wallet` (same stream as dashboard).
-/// Shown for **creator** and **advertiser** (and other roles get the same view when balance exists).
+/// Wallet tab — [WayoAdsAccountRole.advertiser]: full wallet + Stripe / Apple Pay / Google Pay.
+/// Other roles: read-only balance from dashboard stream.
 class WalletTabScreen extends ConsumerWidget {
   const WalletTabScreen({super.key});
 
@@ -37,6 +39,17 @@ class WalletTabScreen extends ConsumerWidget {
       WayoAdsAccountRole.advertiser => t.dashboard.account_advertiser,
       _ => null,
     };
+
+    if (role == WayoAdsAccountRole.advertiser) {
+      return Scaffold(
+        appBar: AppBar(title: Text(t.nav.wallet), elevation: 0),
+        body: const AdvertiserWalletTabContent(),
+      );
+    }
+
+    if (role == WayoAdsAccountRole.creator) {
+      return const CreatorWalletTabScreen();
+    }
 
     return Scaffold(
       appBar: AppBar(title: Text(t.nav.wallet), elevation: 0),
@@ -85,7 +98,7 @@ class WalletTabScreen extends ConsumerWidget {
                         retryLabel: t.dashboard.errors.retry,
                         onRetry: () => ref.invalidate(dashboardStreamProvider),
                       ),
-                    _WalletBalanceBlock(
+                    _NonAdvertiserBalanceBlock(
                       snapshot: snap,
                       moneyLocale: moneyLocale,
                     ),
@@ -100,8 +113,8 @@ class WalletTabScreen extends ConsumerWidget {
   }
 }
 
-class _WalletBalanceBlock extends StatelessWidget {
-  const _WalletBalanceBlock({
+class _NonAdvertiserBalanceBlock extends StatelessWidget {
+  const _NonAdvertiserBalanceBlock({
     required this.snapshot,
     required this.moneyLocale,
   });

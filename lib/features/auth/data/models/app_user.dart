@@ -15,6 +15,8 @@ class AppUser {
     this.avatar,
     this.wayoAdsRole = WayoAdsAccountRole.unknown,
     this.appRoles = const [],
+    this.emailVerified,
+    this.pendingOnboarding = const [],
   });
 
   final int id;
@@ -27,6 +29,16 @@ class AppUser {
 
   /// All per-app roles returned by the auth API (`app_roles`).
   final List<AppRoleEntry> appRoles;
+
+  /// From Auth_Laravel: `true` = `email_verified_at` is set, `false` = key present but not verified.
+  /// `null` = field omitted (older clients / do not block).
+  final bool? emailVerified;
+
+  /// Same rule as the web app: if Auth marks the address as not verified, complete verification first.
+  bool get mustVerifyEmail => emailVerified == false;
+
+  /// Ordered steps from Auth_Wayo / Wayo-ads (e.g. `select_role`, `verify_email`).
+  final List<String> pendingOnboarding;
 
   bool get isCreator => wayoAdsRole == WayoAdsAccountRole.creator;
 
@@ -44,7 +56,34 @@ class AppUser {
       avatar: json['avatar'] as String?,
       wayoAdsRole: role,
       appRoles: roles,
+      emailVerified: _parseEmailVerifiedFlag(json),
+      pendingOnboarding: _parsePendingOnboarding(json),
     );
+  }
+
+  static List<String> _parsePendingOnboarding(Map<String, dynamic> json) {
+    final raw = json['pending_onboarding'] ?? json['pendingOnboarding'];
+    if (raw is! List<dynamic>) {
+      return const [];
+    }
+    return raw.map((e) => '$e'.trim()).where((s) => s.isNotEmpty).toList();
+  }
+
+  static bool? _parseEmailVerifiedFlag(Map<String, dynamic> json) {
+    if (json.containsKey('email_verified_at')) {
+      final v = json['email_verified_at'];
+      if (v == null) {
+        return false;
+      }
+      if (v is String && v.trim().isEmpty) {
+        return false;
+      }
+      return true;
+    }
+    if (json['email_verified'] is bool) {
+      return json['email_verified'] as bool;
+    }
+    return null;
   }
 
   static List<AppRoleEntry> _parseAppRoles(Map<String, dynamic> json) {
@@ -55,7 +94,6 @@ class AppUser {
           .map((e) => AppRoleEntry.fromJson(Map<String, dynamic>.from(e)))
           .toList();
     }
-    // Some JSON encoders turn lists into { "0": {...}, "1": {...} }
     if (raw is Map) {
       return raw.values
           .whereType<Map<dynamic, dynamic>>()
@@ -85,6 +123,30 @@ class AppUser {
     return WayoAdsAccountRole.unknown;
   }
 
+  /// When Auth `GET /user` has not yet returned `app_roles` but the client chose a role.
+  AppUser withWayoAdsRolePatchedFromApiString(String apiRole) {
+    final r = WayoAdsAccountRole.fromApiString(apiRole);
+    if (r == WayoAdsAccountRole.unknown) {
+      return this;
+    }
+    final slug = _wayoAdsAppSlug();
+    final nextRoles = <AppRoleEntry>[
+      for (final e in appRoles)
+        if (e.app != slug) e,
+      AppRoleEntry(app: slug, role: apiRole.trim().toUpperCase()),
+    ];
+    return AppUser(
+      id: id,
+      email: email,
+      name: name,
+      avatar: avatar,
+      wayoAdsRole: r,
+      appRoles: nextRoles,
+      emailVerified: emailVerified,
+      pendingOnboarding: pendingOnboarding,
+    );
+  }
+
   Map<String, dynamic> toJson() => {
     'id': id,
     'email': email,
@@ -93,6 +155,8 @@ class AppUser {
     'wayo_ads_role': wayoAdsRole.name,
     if (_apiRoleForWayoAds() != null) 'app_role': _apiRoleForWayoAds(),
     'app_roles': appRoles.map((e) => e.toJson()).toList(),
+    if (emailVerified != null) 'email_verified': emailVerified,
+    if (pendingOnboarding.isNotEmpty) 'pending_onboarding': pendingOnboarding,
   };
 
   /// Persisted shape compatible with Auth_Wayo (`CREATOR` / `ADVERTISER`).

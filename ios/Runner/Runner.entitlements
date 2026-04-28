@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!--
+		Apple Pay (Stripe PaymentSheet).
+
+		1) Create an Apple Merchant ID in https://developer.apple.com/account > Identifiers
+		   (e.g. `merchant.com.wayo.wayoadsgo`).
+		2) Enable "Apple Pay Payment Processing" capability in Runner target (Xcode > Signing & Capabilities).
+		3) Append the merchant id below.
+		4) Upload your Apple Pay cert to the Stripe Dashboard.
+		5) Set STRIPE_APPLE_MERCHANT_ID in dart_defines.json to the same value.
+
+		Without a valid Apple Developer Team + Merchant ID, Apple Pay will not appear in PaymentSheet.
+	-->
+	<key>com.apple.developer.in-app-payments</key>
+	<array>
+		<!-- <string>merchant.com.wayo.wayoadsgo</string> -->
+	</array>
+</dict>
+</plist>

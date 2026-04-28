@@ -9,6 +9,7 @@ import '../../../auth/domain/wayo_ads_account_role.dart';
 import '../../../auth/presentation/providers/current_account_providers.dart';
 import '../../domain/entities/notification_item.dart';
 import '../providers/dashboard_state_providers.dart';
+import 'creator_application_notification_actions.dart';
 import '../../../../router/app_router.dart';
 
 const int _kPreviewCount = 8;
@@ -362,6 +363,10 @@ class _PopupNotificationTile extends StatelessWidget {
                       ),
                     ),
                   ],
+                  CreatorApplicationNotificationActions(
+                    item: item,
+                    compact: true,
+                  ),
                   if (dateStr.isNotEmpty) ...[
                     const SizedBox(height: 8),
                     Row(

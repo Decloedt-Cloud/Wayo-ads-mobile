@@ -6,10 +6,38 @@ abstract final class ApiEndpoints {
   /// Wayo-ads wallet (advertiser balance) — [GET /api/wallet](Wayo-ads).
   static const String wallet = 'api/wallet';
 
+  /// Stripe / PSP settings for mobile — [GET /api/wallet/config](Wayo-ads).
+  static const String walletConfig = 'api/wallet/config';
+
+  /// [POST /api/wallet/deposit-intent](Wayo-ads) — body `{ amountCents, currency? }`.
+  static const String walletDepositIntent = 'api/wallet/deposit-intent';
+
+  /// [POST /api/wallet/confirm-deposit](Wayo-ads) — body `{ intentId }`.
+  static const String walletConfirmDeposit = 'api/wallet/confirm-deposit';
+
+  /// Dev/mock only — [POST /api/webhooks/psp/simulate](Wayo-ads) — body `{ intentId }`.
+  static const String webhooksPspSimulate = 'api/webhooks/psp/simulate';
+
   /// Wayo-ads campaigns list — [GET /api/campaigns?advertiserOnly=true](Wayo-ads).
   static const String campaigns = 'api/campaigns';
 
   static String campaignDetail(String id) => 'api/campaigns/$id';
+
+  /// List applications for a campaign (advertiser) — [GET /api/campaigns/:id/applications](Wayo-ads).
+  static String campaignApplications(String campaignId) =>
+      'api/campaigns/$campaignId/applications';
+
+  /// Approve a pending creator application (advertiser) — [POST /api/campaigns/:id/applications/:applicationId/approve](Wayo-ads).
+  static String campaignApplicationApprove(
+    String campaignId,
+    String applicationId,
+  ) => 'api/campaigns/$campaignId/applications/$applicationId/approve';
+
+  /// Reject a pending application — [POST /api/campaigns/:id/applications/:applicationId/reject](Wayo-ads).
+  static String campaignApplicationReject(
+    String campaignId,
+    String applicationId,
+  ) => 'api/campaigns/$campaignId/applications/$applicationId/reject';
 
   /// Wayo-ads — notifications.
   static const String notifications = 'api/notifications';

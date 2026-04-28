@@ -1,5 +1,9 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 
+import '../../../../core/network/wayo_ads_public_url.dart';
+import '../../../creator_campaigns/domain/creator_browse_campaign.dart';
 import '../../../../core/config/auth_runtime_config.dart';
 import '../../../../core/errors/auth_exceptions.dart';
 import '../../../../core/network/api_endpoints.dart';
@@ -137,7 +141,12 @@ final class DashboardRemoteDatasource implements DashboardRemote {
             (m['approvedCreators'] as num?)?.toInt() ??
             (m['approved_creators'] as num?)?.toInt() ??
             0,
-        coverUrl: m['cover_url'] as String? ?? m['coverUrl'] as String?,
+        coverUrl:
+            m['cover_url'] as String? ??
+            m['coverUrl'] as String? ??
+            m['coverImageUrl'] as String?,
+        brandLogoUrl: parseCampaignBrandLogoFromJson(m),
+        campaignType: CreatorCampaignType.fromApi(m['type']),
         createdAt: _parseDateTime(m['createdAt'] ?? m['created_at']),
         lockedBudgetCents: _parseCents(
           m['lockedBudget'] ?? m['lockedBudgetCents'],
@@ -176,6 +185,7 @@ final class DashboardRemoteDatasource implements DashboardRemote {
       if (delivery is Map<String, dynamic>) {
         isRead = delivery['status'] == 'READ' || delivery['readAt'] != null;
       }
+      final meta = _mergeNotificationMetadata(m);
       return NotificationItem(
         id: '${m['id'] ?? ''}',
         title: m['title'] as String? ?? '',
@@ -183,7 +193,9 @@ final class DashboardRemoteDatasource implements DashboardRemote {
         isRead: isRead,
         createdAt: _parseDateTime(m['createdAt'] ?? m['created_at']),
         priority: m['priority'] as String?,
-        type: m['type'] as String?,
+        type: m['type'] as String? ?? m['notificationType'] as String?,
+        actionUrl: m['actionUrl'] as String?,
+        metadata: meta,
       );
     }).toList();
   }
@@ -281,5 +293,134 @@ final class DashboardRemoteDatasource implements DashboardRemote {
       return DateTime.tryParse(v);
     }
     return null;
+  }
+
+  /// Normalises notification payload for mobile: some APIs put `campaignId` / `applicationId`
+  /// on the root object, expose `meta`/`payload`, or JSON-stringify metadata.
+  static Map<String, dynamic>? _mergeNotificationMetadata(
+    Map<String, dynamic> envelope,
+  ) {
+    Map<String, dynamic>? parseMap(dynamic raw) {
+      if (raw is Map<String, dynamic>) return Map<String, dynamic>.from(raw);
+      if (raw is Map) return Map<String, dynamic>.from(raw);
+      return null;
+    }
+
+    final rawMeta =
+        envelope['metadata'] ?? envelope['meta'] ?? envelope['payload'];
+    Map<String, dynamic>? parsed;
+    if (rawMeta is String && rawMeta.trim().isNotEmpty) {
+      try {
+        final d = jsonDecode(rawMeta.trim());
+        if (d is Map) {
+          parsed = Map<String, dynamic>.from(d);
+        }
+      } catch (_) {}
+    }
+    parsed ??= parseMap(rawMeta);
+
+    final out = <String, dynamic>{};
+    if (parsed != null) {
+      out.addAll(parsed);
+    }
+    void takeFromRoot(String canonical, List<String> keys) {
+      for (final k in keys) {
+        final v = envelope[k];
+        if (v != null) {
+          out[canonical] = v;
+          return;
+        }
+      }
+    }
+
+    takeFromRoot('campaignId', ['campaignId', 'campaign_id']);
+    takeFromRoot('applicationId', [
+      'applicationId',
+      'application_id',
+      'creatorApplicationId',
+      'creator_application_id',
+    ]);
+
+    final dataBlock = envelope['data'];
+    if (dataBlock is Map) {
+      final dm = Map<String, dynamic>.from(dataBlock);
+      void pickFromBlock(String canon, List<String> keys) {
+        for (final k in keys) {
+          final v = dm[k];
+          if (v != null) {
+            out.putIfAbsent(canon, () => v);
+            return;
+          }
+        }
+      }
+
+      pickFromBlock('campaignId', ['campaignId', 'campaign_id']);
+      pickFromBlock('applicationId', [
+        'applicationId',
+        'application_id',
+        'creatorApplicationId',
+      ]);
+      if (!out.containsKey('application')) {
+        final a = dm['application'];
+        if (a is Map) {
+          out['application'] = Map<String, dynamic>.from(a);
+        }
+      }
+    }
+
+    final appTop = envelope['application'];
+    if (appTop is Map && out['application'] == null) {
+      out['application'] = Map<String, dynamic>.from(appTop);
+    }
+
+    final link =
+        envelope['actionUrl'] ??
+        envelope['action_url'] ??
+        envelope['deeplink'] ??
+        envelope['url'];
+    if (link is String && link.isNotEmpty) {
+      _mergeIdsFromActionUrl(out, link);
+    }
+
+    if (out.isEmpty) {
+      return null;
+    }
+    return out;
+  }
+
+  /// Fills [out] with `campaignId` / `applicationId` from deep links or web paths.
+  static void _mergeIdsFromActionUrl(Map<String, dynamic> out, String raw) {
+    try {
+      final uri = Uri.parse(raw);
+      for (final e in uri.queryParameters.entries) {
+        final k = e.key.toLowerCase();
+        if ((k == 'campaignid' || k == 'campaign_id') &&
+            out['campaignId'] == null &&
+            e.value.isNotEmpty) {
+          out['campaignId'] = e.value;
+        }
+        if ((k == 'applicationid' ||
+                k == 'application_id' ||
+                k == 'creatorapplicationid') &&
+            out['applicationId'] == null &&
+            e.value.isNotEmpty) {
+          out['applicationId'] = e.value;
+        }
+      }
+      final segments = uri.pathSegments;
+      for (var i = 0; i + 1 < segments.length; i++) {
+        if (segments[i] == 'campaigns') {
+          if (out['campaignId'] == null && segments[i + 1].isNotEmpty) {
+            out['campaignId'] = segments[i + 1];
+          }
+        } else if (segments[i] == 'applications') {
+          if (out['applicationId'] == null &&
+              i + 1 < segments.length &&
+              segments[i + 1].isNotEmpty) {
+            out['applicationId'] = segments[i + 1];
+          }
+        }
+      }
+    } catch (_) {}
   }
 }

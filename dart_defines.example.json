@@ -7,12 +7,14 @@
   "AUTH_OAUTH_CLIENT_SECRET": "REPLACE",
   "AUTH_APP_NAME": "wayo_ads",
   "AUTH_OAUTH_REDIRECT_URI": "wayoads://oauth/callback",
-  "AUTH_GOOGLE_SERVER_CLIENT_ID": "REPLACE.apps.googleusercontent.com",
+  "AUTH_GOOGLE_SERVER_CLIENT_ID": "418718041924-fcujk5vfppueq260k43r582rovrj5ghh.apps.googleusercontent.com",
+  "_comment_google_web_client": "Must be the OAuth 'Web application' client id (identical to Auth_Wayo / Laravel GOOGLE_CLIENT_ID). Do not put the Android or iOS native client ids here. iOS: add REVERSED_CLIENT_ID to ios/Runner/Info.plist (see second CFBundleURLTypes entry).",
+  "_comment_google_android": "If Android shows ApiException: 10, add in Google Cloud (same project as this Web client id) an OAuth client type Android: package name ma.wayo.wayoadsgo, SHA-1 from debug keystore (keytool -list -v -keystore %USERPROFILE%\\.android\\debug.keystore -alias androiddebugkey -storepass android -keypass android). Release builds need the release keystore SHA-1 too.",
   "WAYO_ADS_APP_KEY": "REPLACE",
   "WAYO_ADS_API_BASE_URL": "https://ads.wayo.local",
   "CHAT_SERVICE_API_BASE_URL": "https://wayochat.wayo.ac",
-  "_comment_ads": "Local: same PC (Auth 127.0.0.1:8000, Next :3000) or Android emulator 10.0.2.2. Production mobile: WAYO_ADS_API_BASE_URL=https://ads.wayo.agency (see dart_defines.prod.json). If WAYO_ADS_API_BASE_URL unset, app uses Auth base.",
-  "_comment_chat": "Laravel chat-service (DB, Sanctum, conversations, uploads). Production: https://wayochat.wayo.ac — must match Wayo-ads CHAT_SERVICE_API_URL. Leave \"\" to use only bootstrap apiBaseUrl; Android debug rewrites localhost→10.0.2.2.",
+  "_comment_ads": "Local: same PC (Auth 127.0.0.1:8000, Next :3000) or Android emulator 10.0.2.2. Production mobile: WAYO_ADS_API_BASE_URL=https://ads.wayo.agency (see dart_defines.prod.json). If WAYO_ADS_API_BASE_URL unset, app uses Auth base for other calls — but for Creator/Advertiser choice, Auth must either expose POST /api/auth/wayo-ads/role or you must set this to your Wayo-ads (Next) origin so the app can call POST /api/user/role when Auth returns 404.",
+  "_comment_chat": "Laravel chat (conversations, uploads). MUST use the same origin as Wayo-ads CHAT_SERVICE_API_URL / the JWT: if Wayo-ads runs on http://10.0.2.2:3000 but you leave this as https://wayochat.wayo.ac, GET /api/v1/conversations returns 401 (token not valid on prod). For local stack set e.g. \"http://10.0.2.2:8000\" (your chat app port). Production: https://wayochat.wayo.ac. Leave \"\" to use only bootstrap apiBaseUrl; Android debug rewrites localhost→10.0.2.2.",
   "REVERB_HOST": "reverb.wayo.local",
   "REVERB_KEY": "your_reverb_key",
   "REVERB_PORT": "443",
@@ -21,5 +23,12 @@
   "SENTRY_ENV": "staging",
   "APP_RELEASE": "wayo-ads-go@1.0.0+1",
   "CERT_PIN_PRIMARY": "",
-  "CERT_PIN_BACKUP": ""
+  "CERT_PIN_BACKUP": "",
+  "_comment_stripe": "Stripe publishable key comes from backend GET /api/wallet/config (Wayo-ads .env NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY) — do NOT hardcode it on mobile. Apple Pay: create Merchant ID in Apple Developer (e.g. merchant.com.wayo.wayoadsgo), enable Apple Pay capability in Xcode, upload cert to Stripe, then fill STRIPE_APPLE_MERCHANT_ID. Google Pay works on Android without extra config (AndroidManifest meta-data com.google.android.gms.wallet.api.enabled is already set). STRIPE_URL_SCHEME must match iOS CFBundleURLSchemes / Android appAuthRedirectScheme.",
+  "STRIPE_APPLE_MERCHANT_ID": "",
+  "STRIPE_URL_SCHEME": "com.wayo.wayoadsgo",
+
+  "_comment_google_pay": "STRIPE_GOOGLE_PAY_TEST_ENV: \"true\" forces Google Pay test environment (no merchant approval required). Set to \"false\" ONLY after your Google Pay Business Console merchant is APPROVED FOR PRODUCTION (https://pay.google.com/business/console). Empty string falls back to debug=test/release=prod. STRIPE_GOOGLE_PAY_MERCHANT_ID is the id issued by Google (e.g. BCR2DN...).",
+  "STRIPE_GOOGLE_PAY_TEST_ENV": "true",
+  "STRIPE_GOOGLE_PAY_MERCHANT_ID": ""
 }

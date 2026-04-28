@@ -10,7 +10,6 @@ import 'package:intl/intl.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../i18n/strings.g.dart';
 import '../../data/chat_media_utils.dart';
-import '../../data/chat_repository.dart';
 import '../../data/chat_realtime_service.dart';
 import '../../domain/chat_conversation.dart';
 import '../../domain/chat_credentials.dart';
@@ -283,6 +282,8 @@ class _ChatInboxScreenState extends ConsumerState<ChatInboxScreen> {
                                 return RefreshIndicator(
                                   color: ln.plasma,
                                   onRefresh: () async {
+                                    // Also refresh bootstrap to get fresh chat token if stale.
+                                    ref.invalidate(chatBootstrapProvider);
                                     ref.invalidate(chatConversationsProvider);
                                     await ref.read(
                                       chatConversationsProvider.future,

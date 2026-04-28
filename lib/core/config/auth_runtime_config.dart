@@ -82,6 +82,23 @@ final class AuthRuntimeConfig {
     return AppConfig.appRelease;
   }
 
+  /// Origin for Next.js static files (`/uploads/...`) — **`WAYO_ADS_API_BASE_URL`** or
+  /// `--dart-define=WAYO_ADS_API_BASE_URL=…` only. Does **not** fall back to Auth
+  /// Laravel; otherwise logos resolve to `:8000/uploads/…` (404).
+  ///
+  /// Trailing `/api` is stripped for static URLs.
+  String? get resolvedWayoAdsPublicAssetOrigin {
+    final o = _trimSlash(_wayoAdsApiBaseUrl);
+    if (o.isNotEmpty) {
+      return o.endsWith('/api') ? o.substring(0, o.length - 4) : o;
+    }
+    final c = _trimSlash(AppConfig.wayoAdsApiBaseUrl);
+    if (c.isNotEmpty) {
+      return c.endsWith('/api') ? c.substring(0, c.length - 4) : c;
+    }
+    return null;
+  }
+
   /// Normalized Wayo-ads API base (trailing `/`).
   ///
   /// Order: overlay `WAYO_ADS_API_BASE_URL` → compile-time define → **same origin as
@@ -128,6 +145,38 @@ final class AuthRuntimeConfig {
     final b = _trimSlash(resolvedWayoAdsBaseUrl.replaceAll(RegExp(r'/+$'), ''));
     final p = wayoAdsRequestPath(path);
     return '$b/$p';
+  }
+
+  /// Overlay / `--dart-define` Wayo-ads (Next) origin only — **no** fallback to Auth.
+  ///
+  /// Used when `POST …/api/auth/wayo-ads/role` is not deployed on Laravel: the app
+  /// falls back to `POST {this}/api/user/role` instead. If empty, configure
+  /// `WAYO_ADS_API_BASE_URL`.
+  String? get explicitWayoAdsBaseOnly {
+    final o = _trimSlash(_wayoAdsApiBaseUrl);
+    if (o.isNotEmpty) {
+      return o;
+    }
+    final c = _trimSlash(AppConfig.wayoAdsApiBaseUrl);
+    if (c.isNotEmpty) {
+      return c;
+    }
+    return null;
+  }
+
+  /// Full URL on [explicitWayoAdsBaseOnly] (e.g. `api/user/role`), or `null` if unset.
+  String? explicitWayoAdsAbsoluteUrl(String path) {
+    final base = explicitWayoAdsBaseOnly;
+    if (base == null) {
+      return null;
+    }
+    var p = path.replaceAll(RegExp(r'^/+'), '');
+    final trimmed = _trimSlash(base);
+    final hostsApi = trimmed.endsWith('/api') || trimmed == 'api';
+    if (hostsApi && p.startsWith('api/')) {
+      p = p.substring(4);
+    }
+    return '$trimmed/$p';
   }
 
   String get reverbHost =>

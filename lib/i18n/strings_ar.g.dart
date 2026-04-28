@@ -55,6 +55,9 @@ class TranslationsAr extends Translations {
   @override
   late final _TranslationsLoginAr login = _TranslationsLoginAr._(_root);
   @override
+  late final _TranslationsVerifyEmailAr verify_email =
+      _TranslationsVerifyEmailAr._(_root);
+  @override
   late final _TranslationsForgotPasswordAr forgot_password =
       _TranslationsForgotPasswordAr._(_root);
   @override
@@ -78,6 +81,11 @@ class TranslationsAr extends Translations {
   @override
   late final _TranslationsNavAr nav = _TranslationsNavAr._(_root);
   @override
+  late final _TranslationsCreatorAr creator = _TranslationsCreatorAr._(_root);
+  @override
+  late final _TranslationsAdvertiserWalletAr advertiser_wallet =
+      _TranslationsAdvertiserWalletAr._(_root);
+  @override
   late final _TranslationsChatAr chat = _TranslationsChatAr._(_root);
   @override
   late final _TranslationsCommonAr common = _TranslationsCommonAr._(_root);
@@ -89,6 +97,10 @@ class TranslationsAr extends Translations {
   @override
   late final _TranslationsAppSettingsAr app_settings =
       _TranslationsAppSettingsAr._(_root);
+  @override
+  late final _TranslationsOnboardingAr onboarding = _TranslationsOnboardingAr._(
+    _root,
+  );
 }
 
 // Path: connectivity
@@ -191,6 +203,36 @@ class _TranslationsLoginAr extends TranslationsLoginEn {
   @override
   String get google_channel_restart =>
       'انقطع اتصال Google مع أندرويد (غالبًا بعد hot restart). أوقف التطبيق بالكامل ثم شغّله من جديد — لا تستخدم hot restart.';
+  @override
+  String get google_android_oauth_misconfigured =>
+      'تعذّر على Google التحقق من التطبيق (رمز 10). في Google Cloud Console ونفس مشروع معرّف العميل للويب: أنشئ عميل OAuth من نوع Android باسم الحزمة ma.wayo.wayoadsgo وبصمة SHA-1 لبيانات الاعتماد (تطوير أو إصدار)، انتظر بضع دقائق ثم أعِد المحاولة.';
+}
+
+// Path: verify_email
+class _TranslationsVerifyEmailAr extends TranslationsVerifyEmailEn {
+  _TranslationsVerifyEmailAr._(TranslationsAr root)
+    : this._root = root,
+      super.internal(root);
+
+  final TranslationsAr _root; // ignore: unused_field
+
+  // Translations
+  @override
+  String get title => 'أكّد بريدك الإلكتروني';
+  @override
+  String get subtitle =>
+      'يتطلب Wayo ID عنوانًا مُؤكدًا (كما على الموقع). افتح الرابط الذي أرسلناه إلى:';
+  @override
+  String get check_again => 'تم التأكيد — متابعة';
+  @override
+  String get open_mail => 'فتح تطبيق البريد';
+  @override
+  String get still_pending =>
+      'ما زالت التحقق قيد الانتظار. راجع الوارد أو الرسائل غير المرغوبة ثم أعد المحاولة.';
+  @override
+  String get open_mail_failed => 'تعذّر فتح تطبيق البريد.';
+  @override
+  String get sign_out => 'تسجيل الخروج';
 }
 
 // Path: forgot_password
@@ -358,6 +400,16 @@ class _TranslationsDashboardAr extends TranslationsDashboardEn {
   @override
   String get notifications_important => 'مهم';
   @override
+  String get application_approve => 'قبول';
+  @override
+  String get application_reject => 'رفض';
+  @override
+  String get application_approved => 'تم قبول الطلب';
+  @override
+  String get application_rejected => 'تم رفض الطلب';
+  @override
+  String get application_action_failed => 'تعذّر تحديث الطلب. أعد المحاولة.';
+  @override
   String get theme_toggle_tooltip => 'التبديل بين الوضع الفاتح والداكن';
   @override
   String get refresh => 'تحديث لوحة التحكم';
@@ -397,6 +449,9 @@ class _TranslationsAdvertiserCampaignsAr
   @override
   late final _TranslationsAdvertiserCampaignsDetailAr detail =
       _TranslationsAdvertiserCampaignsDetailAr._(_root);
+  @override
+  late final _TranslationsAdvertiserCampaignsApplicationsAr applications =
+      _TranslationsAdvertiserCampaignsApplicationsAr._(_root);
 }
 
 // Path: nav
@@ -418,6 +473,116 @@ class _TranslationsNavAr extends TranslationsNavEn {
   String get wallet => 'المحفظة';
   @override
   String get chat => 'المحادثات';
+}
+
+// Path: creator
+class _TranslationsCreatorAr extends TranslationsCreatorEn {
+  _TranslationsCreatorAr._(TranslationsAr root)
+    : this._root = root,
+      super.internal(root);
+
+  final TranslationsAr _root; // ignore: unused_field
+
+  // Translations
+  @override
+  late final _TranslationsCreatorDashboardAr dashboard =
+      _TranslationsCreatorDashboardAr._(_root);
+  @override
+  late final _TranslationsCreatorWalletAr wallet =
+      _TranslationsCreatorWalletAr._(_root);
+  @override
+  late final _TranslationsCreatorCampaignsAr campaigns =
+      _TranslationsCreatorCampaignsAr._(_root);
+  @override
+  late final _TranslationsCreatorStatsAr stats = _TranslationsCreatorStatsAr._(
+    _root,
+  );
+  @override
+  late final _TranslationsCreatorApplicationsAr applications =
+      _TranslationsCreatorApplicationsAr._(_root);
+  @override
+  late final _TranslationsCreatorBusinessAr business =
+      _TranslationsCreatorBusinessAr._(_root);
+}
+
+// Path: advertiser_wallet
+class _TranslationsAdvertiserWalletAr extends TranslationsAdvertiserWalletEn {
+  _TranslationsAdvertiserWalletAr._(TranslationsAr root)
+    : this._root = root,
+      super.internal(root);
+
+  final TranslationsAr _root; // ignore: unused_field
+
+  // Translations
+  @override
+  String get hero_title => 'رصيدك';
+  @override
+  String get hero_subtitle =>
+      'أضف رصيداً لتشغيل الحملات. تتم المعالجة بأمان عبر Stripe. يتوفر Apple Pay على iOS وGoogle Pay على Android عند دعمهما.';
+  @override
+  String get available => 'المتاح';
+  @override
+  String get pending => 'قيد الانتظار';
+  @override
+  String get add_funds => 'إضافة رصيد';
+  @override
+  String get amount_label => 'المبلغ';
+  @override
+  String get quick_50 => '50€';
+  @override
+  String get quick_100 => '100€';
+  @override
+  String get quick_250 => '250€';
+  @override
+  String get min_deposit => 'الحد الأدنى للإيداع 0,50 حسب العملة.';
+  @override
+  String get test_pay => 'محاكاة الدفع (تطوير)';
+  @override
+  String get test_hint => 'وضع اختباري: بدون بطاقة حقيقية.';
+  @override
+  String get pay_secure => 'بطاقة أو Apple Pay أو Google Pay';
+  @override
+  String get pay_with_card => 'الدفع بالبطاقة';
+  @override
+  String get pay_with_apple => 'الدفع عبر Apple Pay';
+  @override
+  String get pay_with_google => 'الدفع عبر Google Pay';
+  @override
+  String get or => 'أو';
+  @override
+  String get stripe_unavailable => 'الشحن غير متاح: لم يُضبط الدفع في الخادم.';
+  @override
+  String get tx_title => 'آخر الحركات';
+  @override
+  String get tx_empty => 'لا معاملات بعد';
+  @override
+  String get tx_deposit => 'إيداع';
+  @override
+  String get tx_withdrawal => 'سحب';
+  @override
+  String get tx_other => 'معاملة';
+  @override
+  String get success => 'تم تحديث الرصيد';
+  @override
+  String get failed => 'تعذّر إضافة الرصيد. أعد المحاولة.';
+  @override
+  String get in_progress => 'جاري المعالجة…';
+  @override
+  String get save_card => 'حفظ هذه البطاقة للمرة القادمة';
+  @override
+  String get save_card_hint =>
+      'للدفع بالبطاقة فقط. يتطلب دعماً من الخادم عند التفعيل.';
+  @override
+  String get saved_card_title => 'بطاقة محفوظة';
+  @override
+  String get saved_card_generic => 'تم حفظ البطاقة على هذا الجهاز';
+  @override
+  String tx_page({required Object current, required Object total}) =>
+      'الصفحة ${current} من ${total}';
+  @override
+  String get tx_prev => 'السابق';
+  @override
+  String get tx_next => 'التالي';
 }
 
 // Path: chat
@@ -715,6 +880,48 @@ class _TranslationsAppSettingsAr extends TranslationsAppSettingsEn {
   String get lang_ar => 'العربية';
 }
 
+// Path: onboarding
+class _TranslationsOnboardingAr extends TranslationsOnboardingEn {
+  _TranslationsOnboardingAr._(TranslationsAr root)
+    : this._root = root,
+      super.internal(root);
+
+  final TranslationsAr _root; // ignore: unused_field
+
+  // Translations
+  @override
+  String get role_gate_title => 'اختر ملفك';
+  @override
+  String get role_gate_subtitle =>
+      'نفس الخطوة كما على موقع Wayo Ads قبل استخدام التطبيق.';
+  @override
+  String get role_creator_cta => 'مبدع';
+  @override
+  String get role_creator_desc => 'تصفح الحملات وتقدّم وتعاون مع العلامات.';
+  @override
+  String get role_advertiser_cta => 'معلن';
+  @override
+  String get role_advertiser_desc =>
+      'أطلق الحملات وأدر المبدعين من لوحة التحكم.';
+  @override
+  String get email_code_title => 'تأكيد البريد';
+  @override
+  String email_code_subtitle({required Object email}) =>
+      'أدخل الرمز المكوّن من 6 أرقام الذي أرسلناه إلى ${email}.';
+  @override
+  String get skip => 'تخطي';
+  @override
+  String get next => 'التالي';
+  @override
+  String get done => 'حسنًا';
+  @override
+  late final _TranslationsOnboardingAdvertiserAr advertiser =
+      _TranslationsOnboardingAdvertiserAr._(_root);
+  @override
+  late final _TranslationsOnboardingCreatorAr creator =
+      _TranslationsOnboardingCreatorAr._(_root);
+}
+
 // Path: dashboard.balance
 class _TranslationsDashboardBalanceAr extends TranslationsDashboardBalanceEn {
   _TranslationsDashboardBalanceAr._(TranslationsAr root)
@@ -788,6 +995,8 @@ class _TranslationsAdvertiserCampaignsTabsAr
   @override
   String get active => 'نشطة';
   @override
+  String get draft => 'مسودات';
+  @override
   String get paused => 'معلّقة';
   @override
   String get completed => 'مكتملة';
@@ -827,6 +1036,8 @@ class _TranslationsAdvertiserCampaignsCardAr
   String get budget_total => 'الميزانية';
   @override
   String get remaining => 'المتبقي';
+  @override
+  String get locked => 'محجوز';
   @override
   String get spent => 'المنفق';
   @override
@@ -894,7 +1105,560 @@ class _TranslationsAdvertiserCampaignsDetailAr
   @override
   String get valid_views => 'مشاهدات مُصدّقة';
   @override
+  String get valid_clicks => 'نقرات صالحة';
+  @override
   String get approved_creators => 'منشئون معتمدون';
+  @override
+  String get platform_label => 'المنصة';
+  @override
+  String get campaign_type_label => 'نوع الحملة';
+}
+
+// Path: advertiser_campaigns.applications
+class _TranslationsAdvertiserCampaignsApplicationsAr
+    extends TranslationsAdvertiserCampaignsApplicationsEn {
+  _TranslationsAdvertiserCampaignsApplicationsAr._(TranslationsAr root)
+    : this._root = root,
+      super.internal(root);
+
+  final TranslationsAr _root; // ignore: unused_field
+
+  // Translations
+  @override
+  String get title => 'طلبات المنشئين';
+  @override
+  String pending_badge({required Object count}) => '${count} في الانتظار';
+  @override
+  String get subtitle => 'راجع واعتمد أو ارفض طلبات المنشئين';
+  @override
+  String get empty_title => 'لا توجد طلبات';
+  @override
+  String get empty_subtitle => 'عندما يقدم المنشئون طلباتهم ستظهر هنا.';
+  @override
+  String get load_error => 'تعذّر تحميل الطلبات';
+  @override
+  String trust_score({required Object score}) => 'الثقة: ${score}';
+  @override
+  String get approve_button => 'اعتماد';
+  @override
+  String get reject_button => 'رفض';
+  @override
+  String get approved_status => 'معتمد';
+  @override
+  String get rejected_status => 'مرفوض';
+}
+
+// Path: creator.dashboard
+class _TranslationsCreatorDashboardAr extends TranslationsCreatorDashboardEn {
+  _TranslationsCreatorDashboardAr._(TranslationsAr root)
+    : this._root = root,
+      super.internal(root);
+
+  final TranslationsAr _root; // ignore: unused_field
+
+  // Translations
+  @override
+  String get title => 'استوديو المبدع';
+  @override
+  String get subtitle => 'تابع إحصائياتك وطلباتك وأرباحك في الوقت الفعلي.';
+  @override
+  String get coming_soon_title => 'لوحة تحكّم المبدع';
+  @override
+  String get coming_soon_subtitle =>
+      'ستظهر هنا الإحصائيات والتحليلات والطلبات النشطة. التحديث الحي مفعَّل — لا حاجة للتحديث اليدوي.';
+}
+
+// Path: creator.wallet
+class _TranslationsCreatorWalletAr extends TranslationsCreatorWalletEn {
+  _TranslationsCreatorWalletAr._(TranslationsAr root)
+    : this._root = root,
+      super.internal(root);
+
+  final TranslationsAr _root; // ignore: unused_field
+
+  // Translations
+  @override
+  String get coming_soon_title => 'أرباحك';
+  @override
+  String get coming_soon_subtitle =>
+      'الرصيد المتاح، المدفوعات المعلّقة وسجل Stripe ستظهر هنا.';
+  @override
+  String get connect_stripe_title => 'ربط Stripe';
+  @override
+  String get connect_stripe_subtitle =>
+      'اربط حسابك المصرفي عبر Stripe لتفعيل السحوبات. لا نحفظ أي بيانات مصرفية.';
+  @override
+  String get withdraw_title => 'طلب سحب';
+  @override
+  String get withdraw_subtitle => 'اسحب رصيدك المتاح إلى حساب Stripe المربوط.';
+  @override
+  String get available_balance => 'المتاح';
+  @override
+  String get pending_balance => 'قيد الانتظار';
+  @override
+  String get total_earned => 'إجمالي الأرباح';
+  @override
+  String get load_error => 'تعذّر تحميل محفظتك';
+  @override
+  String get withdraw_button => 'سحب';
+  @override
+  String get withdraw_sheet_title => 'طلب سحب';
+  @override
+  String get withdraw_sheet_subtitle =>
+      'الرصيد المتاح: {available}. ستُحوَّل الأموال إلى حساب Stripe المربوط.';
+  @override
+  String get withdraw_amount_label => 'المبلغ';
+  @override
+  String get withdraw_submit => 'تأكيد السحب';
+  @override
+  String get withdraw_submitting => 'جارٍ المعالجة…';
+  @override
+  String get withdraw_max => 'الحد الأقصى';
+  @override
+  String get withdraw_success => 'تم إرسال طلب السحب.';
+  @override
+  String get withdraw_secure_footer =>
+      'سحب آمن — تعالجه Stripe. بياناتك المصرفية لا تصل إلينا أبدًا.';
+  @override
+  String get withdraw_error_invalid => 'أدخل مبلغًا صالحًا.';
+  @override
+  String get withdraw_error_min => 'الحد الأدنى للسحب هو {min}.';
+  @override
+  String get withdraw_error_insufficient => 'الرصيد المتاح غير كافٍ.';
+  @override
+  String get withdraw_reason_business_info =>
+      'أكمل معلومات نشاطك التجاري قبل ربط حساب الدفع.';
+  @override
+  String get withdraw_reason_stripe => 'قم بربط Stripe لتفعيل السحب.';
+  @override
+  String get withdraw_reason_stripe_incomplete =>
+      'أكمل إعداد Stripe لتفعيل السحب.';
+  @override
+  String get withdraw_reason_payouts_disabled =>
+      'حساب Stripe الخاص بك غير مفعَّل للمدفوعات بعد.';
+  @override
+  String get withdraw_reason_below_min => 'الحد الأدنى للسحب هو {min}.';
+  @override
+  String get cancel_action => 'إلغاء الطلب';
+  @override
+  String get cancel_in_progress => 'جارٍ الإلغاء…';
+  @override
+  String get cancel_dialog_title => 'إلغاء هذا السحب؟';
+  @override
+  String get cancel_dialog_message =>
+      'سيتم إلغاء السحب المعلق وإعادة المبلغ إلى رصيدك المتاح.';
+  @override
+  String get cancel_dialog_yes => 'إلغاء السحب';
+  @override
+  String get cancel_dialog_no => 'الاحتفاظ به';
+  @override
+  String get cancel_success => 'تم إلغاء السحب واستعادة المبلغ.';
+  @override
+  String get stripe_connected => 'متصل';
+  @override
+  String get stripe_onboarding_required_pill => 'إجراء مطلوب';
+  @override
+  String get stripe_connect_action => 'ربط Stripe';
+  @override
+  String get stripe_complete_action => 'إكمال الإعداد';
+  @override
+  String get stripe_open_dashboard => 'فتح لوحة Stripe';
+  @override
+  String get stripe_error => 'حدث خطأ مع Stripe. يرجى المحاولة مجددًا.';
+  @override
+  String get stripe_card_title_disconnected => 'ربط Stripe';
+  @override
+  String get stripe_card_subtitle_disconnected =>
+      'اربط حسابك المصرفي عبر Stripe لاستلام المدفوعات.';
+  @override
+  String get stripe_card_title_incomplete => 'أكمل الإعداد';
+  @override
+  String get stripe_card_subtitle_incomplete =>
+      'تحتاج Stripe بعض المعلومات قبل تفعيل المدفوعات.';
+  @override
+  String get stripe_card_title_connected => 'Stripe متصل';
+  @override
+  String get stripe_card_subtitle_connected =>
+      'حساب Stripe Express نشط. المدفوعات تصل إلى بنكك.';
+  @override
+  String get history_title => 'سجل السحوبات';
+  @override
+  String get history_empty => 'لا توجد سحوبات بعد — ستظهر هنا.';
+  @override
+  String get history_load_error => 'تعذّر تحميل سجل السحوبات.';
+  @override
+  String get history_status_pending => 'قيد الانتظار';
+  @override
+  String get history_status_processing => 'قيد المعالجة';
+  @override
+  String get history_status_succeeded => 'مدفوع';
+  @override
+  String get history_status_failed => 'فشل';
+  @override
+  String get history_status_cancelled => 'ملغى';
+  @override
+  String get conditions_title => 'شروط السحب';
+  @override
+  String get conditions_subtitle => 'معلومات مفيدة قبل طلب الدفع.';
+  @override
+  String get conditions_min_label => 'الحد الأدنى للسحب';
+  @override
+  String get conditions_fee_label => 'العمولة';
+  @override
+  String conditions_fee_value({required Object percent}) =>
+      '${percent} (بدون ضريبة)';
+  @override
+  String get conditions_processing_label => 'مدة المعالجة';
+  @override
+  String get conditions_processing_value => '2 إلى 5 أيام عمل';
+}
+
+// Path: creator.campaigns
+class _TranslationsCreatorCampaignsAr extends TranslationsCreatorCampaignsEn {
+  _TranslationsCreatorCampaignsAr._(TranslationsAr root)
+    : this._root = root,
+      super.internal(root);
+
+  final TranslationsAr _root; // ignore: unused_field
+
+  // Translations
+  @override
+  String get browse_title => 'استكشاف الحملات';
+  @override
+  String get browse_subtitle =>
+      'ابحث عن الحملات المناسبة لجمهورك وقدّم طلبك بنقرة واحدة.';
+  @override
+  String get applications_title => 'طلباتي';
+  @override
+  String get applications_subtitle =>
+      'تابع حالة كل طلب: قُبل، قيد المراجعة، أو مرفوض.';
+  @override
+  String get submit_title => 'تقديم منشور';
+  @override
+  String get submit_subtitle =>
+      'بعد الموافقة، شارك رابط فيديو علني ليراجعه المعلن.';
+  @override
+  String get details_title => 'تفاصيل الحملة';
+  @override
+  String get application_title => 'طلبي';
+  @override
+  String get load_error => 'تعذّر تحميل الحملات.';
+  @override
+  String get empty_title => 'لا توجد حملات حالياً';
+  @override
+  String get empty_subtitle =>
+      'ستظهر هنا الحملات الجديدة فور إطلاقها من طرف المعلنين.';
+  @override
+  String get description_title => 'الوصف';
+  @override
+  String get requirements_title => 'المتطلبات';
+  @override
+  String get assets_title => 'عناصر العلامة';
+  @override
+  String get assets_subtitle => 'حمّل ملف الموجز والشعارات واللقطات.';
+  @override
+  String get type_link => 'رابط';
+  @override
+  String get type_video => 'فيديو';
+  @override
+  String get type_shorts => 'Shorts';
+  @override
+  String get reward_cpm_label => 'الكلفة لكل 1000';
+  @override
+  String get reward_cpc_label => 'المكافأة لكل نقرة';
+  @override
+  String get reward_per_view_label => 'المكافأة لكل مشاهدة';
+  @override
+  String reward_per_view({required Object amount}) => '${amount} / مشاهدة';
+  @override
+  String reward_per_click({required Object amount}) => '${amount} / نقرة';
+  @override
+  String get budget_remaining_label => 'الميزانية المتبقية';
+  @override
+  String requirement_platform({required Object platform}) =>
+      'انشر على ${platform} فقط';
+  @override
+  String requirement_min_duration({required Object minutes}) =>
+      'أدنى مدة: ${minutes} دقيقة';
+  @override
+  String requirement_shorts_max({required Object seconds}) =>
+      'Shorts حتى ${seconds} ثانية';
+  @override
+  String get requirement_vertical => 'صيغة عمودية (9:16) مطلوبة';
+  @override
+  String get requirement_none => 'لا توجد متطلبات خاصة.';
+  @override
+  String get apply_cta => 'قدّم طلبك لهذه الحملة';
+  @override
+  String get apply_title => 'تقديم طلب';
+  @override
+  String get apply_message_label => 'عرضك (اختياري)';
+  @override
+  String get apply_message_hint => 'اشرح للمعلن لماذا أنت المرشح المثالي…';
+  @override
+  String get apply_submit => 'إرسال الطلب';
+  @override
+  String get apply_in_progress => 'جارٍ الإرسال…';
+  @override
+  String get apply_error => 'تعذّر إرسال طلبك. حاول مرة أخرى.';
+  @override
+  String get apply_success => 'تم إرسال طلبك — ستصلك إشعار بعد المراجعة.';
+  @override
+  String get apply_pending_title => 'الطلب قيد المراجعة';
+  @override
+  String get apply_pending_subtitle => 'سنعلمك فور ردّ المعلن.';
+  @override
+  String get open_application_cta => 'فتح طلبي';
+  @override
+  String get chat_with_advertiser => 'محادثة المعلن';
+  @override
+  String get status_banner_approved_title => 'تمت الموافقة عليك!';
+  @override
+  String get status_banner_approved_subtitle =>
+      'يمكنك الآن تقديم الفيديو ومراسلة المعلن.';
+  @override
+  String get status_banner_pending_title => 'بانتظار ردّ المعلن';
+  @override
+  String get status_banner_pending_subtitle =>
+      'عرضك قيد المراجعة — سنخبرك هنا عند اتخاذ القرار.';
+  @override
+  String get status_banner_rejected_title => 'لم يتم اختيارك هذه المرة';
+  @override
+  String get status_banner_rejected_subtitle =>
+      'راقب علامة الحملات — كل أسبوع حملات جديدة.';
+  @override
+  String get my_submissions_title => 'مشاركاتي';
+  @override
+  String get my_submissions_empty_approved =>
+      'لم ترسل أي فيديو بعد. أرسل واحداً لتبدأ الربح.';
+  @override
+  String get my_submissions_empty_pending =>
+      'تُفتح خانة الإرسال بعد قبول طلبك.';
+  @override
+  String get submit_cta => 'تقديم منشور';
+  @override
+  String get submit_platform_label => 'المنصة';
+  @override
+  String get submit_url_label => 'رابط الفيديو العلني';
+  @override
+  String get submit_url_hint => 'https://youtube.com/watch?v=…';
+  @override
+  String get submit_url_required => 'ألصق رابط الفيديو.';
+  @override
+  String get submit_url_invalid => 'أدخل رابطاً علنياً صالحاً.';
+  @override
+  String get submit_url_youtube_only => 'يُدعم حالياً فقط روابط YouTube.';
+  @override
+  String get submit_in_progress => 'جارٍ الإرسال…';
+  @override
+  String get submit_footer =>
+      'يجب أن يبقى الفيديو علنياً طوال الحملة للتحقّق من المشاهدات.';
+  @override
+  String get submit_error => 'تعذّر إرسال الفيديو. حاول مجدداً.';
+  @override
+  String get submit_success => 'تم إرسال الفيديو — سيراجعه المعلن قريباً.';
+  @override
+  String get submit_blocked_limit =>
+      'سبق أن أرسلت مشاركة لهذه الحملة. انتظر المراجعة.';
+  @override
+  String get submission_status_pending => 'قيد المراجعة';
+  @override
+  String get submission_status_approved => 'مقبول';
+  @override
+  String get submission_status_rejected => 'مرفوض';
+  @override
+  String get submission_status_flagged => 'تم الإبلاغ';
+  @override
+  String submission_views({required Object views}) => '${views} مشاهدة موثقة';
+}
+
+// Path: creator.stats
+class _TranslationsCreatorStatsAr extends TranslationsCreatorStatsEn {
+  _TranslationsCreatorStatsAr._(TranslationsAr root)
+    : this._root = root,
+      super.internal(root);
+
+  final TranslationsAr _root; // ignore: unused_field
+
+  // Translations
+  @override
+  String get earnings_title => 'إجمالي الأرباح';
+  @override
+  String get pending => 'قيد الانتظار';
+  @override
+  String get validated_views => 'المشاهدات المعتمدة';
+  @override
+  String get validation_rate => 'نسبة الاعتماد';
+  @override
+  String get approved_campaigns => 'الحملات المقبولة';
+}
+
+// Path: creator.applications
+class _TranslationsCreatorApplicationsAr
+    extends TranslationsCreatorApplicationsEn {
+  _TranslationsCreatorApplicationsAr._(TranslationsAr root)
+    : this._root = root,
+      super.internal(root);
+
+  final TranslationsAr _root; // ignore: unused_field
+
+  // Translations
+  @override
+  String get section_title => 'الطلبات النشطة';
+  @override
+  String get empty_title => 'لا توجد طلبات بعد';
+  @override
+  String get empty_subtitle =>
+      'استعرض علامة التبويب «الحملات» وقدّم طلبك على ما يناسب جمهورك.';
+  @override
+  String get load_error => 'تعذّر تحميل طلباتك';
+  @override
+  String get status_pending => 'قيد المراجعة';
+  @override
+  String get status_approved => 'مقبولة';
+  @override
+  String get status_rejected => 'مرفوضة';
+  @override
+  String get status_withdrawn => 'مسحوبة';
+  @override
+  String get status_unknown => '—';
+}
+
+// Path: creator.business
+class _TranslationsCreatorBusinessAr extends TranslationsCreatorBusinessEn {
+  _TranslationsCreatorBusinessAr._(TranslationsAr root)
+    : this._root = root,
+      super.internal(root);
+
+  final TranslationsAr _root; // ignore: unused_field
+
+  // Translations
+  @override
+  String get cta_title => 'أكمل معلومات نشاطك التجاري';
+  @override
+  String get cta_subtitle =>
+      'مطلوب قبل ربط حسابك المصرفي لضمان توجيه المدفوعات بشكل صحيح.';
+  @override
+  String get cta_required_pill => 'مطلوب';
+  @override
+  String get cta_button => 'Finalize your Business Information';
+  @override
+  String get dialog_title => 'معلومات النشاط التجاري';
+  @override
+  String get dialog_subtitle =>
+      'قدّم بعض المعلومات القانونية حتى يتمكن Stripe من فتح حسابك ومعالجة المدفوعات.';
+  @override
+  String get section_type => 'نوع الحساب';
+  @override
+  String get section_company => 'الشركة';
+  @override
+  String get section_address => 'العنوان';
+  @override
+  String get section_stripe => 'بلد وعملة الدفع';
+  @override
+  String get type_personal_title => 'فرد';
+  @override
+  String get type_personal_subtitle => 'أتلقى المدفوعات بصفتي فردًا.';
+  @override
+  String get type_sole_title => 'عامل حر';
+  @override
+  String get type_sole_subtitle => 'أدير نشاطًا مستقلًا باسمي.';
+  @override
+  String get type_company_title => 'شركة مسجّلة';
+  @override
+  String get type_company_subtitle => 'أعمل تحت كيان قانوني مسجّل.';
+  @override
+  String get company_name => 'اسم الشركة';
+  @override
+  String get vat_number => 'الرقم الضريبي';
+  @override
+  String get address_line1 => 'العنوان (سطر 1)';
+  @override
+  String get address_line2 => 'العنوان (سطر 2، اختياري)';
+  @override
+  String get city => 'المدينة';
+  @override
+  String get postal_code => 'الرمز البريدي';
+  @override
+  String get state_region => 'المنطقة (اختياري)';
+  @override
+  String get country => 'البلد';
+  @override
+  String get currency => 'عملة الدفع';
+  @override
+  String get error_required => 'حقل مطلوب';
+  @override
+  String get save_and_continue => 'حفظ ومتابعة';
+  @override
+  String get submitting => 'جارٍ الحفظ…';
+  @override
+  String get footer_info =>
+      'تُرسل هذه المعلومات إلى Stripe لتفعيل حساب الدفع. لن تصل إلينا بياناتك المصرفية أبدًا.';
+  @override
+  String get save_error => 'تعذّر حفظ المعلومات. يرجى المحاولة مجددًا.';
+}
+
+// Path: onboarding.advertiser
+class _TranslationsOnboardingAdvertiserAr
+    extends TranslationsOnboardingAdvertiserEn {
+  _TranslationsOnboardingAdvertiserAr._(TranslationsAr root)
+    : this._root = root,
+      super.internal(root);
+
+  final TranslationsAr _root; // ignore: unused_field
+
+  // Translations
+  @override
+  String get dashboard_title => 'لوحة التحكم';
+  @override
+  String get dashboard_subtitle =>
+      'تابع رصيدك وحملاتك النشطة وإشعاراتك — كل التحديثات تصل فورًا.';
+  @override
+  String get campaigns_title => 'الحملات';
+  @override
+  String get campaigns_subtitle =>
+      'أنشئ حملات جديدة، راجع الطلبات وراقب الأداء من مكان واحد.';
+  @override
+  String get wallet_title => 'المحفظة';
+  @override
+  String get wallet_subtitle =>
+      'اشحن ميزانيتك واطلع على الفواتير وسجل الإنفاق — محمي عبر Stripe.';
+  @override
+  String get chat_title => 'الدردشة';
+  @override
+  String get chat_subtitle =>
+      'تحدث مع المبدعين بعد اعتماد الحملة. محادثاتك متزامنة على جميع أجهزتك.';
+}
+
+// Path: onboarding.creator
+class _TranslationsOnboardingCreatorAr extends TranslationsOnboardingCreatorEn {
+  _TranslationsOnboardingCreatorAr._(TranslationsAr root)
+    : this._root = root,
+      super.internal(root);
+
+  final TranslationsAr _root; // ignore: unused_field
+
+  // Translations
+  @override
+  String get dashboard_title => 'لوحة المبدع';
+  @override
+  String get dashboard_subtitle =>
+      'مؤشراتك الرئيسية وطلباتك النشطة وأرباحك تتحدث تلقائيًا دون الحاجة للتحديث اليدوي.';
+  @override
+  String get campaigns_title => 'تصفح وقدّم طلبك';
+  @override
+  String get campaigns_subtitle =>
+      'اكتشف الحملات المتاحة، قدّم بنقرة واحدة وتابع حالة طلبك مباشرة.';
+  @override
+  String get wallet_title => 'الأرباح والسحوبات';
+  @override
+  String get wallet_subtitle =>
+      'اطّلع على رصيدك واطلب تحويلاً عبر Stripe Connect واستعرض سحوباتك السابقة.';
+  @override
+  String get chat_title => 'تحدث مع المعلن';
+  @override
+  String get chat_subtitle =>
+      'فور الاعتماد، تُفتح الدردشة للتنسيق مع المعلن حول المخرجات.';
 }
 
 /// Flat map(s) containing all translations.
@@ -978,6 +1742,22 @@ extension on TranslationsAr {
         return 'فشل تسجيل الدخول عبر Google. حاول مرة أخرى.';
       case 'login.google_channel_restart':
         return 'انقطع اتصال Google مع أندرويد (غالبًا بعد hot restart). أوقف التطبيق بالكامل ثم شغّله من جديد — لا تستخدم hot restart.';
+      case 'login.google_android_oauth_misconfigured':
+        return 'تعذّر على Google التحقق من التطبيق (رمز 10). في Google Cloud Console ونفس مشروع معرّف العميل للويب: أنشئ عميل OAuth من نوع Android باسم الحزمة ma.wayo.wayoadsgo وبصمة SHA-1 لبيانات الاعتماد (تطوير أو إصدار)، انتظر بضع دقائق ثم أعِد المحاولة.';
+      case 'verify_email.title':
+        return 'أكّد بريدك الإلكتروني';
+      case 'verify_email.subtitle':
+        return 'يتطلب Wayo ID عنوانًا مُؤكدًا (كما على الموقع). افتح الرابط الذي أرسلناه إلى:';
+      case 'verify_email.check_again':
+        return 'تم التأكيد — متابعة';
+      case 'verify_email.open_mail':
+        return 'فتح تطبيق البريد';
+      case 'verify_email.still_pending':
+        return 'ما زالت التحقق قيد الانتظار. راجع الوارد أو الرسائل غير المرغوبة ثم أعد المحاولة.';
+      case 'verify_email.open_mail_failed':
+        return 'تعذّر فتح تطبيق البريد.';
+      case 'verify_email.sign_out':
+        return 'تسجيل الخروج';
       case 'forgot_password.title':
         return 'إعادة تعيين\nكلمة المرور';
       case 'forgot_password.subtitle':
@@ -1088,6 +1868,16 @@ extension on TranslationsAr {
         return 'عرض كل الإشعارات';
       case 'dashboard.notifications_important':
         return 'مهم';
+      case 'dashboard.application_approve':
+        return 'قبول';
+      case 'dashboard.application_reject':
+        return 'رفض';
+      case 'dashboard.application_approved':
+        return 'تم قبول الطلب';
+      case 'dashboard.application_rejected':
+        return 'تم رفض الطلب';
+      case 'dashboard.application_action_failed':
+        return 'تعذّر تحديث الطلب. أعد المحاولة.';
       case 'dashboard.theme_toggle_tooltip':
         return 'التبديل بين الوضع الفاتح والداكن';
       case 'dashboard.refresh':
@@ -1098,6 +1888,8 @@ extension on TranslationsAr {
         return 'تابع أداء حملاتك — عرض فقط.';
       case 'advertiser_campaigns.tabs.active':
         return 'نشطة';
+      case 'advertiser_campaigns.tabs.draft':
+        return 'مسودات';
       case 'advertiser_campaigns.tabs.paused':
         return 'معلّقة';
       case 'advertiser_campaigns.tabs.completed':
@@ -1116,6 +1908,8 @@ extension on TranslationsAr {
         return 'الميزانية';
       case 'advertiser_campaigns.card.remaining':
         return 'المتبقي';
+      case 'advertiser_campaigns.card.locked':
+        return 'محجوز';
       case 'advertiser_campaigns.card.spent':
         return 'المنفق';
       case 'advertiser_campaigns.card.cpc':
@@ -1146,8 +1940,36 @@ extension on TranslationsAr {
         return 'الأداء';
       case 'advertiser_campaigns.detail.valid_views':
         return 'مشاهدات مُصدّقة';
+      case 'advertiser_campaigns.detail.valid_clicks':
+        return 'نقرات صالحة';
       case 'advertiser_campaigns.detail.approved_creators':
         return 'منشئون معتمدون';
+      case 'advertiser_campaigns.detail.platform_label':
+        return 'المنصة';
+      case 'advertiser_campaigns.detail.campaign_type_label':
+        return 'نوع الحملة';
+      case 'advertiser_campaigns.applications.title':
+        return 'طلبات المنشئين';
+      case 'advertiser_campaigns.applications.pending_badge':
+        return ({required Object count}) => '${count} في الانتظار';
+      case 'advertiser_campaigns.applications.subtitle':
+        return 'راجع واعتمد أو ارفض طلبات المنشئين';
+      case 'advertiser_campaigns.applications.empty_title':
+        return 'لا توجد طلبات';
+      case 'advertiser_campaigns.applications.empty_subtitle':
+        return 'عندما يقدم المنشئون طلباتهم ستظهر هنا.';
+      case 'advertiser_campaigns.applications.load_error':
+        return 'تعذّر تحميل الطلبات';
+      case 'advertiser_campaigns.applications.trust_score':
+        return ({required Object score}) => 'الثقة: ${score}';
+      case 'advertiser_campaigns.applications.approve_button':
+        return 'اعتماد';
+      case 'advertiser_campaigns.applications.reject_button':
+        return 'رفض';
+      case 'advertiser_campaigns.applications.approved_status':
+        return 'معتمد';
+      case 'advertiser_campaigns.applications.rejected_status':
+        return 'مرفوض';
       case 'nav.dashboard':
         return 'لوحة التحكم';
       case 'nav.campaigns':
@@ -1158,6 +1980,425 @@ extension on TranslationsAr {
         return 'المحفظة';
       case 'nav.chat':
         return 'المحادثات';
+      case 'creator.dashboard.title':
+        return 'استوديو المبدع';
+      case 'creator.dashboard.subtitle':
+        return 'تابع إحصائياتك وطلباتك وأرباحك في الوقت الفعلي.';
+      case 'creator.dashboard.coming_soon_title':
+        return 'لوحة تحكّم المبدع';
+      case 'creator.dashboard.coming_soon_subtitle':
+        return 'ستظهر هنا الإحصائيات والتحليلات والطلبات النشطة. التحديث الحي مفعَّل — لا حاجة للتحديث اليدوي.';
+      case 'creator.wallet.coming_soon_title':
+        return 'أرباحك';
+      case 'creator.wallet.coming_soon_subtitle':
+        return 'الرصيد المتاح، المدفوعات المعلّقة وسجل Stripe ستظهر هنا.';
+      case 'creator.wallet.connect_stripe_title':
+        return 'ربط Stripe';
+      case 'creator.wallet.connect_stripe_subtitle':
+        return 'اربط حسابك المصرفي عبر Stripe لتفعيل السحوبات. لا نحفظ أي بيانات مصرفية.';
+      case 'creator.wallet.withdraw_title':
+        return 'طلب سحب';
+      case 'creator.wallet.withdraw_subtitle':
+        return 'اسحب رصيدك المتاح إلى حساب Stripe المربوط.';
+      case 'creator.wallet.available_balance':
+        return 'المتاح';
+      case 'creator.wallet.pending_balance':
+        return 'قيد الانتظار';
+      case 'creator.wallet.total_earned':
+        return 'إجمالي الأرباح';
+      case 'creator.wallet.load_error':
+        return 'تعذّر تحميل محفظتك';
+      case 'creator.wallet.withdraw_button':
+        return 'سحب';
+      case 'creator.wallet.withdraw_sheet_title':
+        return 'طلب سحب';
+      case 'creator.wallet.withdraw_sheet_subtitle':
+        return 'الرصيد المتاح: {available}. ستُحوَّل الأموال إلى حساب Stripe المربوط.';
+      case 'creator.wallet.withdraw_amount_label':
+        return 'المبلغ';
+      case 'creator.wallet.withdraw_submit':
+        return 'تأكيد السحب';
+      case 'creator.wallet.withdraw_submitting':
+        return 'جارٍ المعالجة…';
+      case 'creator.wallet.withdraw_max':
+        return 'الحد الأقصى';
+      case 'creator.wallet.withdraw_success':
+        return 'تم إرسال طلب السحب.';
+      case 'creator.wallet.withdraw_secure_footer':
+        return 'سحب آمن — تعالجه Stripe. بياناتك المصرفية لا تصل إلينا أبدًا.';
+      case 'creator.wallet.withdraw_error_invalid':
+        return 'أدخل مبلغًا صالحًا.';
+      case 'creator.wallet.withdraw_error_min':
+        return 'الحد الأدنى للسحب هو {min}.';
+      case 'creator.wallet.withdraw_error_insufficient':
+        return 'الرصيد المتاح غير كافٍ.';
+      case 'creator.wallet.withdraw_reason_business_info':
+        return 'أكمل معلومات نشاطك التجاري قبل ربط حساب الدفع.';
+      case 'creator.wallet.withdraw_reason_stripe':
+        return 'قم بربط Stripe لتفعيل السحب.';
+      case 'creator.wallet.withdraw_reason_stripe_incomplete':
+        return 'أكمل إعداد Stripe لتفعيل السحب.';
+      case 'creator.wallet.withdraw_reason_payouts_disabled':
+        return 'حساب Stripe الخاص بك غير مفعَّل للمدفوعات بعد.';
+      case 'creator.wallet.withdraw_reason_below_min':
+        return 'الحد الأدنى للسحب هو {min}.';
+      case 'creator.wallet.cancel_action':
+        return 'إلغاء الطلب';
+      case 'creator.wallet.cancel_in_progress':
+        return 'جارٍ الإلغاء…';
+      case 'creator.wallet.cancel_dialog_title':
+        return 'إلغاء هذا السحب؟';
+      case 'creator.wallet.cancel_dialog_message':
+        return 'سيتم إلغاء السحب المعلق وإعادة المبلغ إلى رصيدك المتاح.';
+      case 'creator.wallet.cancel_dialog_yes':
+        return 'إلغاء السحب';
+      case 'creator.wallet.cancel_dialog_no':
+        return 'الاحتفاظ به';
+      case 'creator.wallet.cancel_success':
+        return 'تم إلغاء السحب واستعادة المبلغ.';
+      case 'creator.wallet.stripe_connected':
+        return 'متصل';
+      case 'creator.wallet.stripe_onboarding_required_pill':
+        return 'إجراء مطلوب';
+      case 'creator.wallet.stripe_connect_action':
+        return 'ربط Stripe';
+      case 'creator.wallet.stripe_complete_action':
+        return 'إكمال الإعداد';
+      case 'creator.wallet.stripe_open_dashboard':
+        return 'فتح لوحة Stripe';
+      case 'creator.wallet.stripe_error':
+        return 'حدث خطأ مع Stripe. يرجى المحاولة مجددًا.';
+      case 'creator.wallet.stripe_card_title_disconnected':
+        return 'ربط Stripe';
+      case 'creator.wallet.stripe_card_subtitle_disconnected':
+        return 'اربط حسابك المصرفي عبر Stripe لاستلام المدفوعات.';
+      case 'creator.wallet.stripe_card_title_incomplete':
+        return 'أكمل الإعداد';
+      case 'creator.wallet.stripe_card_subtitle_incomplete':
+        return 'تحتاج Stripe بعض المعلومات قبل تفعيل المدفوعات.';
+      case 'creator.wallet.stripe_card_title_connected':
+        return 'Stripe متصل';
+      case 'creator.wallet.stripe_card_subtitle_connected':
+        return 'حساب Stripe Express نشط. المدفوعات تصل إلى بنكك.';
+      case 'creator.wallet.history_title':
+        return 'سجل السحوبات';
+      case 'creator.wallet.history_empty':
+        return 'لا توجد سحوبات بعد — ستظهر هنا.';
+      case 'creator.wallet.history_load_error':
+        return 'تعذّر تحميل سجل السحوبات.';
+      case 'creator.wallet.history_status_pending':
+        return 'قيد الانتظار';
+      case 'creator.wallet.history_status_processing':
+        return 'قيد المعالجة';
+      case 'creator.wallet.history_status_succeeded':
+        return 'مدفوع';
+      case 'creator.wallet.history_status_failed':
+        return 'فشل';
+      case 'creator.wallet.history_status_cancelled':
+        return 'ملغى';
+      case 'creator.wallet.conditions_title':
+        return 'شروط السحب';
+      case 'creator.wallet.conditions_subtitle':
+        return 'معلومات مفيدة قبل طلب الدفع.';
+      case 'creator.wallet.conditions_min_label':
+        return 'الحد الأدنى للسحب';
+      case 'creator.wallet.conditions_fee_label':
+        return 'العمولة';
+      case 'creator.wallet.conditions_fee_value':
+        return ({required Object percent}) => '${percent} (بدون ضريبة)';
+      case 'creator.wallet.conditions_processing_label':
+        return 'مدة المعالجة';
+      case 'creator.wallet.conditions_processing_value':
+        return '2 إلى 5 أيام عمل';
+      case 'creator.campaigns.browse_title':
+        return 'استكشاف الحملات';
+      case 'creator.campaigns.browse_subtitle':
+        return 'ابحث عن الحملات المناسبة لجمهورك وقدّم طلبك بنقرة واحدة.';
+      case 'creator.campaigns.applications_title':
+        return 'طلباتي';
+      case 'creator.campaigns.applications_subtitle':
+        return 'تابع حالة كل طلب: قُبل، قيد المراجعة، أو مرفوض.';
+      case 'creator.campaigns.submit_title':
+        return 'تقديم منشور';
+      case 'creator.campaigns.submit_subtitle':
+        return 'بعد الموافقة، شارك رابط فيديو علني ليراجعه المعلن.';
+      case 'creator.campaigns.details_title':
+        return 'تفاصيل الحملة';
+      case 'creator.campaigns.application_title':
+        return 'طلبي';
+      case 'creator.campaigns.load_error':
+        return 'تعذّر تحميل الحملات.';
+      case 'creator.campaigns.empty_title':
+        return 'لا توجد حملات حالياً';
+      case 'creator.campaigns.empty_subtitle':
+        return 'ستظهر هنا الحملات الجديدة فور إطلاقها من طرف المعلنين.';
+      case 'creator.campaigns.description_title':
+        return 'الوصف';
+      case 'creator.campaigns.requirements_title':
+        return 'المتطلبات';
+      case 'creator.campaigns.assets_title':
+        return 'عناصر العلامة';
+      case 'creator.campaigns.assets_subtitle':
+        return 'حمّل ملف الموجز والشعارات واللقطات.';
+      case 'creator.campaigns.type_link':
+        return 'رابط';
+      case 'creator.campaigns.type_video':
+        return 'فيديو';
+      case 'creator.campaigns.type_shorts':
+        return 'Shorts';
+      case 'creator.campaigns.reward_cpm_label':
+        return 'الكلفة لكل 1000';
+      case 'creator.campaigns.reward_cpc_label':
+        return 'المكافأة لكل نقرة';
+      case 'creator.campaigns.reward_per_view_label':
+        return 'المكافأة لكل مشاهدة';
+      case 'creator.campaigns.reward_per_view':
+        return ({required Object amount}) => '${amount} / مشاهدة';
+      case 'creator.campaigns.reward_per_click':
+        return ({required Object amount}) => '${amount} / نقرة';
+      case 'creator.campaigns.budget_remaining_label':
+        return 'الميزانية المتبقية';
+      case 'creator.campaigns.requirement_platform':
+        return ({required Object platform}) => 'انشر على ${platform} فقط';
+      case 'creator.campaigns.requirement_min_duration':
+        return ({required Object minutes}) => 'أدنى مدة: ${minutes} دقيقة';
+      case 'creator.campaigns.requirement_shorts_max':
+        return ({required Object seconds}) => 'Shorts حتى ${seconds} ثانية';
+      case 'creator.campaigns.requirement_vertical':
+        return 'صيغة عمودية (9:16) مطلوبة';
+      case 'creator.campaigns.requirement_none':
+        return 'لا توجد متطلبات خاصة.';
+      case 'creator.campaigns.apply_cta':
+        return 'قدّم طلبك لهذه الحملة';
+      case 'creator.campaigns.apply_title':
+        return 'تقديم طلب';
+      case 'creator.campaigns.apply_message_label':
+        return 'عرضك (اختياري)';
+      case 'creator.campaigns.apply_message_hint':
+        return 'اشرح للمعلن لماذا أنت المرشح المثالي…';
+      case 'creator.campaigns.apply_submit':
+        return 'إرسال الطلب';
+      case 'creator.campaigns.apply_in_progress':
+        return 'جارٍ الإرسال…';
+      case 'creator.campaigns.apply_error':
+        return 'تعذّر إرسال طلبك. حاول مرة أخرى.';
+      case 'creator.campaigns.apply_success':
+        return 'تم إرسال طلبك — ستصلك إشعار بعد المراجعة.';
+      case 'creator.campaigns.apply_pending_title':
+        return 'الطلب قيد المراجعة';
+      case 'creator.campaigns.apply_pending_subtitle':
+        return 'سنعلمك فور ردّ المعلن.';
+      case 'creator.campaigns.open_application_cta':
+        return 'فتح طلبي';
+      case 'creator.campaigns.chat_with_advertiser':
+        return 'محادثة المعلن';
+      case 'creator.campaigns.status_banner_approved_title':
+        return 'تمت الموافقة عليك!';
+      case 'creator.campaigns.status_banner_approved_subtitle':
+        return 'يمكنك الآن تقديم الفيديو ومراسلة المعلن.';
+      case 'creator.campaigns.status_banner_pending_title':
+        return 'بانتظار ردّ المعلن';
+      case 'creator.campaigns.status_banner_pending_subtitle':
+        return 'عرضك قيد المراجعة — سنخبرك هنا عند اتخاذ القرار.';
+      case 'creator.campaigns.status_banner_rejected_title':
+        return 'لم يتم اختيارك هذه المرة';
+      case 'creator.campaigns.status_banner_rejected_subtitle':
+        return 'راقب علامة الحملات — كل أسبوع حملات جديدة.';
+      case 'creator.campaigns.my_submissions_title':
+        return 'مشاركاتي';
+      case 'creator.campaigns.my_submissions_empty_approved':
+        return 'لم ترسل أي فيديو بعد. أرسل واحداً لتبدأ الربح.';
+      case 'creator.campaigns.my_submissions_empty_pending':
+        return 'تُفتح خانة الإرسال بعد قبول طلبك.';
+      case 'creator.campaigns.submit_cta':
+        return 'تقديم منشور';
+      case 'creator.campaigns.submit_platform_label':
+        return 'المنصة';
+      case 'creator.campaigns.submit_url_label':
+        return 'رابط الفيديو العلني';
+      case 'creator.campaigns.submit_url_hint':
+        return 'https://youtube.com/watch?v=…';
+      case 'creator.campaigns.submit_url_required':
+        return 'ألصق رابط الفيديو.';
+      case 'creator.campaigns.submit_url_invalid':
+        return 'أدخل رابطاً علنياً صالحاً.';
+      case 'creator.campaigns.submit_url_youtube_only':
+        return 'يُدعم حالياً فقط روابط YouTube.';
+      case 'creator.campaigns.submit_in_progress':
+        return 'جارٍ الإرسال…';
+      case 'creator.campaigns.submit_footer':
+        return 'يجب أن يبقى الفيديو علنياً طوال الحملة للتحقّق من المشاهدات.';
+      case 'creator.campaigns.submit_error':
+        return 'تعذّر إرسال الفيديو. حاول مجدداً.';
+      case 'creator.campaigns.submit_success':
+        return 'تم إرسال الفيديو — سيراجعه المعلن قريباً.';
+      case 'creator.campaigns.submit_blocked_limit':
+        return 'سبق أن أرسلت مشاركة لهذه الحملة. انتظر المراجعة.';
+      case 'creator.campaigns.submission_status_pending':
+        return 'قيد المراجعة';
+      case 'creator.campaigns.submission_status_approved':
+        return 'مقبول';
+      case 'creator.campaigns.submission_status_rejected':
+        return 'مرفوض';
+      case 'creator.campaigns.submission_status_flagged':
+        return 'تم الإبلاغ';
+      case 'creator.campaigns.submission_views':
+        return ({required Object views}) => '${views} مشاهدة موثقة';
+      case 'creator.stats.earnings_title':
+        return 'إجمالي الأرباح';
+      case 'creator.stats.pending':
+        return 'قيد الانتظار';
+      case 'creator.stats.validated_views':
+        return 'المشاهدات المعتمدة';
+      case 'creator.stats.validation_rate':
+        return 'نسبة الاعتماد';
+      case 'creator.stats.approved_campaigns':
+        return 'الحملات المقبولة';
+      case 'creator.applications.section_title':
+        return 'الطلبات النشطة';
+      case 'creator.applications.empty_title':
+        return 'لا توجد طلبات بعد';
+      case 'creator.applications.empty_subtitle':
+        return 'استعرض علامة التبويب «الحملات» وقدّم طلبك على ما يناسب جمهورك.';
+      case 'creator.applications.load_error':
+        return 'تعذّر تحميل طلباتك';
+      case 'creator.applications.status_pending':
+        return 'قيد المراجعة';
+      case 'creator.applications.status_approved':
+        return 'مقبولة';
+      case 'creator.applications.status_rejected':
+        return 'مرفوضة';
+      case 'creator.applications.status_withdrawn':
+        return 'مسحوبة';
+      case 'creator.applications.status_unknown':
+        return '—';
+      case 'creator.business.cta_title':
+        return 'أكمل معلومات نشاطك التجاري';
+      case 'creator.business.cta_subtitle':
+        return 'مطلوب قبل ربط حسابك المصرفي لضمان توجيه المدفوعات بشكل صحيح.';
+      case 'creator.business.cta_required_pill':
+        return 'مطلوب';
+      case 'creator.business.cta_button':
+        return 'Finalize your Business Information';
+      case 'creator.business.dialog_title':
+        return 'معلومات النشاط التجاري';
+      case 'creator.business.dialog_subtitle':
+        return 'قدّم بعض المعلومات القانونية حتى يتمكن Stripe من فتح حسابك ومعالجة المدفوعات.';
+      case 'creator.business.section_type':
+        return 'نوع الحساب';
+      case 'creator.business.section_company':
+        return 'الشركة';
+      case 'creator.business.section_address':
+        return 'العنوان';
+      case 'creator.business.section_stripe':
+        return 'بلد وعملة الدفع';
+      case 'creator.business.type_personal_title':
+        return 'فرد';
+      case 'creator.business.type_personal_subtitle':
+        return 'أتلقى المدفوعات بصفتي فردًا.';
+      case 'creator.business.type_sole_title':
+        return 'عامل حر';
+      case 'creator.business.type_sole_subtitle':
+        return 'أدير نشاطًا مستقلًا باسمي.';
+      case 'creator.business.type_company_title':
+        return 'شركة مسجّلة';
+      case 'creator.business.type_company_subtitle':
+        return 'أعمل تحت كيان قانوني مسجّل.';
+      case 'creator.business.company_name':
+        return 'اسم الشركة';
+      case 'creator.business.vat_number':
+        return 'الرقم الضريبي';
+      case 'creator.business.address_line1':
+        return 'العنوان (سطر 1)';
+      case 'creator.business.address_line2':
+        return 'العنوان (سطر 2، اختياري)';
+      case 'creator.business.city':
+        return 'المدينة';
+      case 'creator.business.postal_code':
+        return 'الرمز البريدي';
+      case 'creator.business.state_region':
+        return 'المنطقة (اختياري)';
+      case 'creator.business.country':
+        return 'البلد';
+      case 'creator.business.currency':
+        return 'عملة الدفع';
+      case 'creator.business.error_required':
+        return 'حقل مطلوب';
+      case 'creator.business.save_and_continue':
+        return 'حفظ ومتابعة';
+      case 'creator.business.submitting':
+        return 'جارٍ الحفظ…';
+      case 'creator.business.footer_info':
+        return 'تُرسل هذه المعلومات إلى Stripe لتفعيل حساب الدفع. لن تصل إلينا بياناتك المصرفية أبدًا.';
+      case 'creator.business.save_error':
+        return 'تعذّر حفظ المعلومات. يرجى المحاولة مجددًا.';
+      case 'advertiser_wallet.hero_title':
+        return 'رصيدك';
+      case 'advertiser_wallet.hero_subtitle':
+        return 'أضف رصيداً لتشغيل الحملات. تتم المعالجة بأمان عبر Stripe. يتوفر Apple Pay على iOS وGoogle Pay على Android عند دعمهما.';
+      case 'advertiser_wallet.available':
+        return 'المتاح';
+      case 'advertiser_wallet.pending':
+        return 'قيد الانتظار';
+      case 'advertiser_wallet.add_funds':
+        return 'إضافة رصيد';
+      case 'advertiser_wallet.amount_label':
+        return 'المبلغ';
+      case 'advertiser_wallet.quick_50':
+        return '50€';
+      case 'advertiser_wallet.quick_100':
+        return '100€';
+      case 'advertiser_wallet.quick_250':
+        return '250€';
+      case 'advertiser_wallet.min_deposit':
+        return 'الحد الأدنى للإيداع 0,50 حسب العملة.';
+      case 'advertiser_wallet.test_pay':
+        return 'محاكاة الدفع (تطوير)';
+      case 'advertiser_wallet.test_hint':
+        return 'وضع اختباري: بدون بطاقة حقيقية.';
+      case 'advertiser_wallet.pay_secure':
+        return 'بطاقة أو Apple Pay أو Google Pay';
+      case 'advertiser_wallet.pay_with_card':
+        return 'الدفع بالبطاقة';
+      case 'advertiser_wallet.pay_with_apple':
+        return 'الدفع عبر Apple Pay';
+      case 'advertiser_wallet.pay_with_google':
+        return 'الدفع عبر Google Pay';
+      case 'advertiser_wallet.or':
+        return 'أو';
+      case 'advertiser_wallet.stripe_unavailable':
+        return 'الشحن غير متاح: لم يُضبط الدفع في الخادم.';
+      case 'advertiser_wallet.tx_title':
+        return 'آخر الحركات';
+      case 'advertiser_wallet.tx_empty':
+        return 'لا معاملات بعد';
+      case 'advertiser_wallet.tx_deposit':
+        return 'إيداع';
+      case 'advertiser_wallet.tx_withdrawal':
+        return 'سحب';
+      case 'advertiser_wallet.tx_other':
+        return 'معاملة';
+      case 'advertiser_wallet.success':
+        return 'تم تحديث الرصيد';
+      case 'advertiser_wallet.failed':
+        return 'تعذّر إضافة الرصيد. أعد المحاولة.';
+      case 'advertiser_wallet.in_progress':
+        return 'جاري المعالجة…';
+      case 'advertiser_wallet.save_card':
+        return 'حفظ هذه البطاقة للمرة القادمة';
+      case 'advertiser_wallet.save_card_hint':
+        return 'للدفع بالبطاقة فقط. يتطلب دعماً من الخادم عند التفعيل.';
+      case 'advertiser_wallet.saved_card_title':
+        return 'بطاقة محفوظة';
+      case 'advertiser_wallet.saved_card_generic':
+        return 'تم حفظ البطاقة على هذا الجهاز';
+      case 'advertiser_wallet.tx_page':
+        return ({required Object current, required Object total}) =>
+            'الصفحة ${current} من ${total}';
+      case 'advertiser_wallet.tx_prev':
+        return 'السابق';
+      case 'advertiser_wallet.tx_next':
+        return 'التالي';
       case 'chat.inbox_title':
         return 'الرسائل';
       case 'chat.inbox_subtitle':
@@ -1380,6 +2621,61 @@ extension on TranslationsAr {
         return 'Français';
       case 'app_settings.lang_ar':
         return 'العربية';
+      case 'onboarding.role_gate_title':
+        return 'اختر ملفك';
+      case 'onboarding.role_gate_subtitle':
+        return 'نفس الخطوة كما على موقع Wayo Ads قبل استخدام التطبيق.';
+      case 'onboarding.role_creator_cta':
+        return 'مبدع';
+      case 'onboarding.role_creator_desc':
+        return 'تصفح الحملات وتقدّم وتعاون مع العلامات.';
+      case 'onboarding.role_advertiser_cta':
+        return 'معلن';
+      case 'onboarding.role_advertiser_desc':
+        return 'أطلق الحملات وأدر المبدعين من لوحة التحكم.';
+      case 'onboarding.email_code_title':
+        return 'تأكيد البريد';
+      case 'onboarding.email_code_subtitle':
+        return ({required Object email}) =>
+            'أدخل الرمز المكوّن من 6 أرقام الذي أرسلناه إلى ${email}.';
+      case 'onboarding.skip':
+        return 'تخطي';
+      case 'onboarding.next':
+        return 'التالي';
+      case 'onboarding.done':
+        return 'حسنًا';
+      case 'onboarding.advertiser.dashboard_title':
+        return 'لوحة التحكم';
+      case 'onboarding.advertiser.dashboard_subtitle':
+        return 'تابع رصيدك وحملاتك النشطة وإشعاراتك — كل التحديثات تصل فورًا.';
+      case 'onboarding.advertiser.campaigns_title':
+        return 'الحملات';
+      case 'onboarding.advertiser.campaigns_subtitle':
+        return 'أنشئ حملات جديدة، راجع الطلبات وراقب الأداء من مكان واحد.';
+      case 'onboarding.advertiser.wallet_title':
+        return 'المحفظة';
+      case 'onboarding.advertiser.wallet_subtitle':
+        return 'اشحن ميزانيتك واطلع على الفواتير وسجل الإنفاق — محمي عبر Stripe.';
+      case 'onboarding.advertiser.chat_title':
+        return 'الدردشة';
+      case 'onboarding.advertiser.chat_subtitle':
+        return 'تحدث مع المبدعين بعد اعتماد الحملة. محادثاتك متزامنة على جميع أجهزتك.';
+      case 'onboarding.creator.dashboard_title':
+        return 'لوحة المبدع';
+      case 'onboarding.creator.dashboard_subtitle':
+        return 'مؤشراتك الرئيسية وطلباتك النشطة وأرباحك تتحدث تلقائيًا دون الحاجة للتحديث اليدوي.';
+      case 'onboarding.creator.campaigns_title':
+        return 'تصفح وقدّم طلبك';
+      case 'onboarding.creator.campaigns_subtitle':
+        return 'اكتشف الحملات المتاحة، قدّم بنقرة واحدة وتابع حالة طلبك مباشرة.';
+      case 'onboarding.creator.wallet_title':
+        return 'الأرباح والسحوبات';
+      case 'onboarding.creator.wallet_subtitle':
+        return 'اطّلع على رصيدك واطلب تحويلاً عبر Stripe Connect واستعرض سحوباتك السابقة.';
+      case 'onboarding.creator.chat_title':
+        return 'تحدث مع المعلن';
+      case 'onboarding.creator.chat_subtitle':
+        return 'فور الاعتماد، تُفتح الدردشة للتنسيق مع المعلن حول المخرجات.';
       default:
         return null;
     }

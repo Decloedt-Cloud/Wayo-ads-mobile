@@ -230,7 +230,7 @@ class _Body extends StatelessWidget {
   });
 
   final List<AdvertiserCampaign> filtered;
-  final ({int active, int paused, int completed}) counts;
+  final ({int active, int draft, int paused, int completed}) counts;
   final AdvertiserCampaignsTab tab;
   final TextEditingController searchCtrl;
   final String searchQ;
@@ -308,6 +308,7 @@ class _Body extends StatelessWidget {
                         '/campaigns/${c.id}',
                         extra: <String, String?>{
                           'coverUrl': c.coverUrl,
+                          'brandLogoUrl': c.brandLogoUrl,
                           'title': c.name,
                         },
                       ),
@@ -373,27 +374,39 @@ class _StatusTabs extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: AppColors.borderOf(context)),
       ),
-      child: Row(
-        children: [
-          _TabPill(
-            label: t.advertiser_campaigns.tabs.active,
-            selected: selected == AdvertiserCampaignsTab.active,
-            duration: duration,
-            onTap: () => onChanged(AdvertiserCampaignsTab.active),
-          ),
-          _TabPill(
-            label: t.advertiser_campaigns.tabs.paused,
-            selected: selected == AdvertiserCampaignsTab.paused,
-            duration: duration,
-            onTap: () => onChanged(AdvertiserCampaignsTab.paused),
-          ),
-          _TabPill(
-            label: t.advertiser_campaigns.tabs.completed,
-            selected: selected == AdvertiserCampaignsTab.completed,
-            duration: duration,
-            onTap: () => onChanged(AdvertiserCampaignsTab.completed),
-          ),
-        ],
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            _TabPill(
+              label: t.advertiser_campaigns.tabs.active,
+              selected: selected == AdvertiserCampaignsTab.active,
+              duration: duration,
+              onTap: () => onChanged(AdvertiserCampaignsTab.active),
+            ),
+            const SizedBox(width: 4),
+            _TabPill(
+              label: t.advertiser_campaigns.tabs.draft,
+              selected: selected == AdvertiserCampaignsTab.draft,
+              duration: duration,
+              onTap: () => onChanged(AdvertiserCampaignsTab.draft),
+            ),
+            const SizedBox(width: 4),
+            _TabPill(
+              label: t.advertiser_campaigns.tabs.paused,
+              selected: selected == AdvertiserCampaignsTab.paused,
+              duration: duration,
+              onTap: () => onChanged(AdvertiserCampaignsTab.paused),
+            ),
+            const SizedBox(width: 4),
+            _TabPill(
+              label: t.advertiser_campaigns.tabs.completed,
+              selected: selected == AdvertiserCampaignsTab.completed,
+              duration: duration,
+              onTap: () => onChanged(AdvertiserCampaignsTab.completed),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -414,7 +427,8 @@ class _TabPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minWidth: 86),
       child: AnimatedContainer(
         duration: duration,
         curve: Curves.easeOutCubic,
@@ -435,15 +449,17 @@ class _TabPill extends StatelessWidget {
             onTap: onTap,
             borderRadius: BorderRadius.circular(11),
             child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 10),
+              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
               child: Center(
                 child: Text(
                   label,
                   textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontWeight: FontWeight.w700,
-                    fontSize: 13,
-                    letterSpacing: 0.2,
+                    fontSize: 12.5,
+                    letterSpacing: 0.1,
                     color: selected
                         ? AppColors.primary
                         : AppColors.textSecondaryOf(context),
@@ -466,7 +482,7 @@ class _CountChips extends StatelessWidget {
     required this.duration,
   });
 
-  final ({int active, int paused, int completed}) counts;
+  final ({int active, int draft, int paused, int completed}) counts;
   final AdvertiserCampaignsTab selected;
   final void Function(AdvertiserCampaignsTab) onSelect;
   final Duration duration;
@@ -483,6 +499,13 @@ class _CountChips extends StatelessWidget {
             selected: selected == AdvertiserCampaignsTab.active,
             duration: duration,
             onTap: () => onSelect(AdvertiserCampaignsTab.active),
+          ),
+          const SizedBox(width: 8),
+          _Chip(
+            label: '${t.advertiser_campaigns.tabs.draft} (${counts.draft})',
+            selected: selected == AdvertiserCampaignsTab.draft,
+            duration: duration,
+            onTap: () => onSelect(AdvertiserCampaignsTab.draft),
           ),
           const SizedBox(width: 8),
           _Chip(

@@ -8,6 +8,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../i18n/strings.g.dart';
 import '../../domain/entities/notification_item.dart';
 import '../providers/dashboard_state_providers.dart';
+import '../widgets/creator_application_notification_actions.dart';
 
 /// Simple notifications list with mark-as-read.
 class NotificationsScreen extends ConsumerWidget {
@@ -194,6 +195,7 @@ class _NotificationTile extends StatelessWidget {
                         ),
                       ),
                     ],
+                    CreatorApplicationNotificationActions(item: item),
                   ],
                 ),
               ),

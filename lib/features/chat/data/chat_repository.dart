@@ -2,13 +2,11 @@ import 'dart:io' show Platform;
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/config/auth_runtime_config.dart';
 import '../../../core/errors/auth_exceptions.dart';
 import '../../../core/network/api_endpoints.dart';
 import '../../../core/network/interceptors/logging_interceptor.dart';
-import '../../../core/network/wayo_ads_dio.dart';
 import '../domain/chat_conversation.dart';
 import '../domain/chat_credentials.dart';
 import '../domain/chat_directory_user.dart';
@@ -72,14 +70,18 @@ String _rewriteReverbHostForAndroidEmulator(String host) {
   }
 }
 
-final chatRepositoryProvider = Provider<ChatRepository>((ref) {
-  return ChatRepository(ref.watch(wayoAdsDioProvider));
-});
+/// Refetch Wayo-ads `GET /api/chat/token` and return fresh chat-service credentials.
+/// Used on chat API 401 (expired short-lived token).
+typedef ChatCredentialsRefresher = Future<ChatCredentials> Function();
 
 final class ChatRepository {
-  ChatRepository(this._wayoAdsDio);
+  ChatRepository(
+    this._wayoAdsDio, {
+    required Future<ChatCredentials> Function() refreshChatCredentials,
+  }) : _refreshChatCredentials = refreshChatCredentials;
 
   final Dio _wayoAdsDio;
+  final Future<ChatCredentials> Function() _refreshChatCredentials;
 
   static AuthException mapError(Object e) {
     if (e is AuthException) return e;
@@ -137,6 +139,20 @@ final class ChatRepository {
           throw const ServerException('Incomplete chat bootstrap payload');
         }
         final resolvedBase = _effectiveChatApiBaseUrl(apiBaseUrl);
+        if (kDebugMode) {
+          final ads = AuthRuntimeConfig.instance.resolvedWayoAdsBaseUrl;
+          final localAds =
+              ads.contains('10.0.2.2') ||
+              ads.contains('127.0.0.1') ||
+              ads.contains('localhost');
+          if (localAds && resolvedBase.contains('wayochat')) {
+            debugPrint(
+              '[Chat] Wayo-ads is local but chat HTTP is $resolvedBase. '
+              '401 on /conversations? Point CHAT_SERVICE_API_BASE_URL to the Laravel chat '
+              'that signs this JWT (e.g. http://10.0.2.2:8000), not only production wayochat.',
+            );
+          }
+        }
         final authEndpoint = '$resolvedBase/api/v1/broadcasting/auth';
         return ChatCredentials(
           token: token,
@@ -155,11 +171,26 @@ final class ChatRepository {
           ),
         );
       } on DioException catch (e) {
-        final is401 = e.response?.statusCode == 401;
+        final code = e.response?.statusCode;
+        final is401 = code == 401;
+        final isTransientServer =
+            code == 500 || code == 502 || code == 503 || code == 504;
         final isLastAttempt = attempt == maxAttempts - 1;
         if (is401 && !isLastAttempt) {
           await Future<void>.delayed(
             Duration(milliseconds: 400 * (attempt + 1)),
+          );
+          continue;
+        }
+        if (isTransientServer && !isLastAttempt) {
+          if (kDebugMode) {
+            debugPrint(
+              '[Chat] GET $path returned $code; retrying bootstrap '
+              '(attempt ${attempt + 1}/$maxAttempts)…',
+            );
+          }
+          await Future<void>.delayed(
+            Duration(milliseconds: 500 * (attempt + 1)),
           );
           continue;
         }
@@ -169,34 +200,58 @@ final class ChatRepository {
     throw const ServerException('Chat bootstrap failed after retries');
   }
 
+  static const _kChat401Retried = 'chat_service_401_retried';
+
+  void _addChatDioAuthRetry(Dio dio, {String? Function()? socketId}) {
+    // Queued wrapper: async 401 recovery must complete [ErrorInterceptorHandler].
+    dio.interceptors.add(
+      QueuedInterceptorsWrapper(
+        onRequest: (options, handler) {
+          final sid = socketId?.call();
+          if (sid != null && sid.isNotEmpty) {
+            options.headers['X-Socket-ID'] = sid;
+          }
+          handler.next(options);
+        },
+        onError: (DioException e, ErrorInterceptorHandler handler) {
+          if (e.response?.statusCode != 401) {
+            return handler.next(e);
+          }
+          if (e.requestOptions.extra[_kChat401Retried] == true) {
+            return handler.next(e);
+          }
+          e.requestOptions.extra[_kChat401Retried] = true;
+          _refreshChatCredentials()
+              .then((creds) {
+                e.requestOptions.headers['Authorization'] =
+                    'Bearer ${creds.token}';
+                e.requestOptions.headers['X-Application-ID'] = creds.appId;
+                return dio.fetch<dynamic>(e.requestOptions);
+              })
+              .then(handler.resolve)
+              .catchError((Object _) => handler.next(e));
+        },
+      ),
+    );
+  }
+
   Dio _chatDio(ChatCredentials c, {String? Function()? socketId}) {
     final base = c.apiBaseUrl.endsWith('/') ? c.apiBaseUrl : '${c.apiBaseUrl}/';
-    final dio =
-        Dio(
-            BaseOptions(
-              baseUrl: base,
-              connectTimeout: const Duration(seconds: 12),
-              receiveTimeout: const Duration(seconds: 20),
-              sendTimeout: const Duration(seconds: 15),
-              headers: <String, dynamic>{
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ${c.token}',
-                'X-Application-ID': c.appId,
-              },
-            ),
-          )
-          ..interceptors.add(
-            InterceptorsWrapper(
-              onRequest: (options, handler) {
-                final sid = socketId?.call();
-                if (sid != null && sid.isNotEmpty) {
-                  options.headers['X-Socket-ID'] = sid;
-                }
-                handler.next(options);
-              },
-            ),
-          );
+    final dio = Dio(
+      BaseOptions(
+        baseUrl: base,
+        connectTimeout: const Duration(seconds: 12),
+        receiveTimeout: const Duration(seconds: 20),
+        sendTimeout: const Duration(seconds: 15),
+        headers: <String, dynamic>{
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ${c.token}',
+          'X-Application-ID': c.appId,
+        },
+      ),
+    );
+    _addChatDioAuthRetry(dio, socketId: socketId);
     if (kDebugMode) {
       dio.interceptors.add(WayoLoggingInterceptor());
     }
@@ -424,31 +479,23 @@ final class ChatRepository {
     });
 
     final base = c.apiBaseUrl.endsWith('/') ? c.apiBaseUrl : '${c.apiBaseUrl}/';
-    final dio =
-        Dio(
-            BaseOptions(
-              baseUrl: base,
-              connectTimeout: const Duration(seconds: 120),
-              receiveTimeout: const Duration(seconds: 120),
-              sendTimeout: const Duration(seconds: 120),
-              headers: <String, dynamic>{
-                'Accept': 'application/json',
-                'Authorization': 'Bearer ${c.token}',
-                'X-Application-ID': c.appId,
-              },
-            ),
-          )
-          ..interceptors.add(
-            InterceptorsWrapper(
-              onRequest: (options, handler) {
-                final sid = socketId?.call();
-                if (sid != null && sid.isNotEmpty) {
-                  options.headers['X-Socket-ID'] = sid;
-                }
-                handler.next(options);
-              },
-            ),
-          );
+    final dio = Dio(
+      BaseOptions(
+        baseUrl: base,
+        connectTimeout: const Duration(seconds: 120),
+        receiveTimeout: const Duration(seconds: 120),
+        sendTimeout: const Duration(seconds: 120),
+        headers: <String, dynamic>{
+          'Accept': 'application/json',
+          'Authorization': 'Bearer ${c.token}',
+          'X-Application-ID': c.appId,
+        },
+      ),
+    );
+    _addChatDioAuthRetry(dio, socketId: socketId);
+    if (kDebugMode) {
+      dio.interceptors.add(WayoLoggingInterceptor());
+    }
 
     final res = await dio.post<Map<String, dynamic>>(
       'api/v1/conversations/$conversationId/messages',

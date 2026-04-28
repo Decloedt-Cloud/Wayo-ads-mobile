@@ -72,6 +72,9 @@ final class WayoReverbRealtime {
     final adv = pr.ReverbClient.instance().subscribeToPrivateChannel(
       RealtimeChannels.advertiser(userId),
     );
+    final creator = pr.ReverbClient.instance().subscribeToPrivateChannel(
+      RealtimeChannels.creator(userId),
+    );
     final usr = pr.ReverbClient.instance().subscribeToPrivateChannel(
       RealtimeChannels.user(userId),
     );
@@ -91,6 +94,7 @@ final class WayoReverbRealtime {
 
     _subs
       ..add(adv.stream.listen(forward))
+      ..add(creator.stream.listen(forward))
       ..add(usr.stream.listen(forward));
   }
 

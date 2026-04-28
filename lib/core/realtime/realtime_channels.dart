@@ -4,5 +4,7 @@
 abstract final class RealtimeChannels {
   static String advertiser(int userId) => 'private-advertiser.$userId';
 
+  static String creator(int userId) => 'private-creator.$userId';
+
   static String user(int userId) => 'private-user.$userId';
 }

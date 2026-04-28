@@ -28,6 +28,19 @@ final class GoogleSignInFacade {
     _serverClientId = null;
   }
 
+  /// Call after app logout so the next "Continue with Google" shows the account picker again.
+  static Future<void> signOutFromGoogle() async {
+    try {
+      if (_client != null) {
+        await _client!.signOut();
+      }
+    } catch (_) {
+      // Non-fatal: account may not have used Google this session.
+    } finally {
+      reset();
+    }
+  }
+
   static bool _isChannelError(Object e) {
     if (e is PlatformException) {
       if (e.code == 'channel-error') {
@@ -41,6 +54,16 @@ final class GoogleSignInFacade {
   }
 
   static bool looksLikeStaleChannel(Object e) => _isChannelError(e);
+
+  /// [com.google.android.gms.common.api.ApiException]: `10` = [DEVELOPER_ERROR]
+  /// (package name + SHA-1 must be registered for an **Android** OAuth client in the
+  /// same Google Cloud project as the Web client id used in [serverClientId]).
+  static bool isAndroidDeveloperConfigError(Object e) {
+    final combined = e is PlatformException
+        ? '${e.code} ${e.message ?? ''} ${e.details ?? ''}'
+        : e.toString();
+    return combined.contains('ApiException: 10');
+  }
 
   /// Returns Google [id_token] for the signed-in account, or `null` if cancelled / no token.
   static Future<String?> signInForIdToken(String serverClientId) async {

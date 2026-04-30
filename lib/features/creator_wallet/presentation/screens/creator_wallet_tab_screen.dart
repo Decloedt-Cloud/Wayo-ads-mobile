@@ -195,7 +195,7 @@ class _Header extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(t.nav.wallet, style: AppTextStyles.displayLarge(context)),
+              Text(t.nav.wallet, style: AppTextStyles.pageTitle(context)),
               const SizedBox(height: 4),
               Row(children: [_RolePill(label: t.dashboard.account_creator)]),
             ],

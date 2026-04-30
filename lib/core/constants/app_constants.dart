@@ -1,6 +1,10 @@
-/// Build-time configuration via `--dart-define-from-file=dart_defines.json`.
+/// Build-time configuration via `--dart-define` or `--dart-define-from-file`.
 ///
-/// // TODO(dev): confirm Auth_Wayo base URL and env-specific values for each flavor.
+/// **SECURITY:** The default `http://10.0.2.2:8000` is for Android emulator dev only.
+/// In **release builds**, this MUST be overridden with an HTTPS URL via:
+///   `--dart-define=AUTH_WAYO_BASE_URL=https://your-api.example.com`
+///
+/// See [validateProductionUrls] for runtime enforcement.
 const String authWayoBaseUrl = String.fromEnvironment(
   'AUTH_WAYO_BASE_URL',
   defaultValue: 'http://10.0.2.2:8000',

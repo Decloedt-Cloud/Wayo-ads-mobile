@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import '../../../core/config/auth_runtime_config.dart';
 import '../../../core/errors/auth_exceptions.dart';
 import '../../../core/network/api_endpoints.dart';
+import '../../../core/network/interceptors/certificate_pinning.dart';
 import '../../../core/network/interceptors/logging_interceptor.dart';
 import '../domain/chat_conversation.dart';
 import '../domain/chat_credentials.dart';
@@ -93,7 +94,7 @@ final class ChatRepository {
       }
       final code = e.response?.statusCode;
       if (code == 401 || code == 403) {
-        return ServerException(e.message ?? 'Unauthorized');
+        return ServerException(e.message ?? 'Unauthorized', code);
       }
       return ServerException(e.message ?? 'Request failed');
     }
@@ -123,10 +124,10 @@ final class ChatRepository {
         if (inner is! Map<String, dynamic>) {
           throw const ServerException('Invalid chat bootstrap payload');
         }
-        final token = inner['token'] as String?;
+        final token = (inner['token'] as String?)?.trim();
         final chatUserId = inner['chatUserId'];
-        final appId = inner['appId'] as String?;
-        final apiBaseUrl = inner['apiBaseUrl'] as String?;
+        final appId = (inner['appId'] as String?)?.trim();
+        final apiBaseUrl = (inner['apiBaseUrl'] as String?)?.trim();
         final rt = inner['realtime'];
         if (token == null ||
             token.isEmpty ||
@@ -224,8 +225,8 @@ final class ChatRepository {
           _refreshChatCredentials()
               .then((creds) {
                 e.requestOptions.headers['Authorization'] =
-                    'Bearer ${creds.token}';
-                e.requestOptions.headers['X-Application-ID'] = creds.appId;
+                    'Bearer ${creds.token.trim()}';
+                e.requestOptions.headers['X-Application-ID'] = creds.appId.trim();
                 return dio.fetch<dynamic>(e.requestOptions);
               })
               .then(handler.resolve)
@@ -246,11 +247,18 @@ final class ChatRepository {
         headers: <String, dynamic>{
           'Accept': 'application/json',
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer ${c.token}',
-          'X-Application-ID': c.appId,
+          'Authorization': 'Bearer ${c.token.trim()}',
+          'X-Application-ID': c.appId.trim(),
         },
       ),
     );
+
+    // SECURITY: Attach certificate pinning in release builds.
+    CertificatePinning.attach(
+      dio,
+      pinnedSha256Base64: AuthRuntimeConfig.instance.mergedPinnedSha256Base64,
+    );
+
     _addChatDioAuthRetry(dio, socketId: socketId);
     if (kDebugMode) {
       dio.interceptors.add(WayoLoggingInterceptor());
@@ -259,6 +267,9 @@ final class ChatRepository {
   }
 
   /// Same query as Wayo-ads `AdvertiserChatDialog` user search.
+  ///
+  /// Retries once after a forced credential refresh on HTTP 401 (in addition to
+  /// the Dio 401 interceptor), to recover from stale [ChatCredentials] or JWT skew.
   Future<List<ChatDirectoryUser>> searchUsers(
     ChatCredentials c,
     String term, {
@@ -268,28 +279,47 @@ final class ChatRepository {
   }) async {
     final q = term.trim();
     if (q.isEmpty) return const [];
-    final dio = _chatDio(c, socketId: socketId);
-    final res = await dio.get<Map<String, dynamic>>(
-      'api/v1/users',
-      queryParameters: <String, dynamic>{
-        'search': q,
-        'limit': limit,
-        'offset': offset,
-      },
-    );
-    final data = res.data;
-    if (data == null || data['success'] != true) {
-      throw ServerException(
-        data?['message'] as String? ?? 'User search failed',
-      );
+    ChatCredentials creds = c;
+    for (var attempt = 0; attempt < 2; attempt++) {
+      try {
+        final dio = _chatDio(creds, socketId: socketId);
+        final res = await dio.get<Map<String, dynamic>>(
+          'api/v1/users',
+          queryParameters: <String, dynamic>{
+            'search': q,
+            'limit': limit,
+            'offset': offset,
+          },
+        );
+        final data = res.data;
+        if (data == null || data['success'] != true) {
+          throw ServerException(
+            data?['message'] as String? ?? 'User search failed',
+          );
+        }
+        final list = data['data'];
+        if (list is! List<dynamic>) {
+          return const [];
+        }
+        return list
+            .map((e) => ChatDirectoryUser.fromJson(e as Map<String, dynamic>))
+            .toList();
+      } on DioException catch (e) {
+        final code = e.response?.statusCode;
+        if (code == 401 && attempt == 0) {
+          if (kDebugMode) {
+            debugPrint(
+              '[Chat] GET api/v1/users → 401; forcing chat bootstrap refresh '
+              '(body: ${e.response?.data}).',
+            );
+          }
+          creds = await _refreshChatCredentials();
+          continue;
+        }
+        throw mapError(e);
+      }
     }
-    final list = data['data'];
-    if (list is! List<dynamic>) {
-      return const [];
-    }
-    return list
-        .map((e) => ChatDirectoryUser.fromJson(e as Map<String, dynamic>))
-        .toList();
+    throw const ServerException('User search failed');
   }
 
   Future<ChatConversation> createDirectConversation(
@@ -487,11 +517,18 @@ final class ChatRepository {
         sendTimeout: const Duration(seconds: 120),
         headers: <String, dynamic>{
           'Accept': 'application/json',
-          'Authorization': 'Bearer ${c.token}',
-          'X-Application-ID': c.appId,
+          'Authorization': 'Bearer ${c.token.trim()}',
+          'X-Application-ID': c.appId.trim(),
         },
       ),
     );
+
+    // SECURITY: Attach certificate pinning in release builds.
+    CertificatePinning.attach(
+      dio,
+      pinnedSha256Base64: AuthRuntimeConfig.instance.mergedPinnedSha256Base64,
+    );
+
     _addChatDioAuthRetry(dio, socketId: socketId);
     if (kDebugMode) {
       dio.interceptors.add(WayoLoggingInterceptor());

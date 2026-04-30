@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -13,27 +15,57 @@ import '../../../creator_dashboard/presentation/providers/creator_dashboard_prov
 import '../providers/creator_campaigns_providers.dart';
 import '../widgets/creator_browse_campaign_card.dart';
 
+String _moneyLocale(AppLocale l) => switch (l) {
+  AppLocale.en => 'en_US',
+  AppLocale.fr => 'fr_FR',
+  AppLocale.ar => 'ar_SA',
+};
+
 /// Creator **campaigns** tab — browse active campaigns and see the state
 /// of applications you've already submitted.
 ///
-/// Pull-to-refresh invalidates both [creatorBrowseCampaignsProvider] and
-/// [creatorApplicationsProvider] so the "applied" / "approved" pills stay
-/// in sync with the list on the left.
-class CreatorCampaignsTabScreen extends ConsumerWidget {
+/// Pull-to-refresh resets to page 1, invalidates both
+/// [creatorBrowseCampaignsPagedProvider] and [creatorApplicationsProvider].
+class CreatorCampaignsTabScreen extends ConsumerStatefulWidget {
   const CreatorCampaignsTabScreen({super.key});
 
-  String _moneyLocale(AppLocale l) => switch (l) {
-    AppLocale.en => 'en_US',
-    AppLocale.fr => 'fr_FR',
-    AppLocale.ar => 'ar_SA',
-  };
+  @override
+  ConsumerState<CreatorCampaignsTabScreen> createState() =>
+      _CreatorCampaignsTabScreenState();
+}
+
+class _CreatorCampaignsTabScreenState
+    extends ConsumerState<CreatorCampaignsTabScreen> {
+  final _searchCtrl = TextEditingController();
+  Timer? _debounce;
+
+  // OPTIMIZATION: Removed _searchCtrl.addListener(() => setState(() {}))
+  // _BrowseSearchField now uses ValueListenableBuilder internally.
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  void dispose() {
+    _debounce?.cancel();
+    _searchCtrl.dispose();
+    super.dispose();
+  }
+
+  void _scheduleSearchQuery(String raw) {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 320), () {
+      ref.read(creatorBrowseCampaignPageProvider.notifier).state = 1;
+      ref.read(creatorBrowseCampaignSearchQueryProvider.notifier).state = raw;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final t = context.t;
     final locale = ref.watch(localeProvider);
     final moneyLocale = _moneyLocale(locale);
-    final browseAsync = ref.watch(creatorBrowseCampaignsProvider);
+    final browsePage = ref.watch(creatorBrowseCampaignPageProvider);
+    final searchQ = ref.watch(creatorBrowseCampaignSearchQueryProvider);
+    final browseKey = (page: browsePage, search: searchQ);
+    final browseAsync = ref.watch(creatorBrowseCampaignsPagedProvider(browseKey));
     final appsAsync = ref.watch(creatorApplicationsProvider);
 
     return Scaffold(
@@ -42,9 +74,14 @@ class CreatorCampaignsTabScreen extends ConsumerWidget {
         color: CreatorColors.primaryOf(context),
         onRefresh: () async {
           HapticFeedback.lightImpact();
-          ref.invalidate(creatorBrowseCampaignsProvider);
+          ref.read(creatorBrowseCampaignPageProvider.notifier).state = 1;
+          ref.invalidate(creatorBrowseCampaignsPagedProvider);
           ref.invalidate(creatorApplicationsProvider);
-          await ref.read(creatorBrowseCampaignsProvider.future);
+          final k = (
+            page: 1,
+            search: ref.read(creatorBrowseCampaignSearchQueryProvider),
+          );
+          await ref.read(creatorBrowseCampaignsPagedProvider(k).future);
         },
         child: ListView(
           physics: const BouncingScrollPhysics(
@@ -57,17 +94,37 @@ class CreatorCampaignsTabScreen extends ConsumerWidget {
               subtitle: t.creator.campaigns.browse_subtitle,
             ),
             const SizedBox(height: 12),
+            _BrowseSearchField(
+              controller: _searchCtrl,
+              onChanged: _scheduleSearchQuery,
+              onClear: () {
+                _debounce?.cancel();
+                _searchCtrl.clear();
+                ref.read(creatorBrowseCampaignPageProvider.notifier).state = 1;
+                ref.read(creatorBrowseCampaignSearchQueryProvider.notifier).state =
+                    '';
+              },
+            ),
+            const SizedBox(height: 12),
             browseAsync.when(
               loading: () => const _LoadingBlock(),
               error: (err, _) => _ErrorBlock(
                 message: t.creator.campaigns.load_error,
-                onRetry: () => ref.invalidate(creatorBrowseCampaignsProvider),
+                onRetry: () => ref.invalidate(
+                  creatorBrowseCampaignsPagedProvider(browseKey),
+                ),
               ),
-              data: (list) {
+              data: (pageResult) {
+                final list = pageResult.campaigns;
+                final hasSearch = searchQ.trim().isNotEmpty;
                 if (list.isEmpty) {
                   return _EmptyBrowseBlock(
-                    title: t.creator.campaigns.empty_title,
-                    subtitle: t.creator.campaigns.empty_subtitle,
+                    title: hasSearch
+                        ? t.creator.campaigns.browse_empty_search_title
+                        : t.creator.campaigns.empty_title,
+                    subtitle: hasSearch
+                        ? t.creator.campaigns.browse_empty_search_subtitle
+                        : t.creator.campaigns.empty_subtitle,
                   );
                 }
                 final statusByCampaign = <String, CreatorApplicationStatus>{};
@@ -98,6 +155,44 @@ class CreatorCampaignsTabScreen extends ConsumerWidget {
                         },
                       ),
                       const SizedBox(height: 10),
+                    ],
+                    if (pageResult.totalPages > 1) ...[
+                      const SizedBox(height: 6),
+                      _BrowsePaginationBar(
+                        page: browsePage,
+                        totalPages: pageResult.totalPages,
+                        previousLabel: t.creator.campaigns.pagination_previous,
+                        nextLabel: t.creator.campaigns.pagination_next,
+                        pageLabel: (cur, tot) =>
+                            t.creator.campaigns.pagination_page(
+                              current: cur,
+                              total: tot,
+                            ),
+                        onPrevious: browsePage > 1
+                            ? () {
+                                HapticFeedback.selectionClick();
+                                ref
+                                        .read(
+                                          creatorBrowseCampaignPageProvider
+                                              .notifier,
+                                        )
+                                        .state =
+                                    browsePage - 1;
+                              }
+                            : null,
+                        onNext: browsePage < pageResult.totalPages
+                            ? () {
+                                HapticFeedback.selectionClick();
+                                ref
+                                        .read(
+                                          creatorBrowseCampaignPageProvider
+                                              .notifier,
+                                        )
+                                        .state =
+                                    browsePage + 1;
+                              }
+                            : null,
+                      ),
                     ],
                   ],
                 );
@@ -154,6 +249,75 @@ class CreatorCampaignsTabScreen extends ConsumerWidget {
   }
 }
 
+/// Search field using [ValueListenableBuilder] for clear button visibility.
+class _BrowseSearchField extends StatelessWidget {
+  const _BrowseSearchField({
+    required this.controller,
+    required this.onChanged,
+    required this.onClear,
+  });
+
+  final TextEditingController controller;
+  final void Function(String) onChanged;
+  final VoidCallback onClear;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.t;
+    final primary = CreatorColors.primaryOf(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final hintColor = AppColors.textMutedOf(context);
+    final borderColor = AppColors.borderOf(context);
+    final fillColor = isDark
+        ? AppColors.surfaceElevatedOf(context).withValues(alpha: 0.35)
+        : AppColors.surfaceElevatedOf(context);
+
+    return ValueListenableBuilder<TextEditingValue>(
+      valueListenable: controller,
+      builder: (context, value, _) {
+        final hasText = value.text.isNotEmpty;
+        return TextField(
+          controller: controller,
+          onChanged: onChanged,
+          textInputAction: TextInputAction.search,
+          onSubmitted: onChanged,
+          style: TextStyle(color: AppColors.textPrimaryOf(context)),
+          cursorColor: primary,
+          decoration: InputDecoration(
+            hintText: t.creator.campaigns.browse_search_placeholder,
+            hintStyle: TextStyle(color: hintColor),
+            prefixIcon: Icon(Icons.search_rounded, color: hintColor),
+            suffixIcon: hasText
+                ? IconButton(
+                    tooltip:
+                        MaterialLocalizations.of(context).deleteButtonTooltip,
+                    onPressed: onClear,
+                    icon: Icon(Icons.close_rounded, color: hintColor),
+                  )
+                : null,
+            filled: true,
+            fillColor: fillColor,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(color: borderColor),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(color: borderColor),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(color: primary, width: 1.4),
+            ),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 4, vertical: 14),
+          ),
+        );
+      },
+    );
+  }
+}
+
 class _SectionHeader extends StatelessWidget {
   const _SectionHeader({required this.title, required this.subtitle});
 
@@ -167,7 +331,7 @@ class _SectionHeader extends StatelessWidget {
       children: [
         Text(
           title,
-          style: AppTextStyles.headlineMedium(context).copyWith(fontSize: 18),
+          style: AppTextStyles.pageTitle(context),
         ),
         const SizedBox(height: 2),
         Text(
@@ -398,6 +562,58 @@ class _ApplicationTile extends StatelessWidget {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _BrowsePaginationBar extends StatelessWidget {
+  const _BrowsePaginationBar({
+    required this.page,
+    required this.totalPages,
+    required this.previousLabel,
+    required this.nextLabel,
+    required this.pageLabel,
+    required this.onPrevious,
+    required this.onNext,
+  });
+
+  final int page;
+  final int totalPages;
+  final String previousLabel;
+  final String nextLabel;
+  final String Function(int current, int total) pageLabel;
+  final VoidCallback? onPrevious;
+  final VoidCallback? onNext;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppColors.surfaceElevatedOf(context),
+      borderRadius: BorderRadius.circular(14),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        child: Row(
+          children: [
+            TextButton(
+              onPressed: onPrevious,
+              child: Text(previousLabel),
+            ),
+            Expanded(
+              child: Text(
+                pageLabel(page, totalPages),
+                textAlign: TextAlign.center,
+                style: AppTextStyles.labelLarge(
+                  context,
+                ).copyWith(color: AppColors.textSecondaryOf(context)),
+              ),
+            ),
+            TextButton(
+              onPressed: onNext,
+              child: Text(nextLabel),
+            ),
+          ],
         ),
       ),
     );

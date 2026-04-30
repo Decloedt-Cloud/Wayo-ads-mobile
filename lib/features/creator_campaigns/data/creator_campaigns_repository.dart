@@ -1,6 +1,7 @@
 import '../../../core/network/rate_limiter.dart';
 import '../../../core/network/request_deduplicator.dart';
 import '../domain/creator_browse_campaign.dart';
+import '../domain/creator_browse_page_result.dart';
 import '../domain/creator_campaign_detail.dart';
 import '../domain/creator_social_post.dart';
 import 'creator_campaigns_remote_datasource.dart';
@@ -27,22 +28,42 @@ class CreatorCampaignsRepository {
   final RequestDeduplicator _dedup;
   final RateLimiter _rate;
 
-  static const String _browseKey = 'creator_browse_campaigns';
+  static String _browseKey(int page, int limit, String search) =>
+      'creator_browse_campaigns_${page}_${limit}_$search';
   static String _detailKey(String id) => 'creator_campaign_detail_$id';
   static String _submissionsKey(String id) =>
       'creator_campaign_submissions_$id';
 
-  Future<List<CreatorBrowseCampaign>> fetchBrowseCampaigns({
-    List<CreatorBrowseCampaign>? fallback,
-    int limit = 30,
+  Future<CreatorBrowsePageResult> fetchBrowseCampaignsPage({
+    List<CreatorBrowseCampaign>? fallbackList,
+    CreatorBrowsePageResult? fallbackPage,
+    int limit = 10,
+    int page = 1,
+    String? search,
   }) async {
-    if (!_rate.canCall(_browseKey) && fallback != null) {
+    final normalizedSearch = search?.trim() ?? '';
+    final key = _browseKey(page, limit, normalizedSearch);
+    final fallback =
+        fallbackPage ??
+        (fallbackList != null
+            ? CreatorBrowsePageResult(
+                campaigns: fallbackList,
+                total: fallbackList.length,
+                page: page,
+                totalPages: 1,
+              )
+            : null);
+    if (!_rate.canCall(key) && fallback != null) {
       return fallback;
     }
-    _rate.mark(_browseKey);
-    return _dedup.run<List<CreatorBrowseCampaign>>(
-      _browseKey,
-      () => _remote.fetchBrowseCampaigns(limit: limit),
+    _rate.mark(key);
+    return _dedup.run<CreatorBrowsePageResult>(
+      key,
+      () => _remote.fetchBrowseCampaignsPage(
+        limit: limit,
+        page: page,
+        search: normalizedSearch.isEmpty ? null : normalizedSearch,
+      ),
     );
   }
 

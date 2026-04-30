@@ -1,14 +1,17 @@
 {
-  "AUTH_WAYO_BASE_URL": "https://myaccount.wayo.ac",
-  "AUTH_API_URL": "https://myaccount.wayo.ac",
+  "AUTH_WAYO_BASE_URL": "https://preprodauth.wayo.ac",
+  "AUTH_API_URL": "https://preprodauth.wayo.ac",
   "AUTH_OAUTH_CLIENT_ID": "019d9750-1485-72d2-9fc4-9a4d993ac0fc",
   "AUTH_OAUTH_CLIENT_SECRET": "JXQou3gWAnftgssNiG1oP9UNEocFbuKCfWyQDX3W",
   "AUTH_APP_NAME": "wayo_ads",
   "AUTH_OAUTH_REDIRECT_URI": "com.wayo.wayoadsgo:/oauthredirect",
   "AUTH_GOOGLE_SERVER_CLIENT_ID": "418718041924-fcujk5vfppueq260k43r582rovrj5ghh.apps.googleusercontent.com",
   "WAYO_ADS_APP_KEY": "oxz2HNCvFTGROqMw3KyAp9cV7qH5XxbquyJn6wrhRyk=",
-  "WAYO_ADS_API_BASE_URL": "https://wayo-ads.com",
+  "WAYO_ADS_API_BASE_URL": "https://ads.wayo.agency",
   "CHAT_SERVICE_API_BASE_URL": "https://wayochat.wayo.ac",
+
+  "CERT_PIN_PRIMARY": "TTbpBlKPoadLPXyjnvG/wbzJ7eaNVGprhdQ97xYzcxM=",
+  "CERT_PIN_BACKUP": "",
 
   "STRIPE_GOOGLE_PAY_TEST_ENV": "true",
   "STRIPE_GOOGLE_PAY_MERCHANT_ID": "BCR2DN5T42SPJCIF",

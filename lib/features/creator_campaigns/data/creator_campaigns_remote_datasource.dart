@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 
 import '../domain/creator_browse_campaign.dart';
+import '../domain/creator_browse_page_result.dart';
 import '../domain/creator_campaign_detail.dart';
 import '../domain/creator_social_post.dart';
 
@@ -30,34 +31,68 @@ class CreatorCampaignsRemoteDatasource {
   final Dio _dio;
 
   /// `GET /api/campaigns?status=ACTIVE&creatorOnly=true` — browseable
-  /// campaigns the creator can apply to.
-  Future<List<CreatorBrowseCampaign>> fetchBrowseCampaigns({
-    int limit = 30,
+  /// campaigns the creator can apply to (paginated).
+  Future<CreatorBrowsePageResult> fetchBrowseCampaignsPage({
+    int limit = 10,
     int page = 1,
+    String? search,
   }) async {
     try {
+      final qp = <String, dynamic>{
+        'status': 'ACTIVE',
+        'creatorOnly': 'true',
+        'page': page,
+        'limit': limit.clamp(1, 100),
+      };
+      final trimmed = search?.trim();
+      if (trimmed != null && trimmed.isNotEmpty) {
+        qp['search'] = trimmed;
+      }
       final res = await _dio.get<Object?>(
         'api/campaigns',
-        queryParameters: <String, dynamic>{
-          'status': 'ACTIVE',
-          'creatorOnly': 'true',
-          'page': page,
-          'limit': limit.clamp(1, 100),
-        },
+        queryParameters: qp,
       );
       final body = res.data;
-      if (body is! Map) return const [];
+      if (body is! Map) {
+        return CreatorBrowsePageResult(
+          campaigns: const [],
+          total: 0,
+          page: page,
+          totalPages: 1,
+        );
+      }
       final raw = body['campaigns'];
-      if (raw is! List) return const [];
-      return raw
-          .whereType<Map>()
-          .map(
-            (e) => CreatorBrowseCampaign.fromJson(Map<String, dynamic>.from(e)),
-          )
-          .toList(growable: false);
+      final list = raw is List
+          ? raw
+              .whereType<Map>()
+              .map(
+                (e) =>
+                    CreatorBrowseCampaign.fromJson(Map<String, dynamic>.from(e)),
+              )
+              .toList(growable: false)
+          : const <CreatorBrowseCampaign>[];
+      final total = _intFromJson(body['total'], list.length);
+      final pageNum = _intFromJson(body['page'], page);
+      var totalPages = _intFromJson(body['totalPages'], 0);
+      if (totalPages < 1) {
+        final lim = limit.clamp(1, 100);
+        totalPages = total > 0 ? (total + lim - 1) ~/ lim : 1;
+      }
+      return CreatorBrowsePageResult(
+        campaigns: list,
+        total: total,
+        page: pageNum,
+        totalPages: totalPages,
+      );
     } on DioException catch (e) {
       throw _mapDioException(e, 'Failed to load campaigns');
     }
+  }
+
+  static int _intFromJson(dynamic v, int fallback) {
+    if (v is int) return v;
+    if (v is num) return v.toInt();
+    return int.tryParse('$v') ?? fallback;
   }
 
   /// `GET /api/campaigns/:id` — full detail. The response shape depends on

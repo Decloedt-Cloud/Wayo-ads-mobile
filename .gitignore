@@ -47,6 +47,11 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
+# Release signing keystore (NEVER commit)
+/android/key.properties
+*.jks
+*.keystore
+
 # Exclure les autres projets du monorepo
 /Auth_Wayo/
 /chat-service/

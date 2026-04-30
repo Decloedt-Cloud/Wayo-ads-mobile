@@ -217,9 +217,7 @@ class _OfflineCardState extends State<_OfflineCard> {
                     ? t.connectivity.reconnecting_title
                     : t.connectivity.offline_title,
                 textAlign: TextAlign.center,
-                style: AppTextStyles.headlineMedium(
-                  context,
-                ).copyWith(fontSize: 22, height: 1.25),
+                style: AppTextStyles.pageTitle(context).copyWith(height: 1.25),
               ),
               const SizedBox(height: 8),
               Text(

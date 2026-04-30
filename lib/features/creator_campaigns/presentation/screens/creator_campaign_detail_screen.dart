@@ -171,9 +171,7 @@ class _Body extends ConsumerWidget {
               const SizedBox(height: 4),
               Text(
                 c.title,
-                style: AppTextStyles.headlineMedium(
-                  context,
-                ).copyWith(fontSize: 22),
+                style: AppTextStyles.pageTitle(context),
               ),
               const SizedBox(height: 14),
               Wrap(
@@ -281,6 +279,8 @@ class _Hero extends StatelessWidget {
           imageUrl: coverUrl!,
           fit: BoxFit.cover,
           width: double.infinity,
+          memCacheWidth: 800,
+          memCacheHeight: 400,
           placeholder: (_, _) => placeholder,
           errorWidget: (_, _, _) => placeholder,
         ),
@@ -297,6 +297,8 @@ class _Hero extends StatelessWidget {
             child: CachedNetworkImage(
               imageUrl: brandLogoUrl!,
               fit: BoxFit.contain,
+              memCacheWidth: 320,
+              memCacheHeight: 320,
               errorWidget: (_, _, _) => placeholder,
             ),
           ),
@@ -313,6 +315,8 @@ class _Hero extends StatelessWidget {
             child: CachedNetworkImage(
               imageUrl: coverUrl!,
               fit: BoxFit.cover,
+              memCacheWidth: 800,
+              memCacheHeight: 400,
               placeholder: (_, _) => placeholder,
               errorWidget: (_, _, _) => placeholder,
             ),

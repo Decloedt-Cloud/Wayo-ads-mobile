@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_text_styles.dart';
 import '../../../../i18n/strings.g.dart';
 import '../../domain/entities/notification_item.dart';
 import '../providers/dashboard_state_providers.dart';
@@ -37,13 +38,19 @@ class NotificationsScreen extends ConsumerWidget {
               _ => null,
             };
             if (subtitle == null) {
-              return Text(t.dashboard.notifications_title);
+              return Text(
+                t.dashboard.notifications_title,
+                style: AppTextStyles.pageTitle(context),
+              );
             }
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(t.dashboard.notifications_title),
+                Text(
+                  t.dashboard.notifications_title,
+                  style: AppTextStyles.pageTitle(context),
+                ),
                 Text(
                   subtitle,
                   style: TextStyle(

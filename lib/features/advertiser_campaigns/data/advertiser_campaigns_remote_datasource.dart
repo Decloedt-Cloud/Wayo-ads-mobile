@@ -9,11 +9,20 @@ import '../../creator_campaigns/domain/creator_browse_campaign.dart';
 import '../../dashboard/domain/entities/campaign_platform.dart';
 import '../../dashboard/domain/entities/campaign_status.dart';
 import '../domain/advertiser_campaign.dart';
+import '../domain/advertiser_campaigns_page_result.dart';
 import '../domain/campaign_application.dart';
 
 /// Wayo-ads `GET /api/campaigns` (Bearer via [Dio] interceptors).
 abstract interface class AdvertiserCampaignsRemote {
   Future<List<AdvertiserCampaign>> fetchAdvertiserCampaigns({int limit = 100});
+
+  /// Paginated listing with optional [status] (`ACTIVE`, `DRAFT`, …) and [search].
+  Future<AdvertiserCampaignsPageResult> fetchAdvertiserCampaignsPage({
+    required int page,
+    int limit = 10,
+    String? status,
+    String? search,
+  });
 
   Future<Map<String, dynamic>> fetchCampaignDetailJson(String id);
 
@@ -36,13 +45,35 @@ final class AdvertiserCampaignsRemoteDatasource
   Future<List<AdvertiserCampaign>> fetchAdvertiserCampaigns({
     int limit = 100,
   }) async {
+    final page = await fetchAdvertiserCampaignsPage(
+      page: 1,
+      limit: limit.clamp(1, 100),
+    );
+    return page.campaigns;
+  }
+
+  @override
+  Future<AdvertiserCampaignsPageResult> fetchAdvertiserCampaignsPage({
+    required int page,
+    int limit = 10,
+    String? status,
+    String? search,
+  }) async {
+    final qp = <String, dynamic>{
+      'advertiserOnly': 'true',
+      'page': page,
+      'limit': limit.clamp(1, 100),
+    };
+    if (status != null && status.isNotEmpty) {
+      qp['status'] = status;
+    }
+    final trimmed = search?.trim();
+    if (trimmed != null && trimmed.isNotEmpty) {
+      qp['search'] = trimmed;
+    }
     final res = await _dio.get<Map<String, dynamic>>(
       AuthRuntimeConfig.instance.wayoAdsRequestPath(ApiEndpoints.campaigns),
-      queryParameters: <String, dynamic>{
-        'advertiserOnly': 'true',
-        'page': 1,
-        'limit': limit.clamp(1, 100),
-      },
+      queryParameters: qp,
     );
     final data = res.data;
     if (data == null) {
@@ -57,7 +88,28 @@ final class AdvertiserCampaignsRemoteDatasource
           ? data['data'] as List<dynamic>
           : const [];
     }
-    return list.map((e) => _parseListItem(e as Map<String, dynamic>)).toList();
+    final campaigns = list
+        .map((e) => _parseListItem(e as Map<String, dynamic>))
+        .toList();
+    final total = _parseInt(data['total'], campaigns.length);
+    final pageNum = _parseInt(data['page'], page);
+    var totalPages = _parseInt(data['totalPages'], 0);
+    final lim = limit.clamp(1, 100);
+    if (totalPages < 1) {
+      totalPages = total > 0 ? (total + lim - 1) ~/ lim : 1;
+    }
+    return AdvertiserCampaignsPageResult(
+      campaigns: campaigns,
+      total: total,
+      page: pageNum,
+      totalPages: totalPages,
+    );
+  }
+
+  static int _parseInt(dynamic v, int fallback) {
+    if (v is int) return v;
+    if (v is num) return v.toInt();
+    return int.tryParse('$v') ?? fallback;
   }
 
   @override

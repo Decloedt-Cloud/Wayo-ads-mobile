@@ -16,7 +16,6 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../i18n/strings.g.dart';
 import '../../../dashboard/presentation/providers/dashboard_state_providers.dart';
 import '../../data/advertiser_wallet_repository.dart';
-import '../../data/wallet_saved_card_local.dart';
 import '../../domain/wallet_models.dart';
 import '../../presentation/providers/advertiser_wallet_providers.dart';
 import '../../stripe/advertiser_stripe_deposit.dart';
@@ -24,8 +23,10 @@ import '../../stripe/advertiser_stripe_deposit.dart';
 enum _PayMethod { card, applePay, googlePay }
 
 const int _kWalletTxPageSize = 7;
+/// Minimum top-up amount in minor units (e.g. cents): 50.00 in wallet currency.
+const int _kMinDepositCents = 5000;
 
-/// Advertiser-only wallet: balance, transactions, Stripe (cards) + Apple Pay (iOS) / Google Pay (Android).
+/// Advertiser-only wallet: balance, transactions, Stripe card + Apple Pay / Google Pay.
 class AdvertiserWalletTabContent extends ConsumerStatefulWidget {
   const AdvertiserWalletTabContent({super.key});
 
@@ -38,19 +39,7 @@ class _AdvertiserWalletTabContentState
     extends ConsumerState<AdvertiserWalletTabContent> {
   final _amountCtrl = TextEditingController();
   _PayMethod? _busyMethod;
-  bool _saveCardForNext = false;
   int _txPage = 0;
-  String? _localSavedLabel;
-
-  @override
-  void initState() {
-    super.initState();
-    WalletSavedCardLocal.read().then((s) {
-      if (mounted) {
-        setState(() => _localSavedLabel = s);
-      }
-    });
-  }
 
   @override
   void dispose() {
@@ -74,10 +63,6 @@ class _AdvertiserWalletTabContentState
     ref.invalidate(advertiserWalletPageProvider);
     ref.invalidate(dashboardStreamProvider);
     await ref.read(advertiserWalletPageProvider.future);
-    final s = await WalletSavedCardLocal.read();
-    if (mounted) {
-      setState(() => _localSavedLabel = s);
-    }
   }
 
   void _toast(String msg) {
@@ -87,18 +72,6 @@ class _AdvertiserWalletTabContentState
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(content: Text(msg)));
-  }
-
-  String? _mergedSavedLabel(AdvertiserWalletPageData data) {
-    final s = data.savedCardHint?.trim();
-    if (s != null && s.isNotEmpty) {
-      return s;
-    }
-    final l = _localSavedLabel?.trim();
-    if (l != null && l.isNotEmpty) {
-      return l;
-    }
-    return null;
   }
 
   String _txLabel(String type, Translations t) {
@@ -135,7 +108,7 @@ class _AdvertiserWalletTabContentState
     }
     final t = context.t;
     final cents = _amountToCents(_amountCtrl.text);
-    if (cents == null || cents < 50) {
+    if (cents == null || cents < _kMinDepositCents) {
       _toast(t.advertiser_wallet.min_deposit);
       return;
     }
@@ -145,7 +118,6 @@ class _AdvertiserWalletTabContentState
       final intent = await repo.createDepositIntent(
         amountCents: cents,
         currency: currency,
-        savePaymentMethod: method == _PayMethod.card && _saveCardForNext,
       );
 
       // Dev / mock PSP path — no Stripe SDK at all.
@@ -164,16 +136,13 @@ class _AdvertiserWalletTabContentState
         return;
       }
 
-      PaymentSheetPaymentOption? cardSheetOption;
-
       try {
         switch (method) {
           case _PayMethod.card:
-            cardSheetOption =
-                await AdvertiserStripeDeposit.presentCardPaymentSheet(
-                  clientSecret: intent.clientSecret,
-                  currency: intent.currency,
-                );
+            await AdvertiserStripeDeposit.presentCardPaymentSheet(
+              clientSecret: intent.clientSecret,
+              currency: intent.currency,
+            );
             break;
           case _PayMethod.applePay:
             await AdvertiserStripeDeposit.confirmWithApplePay(
@@ -206,25 +175,6 @@ class _AdvertiserWalletTabContentState
         return;
       }
       _toast(t.advertiser_wallet.success);
-
-      // Persist "saved card" only after the wallet credit succeeded on the server.
-      if (method == _PayMethod.card && _saveCardForNext) {
-        try {
-          final label = await AdvertiserStripeDeposit.savedCardDisplayLabel(
-            clientSecret: intent.clientSecret,
-            sheetOption: cardSheetOption,
-            fallbackLabel: t.advertiser_wallet.saved_card_generic,
-          );
-          await WalletSavedCardLocal.write(label);
-          if (mounted) {
-            setState(() => _localSavedLabel = label);
-          }
-        } catch (e) {
-          if (kDebugMode) {
-            debugPrint('[Wallet] save card label persist: $e');
-          }
-        }
-      }
 
       await _refresh();
     } on ServerException catch (e) {
@@ -306,7 +256,6 @@ class _AdvertiserWalletTabContentState
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    _SavedCardBanner(label: _mergedSavedLabel(data), t: t),
                     _WalletPayStrip(
                       data: data,
                       t: t,
@@ -362,14 +311,6 @@ class _AdvertiserWalletTabContentState
                         ),
                       ],
                     ),
-                    if (!data.canSimulate) ...[
-                      const SizedBox(height: 14),
-                      _SaveCardTile(
-                        value: _saveCardForNext,
-                        onChanged: (v) => setState(() => _saveCardForNext = v),
-                        t: t,
-                      ),
-                    ],
                     if (data.canSimulate) ...[
                       const SizedBox(height: 8),
                       Text(
@@ -402,90 +343,6 @@ class _AdvertiserWalletTabContentState
           ),
         );
       },
-    );
-  }
-}
-
-// --- Saved card + payment row (card first, then Apple / Google) ----------------
-
-class _SavedCardBanner extends StatelessWidget {
-  const _SavedCardBanner({required this.label, required this.t});
-
-  final String? label;
-  final Translations t;
-
-  @override
-  Widget build(BuildContext context) {
-    if (label == null || label!.isEmpty) {
-      return const SizedBox.shrink();
-    }
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
-      child: Material(
-        color: AppColors.surfaceElevatedOf(context),
-        borderRadius: BorderRadius.circular(18),
-        child: ListTile(
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 4,
-          ),
-          leading: Icon(
-            Icons.credit_card_rounded,
-            color: const Color(0xFFF4A237).withValues(alpha: 0.95),
-            size: 28,
-          ),
-          title: Text(
-            t.advertiser_wallet.saved_card_title,
-            style: AppTextStyles.caption(context).copyWith(
-              color: AppColors.textMutedOf(context),
-              letterSpacing: 0.2,
-            ),
-          ),
-          subtitle: Text(
-            label!,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _SaveCardTile extends StatelessWidget {
-  const _SaveCardTile({
-    required this.value,
-    required this.onChanged,
-    required this.t,
-  });
-
-  final bool value;
-  final ValueChanged<bool> onChanged;
-  final Translations t;
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      label: t.advertiser_wallet.save_card,
-      child: Material(
-        color: AppColors.surfaceElevatedOf(context).withValues(alpha: 0.6),
-        borderRadius: BorderRadius.circular(16),
-        child: SwitchListTile(
-          value: value,
-          onChanged: onChanged,
-          title: Text(
-            t.advertiser_wallet.save_card,
-            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
-          ),
-          subtitle: Text(
-            t.advertiser_wallet.save_card_hint,
-            style: AppTextStyles.caption(
-              context,
-            ).copyWith(color: AppColors.textMutedOf(context), height: 1.3),
-          ),
-        ),
-      ),
     );
   }
 }

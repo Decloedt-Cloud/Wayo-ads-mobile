@@ -94,44 +94,11 @@ final class AdvertiserWalletRepository {
         ),
       );
     }
-    final savedHint = _parseSavedCardHint(data);
     return AdvertiserWalletPageData(
       balance: balance,
       transactions: transactions,
       canSimulate: data['canSimulate'] == true,
-      savedCardHint: savedHint,
     );
-  }
-
-  static String? _parseSavedCardHint(Map<String, dynamic> data) {
-    dynamic pick(dynamic v) {
-      if (v is Map) {
-        return Map<String, dynamic>.from(v);
-      }
-      return null;
-    }
-
-    final a = pick(data['savedCard']);
-    final b =
-        pick(data['defaultPaymentMethod']) ??
-        pick(data['default_payment_method']);
-    final c = a ?? b;
-    if (c == null) {
-      return null;
-    }
-    final direct = c['label'] as String? ?? c['display'] as String?;
-    if (direct != null && direct.trim().isNotEmpty) {
-      return direct.trim();
-    }
-    final brand = c['brand'] as String? ?? c['cardBrand'] as String?;
-    final last4 = c['last4'] as String? ?? c['last4Digits'] as String?;
-    if (brand != null && last4 != null) {
-      return '$brand ···· $last4';
-    }
-    if (last4 != null) {
-      return '···· $last4';
-    }
-    return null;
   }
 
   static DateTime? _parseDate(dynamic v) {
@@ -141,21 +108,15 @@ final class AdvertiserWalletRepository {
     return null;
   }
 
-  /// [savePaymentMethod] — when `true`, Wayo-ads must create the Stripe
-  /// PaymentIntent with `setup_future_usage: 'off_session'` (and typically a
-  /// `customer`) so the card can be reused; the mobile app cannot do this with
-  /// the publishable key alone.
   Future<DepositIntentResult> createDepositIntent({
     required int amountCents,
     String? currency,
-    bool savePaymentMethod = false,
   }) async {
     final res = await _dio.post<Map<String, dynamic>>(
       _path(ApiEndpoints.walletDepositIntent),
       data: <String, dynamic>{
         'amountCents': amountCents,
         'currency': currency,
-        if (savePaymentMethod) 'savePaymentMethod': true,
       }..removeWhere((_, v) => v == null),
     );
     final data = res.data;

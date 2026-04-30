@@ -1,3 +1,4 @@
+import 'package:country_flags/country_flags.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -68,7 +69,7 @@ class _BusinessInfoDialogState extends ConsumerState<_BusinessInfoDialog> {
     _postalCode = TextEditingController(text: p.postalCode ?? '');
     _state = TextEditingController(text: p.state ?? '');
     _countryCode = _validCountry(p.countryCode);
-    _currency = _validCurrency(p.currency);
+    _currency = _validCurrency(p.currency) ?? 'USD';
   }
 
   @override
@@ -262,19 +263,23 @@ class _BusinessInfoDialogState extends ConsumerState<_BusinessInfoDialog> {
                         const SizedBox(height: 20),
                         _SectionLabel(label: t.creator.business.section_stripe),
                         const SizedBox(height: 8),
-                        _StripeConnectDropdown(
+                        _ModernConnectSelect(
+                          key: ValueKey('country_${_countryCode ?? '∅'}'),
                           label: t.creator.business.country,
                           errorRequired: t.creator.business.error_required,
                           items: StripeConnectCatalog.countries,
                           value: _countryCode,
+                          showCountryFlag: true,
                           onChanged: (v) => setState(() => _countryCode = v),
                         ),
                         const SizedBox(height: 12),
-                        _StripeConnectDropdown(
+                        _ModernConnectSelect(
+                          key: ValueKey('currency_${_currency ?? '∅'}'),
                           label: t.creator.business.currency,
                           errorRequired: t.creator.business.error_required,
                           items: StripeConnectCatalog.currencies,
                           value: _currency,
+                          showCountryFlag: false,
                           onChanged: (v) => setState(() => _currency = v),
                         ),
                       ],
@@ -659,13 +664,16 @@ class _OptionalField extends StatelessWidget {
   }
 }
 
-class _StripeConnectDropdown extends StatelessWidget {
-  const _StripeConnectDropdown({
+/// Stripe country / currency picker — shadcn-like surface, shadow, chevron motion.
+class _ModernConnectSelect extends StatefulWidget {
+  const _ModernConnectSelect({
+    super.key,
     required this.label,
     required this.errorRequired,
     required this.items,
     required this.value,
     required this.onChanged,
+    required this.showCountryFlag,
   });
 
   final String label;
@@ -673,26 +681,268 @@ class _StripeConnectDropdown extends StatelessWidget {
   final List<StripeConnectOption> items;
   final String? value;
   final ValueChanged<String?> onChanged;
+  final bool showCountryFlag;
+
+  @override
+  State<_ModernConnectSelect> createState() => _ModernConnectSelectState();
+}
+
+class _ModernConnectSelectState extends State<_ModernConnectSelect>
+    with SingleTickerProviderStateMixin {
+  bool _menuOpen = false;
+  late final AnimationController _chevronC = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 180),
+  );
+
+  @override
+  void dispose() {
+    _chevronC.dispose();
+    super.dispose();
+  }
+
+  StripeConnectOption? _optionFor(String? code) {
+    if (code == null) return null;
+    for (final o in widget.items) {
+      if (o.code == code) return o;
+    }
+    return null;
+  }
+
+  void _setMenuOpen(bool open) {
+    if (_menuOpen == open) return;
+    setState(() => _menuOpen = open);
+    if (open) {
+      _chevronC.forward();
+    } else {
+      _chevronC.reverse();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return DropdownButtonFormField<String>(
-      initialValue: value,
-      isExpanded: true,
-      menuMaxHeight: 320,
-      decoration: InputDecoration(
-        labelText: label,
-        border: const OutlineInputBorder(),
-      ),
-      items: [
-        for (final o in items)
-          DropdownMenuItem<String>(
-            value: o.code,
-            child: Text('${o.code} — ${o.name}'),
-          ),
-      ],
-      onChanged: onChanged,
-      validator: (v) => (v == null || v.isEmpty) ? errorRequired : null,
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final border = AppColors.borderOf(context);
+    final surface = theme.colorScheme.surface;
+    final shadow = isDark
+        ? Colors.black.withValues(alpha: 0.35)
+        : Colors.black.withValues(alpha: 0.08);
+
+    return FormField<String>(
+      initialValue: widget.value,
+      validator: (v) =>
+          (v == null || v.isEmpty) ? widget.errorRequired : null,
+      builder: (field) {
+        final hasError = field.hasError;
+        final sel = _optionFor(field.value);
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            MenuAnchor(
+              onOpen: () => _setMenuOpen(true),
+              onClose: () => _setMenuOpen(false),
+              style: MenuStyle(
+                backgroundColor: WidgetStatePropertyAll(surface),
+                elevation: const WidgetStatePropertyAll(14),
+                shadowColor: WidgetStatePropertyAll(shadow),
+                padding: const WidgetStatePropertyAll(
+                  EdgeInsets.symmetric(vertical: 6),
+                ),
+                shape: WidgetStatePropertyAll(
+                  RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    side: BorderSide(color: border.withValues(alpha: 0.65)),
+                  ),
+                ),
+                maximumSize: WidgetStatePropertyAll(
+                  Size(
+                    MediaQuery.sizeOf(context).width - 40,
+                    320,
+                  ),
+                ),
+              ),
+              menuChildren: [
+                for (final o in widget.items)
+                  MenuItemButton(
+                    style: MenuItemButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 12,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    onPressed: () {
+                      field.didChange(o.code);
+                      widget.onChanged(o.code);
+                    },
+                    child: widget.showCountryFlag
+                        ? Row(
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(5),
+                                child: CountryFlag.fromCountryCode(
+                                  o.code,
+                                  height: 20,
+                                  width: 28,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  '${o.code} — ${o.name}',
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          )
+                        : Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              '${o.code} — ${o.name}',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                  ),
+              ],
+              builder: (context, controller, _) {
+                return Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(14),
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      if (controller.isOpen) {
+                        controller.close();
+                      } else {
+                        controller.open();
+                      }
+                    },
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      curve: Curves.easeOutCubic,
+                      padding: const EdgeInsets.fromLTRB(14, 16, 10, 16),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surfaceContainerHighest
+                            .withValues(alpha: isDark ? 0.35 : 0.65),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: hasError
+                              ? theme.colorScheme.error.withValues(alpha: 0.85)
+                              : _menuOpen
+                              ? CreatorColors.primaryOf(context)
+                                  .withValues(alpha: 0.75)
+                              : border,
+                          width: hasError ? 1.4 : (_menuOpen ? 1.4 : 1),
+                        ),
+                        boxShadow: [
+                          if (!_menuOpen)
+                            BoxShadow(
+                              color: shadow,
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          if (_menuOpen)
+                            BoxShadow(
+                              color: CreatorColors.primaryOf(context)
+                                  .withValues(alpha: 0.12),
+                              blurRadius: 20,
+                              offset: const Offset(0, 6),
+                            ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          if (widget.showCountryFlag && sel != null) ...[
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(5),
+                              child: CountryFlag.fromCountryCode(
+                                sel.code,
+                                height: 20,
+                                width: 28,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                          ],
+                          if (!widget.showCountryFlag && sel != null) ...[
+                            Text(
+                              sel.code,
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                          ],
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  widget.label,
+                                  style: theme.textTheme.labelMedium?.copyWith(
+                                    color: AppColors.textMutedOf(context),
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  sel != null
+                                      ? sel.name
+                                      : '—',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: theme.textTheme.bodyLarge?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          RotationTransition(
+                            turns: Tween<double>(
+                              begin: 0,
+                              end: 0.5,
+                            ).animate(
+                              CurvedAnimation(
+                                parent: _chevronC,
+                                curve: Curves.easeOutCubic,
+                              ),
+                            ),
+                            child: Icon(
+                              Icons.keyboard_arrow_down_rounded,
+                              size: 26,
+                              color: AppColors.textMutedOf(context),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+            if (hasError && field.errorText != null) ...[
+              const SizedBox(height: 6),
+              Text(
+                field.errorText!,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.error,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ],
+        );
+      },
     );
   }
 }

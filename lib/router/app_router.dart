@@ -23,7 +23,6 @@ import '../features/chat/presentation/screens/chat_thread_screen.dart';
 import '../features/shell/app_shell.dart';
 import '../features/shell/shell_tabs.dart';
 import '../features/wallet/presentation/screens/wallet_tab_screen.dart';
-import '../features/splash/splash_screen.dart';
 import '../screens/privacy_policy_screen.dart';
 
 part 'app_router.g.dart';
@@ -79,15 +78,11 @@ GoRouter goRouter(GoRouterRef ref) {
 
   return GoRouter(
     navigatorKey: rootNavigatorKey,
-    initialLocation: '/splash',
+    initialLocation: '/',
     refreshListenable: refresh,
     redirect: (context, state) {
       final auth = ref.read(authNotifierProvider);
       final loc = state.matchedLocation;
-
-      if (loc == '/splash') {
-        return null;
-      }
 
       if (loc == '/privacy') {
         return null;
@@ -162,10 +157,6 @@ GoRouter goRouter(GoRouterRef ref) {
       );
     },
     routes: [
-      GoRoute(
-        path: '/splash',
-        builder: (context, state) => const SplashScreen(),
-      ),
       GoRoute(
         path: '/',
         builder: (context, state) {

@@ -162,6 +162,8 @@ class _CinematicMessageBubbleState extends State<CinematicMessageBubble> {
                 child: CachedNetworkImage(
                   imageUrl: mediaUrl,
                   fit: BoxFit.cover,
+                  memCacheWidth: 520,
+                  memCacheHeight: 440,
                   placeholder: (context, url) => SizedBox(
                     height: 120,
                     child: Center(
@@ -482,6 +484,8 @@ class _CinematicPeerBubbleAvatar extends StatelessWidget {
           fit: BoxFit.cover,
           width: diameter,
           height: diameter,
+          memCacheWidth: (diameter * 2).toInt(),
+          memCacheHeight: (diameter * 2).toInt(),
           fadeInDuration: const Duration(milliseconds: 200),
           placeholder: (_, _) => SizedBox(
             width: diameter,

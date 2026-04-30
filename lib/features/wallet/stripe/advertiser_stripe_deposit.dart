@@ -38,11 +38,8 @@ final class AdvertiserStripeDeposit {
     await Stripe.instance.applySettings();
   }
 
-  /// Card-only Payment Sheet — equivalent of the web `CardElement` flow.
-  ///
-  /// Returns the chosen payment option label (e.g. `Visa ···· 4242`) on success,
-  /// which can be stored locally when the user opts in to "save card".
-  static Future<PaymentSheetPaymentOption?> presentCardPaymentSheet({
+  /// Card-only Payment Sheet for a one-off wallet top-up (no in-app card storage).
+  static Future<void> presentCardPaymentSheet({
     required String clientSecret,
     required String currency,
   }) async {
@@ -66,36 +63,7 @@ final class AdvertiserStripeDeposit {
         appearance: appearance,
       ),
     );
-    return Stripe.instance.presentPaymentSheet();
-  }
-
-  /// Display string for the "saved card" banner after a **successful** deposit.
-  ///
-  /// Uses the Payment Sheet option label when present; otherwise falls back to
-  /// [fallbackLabel]. Still requires the server to create the PaymentIntent with
-  /// `setup_future_usage` when saving for Stripe’s Customer — see Wayo-ads
-  /// `POST /api/wallet/deposit-intent` + `savePaymentMethod`.
-  static Future<String> savedCardDisplayLabel({
-    required String clientSecret,
-    PaymentSheetPaymentOption? sheetOption,
-    required String fallbackLabel,
-  }) async {
-    final direct = sheetOption?.label.trim() ?? '';
-    if (direct.isNotEmpty) {
-      return direct;
-    }
-    try {
-      final pi = await Stripe.instance.retrievePaymentIntent(clientSecret);
-      final pm = pi.paymentMethodId;
-      if (pm != null && pm.isNotEmpty) {
-        return fallbackLabel;
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        debugPrint('[Stripe] savedCardDisplayLabel retrievePaymentIntent: $e');
-      }
-    }
-    return fallbackLabel;
+    await Stripe.instance.presentPaymentSheet();
   }
 
   /// Apple Pay — iOS with a configured [kStripeAppleMerchantId].

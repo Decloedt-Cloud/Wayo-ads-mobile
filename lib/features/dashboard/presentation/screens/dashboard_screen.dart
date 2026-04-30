@@ -66,7 +66,7 @@ class DashboardScreen extends ConsumerWidget {
                     enabled: true,
                     child: Text(
                       t.dashboard.title,
-                      style: AppTextStyles.displayLarge(context),
+                      style: AppTextStyles.pageTitle(context),
                     ),
                   ),
                   error: (e, _) => Text('$e'),
@@ -97,7 +97,7 @@ class DashboardScreen extends ConsumerWidget {
                         snapshot: snap,
                         moneyLocale: _moneyLocale(locale),
                       ),
-                      _CampaignsSection(
+                    _CampaignsSection(
                         snapshot: snap,
                         isLoading: async.isLoading,
                       ),
@@ -118,6 +118,8 @@ class DashboardScreen extends ConsumerWidget {
     await ref
         .read(authNotifierProvider.notifier)
         .refreshProfileFromAuthServer();
+    ref.read(advertiserDashboardCampaignPageProvider.notifier).state = 1;
+    ref.invalidate(advertiserDashboardCampaignsPageFetchProvider);
     ref.invalidate(dashboardStreamProvider);
     await ref.read(dashboardStreamProvider.future);
     HapticFeedback.lightImpact();
@@ -287,7 +289,7 @@ class _WelcomeBlock extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(t.dashboard.title, style: AppTextStyles.displayLarge(context)),
+        Text(t.dashboard.title, style: AppTextStyles.pageTitle(context)),
         const SizedBox(height: 6),
         Text(welcome, style: AppTextStyles.headlineMedium(context)),
         const SizedBox(height: 8),
@@ -421,7 +423,7 @@ class _BalanceSection extends StatelessWidget {
                     Expanded(
                       child: _AdvertiserMiniStatCard(
                         label: t.nav.campaigns,
-                        value: '${snapshot.campaigns.length}',
+                        value: '${snapshot.campaignsTotalCount}',
                         accent: AppColors.primary,
                         icon: Icons.grid_view_rounded,
                       ),
@@ -630,18 +632,41 @@ class _BalanceSectionSkeleton extends StatelessWidget {
   }
 }
 
-class _CampaignsSection extends StatelessWidget {
+class _CampaignsSection extends ConsumerStatefulWidget {
   const _CampaignsSection({required this.snapshot, required this.isLoading});
 
   final DashboardSnapshot snapshot;
   final bool isLoading;
 
   @override
+  ConsumerState<_CampaignsSection> createState() => _CampaignsSectionState();
+}
+
+class _CampaignsSectionState extends ConsumerState<_CampaignsSection> {
+  @override
   Widget build(BuildContext context) {
     final t = context.t;
-    final list = snapshot.campaigns;
+    final page = ref.watch(advertiserDashboardCampaignPageProvider);
+    final snap = widget.snapshot;
+    final pageFetch = page == 1
+        ? null
+        : ref.watch(advertiserDashboardCampaignsPageFetchProvider(page));
+
+    final list = page == 1
+        ? snap.campaigns
+        : pageFetch?.valueOrNull?.campaigns ?? const <CampaignSummary>[];
+
+    final totalPages = page == 1
+        ? snap.campaignsTotalPages
+        : pageFetch?.valueOrNull?.totalPages ?? snap.campaignsTotalPages;
+
+    final loadingExtra =
+        page != 1 && (pageFetch?.isLoading ?? false) && list.isEmpty;
     final loading =
-        isLoading && list.isEmpty && snapshot.campaignsError == null;
+        widget.isLoading &&
+        list.isEmpty &&
+        snap.campaignsError == null &&
+        page == 1;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
@@ -684,30 +709,135 @@ class _CampaignsSection extends StatelessWidget {
                 ),
               ),
             )
+          else if (loadingExtra)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 24),
+              child: Center(
+                child: CircularProgressIndicator(color: AppColors.primary),
+              ),
+            )
+          else if (page != 1 && pageFetch?.hasError == true)
+            ErrorBanner(
+              message: t.dashboard.errors.load_campaigns,
+              retryLabel: t.dashboard.errors.retry,
+              onRetry: () => ref.invalidate(
+                advertiserDashboardCampaignsPageFetchProvider(page),
+              ),
+            )
           else if (list.isEmpty)
             _EmptyCampaigns()
           else
             AnimationLimiter(
               child: Column(
-                children: List.generate(list.length, (index) {
-                  final c = list[index];
-                  return AnimationConfiguration.staggeredList(
-                    position: index,
-                    duration: const Duration(milliseconds: 420),
-                    child: SlideAnimation(
-                      verticalOffset: 36,
-                      child: FadeInAnimation(
-                        child: Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: _CampaignTile(campaign: c),
+                children: [
+                  ...List.generate(list.length, (index) {
+                    final c = list[index];
+                    return AnimationConfiguration.staggeredList(
+                      position: index,
+                      duration: const Duration(milliseconds: 420),
+                      child: SlideAnimation(
+                        verticalOffset: 36,
+                        child: FadeInAnimation(
+                          child: Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: _CampaignTile(campaign: c),
+                          ),
                         ),
                       ),
+                    );
+                  }),
+                  if (totalPages > 1) ...[
+                    const SizedBox(height: 4),
+                    _DashboardCampaignPaginationBar(
+                      page: page,
+                      totalPages: totalPages,
+                      previousLabel: t.dashboard.campaigns.pagination_previous,
+                      nextLabel: t.dashboard.campaigns.pagination_next,
+                      pageLabel: (cur, tot) =>
+                          t.dashboard.campaigns.pagination_page(
+                            current: cur,
+                            total: tot,
+                          ),
+                      onPrevious: page > 1
+                          ? () {
+                              HapticFeedback.selectionClick();
+                              ref
+                                  .read(
+                                    advertiserDashboardCampaignPageProvider
+                                        .notifier,
+                                  )
+                                  .state = page - 1;
+                            }
+                          : null,
+                      onNext: page < totalPages
+                          ? () {
+                              HapticFeedback.selectionClick();
+                              ref
+                                  .read(
+                                    advertiserDashboardCampaignPageProvider
+                                        .notifier,
+                                  )
+                                  .state = page + 1;
+                            }
+                          : null,
                     ),
-                  );
-                }),
+                  ],
+                ],
               ),
             ),
         ],
+      ),
+    );
+  }
+}
+
+class _DashboardCampaignPaginationBar extends StatelessWidget {
+  const _DashboardCampaignPaginationBar({
+    required this.page,
+    required this.totalPages,
+    required this.previousLabel,
+    required this.nextLabel,
+    required this.pageLabel,
+    required this.onPrevious,
+    required this.onNext,
+  });
+
+  final int page;
+  final int totalPages;
+  final String previousLabel;
+  final String nextLabel;
+  final String Function(int current, int total) pageLabel;
+  final VoidCallback? onPrevious;
+  final VoidCallback? onNext;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppColors.surfaceElevatedOf(context),
+      borderRadius: BorderRadius.circular(14),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        child: Row(
+          children: [
+            TextButton(
+              onPressed: onPrevious,
+              child: Text(previousLabel),
+            ),
+            Expanded(
+              child: Text(
+                pageLabel(page, totalPages),
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                  color: AppColors.textSecondaryOf(context),
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: onNext,
+              child: Text(nextLabel),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -936,12 +1066,6 @@ class _EmptyCampaigns extends StatelessWidget {
           t.dashboard.campaigns.empty_subtitle,
           style: AppTextStyles.bodyLarge(context),
           textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 16),
-        FilledButton(
-          onPressed: () => GoRouter.of(context).go('/campaigns'),
-          style: FilledButton.styleFrom(backgroundColor: AppColors.primary),
-          child: Text(t.dashboard.campaigns.create_cta),
         ),
       ],
     );

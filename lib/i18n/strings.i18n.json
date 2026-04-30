@@ -109,7 +109,10 @@
       "creators": "{count} Creators",
       "empty_title": "No campaigns",
       "empty_subtitle": "Create your first campaign to get started",
-      "create_cta": "Create Campaign"
+      "create_cta": "Create Campaign",
+      "pagination_previous": "Previous",
+      "pagination_next": "Next",
+      "pagination_page": "Page $current / $total"
     },
     "errors": {
       "load_balance": "Couldn't load balance",
@@ -271,6 +274,9 @@
     "campaigns": {
       "browse_title": "Browse campaigns",
       "browse_subtitle": "Find campaigns that match your audience and apply in one tap.",
+      "browse_search_placeholder": "Search by name, type or brand",
+      "browse_empty_search_title": "No matching campaigns",
+      "browse_empty_search_subtitle": "Try another keyword — name, type (video, shorts, link) or advertiser brand.",
       "applications_title": "My applications",
       "applications_subtitle": "Track the status of campaigns you've applied to — approved, pending or rejected.",
       "submit_title": "Submit a post",
@@ -280,6 +286,9 @@
       "load_error": "Couldn't load campaigns.",
       "empty_title": "No campaigns right now",
       "empty_subtitle": "New campaigns show up here the moment advertisers launch them.",
+      "pagination_previous": "Previous",
+      "pagination_next": "Next",
+      "pagination_page": "Page $current / $total",
       "description_title": "Brief",
       "requirements_title": "Requirements",
       "assets_title": "Brand assets",
@@ -398,7 +407,7 @@
     "quick_50": "€50",
     "quick_100": "€100",
     "quick_250": "€250",
-    "min_deposit": "Minimum deposit is 0.50 in your currency.",
+    "min_deposit": "Minimum deposit is 50.00 in your currency.",
     "test_pay": "Simulate payment (dev)",
     "test_hint": "Test mode: no real card. Tops up your dev wallet for QA.",
     "pay_secure": "Pay with card, Apple Pay or Google Pay",
@@ -415,10 +424,6 @@
     "success": "Balance updated",
     "failed": "Could not add funds. Try again.",
     "in_progress": "Processing…",
-    "save_card": "Save this card for next time",
-    "save_card_hint": "For card payments only. Works with your server when supported.",
-    "saved_card_title": "Saved card",
-    "saved_card_generic": "Card saved for this device",
     "tx_page": "Page $current of $total",
     "tx_prev": "Previous",
     "tx_next": "Next"

@@ -5,7 +5,7 @@ import '../../../../core/network/wayo_ads_dio.dart';
 import '../../../dashboard/presentation/providers/dashboard_state_providers.dart';
 import '../../data/creator_campaigns_remote_datasource.dart';
 import '../../data/creator_campaigns_repository.dart';
-import '../../domain/creator_browse_campaign.dart';
+import '../../domain/creator_browse_page_result.dart';
 import '../../domain/creator_campaign_detail.dart';
 import '../../domain/creator_social_post.dart';
 
@@ -33,13 +33,26 @@ final creatorCampaignsRepositoryProvider = Provider<CreatorCampaignsRepository>(
   },
 );
 
-/// Browseable campaigns (`GET /api/campaigns?status=ACTIVE&creatorOnly=true`).
-final creatorBrowseCampaignsProvider =
-    FutureProvider<List<CreatorBrowseCampaign>>((ref) async {
-      ref.keepAlive();
-      return ref
-          .watch(creatorCampaignsRepositoryProvider)
-          .fetchBrowseCampaigns();
+/// Current page index for **browse** list (1-based). Used with [creatorBrowseCampaignsPagedProvider].
+final creatorBrowseCampaignPageProvider = StateProvider<int>((ref) => 1);
+
+/// Applied search text for [creatorBrowseCampaignsPagedProvider] (debounced from the search field).
+final creatorBrowseCampaignSearchQueryProvider = StateProvider<String>(
+  (ref) => '',
+);
+
+/// Paginated browse key: [creatorBrowseCampaignPageProvider] + [creatorBrowseCampaignSearchQueryProvider].
+typedef CreatorBrowsePagedKey = ({int page, String search});
+
+/// Paginated browse (`GET /api/campaigns?creatorOnly=true&limit=10&search=…`).
+final creatorBrowseCampaignsPagedProvider = FutureProvider.autoDispose
+    .family<CreatorBrowsePageResult, CreatorBrowsePagedKey>((ref, key) async {
+      final q = key.search.trim();
+      return ref.watch(creatorCampaignsRepositoryProvider).fetchBrowseCampaignsPage(
+            page: key.page,
+            limit: 10,
+            search: q.isEmpty ? null : q,
+          );
     });
 
 /// Detail of a single campaign — keyed by campaign id.

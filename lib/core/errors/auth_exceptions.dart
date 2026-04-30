@@ -19,8 +19,9 @@ final class NetworkException extends AuthException {
 }
 
 final class ServerException extends AuthException {
-  const ServerException(this.message);
+  const ServerException(this.message, [this.statusCode]);
   final String message;
+  final int? statusCode;
   @override
   String toString() => message;
 }

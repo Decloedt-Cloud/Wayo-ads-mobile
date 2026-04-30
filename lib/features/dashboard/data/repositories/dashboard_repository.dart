@@ -15,6 +15,7 @@ import '../../domain/entities/campaign_status.dart';
 import '../../domain/entities/campaign_summary.dart';
 import '../../domain/entities/user_profile.dart';
 import '../../../creator_campaigns/domain/creator_browse_campaign.dart';
+import '../../domain/advertiser_campaigns_page_result.dart';
 
 /// Cached + fresh dashboard payload with isolated section errors (no global crash).
 final class DashboardSnapshot extends Equatable {
@@ -22,6 +23,10 @@ final class DashboardSnapshot extends Equatable {
     required this.user,
     this.balance,
     this.campaigns = const [],
+    this.campaignsTotalCount = 0,
+    this.campaignsPage = 1,
+    this.campaignsTotalPages = 1,
+    this.advertiserBudgetRollup,
     this.unreadCount = 0,
     this.userError,
     this.balanceError,
@@ -32,6 +37,11 @@ final class DashboardSnapshot extends Equatable {
   final UserProfile? user;
   final AdvertiserBalance? balance;
   final List<CampaignSummary> campaigns;
+  /// Total campaigns for the advertiser (all pages), not just [campaigns].length.
+  final int campaignsTotalCount;
+  final int campaignsPage;
+  final int campaignsTotalPages;
+  final AdvertiserBudgetRollup? advertiserBudgetRollup;
   final int unreadCount;
   final AuthException? userError;
   final AuthException? balanceError;
@@ -45,6 +55,10 @@ final class DashboardSnapshot extends Equatable {
     user,
     balance,
     campaigns,
+    campaignsTotalCount,
+    campaignsPage,
+    campaignsTotalPages,
+    advertiserBudgetRollup,
     unreadCount,
     userError,
     balanceError,
@@ -150,13 +164,28 @@ final class DashboardRepositoryImpl implements DashboardRepository {
 
     AuthException? campaignsErr;
     var campaigns = seed?.campaigns ?? const <CampaignSummary>[];
+    var campaignsTotalCount = seed?.campaignsTotalCount ?? campaigns.length;
+    var campaignsPage = seed?.campaignsPage ?? 1;
+    var campaignsTotalPages = seed?.campaignsTotalPages ?? 1;
+    AdvertiserBudgetRollup? budgetRollup = seed?.advertiserBudgetRollup;
     if (_rate.canCall(DashboardRateLimiterKeys.campaigns)) {
       try {
-        campaigns = await _deduplicator.run(
-          'dashboard_campaigns',
-          () => _remote.fetchCampaigns(),
+        const campaignsLimit = 10;
+        const campaignsPageNum = 1;
+        final pageResult = await _deduplicator.run(
+          'dashboard_campaigns_${campaignsPageNum}_$campaignsLimit',
+          () => _remote.fetchCampaignsPage(
+            page: campaignsPageNum,
+            limit: campaignsLimit,
+          ),
         );
+        campaigns = pageResult.campaigns;
+        campaignsTotalCount = pageResult.total;
+        campaignsPage = pageResult.page;
+        campaignsTotalPages = pageResult.totalPages;
+        budgetRollup = pageResult.budgetRollup;
         _rate.mark(DashboardRateLimiterKeys.campaigns);
+        campaignsErr = null;
       } catch (e) {
         campaignsErr = _map(e);
       }
@@ -165,7 +194,16 @@ final class DashboardRepositoryImpl implements DashboardRepository {
     }
 
     if (balance != null && campaignsErr == null) {
-      balance = _mergeAdvertiserBalanceFromCampaigns(balance, campaigns);
+      if (budgetRollup != null) {
+        balance = AdvertiserBalance(
+          available: balance.available,
+          locked: budgetRollup.lockedCents / 100.0,
+          spent: budgetRollup.spentCents / 100.0,
+          currency: balance.currency,
+        );
+      } else {
+        balance = _mergeAdvertiserBalanceFromCampaigns(balance, campaigns);
+      }
     }
 
     AuthException? unreadErr;
@@ -201,10 +239,20 @@ final class DashboardRepositoryImpl implements DashboardRepository {
       }
       if (campaignsErr != null) {
         try {
-          campaigns = await _deduplicator.run(
-            'dashboard_campaigns',
-            () => _remote.fetchCampaigns(),
+          const campaignsLimit = 10;
+          const campaignsPageNum = 1;
+          final pageResult = await _deduplicator.run(
+            'dashboard_campaigns_${campaignsPageNum}_$campaignsLimit',
+            () => _remote.fetchCampaignsPage(
+              page: campaignsPageNum,
+              limit: campaignsLimit,
+            ),
           );
+          campaigns = pageResult.campaigns;
+          campaignsTotalCount = pageResult.total;
+          campaignsPage = pageResult.page;
+          campaignsTotalPages = pageResult.totalPages;
+          budgetRollup = pageResult.budgetRollup;
           campaignsErr = null;
           _rate.mark(DashboardRateLimiterKeys.campaigns);
         } catch (e) {
@@ -212,7 +260,16 @@ final class DashboardRepositoryImpl implements DashboardRepository {
         }
       }
       if (balance != null && campaignsErr == null) {
-        balance = _mergeAdvertiserBalanceFromCampaigns(balance, campaigns);
+        if (budgetRollup != null) {
+          balance = AdvertiserBalance(
+            available: balance.available,
+            locked: budgetRollup.lockedCents / 100.0,
+            spent: budgetRollup.spentCents / 100.0,
+            currency: balance.currency,
+          );
+        } else {
+          balance = _mergeAdvertiserBalanceFromCampaigns(balance, campaigns);
+        }
       }
       if (unreadErr != null) {
         try {
@@ -232,6 +289,10 @@ final class DashboardRepositoryImpl implements DashboardRepository {
       user: user,
       balance: balance,
       campaigns: campaigns,
+      campaignsTotalCount: campaignsTotalCount,
+      campaignsPage: campaignsPage,
+      campaignsTotalPages: campaignsTotalPages,
+      advertiserBudgetRollup: budgetRollup,
       unreadCount: unread,
       userError: userErr,
       balanceError: balanceErr,
@@ -286,10 +347,23 @@ final class DashboardRepositoryImpl implements DashboardRepository {
     }
     final list = (m['campaigns'] as List<dynamic>? ?? const [])
         .cast<Map<String, dynamic>>();
+    final rollupRaw = m['budgetRollup'];
+    AdvertiserBudgetRollup? rollup;
+    if (rollupRaw is Map<String, dynamic>) {
+      rollup = AdvertiserBudgetRollup(
+        lockedCents: (rollupRaw['lockedCents'] as num?)?.toInt() ?? 0,
+        spentCents: (rollupRaw['spentCents'] as num?)?.toInt() ?? 0,
+      );
+    }
     return DashboardSnapshot(
       user: user,
       balance: balance,
       campaigns: list.map(_campaignFromJson).toList(),
+      campaignsTotalCount:
+          (m['campaignsTotalCount'] as num?)?.toInt() ?? list.length,
+      campaignsPage: (m['campaignsPage'] as num?)?.toInt() ?? 1,
+      campaignsTotalPages: (m['campaignsTotalPages'] as num?)?.toInt() ?? 1,
+      advertiserBudgetRollup: rollup,
       unreadCount: (m['unread'] as num?)?.toInt() ?? 0,
     );
   }
@@ -386,6 +460,14 @@ final class DashboardRepositoryImpl implements DashboardRepository {
             },
           )
           .toList(),
+      'campaignsTotalCount': o.campaignsTotalCount,
+      'campaignsPage': o.campaignsPage,
+      'campaignsTotalPages': o.campaignsTotalPages,
+      if (o.advertiserBudgetRollup != null)
+        'budgetRollup': {
+          'lockedCents': o.advertiserBudgetRollup!.lockedCents,
+          'spentCents': o.advertiserBudgetRollup!.spentCents,
+        },
       'unread': o.unreadCount,
     };
   }

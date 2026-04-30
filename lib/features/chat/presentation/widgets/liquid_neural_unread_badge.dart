@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../formatting/chat_unread_badge_label.dart';
 import '../theme/liquid_neural_palette.dart';
 
 class LiquidNeuralUnreadBadge extends StatelessWidget {
@@ -10,7 +11,7 @@ class LiquidNeuralUnreadBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ln = LiquidNeuralTheme.of(context);
-    final label = count > 99 ? '99+' : '$count';
+    final label = formatChatUnreadBadgeLabel(count);
     return TweenAnimationBuilder<double>(
       key: ValueKey(label),
       tween: Tween(begin: 0.65, end: 1),

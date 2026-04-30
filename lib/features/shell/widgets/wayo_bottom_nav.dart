@@ -192,6 +192,14 @@ class _WayoBottomNavState extends State<WayoBottomNav>
                                 child: Stack(
                                   fit: StackFit.expand,
                                   children: [
+                                    // Tabs must stay LTR so tap index matches [StatefulNavigationShell.goBranch].
+                                    // In RTL locales, a bare [Row] mirrors children and breaks icon ↔ branch mapping
+                                    // (and the sliding pill math, which is LTR-based).
+                                    Directionality(
+                                      textDirection: TextDirection.ltr,
+                                      child: Stack(
+                                        fit: StackFit.expand,
+                                        children: [
                                     Positioned(
                                       left: pillLeft.clamp(
                                         4.0,
@@ -292,6 +300,7 @@ class _WayoBottomNavState extends State<WayoBottomNav>
                                               widget.chatUnread > 0 && idx != 3
                                               ? widget.chatUnread
                                               : null,
+                                          badgeCap: 9,
                                           pulseScale: idx == 3
                                               ? _pulseScale.value
                                               : 1,
@@ -310,6 +319,9 @@ class _WayoBottomNavState extends State<WayoBottomNav>
                                         activeIndex: idx,
                                         tabCount: kWayoShellTabCount,
                                         isDark: isDark,
+                                      ),
+                                    ),
+                                        ],
                                       ),
                                     ),
                                   ],
@@ -387,6 +399,8 @@ class _TabEntry extends StatelessWidget {
     required this.pressed,
     required this.onHighlight,
     this.badge,
+    /// Above this value the label becomes `"${badgeCap}+"` (default `99` for notifications).
+    this.badgeCap = 99,
     this.showRedDot = false,
     this.tabKey,
   });
@@ -401,6 +415,7 @@ class _TabEntry extends StatelessWidget {
   final bool pressed;
   final void Function(bool highlighted) onHighlight;
   final int? badge;
+  final int badgeCap;
   final bool showRedDot;
 
   /// Coach-mark anchor (see [WayoBottomNav.dashboardTabKey] and siblings).
@@ -458,7 +473,7 @@ class _TabEntry extends StatelessWidget {
                           ],
                         ),
                         child: Text(
-                          badge! > 99 ? '99+' : '$badge',
+                          badge! > badgeCap ? '$badgeCap+' : '$badge',
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 9,

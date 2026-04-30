@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../formatting/chat_unread_badge_label.dart';
 import '../theme/premium_chat_tokens.dart';
 import 'signal_typing_indicator.dart';
 
@@ -397,6 +398,8 @@ class _PremiumAvatar extends StatelessWidget {
                         imageUrl: imageUrl!,
                         width: d,
                         height: d,
+                        memCacheWidth: (d * 2).toInt(),
+                        memCacheHeight: (d * 2).toInt(),
                         fit: BoxFit.cover,
                         fadeInDuration: const Duration(milliseconds: 180),
                         placeholder: (_, _) =>
@@ -488,7 +491,7 @@ class _UnreadBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final label = count > 99 ? '99+' : '$count';
+    final label = formatChatUnreadBadgeLabel(count);
     return Container(
       constraints: const BoxConstraints(minWidth: 22, minHeight: 22),
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),

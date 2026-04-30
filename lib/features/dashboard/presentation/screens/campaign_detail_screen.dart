@@ -561,11 +561,7 @@ class _SummaryCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   title,
-                  style: AppTextStyles.headlineMedium(context).copyWith(
-                    fontWeight: FontWeight.w800,
-                    height: 1.2,
-                    fontSize: 22,
-                  ),
+                  style: AppTextStyles.pageTitle(context),
                 ),
               ),
               const SizedBox(width: 10),

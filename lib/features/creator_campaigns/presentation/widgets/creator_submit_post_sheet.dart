@@ -146,7 +146,7 @@ class _SubmitPostSheetState extends ConsumerState<_SubmitPostSheet> {
             const SizedBox(height: 18),
             Text(
               t.creator.campaigns.submit_title,
-              style: AppTextStyles.headlineMedium(context),
+              style: AppTextStyles.pageTitle(context),
             ),
             const SizedBox(height: 4),
             Text(

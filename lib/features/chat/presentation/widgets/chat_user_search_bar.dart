@@ -82,16 +82,17 @@ class _ChatUserSearchBarState extends ConsumerState<ChatUserSearchBar> {
     try {
       final repo = ref.read(chatRepositoryProvider);
       final rt = ref.read(chatRealtimeServiceProvider);
+      final creds = await ref.read(chatBootstrapProvider.future);
 
       final rows = await repo.searchUsers(
-        widget.creds,
+        creds,
         q,
         socketId: () => rt.socketId,
       );
 
       if (!mounted || _lastQuery != q) return;
 
-      final me = widget.creds.chatUserId;
+      final me = creds.chatUserId;
       final hidden = widget.hiddenParticipantIds;
 
       setState(() {

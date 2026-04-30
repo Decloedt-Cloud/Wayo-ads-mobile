@@ -227,7 +227,49 @@ final class AuthRuntimeConfig {
 
   static String _trimSlash(String s) => s.trim().replaceAll(RegExp(r'/+$'), '');
 
+  /// Validates that all API URLs use HTTPS in release builds.
+  ///
+  /// Throws [StateError] if any URL uses plain HTTP (except localhost in debug).
+  /// Call this after [ensureLoaded] completes.
+  static void validateProductionUrls() {
+    if (!kReleaseMode) return;
+
+    final urls = <String, String>{
+      'AUTH_WAYO_BASE_URL': instance._authWayoBaseUrl,
+      'AUTH_BASE_URL': instance._authBaseUrl,
+      'API_BASE_URL': instance._apiBaseUrl,
+      'WAYO_ADS_API_BASE_URL': instance._wayoAdsApiBaseUrl,
+      'CHAT_SERVICE_API_BASE_URL': instance._chatServiceApiBaseUrl,
+    };
+
+    final insecure = <String>[];
+    for (final entry in urls.entries) {
+      final url = entry.value.trim();
+      if (url.isEmpty) continue;
+      final uri = Uri.tryParse(url);
+      if (uri != null && uri.scheme == 'http') {
+        insecure.add('${entry.key}=$url');
+      }
+    }
+
+    if (insecure.isNotEmpty) {
+      throw StateError(
+        'SECURITY: Release builds require HTTPS URLs. '
+        'The following use insecure HTTP:\n  ${insecure.join('\n  ')}\n'
+        'Override via --dart-define with https:// URLs.',
+      );
+    }
+  }
+
   /// Call after [WidgetsFlutterBinding.ensureInitialized].
+  ///
+  /// In **release** builds, all config comes exclusively from compile-time
+  /// `--dart-define` / `--dart-define-from-file`. The `dart_defines.json`
+  /// asset overlay is **disabled** to prevent shipping secrets inside the
+  /// APK/IPA (they would be trivially extractable).
+  ///
+  /// In **debug** builds, a local `dart_defines.json` (not bundled in release)
+  /// can still override values for developer convenience.
   static Future<void> ensureLoaded() async {
     final i = instance;
     i._authWayoBaseUrl = c.authWayoBaseUrl.trim();
@@ -236,6 +278,13 @@ final class AuthRuntimeConfig {
     i._googleServerClientId = c.authGoogleServerClientId.trim();
     i._wayoAdsAppKey = c.wayoAdsAppKey.trim();
     i._authAppName = c.authAppName.trim();
+
+    // SECURITY: Only load dart_defines.json overlay in debug builds.
+    // In release, secrets MUST come from --dart-define at compile time.
+    if (!kDebugMode) {
+      validateProductionUrls();
+      return;
+    }
 
     try {
       final raw = await rootBundle.loadString('dart_defines.json');
@@ -263,7 +312,6 @@ final class AuthRuntimeConfig {
       overlay('CERT_PIN_BACKUP', (v) => i._certPinBackup = v);
       overlay('WAYO_ADS_API_BASE_URL', (v) => i._wayoAdsApiBaseUrl = v);
       overlay('CHAT_SERVICE_API_BASE_URL', (v) => i._chatServiceApiBaseUrl = v);
-      // Legacy key (same intent as WAYO_ADS_API_BASE_URL)
       if (i._wayoAdsApiBaseUrl.isEmpty) {
         overlay('WAYO_ADS_API_BASE', (v) => i._wayoAdsApiBaseUrl = v);
       }
@@ -271,13 +319,9 @@ final class AuthRuntimeConfig {
       overlay('REVERB_KEY', (v) => i._reverbKey = v);
       overlay('REVERB_PORT', (v) => i._reverbPort = v);
       overlay('REVERB_SCHEME', (v) => i._reverbScheme = v);
-    } catch (e, st) {
-      if (kDebugMode) {
-        debugPrint(
-          'AuthRuntimeConfig: dart_defines.json asset missing or invalid ($e)',
-        );
-        debugPrintStack(stackTrace: st);
-      }
+    } catch (_) {
+      // dart_defines.json is optional in debug — compile-time defines are used.
+      debugPrint('[DEBUG] Using compile-time defines (no dart_defines.json).');
     }
   }
 }

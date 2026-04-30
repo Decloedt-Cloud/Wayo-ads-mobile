@@ -74,7 +74,7 @@ class _ApplySheetState extends ConsumerState<_ApplySheet> {
         message: msg.isEmpty ? null : msg,
       );
       ref.invalidate(creatorApplicationsProvider);
-      ref.invalidate(creatorBrowseCampaignsProvider);
+      ref.invalidate(creatorBrowseCampaignsPagedProvider);
       ref.invalidate(creatorCampaignDetailProvider(widget.campaignId));
       HapticFeedback.mediumImpact();
       if (!mounted) return;
@@ -125,7 +125,7 @@ class _ApplySheetState extends ConsumerState<_ApplySheet> {
           const SizedBox(height: 18),
           Text(
             t.creator.campaigns.apply_title,
-            style: AppTextStyles.headlineMedium(context),
+            style: AppTextStyles.pageTitle(context),
           ),
           const SizedBox(height: 4),
           Text(

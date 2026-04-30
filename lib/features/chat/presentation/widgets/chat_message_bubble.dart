@@ -119,6 +119,9 @@ class ChatMessageBubble extends StatelessWidget {
                   child: CachedNetworkImage(
                     imageUrl: mediaUrl,
                     fit: BoxFit.cover,
+                    // OPTIMIZATION: Limit decoded image size in memory cache
+                    memCacheWidth: 520,
+                    memCacheHeight: 440,
                     placeholder: (context, url) => SizedBox(
                       height: 120,
                       child: Center(

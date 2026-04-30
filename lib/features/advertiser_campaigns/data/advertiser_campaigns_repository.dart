@@ -5,6 +5,7 @@ import '../../../core/errors/auth_exceptions.dart';
 import '../../../core/network/wayo_ads_dio.dart';
 import 'advertiser_campaigns_remote_datasource.dart';
 import '../domain/advertiser_campaign.dart';
+import '../domain/advertiser_campaigns_page_result.dart';
 import '../domain/campaign_application.dart';
 
 final advertiserCampaignsRemoteProvider = Provider<AdvertiserCampaignsRemote>((
@@ -27,6 +28,52 @@ final class AdvertiserCampaignsRepository {
 
   Future<List<AdvertiserCampaign>> loadCampaigns() =>
       _remote.fetchAdvertiserCampaigns();
+
+  Future<AdvertiserCampaignsPageResult> loadCampaignsPage({
+    required String status,
+    required int page,
+    int limit = 10,
+    String? search,
+  }) =>
+      _remote.fetchAdvertiserCampaignsPage(
+        page: page,
+        limit: limit,
+        status: status,
+        search: search,
+      );
+
+  /// Tab totals (4 light requests with `limit=1`).
+  Future<({int active, int draft, int paused, int completed})>
+  loadCampaignStatusCounts() async {
+    final r = await Future.wait([
+      _remote.fetchAdvertiserCampaignsPage(
+        page: 1,
+        limit: 1,
+        status: 'ACTIVE',
+      ),
+      _remote.fetchAdvertiserCampaignsPage(
+        page: 1,
+        limit: 1,
+        status: 'DRAFT',
+      ),
+      _remote.fetchAdvertiserCampaignsPage(
+        page: 1,
+        limit: 1,
+        status: 'PAUSED',
+      ),
+      _remote.fetchAdvertiserCampaignsPage(
+        page: 1,
+        limit: 1,
+        status: 'COMPLETED',
+      ),
+    ]);
+    return (
+      active: r[0].total,
+      draft: r[1].total,
+      paused: r[2].total,
+      completed: r[3].total,
+    );
+  }
 
   Future<Map<String, dynamic>> loadCampaignDetail(String id) =>
       _remote.fetchCampaignDetailJson(id);

@@ -5,6 +5,7 @@ import 'app_colors.dart';
 
 @immutable
 abstract final class AppTextStyles {
+  /// Marketing / auth hero only (e.g. wordmark). Not for in-app screen titles.
   static TextStyle displayLarge(BuildContext context) => GoogleFonts.inter(
     fontSize: 42,
     fontWeight: FontWeight.w800,
@@ -13,6 +14,28 @@ abstract final class AppTextStyles {
     color: AppColors.textPrimaryOf(context),
   );
 
+  /// **H1 — Single primary title per screen or tab** (Inter, semantic text color).
+  ///
+  /// Use once at the top of a full-screen route or shell tab. Section headings
+  /// and card titles use [headlineMedium] or smaller tokens instead.
+  static TextStyle pageTitle(BuildContext context) => GoogleFonts.inter(
+    fontSize: 32,
+    fontWeight: FontWeight.w800,
+    height: 1.1,
+    letterSpacing: -0.85,
+    color: AppColors.textPrimaryOf(context),
+  );
+
+  /// Same metrics as [pageTitle], with an explicit color (for [ThemeData.appBarTheme]).
+  static TextStyle pageTitleForTheme(Color onSurface) => GoogleFonts.inter(
+    fontSize: 32,
+    fontWeight: FontWeight.w800,
+    height: 1.1,
+    letterSpacing: -0.85,
+    color: onSurface,
+  );
+
+  /// **H2 / sections** — in-page blocks (e.g. “Campaigns”, “History”).
   static TextStyle headlineMedium(BuildContext context) => GoogleFonts.inter(
     fontSize: 24,
     fontWeight: FontWeight.w700,

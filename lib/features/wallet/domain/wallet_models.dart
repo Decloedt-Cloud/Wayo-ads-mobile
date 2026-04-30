@@ -77,29 +77,21 @@ final class WalletTransactionRow extends Equatable {
 }
 
 /// [GET /api/wallet] — balance, history, simulation flag.
-///
-/// [savedCardHint] — optional display string from the server (e.g. `Visa ···· 4242`)
-/// if Wayo-ads returns `savedCard`, `defaultPaymentMethod`, or similar.
 final class AdvertiserWalletPageData extends Equatable {
   const AdvertiserWalletPageData({
     required this.balance,
     required this.transactions,
     required this.canSimulate,
-    this.savedCardHint,
   });
 
   final AdvertiserBalance balance;
   final List<WalletTransactionRow> transactions;
   final bool canSimulate;
 
-  /// Server-provided label for a saved default card, if any.
-  final String? savedCardHint;
-
   @override
   List<Object?> get props => [
     balance,
     transactions,
     canSimulate,
-    savedCardHint,
   ];
 }

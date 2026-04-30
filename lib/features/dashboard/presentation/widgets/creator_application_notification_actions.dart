@@ -82,7 +82,8 @@ class _ApproveRejectRowState extends ConsumerState<_ApproveRejectRow> {
   bool _busyReject = false;
 
   Future<void> _afterSuccess(Translations t, {required bool approved}) async {
-    ref.invalidate(advertiserCampaignsListProvider);
+    ref.invalidate(advertiserCampaignsPagedProvider);
+    ref.invalidate(advertiserCampaignsCountsProvider);
     ref.invalidate(advertiserCampaignDetailProvider(widget.campaignId));
     ref.invalidate(dashboardStreamProvider);
     ref.invalidate(notificationsListProvider);

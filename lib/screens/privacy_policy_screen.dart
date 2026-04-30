@@ -46,7 +46,7 @@ class PrivacyPolicyScreen extends ConsumerWidget {
         ),
         title: Text(
           pp.title,
-          style: AppTextStyles.headlineMedium(context).copyWith(fontSize: 18),
+          style: AppTextStyles.pageTitle(context),
         ),
         actions: const [
           ThemeToggleButton(),

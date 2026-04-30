@@ -13,6 +13,7 @@ import '../../domain/entities/campaign_status.dart';
 import '../../domain/entities/campaign_summary.dart';
 import '../../domain/entities/notification_item.dart';
 import '../../domain/entities/user_profile.dart';
+import '../../domain/advertiser_campaigns_page_result.dart';
 
 /// Remote calls for dashboard (Auth_Wayo + Wayo-ads).
 ///
@@ -22,7 +23,10 @@ abstract interface class DashboardRemote {
 
   Future<AdvertiserBalance> fetchBalance();
 
-  Future<List<CampaignSummary>> fetchCampaigns({int page = 1, int limit = 10});
+  Future<AdvertiserCampaignsPageResult> fetchCampaignsPage({
+    int page = 1,
+    int limit = 10,
+  });
 
   Future<List<NotificationItem>> fetchNotifications({bool unreadOnly = false});
 
@@ -109,7 +113,7 @@ final class DashboardRemoteDatasource implements DashboardRemote {
   }
 
   @override
-  Future<List<CampaignSummary>> fetchCampaigns({
+  Future<AdvertiserCampaignsPageResult> fetchCampaignsPage({
     int page = 1,
     int limit = 10,
   }) async {
@@ -119,7 +123,12 @@ final class DashboardRemoteDatasource implements DashboardRemote {
     );
     final data = res.data;
     if (data == null) {
-      return const [];
+      return AdvertiserCampaignsPageResult(
+        campaigns: const [],
+        total: 0,
+        page: page,
+        totalPages: 1,
+      );
     }
     dynamic list = data['campaigns'];
     if (list is! List<dynamic>) {
@@ -127,7 +136,7 @@ final class DashboardRemoteDatasource implements DashboardRemote {
           ? data['data'] as List<dynamic>
           : const [];
     }
-    return list.map((e) {
+    final campaigns = list.map((e) {
       final m = e as Map<String, dynamic>;
       final id = '${m['id'] ?? ''}';
       final title = m['title'] as String? ?? m['name'] as String? ?? '';
@@ -156,6 +165,37 @@ final class DashboardRemoteDatasource implements DashboardRemote {
         ),
       );
     }).toList();
+
+    final total = _parseInt(data['total'], campaigns.length);
+    final pageNum = _parseInt(data['page'], page);
+    var totalPages = _parseInt(data['totalPages'], 0);
+    if (totalPages < 1) {
+      totalPages = total > 0 ? (total + limit - 1) ~/ limit : 1;
+    }
+
+    AdvertiserBudgetRollup? rollup;
+    final rawRollup = data['budgetRollup'];
+    if (rawRollup is Map) {
+      final rm = Map<String, dynamic>.from(rawRollup);
+      rollup = AdvertiserBudgetRollup(
+        lockedCents: _parseCents(rm['lockedCents']),
+        spentCents: _parseCents(rm['spentCents']),
+      );
+    }
+
+    return AdvertiserCampaignsPageResult(
+      campaigns: campaigns,
+      total: total,
+      page: pageNum,
+      totalPages: totalPages,
+      budgetRollup: rollup,
+    );
+  }
+
+  static int _parseInt(dynamic v, int fallback) {
+    if (v is int) return v;
+    if (v is num) return v.toInt();
+    return int.tryParse('$v') ?? fallback;
   }
 
   @override

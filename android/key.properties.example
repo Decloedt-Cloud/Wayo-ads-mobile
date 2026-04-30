@@ -1,0 +1,11 @@
+# Release signing configuration for Android builds.
+# Copy this file to key.properties and fill in your values.
+# NEVER commit key.properties to version control.
+#
+# To generate a keystore:
+#   keytool -genkey -v -keystore wayo-release.jks -keyalg RSA -keysize 2048 -validity 10000 -alias wayo
+#
+storePassword=YOUR_KEYSTORE_PASSWORD
+keyPassword=YOUR_KEY_PASSWORD
+keyAlias=wayo
+storeFile=../wayo-release.jks

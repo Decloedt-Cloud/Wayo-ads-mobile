@@ -102,14 +102,41 @@ final chatRealtimeBindingProvider = FutureProvider<void>((ref) async {
 
 final chatMessagesFamilyProvider = FutureProvider.autoDispose
     .family<List<ChatMessage>, int>((ref, conversationId) async {
-      final creds = await ref.watch(chatBootstrapProvider.future);
       final rt = ref.read(chatRealtimeServiceProvider);
       final repo = ref.read(chatRepositoryProvider);
-      return repo.fetchMessages(
-        creds,
-        conversationId,
-        socketId: () => rt.socketId,
-      );
+
+      Object? lastError;
+      for (var attempt = 0; attempt < 3; attempt++) {
+        final creds = await ref.read(chatBootstrapProvider.future);
+        try {
+          return await repo.fetchMessages(
+            creds,
+            conversationId,
+            socketId: () => rt.socketId,
+          );
+        } on DioException catch (e) {
+          lastError = e;
+          final is401 = e.response?.statusCode == 401;
+          if (is401) {
+            ref.invalidate(chatBootstrapProvider);
+            if (kDebugMode) {
+              debugPrint(
+                '[Chat] 401 on messages (attempt ${attempt + 1}); '
+                'invalidated bootstrap, will retry with fresh token.',
+              );
+            }
+          }
+          if (attempt < 2) {
+            await Future<void>.delayed(Duration(milliseconds: 400 * (attempt + 1)));
+          }
+        } catch (e) {
+          lastError = e;
+          if (attempt < 2) {
+            await Future<void>.delayed(Duration(milliseconds: 320 * (attempt + 1)));
+          }
+        }
+      }
+      throw lastError!;
     });
 
 /// Call on logout so chat tokens and sockets are dropped.

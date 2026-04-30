@@ -56,14 +56,12 @@ Dio wayoAdsDio(WayoAdsDioRef ref) {
     client.interceptors.add(WayoLoggingInterceptor());
   }
 
-  final authHost = Uri.tryParse(runtime.resolvedDioBaseUrl)?.host;
-  final adsHost = Uri.tryParse(base)?.host;
-  if (authHost != null && adsHost != null && authHost == adsHost) {
-    CertificatePinning.attach(
-      client,
-      pinnedSha256Base64: runtime.mergedPinnedSha256Base64,
-    );
-  }
+  // SECURITY: Always attach certificate pinning in release builds.
+  // Pins are shared across all API hosts (Auth + Wayo-ads).
+  CertificatePinning.attach(
+    client,
+    pinnedSha256Base64: runtime.mergedPinnedSha256Base64,
+  );
 
   if (runtime.effectiveSentryEnabled) {
     client.addSentry(captureFailedRequests: true);

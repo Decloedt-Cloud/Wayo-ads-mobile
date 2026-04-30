@@ -176,80 +176,91 @@ class _CinematicComposerBarState extends State<CinematicComposerBar> {
     final ct = CinematicChatTheme.of(context);
     final bottom = MediaQuery.paddingOf(context).bottom;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    // BackdropFilter can sample an empty/black layer while the IME resizes the
+    // view; use an opaque bar only while the keyboard is open.
+    final keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
+
+    final bar = Container(
+      decoration: BoxDecoration(
+        color: ct.bg.withValues(
+          alpha: keyboardOpen ? 1 : (isDark ? 0.72 : 0.78),
+        ),
+        border: Border(
+          top: BorderSide(
+            color: ct.borderSoft.withValues(alpha: 0.4),
+            width: 0.6,
+          ),
+        ),
+      ),
+      padding: EdgeInsets.fromLTRB(12, 10, 12, 10 + bottom),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          AnimatedSize(
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeOutCubic,
+            alignment: Alignment.bottomCenter,
+            child: widget.editing
+                ? _EditingBanner(
+                    title: widget.editingTitle ?? 'Editing message',
+                    preview: widget.editingPreview ?? '',
+                    cancelLabel: widget.editingCancelLabel ?? 'Cancel',
+                    onCancel: widget.onCancelEdit,
+                  )
+                : const SizedBox(width: double.infinity),
+          ),
+          if (widget.errorText != null && widget.errorText!.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8, left: 6),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.error_outline_rounded,
+                    size: 14,
+                    color: Colors.redAccent.shade200,
+                  ),
+                  const SizedBox(width: 6),
+                  Flexible(
+                    child: Text(
+                      widget.errorText!,
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        color: Colors.redAccent.shade100,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          _PremiumInputField(
+            controller: widget.controller,
+            focusNode: _focus,
+            enabled: widget.enabled,
+            focused: _focused,
+            hint: widget.hint,
+            hasText: _hasText,
+            editing: widget.editing,
+            onAttach: widget.onAttach == null
+                ? null
+                : () => _openAttachSheet(context),
+            onSubmit: widget.enabled && _hasText ? _submit : null,
+          ),
+        ],
+      ),
+    );
+
+    if (keyboardOpen) {
+      return Material(color: Colors.transparent, child: bar);
+    }
 
     return Material(
       color: Colors.transparent,
       child: ClipRect(
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-          child: Container(
-            decoration: BoxDecoration(
-              color: ct.bg.withValues(alpha: isDark ? 0.72 : 0.78),
-              border: Border(
-                top: BorderSide(
-                  color: ct.borderSoft.withValues(alpha: 0.4),
-                  width: 0.6,
-                ),
-              ),
-            ),
-            padding: EdgeInsets.fromLTRB(12, 10, 12, 10 + bottom),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                AnimatedSize(
-                  duration: const Duration(milliseconds: 220),
-                  curve: Curves.easeOutCubic,
-                  alignment: Alignment.bottomCenter,
-                  child: widget.editing
-                      ? _EditingBanner(
-                          title: widget.editingTitle ?? 'Editing message',
-                          preview: widget.editingPreview ?? '',
-                          cancelLabel: widget.editingCancelLabel ?? 'Cancel',
-                          onCancel: widget.onCancelEdit,
-                        )
-                      : const SizedBox(width: double.infinity),
-                ),
-                if (widget.errorText != null && widget.errorText!.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8, left: 6),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.error_outline_rounded,
-                          size: 14,
-                          color: Colors.redAccent.shade200,
-                        ),
-                        const SizedBox(width: 6),
-                        Flexible(
-                          child: Text(
-                            widget.errorText!,
-                            style: GoogleFonts.inter(
-                              fontSize: 12,
-                              color: Colors.redAccent.shade100,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                _PremiumInputField(
-                  controller: widget.controller,
-                  focusNode: _focus,
-                  enabled: widget.enabled,
-                  focused: _focused,
-                  hint: widget.hint,
-                  hasText: _hasText,
-                  editing: widget.editing,
-                  onAttach: widget.onAttach == null
-                      ? null
-                      : () => _openAttachSheet(context),
-                  onSubmit: widget.enabled && _hasText ? _submit : null,
-                ),
-              ],
-            ),
-          ),
+          child: bar,
         ),
       ),
     );
@@ -291,9 +302,6 @@ class _PremiumInputField extends StatelessWidget {
   Widget build(BuildContext context) {
     final ct = CinematicChatTheme.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final borderColor = focused
-        ? ct.amber.withValues(alpha: 0.9)
-        : ct.borderSoft.withValues(alpha: isDark ? 0.7 : 0.55);
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 220),
@@ -304,7 +312,6 @@ class _PremiumInputField extends StatelessWidget {
             ? ct.surface.withValues(alpha: 0.9)
             : Colors.white.withValues(alpha: 0.88),
         borderRadius: BorderRadius.circular(26),
-        border: Border.all(color: borderColor, width: focused ? 1.4 : 0.8),
         boxShadow: [
           if (focused)
             BoxShadow(

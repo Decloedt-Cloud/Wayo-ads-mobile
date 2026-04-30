@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:skeletonizer/skeletonizer.dart';
@@ -57,11 +58,8 @@ class _AdvertiserCampaignsScreenState
   final _searchCtrl = TextEditingController();
   Timer? _debounce;
 
-  @override
-  void initState() {
-    super.initState();
-    _searchCtrl.addListener(() => setState(() {}));
-  }
+  // OPTIMIZATION: Removed _searchCtrl.addListener(() => setState(() {}))
+  // _SearchField now uses ValueListenableBuilder internally for clear button.
 
   @override
   void dispose() {
@@ -73,6 +71,7 @@ class _AdvertiserCampaignsScreenState
   void _scheduleSearchDebounce(String raw) {
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 280), () {
+      ref.read(advertiserCampaignsPageIndexProvider.notifier).state = 1;
       ref.read(advertiserCampaignsSearchQueryProvider.notifier).state = raw;
     });
   }
@@ -82,14 +81,21 @@ class _AdvertiserCampaignsScreenState
     final t = context.t;
     final locale = ref.watch(localeProvider);
     final moneyLocale = _moneyLocale(locale);
-    final async = ref.watch(advertiserCampaignsListProvider);
-    final filtered = ref.watch(advertiserCampaignsFilteredProvider);
-    final counts = ref.watch(advertiserCampaignsCountsProvider);
     final tab = ref.watch(advertiserCampaignsTabProvider);
+    final pageIdx = ref.watch(advertiserCampaignsPageIndexProvider);
     final searchQ = ref.watch(advertiserCampaignsSearchQueryProvider);
+    final key = (tab: tab, page: pageIdx, search: searchQ);
+    final pageAsync = ref.watch(advertiserCampaignsPagedProvider(key));
+    final countsAsync = ref.watch(advertiserCampaignsCountsProvider);
     final reduceMotion = MediaQuery.disableAnimationsOf(context);
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    Future<void> refresh() async {
+      ref.invalidate(advertiserCampaignsPagedProvider);
+      ref.invalidate(advertiserCampaignsCountsProvider);
+      await ref.read(advertiserCampaignsPagedProvider(key).future);
+    }
+
     return Scaffold(
       backgroundColor: isDark
           ? Colors.transparent
@@ -97,37 +103,70 @@ class _AdvertiserCampaignsScreenState
       body: DecoratedBox(
         decoration: _campaignsPageBackground(context),
         child: SafeArea(
-          child: async.when(
-            data: (_) => _Body(
-              filtered: filtered,
-              counts: counts,
-              tab: tab,
-              searchCtrl: _searchCtrl,
-              searchQ: searchQ,
-              moneyLocale: moneyLocale,
-              reduceMotion: reduceMotion,
-              onTab: (v) =>
-                  ref.read(advertiserCampaignsTabProvider.notifier).state = v,
-              onSearchChanged: _scheduleSearchDebounce,
-              onClearSearch: () {
-                _debounce?.cancel();
-                _searchCtrl.clear();
-                ref
-                        .read(advertiserCampaignsSearchQueryProvider.notifier)
-                        .state =
-                    '';
-                setState(() {});
-              },
-              onRefresh: () async {
-                ref.invalidate(advertiserCampaignsListProvider);
-                await ref.read(advertiserCampaignsListProvider.future);
-              },
-            ),
+          child: pageAsync.when(
+            data: (pageResult) {
+              final counts = countsAsync.valueOrNull ??
+                  (
+                    active: 0,
+                    draft: 0,
+                    paused: 0,
+                    completed: 0,
+                  );
+              return _Body(
+                campaigns: pageResult.campaigns,
+                totalPages: pageResult.totalPages,
+                currentPage: pageIdx,
+                counts: counts,
+                tab: tab,
+                searchCtrl: _searchCtrl,
+                searchQ: searchQ,
+                moneyLocale: moneyLocale,
+                reduceMotion: reduceMotion,
+                onTab: (v) {
+                  ref.read(advertiserCampaignsTabProvider.notifier).state = v;
+                  ref.read(advertiserCampaignsPageIndexProvider.notifier).state =
+                      1;
+                },
+                onSearchChanged: _scheduleSearchDebounce,
+                onClearSearch: () {
+                  _debounce?.cancel();
+                  _searchCtrl.clear();
+                  ref.read(advertiserCampaignsPageIndexProvider.notifier).state =
+                      1;
+                  ref.read(advertiserCampaignsSearchQueryProvider.notifier).state =
+                      '';
+                },
+                onRefresh: refresh,
+                onPagePrevious: pageIdx > 1
+                    ? () {
+                        HapticFeedback.selectionClick();
+                        ref
+                            .read(
+                              advertiserCampaignsPageIndexProvider.notifier,
+                            )
+                            .state = pageIdx - 1;
+                      }
+                    : null,
+                onPageNext: pageIdx < pageResult.totalPages
+                    ? () {
+                        HapticFeedback.selectionClick();
+                        ref
+                            .read(
+                              advertiserCampaignsPageIndexProvider.notifier,
+                            )
+                            .state = pageIdx + 1;
+                      }
+                    : null,
+              );
+            },
             loading: () => _LoadingShell(t: t),
             error: (e, _) => _ErrorShell(
               t: t,
               message: _errorMessage(context, e),
-              onRetry: () => ref.invalidate(advertiserCampaignsListProvider),
+              onRetry: () {
+                ref.invalidate(advertiserCampaignsPagedProvider);
+                ref.invalidate(advertiserCampaignsCountsProvider);
+              },
             ),
           ),
         ),
@@ -216,7 +255,9 @@ class _ErrorShell extends StatelessWidget {
 
 class _Body extends StatelessWidget {
   const _Body({
-    required this.filtered,
+    required this.campaigns,
+    required this.totalPages,
+    required this.currentPage,
     required this.counts,
     required this.tab,
     required this.searchCtrl,
@@ -227,9 +268,13 @@ class _Body extends StatelessWidget {
     required this.onSearchChanged,
     required this.onClearSearch,
     required this.onRefresh,
+    required this.onPagePrevious,
+    required this.onPageNext,
   });
 
-  final List<AdvertiserCampaign> filtered;
+  final List<AdvertiserCampaign> campaigns;
+  final int totalPages;
+  final int currentPage;
   final ({int active, int draft, int paused, int completed}) counts;
   final AdvertiserCampaignsTab tab;
   final TextEditingController searchCtrl;
@@ -240,6 +285,8 @@ class _Body extends StatelessWidget {
   final void Function(String) onSearchChanged;
   final VoidCallback onClearSearch;
   final Future<void> Function() onRefresh;
+  final VoidCallback? onPagePrevious;
+  final VoidCallback? onPageNext;
 
   @override
   Widget build(BuildContext context) {
@@ -284,11 +331,10 @@ class _Body extends StatelessWidget {
                 controller: searchCtrl,
                 onChanged: onSearchChanged,
                 onClear: onClearSearch,
-                hasText: searchCtrl.text.isNotEmpty || searchQ.isNotEmpty,
               ),
             ),
           ),
-          if (filtered.isEmpty)
+          if (campaigns.isEmpty)
             SliverFillRemaining(
               hasScrollBody: false,
               child: _EmptyState(hasSearch: searchQ.trim().isNotEmpty),
@@ -298,26 +344,99 @@ class _Body extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 120),
               sliver: SliverList(
                 delegate: SliverChildBuilderDelegate((context, i) {
-                  final c = filtered[i];
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: AdvertiserCampaignCard(
-                      campaign: c,
-                      moneyLocale: moneyLocale,
-                      onTap: () => context.push(
-                        '/campaigns/${c.id}',
-                        extra: <String, String?>{
-                          'coverUrl': c.coverUrl,
-                          'brandLogoUrl': c.brandLogoUrl,
-                          'title': c.name,
-                        },
+                  if (i < campaigns.length) {
+                    final c = campaigns[i];
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: AdvertiserCampaignCard(
+                        campaign: c,
+                        moneyLocale: moneyLocale,
+                        onTap: () => context.push(
+                          '/campaigns/${c.id}',
+                          extra: <String, String?>{
+                            'coverUrl': c.coverUrl,
+                            'brandLogoUrl': c.brandLogoUrl,
+                            'title': c.name,
+                          },
+                        ),
                       ),
+                    );
+                  }
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 4, bottom: 8),
+                    child: _AdvertiserCampaignPaginationBar(
+                      page: currentPage,
+                      totalPages: totalPages,
+                      previousLabel: t.dashboard.campaigns.pagination_previous,
+                      nextLabel: t.dashboard.campaigns.pagination_next,
+                      pageLabel: (cur, tot) =>
+                          t.dashboard.campaigns.pagination_page(
+                            current: cur,
+                            total: tot,
+                          ),
+                      onPrevious: onPagePrevious,
+                      onNext: onPageNext,
                     ),
                   );
-                }, childCount: filtered.length),
+                }, childCount: campaigns.length + (totalPages > 1 ? 1 : 0)),
               ),
             ),
         ],
+      ),
+    );
+  }
+}
+
+class _AdvertiserCampaignPaginationBar extends StatelessWidget {
+  const _AdvertiserCampaignPaginationBar({
+    required this.page,
+    required this.totalPages,
+    required this.previousLabel,
+    required this.nextLabel,
+    required this.pageLabel,
+    required this.onPrevious,
+    required this.onNext,
+  });
+
+  final int page;
+  final int totalPages;
+  final String previousLabel;
+  final String nextLabel;
+  final String Function(int current, int total) pageLabel;
+  final VoidCallback? onPrevious;
+  final VoidCallback? onNext;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 4, bottom: 8),
+      child: Material(
+        color: AppColors.surfaceElevatedOf(context),
+        borderRadius: BorderRadius.circular(14),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          child: Row(
+            children: [
+              TextButton(
+                onPressed: onPrevious,
+                child: Text(previousLabel),
+              ),
+              Expanded(
+                child: Text(
+                  pageLabel(page, totalPages),
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                    color: AppColors.textSecondaryOf(context),
+                  ),
+                ),
+              ),
+              TextButton(
+                onPressed: onNext,
+                child: Text(nextLabel),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -337,7 +456,7 @@ class _HeaderBlock extends StatelessWidget {
         children: [
           Text(
             t.advertiser_campaigns.title,
-            style: AppTextStyles.displayLarge(context).copyWith(fontSize: 36),
+            style: AppTextStyles.pageTitle(context),
           ),
           const SizedBox(height: 6),
           Text(
@@ -572,62 +691,69 @@ class _Chip extends StatelessWidget {
   }
 }
 
+/// Search field that uses [ValueListenableBuilder] internally to update the
+/// clear button visibility without requiring parent rebuilds.
 class _SearchField extends StatelessWidget {
   const _SearchField({
     required this.controller,
     required this.onChanged,
     required this.onClear,
-    required this.hasText,
   });
 
   final TextEditingController controller;
   final void Function(String) onChanged;
   final VoidCallback onClear;
-  final bool hasText;
 
   @override
   Widget build(BuildContext context) {
     final t = context.t;
-    return TextField(
-      controller: controller,
-      onChanged: onChanged,
-      style: TextStyle(color: AppColors.textPrimaryOf(context)),
-      cursorColor: AppColors.primary,
-      decoration: InputDecoration(
-        hintText: t.advertiser_campaigns.search_placeholder,
-        hintStyle: TextStyle(color: AppColors.textMutedOf(context)),
-        prefixIcon: Icon(
-          Icons.search_rounded,
-          color: AppColors.textMutedOf(context),
-        ),
-        suffixIcon: hasText
-            ? IconButton(
-                tooltip: MaterialLocalizations.of(context).deleteButtonTooltip,
-                onPressed: onClear,
-                icon: Icon(
-                  Icons.close_rounded,
-                  color: AppColors.textMutedOf(context),
-                ),
-              )
-            : null,
-        filled: true,
-        fillColor: Theme.of(context).brightness == Brightness.dark
-            ? AppColors.surfaceElevatedOf(context).withValues(alpha: 0.35)
-            : AppColors.surfaceElevatedOf(context),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: AppColors.borderOf(context)),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: AppColors.borderOf(context)),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: AppColors.primary, width: 1.4),
-        ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 14),
-      ),
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final fillColor = isDark
+        ? AppColors.surfaceElevatedOf(context).withValues(alpha: 0.35)
+        : AppColors.surfaceElevatedOf(context);
+    final borderColor = AppColors.borderOf(context);
+    final hintColor = AppColors.textMutedOf(context);
+
+    return ValueListenableBuilder<TextEditingValue>(
+      valueListenable: controller,
+      builder: (context, value, _) {
+        final hasText = value.text.isNotEmpty;
+        return TextField(
+          controller: controller,
+          onChanged: onChanged,
+          style: TextStyle(color: AppColors.textPrimaryOf(context)),
+          cursorColor: AppColors.primary,
+          decoration: InputDecoration(
+            hintText: t.advertiser_campaigns.search_placeholder,
+            hintStyle: TextStyle(color: hintColor),
+            prefixIcon: Icon(Icons.search_rounded, color: hintColor),
+            suffixIcon: hasText
+                ? IconButton(
+                    tooltip:
+                        MaterialLocalizations.of(context).deleteButtonTooltip,
+                    onPressed: onClear,
+                    icon: Icon(Icons.close_rounded, color: hintColor),
+                  )
+                : null,
+            filled: true,
+            fillColor: fillColor,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(color: borderColor),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(color: borderColor),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: const BorderSide(color: AppColors.primary, width: 1.4),
+            ),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 4, vertical: 14),
+          ),
+        );
+      },
     );
   }
 }

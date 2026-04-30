@@ -1,18 +1,55 @@
 const String kRedacted = '***REDACTED***';
 
+/// Keys that should be redacted from logs, Sentry reports, and debug output.
+///
+/// Add any field name that could contain sensitive data. Matching is
+/// case-insensitive.
 const Set<String> _sensitiveKeysLower = {
+  // Auth headers
   'authorization',
   'cookie',
   'set-cookie',
-  'password',
-  'password_confirmation',
+  'x-app-key',
+  'x-api-key',
+
+  // Tokens
+  'token',
   'access_token',
   'refresh_token',
   'reset_token',
-  'otp',
-  'token',
+  'id_token',
+  'bearer',
+
+  // Passwords and secrets
+  'password',
+  'password_confirmation',
+  'old_password',
+  'new_password',
   'secret',
-  'x-app-key',
+  'client_secret',
+  'api_key',
+  'apikey',
+  'app_key',
+  'private_key',
+
+  // OTP / verification
+  'otp',
+  'code',
+  'verification_code',
+  'pin',
+
+  // Personal / financial data
+  'email',
+  'phone',
+  'ssn',
+  'card',
+  'card_number',
+  'cvv',
+  'cvc',
+  'expiry',
+  'account_number',
+  'routing_number',
+  'iban',
 };
 
 bool _isSensitiveKey(String key) =>

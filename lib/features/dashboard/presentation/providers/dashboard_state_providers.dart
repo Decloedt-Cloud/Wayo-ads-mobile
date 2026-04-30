@@ -12,6 +12,7 @@ import '../../../../core/storage/secure_storage.dart';
 import '../../data/datasources/dashboard_remote_datasource.dart';
 import '../../data/repositories/dashboard_repository.dart';
 import '../../data/repositories/notifications_repository.dart';
+import '../../domain/advertiser_campaigns_page_result.dart';
 import '../../domain/entities/notification_item.dart';
 import '../../../advertiser_campaigns/presentation/providers/advertiser_campaigns_providers.dart';
 import '../../../creator_campaigns/presentation/providers/creator_campaigns_providers.dart';
@@ -60,6 +61,17 @@ final notificationsRepositoryProvider = Provider<NotificationsRepository>((
     rateLimiter: ref.watch(notificationsRateLimiterProvider),
   );
 });
+
+/// Advertiser dashboard campaign list page (1-based). [dashboardStreamProvider] always loads page 1; this drives extra pages.
+final advertiserDashboardCampaignPageProvider = StateProvider<int>((ref) => 1);
+
+/// Single page of advertiser campaigns for the dashboard (10 per page).
+final advertiserDashboardCampaignsPageFetchProvider = FutureProvider.autoDispose
+    .family<AdvertiserCampaignsPageResult, int>((ref, page) async {
+      return ref
+          .watch(dashboardRemoteDatasourceProvider)
+          .fetchCampaignsPage(page: page, limit: 10);
+    });
 
 /// SWR stream for dashboard (Hive + network + rate limits).
 final dashboardStreamProvider = StreamProvider<DashboardSnapshot>((ref) {
@@ -142,7 +154,9 @@ final realtimeInvalidationProvider = Provider<void>((ref) {
       ref.invalidate(advertiserWalletPageProvider);
     }
     if (campaignEvent) {
-      ref.invalidate(advertiserCampaignsListProvider);
+      ref.invalidate(advertiserCampaignsPagedProvider);
+      ref.invalidate(advertiserCampaignsCountsProvider);
+      ref.invalidate(advertiserDashboardCampaignsPageFetchProvider);
     }
     if (notif) {
       ref.invalidate(notificationsListProvider);
@@ -168,7 +182,7 @@ final realtimeInvalidationProvider = Provider<void>((ref) {
     // ends (creator eligibility changes) or when the creator applies / gets
     // approved / rejected (stale pills / badges).
     if (fromCreatorChannel || campaignEvent || applicationEvent) {
-      ref.invalidate(creatorBrowseCampaignsProvider);
+      ref.invalidate(creatorBrowseCampaignsPagedProvider);
     }
     // Submission reviews update the `myVideos` list inside the detail view;
     // invalidate the family wholesale so open screens re-fetch lazily.

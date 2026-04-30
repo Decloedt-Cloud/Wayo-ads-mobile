@@ -65,8 +65,8 @@ abstract final class StripeConnectCatalog {
   ];
 
   static const List<StripeConnectOption> currencies = [
-    StripeConnectOption(code: 'EUR', name: 'Euro (EUR)'),
     StripeConnectOption(code: 'USD', name: 'US Dollar (USD)'),
+    StripeConnectOption(code: 'EUR', name: 'Euro (EUR)'),
     StripeConnectOption(code: 'GBP', name: 'British Pound (GBP)'),
     StripeConnectOption(code: 'CHF', name: 'Swiss Franc (CHF)'),
     StripeConnectOption(code: 'AUD', name: 'Australian Dollar (AUD)'),

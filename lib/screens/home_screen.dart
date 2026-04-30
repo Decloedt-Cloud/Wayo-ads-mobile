@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../core/theme/app_colors.dart';
+import '../core/theme/app_text_styles.dart';
 import '../features/auth/data/models/app_user.dart';
 import '../features/auth/domain/auth_notifier.dart';
 import '../i18n/strings.g.dart';
@@ -48,7 +49,7 @@ class HomeScreen extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.all(24),
         children: [
-          Text(t.home.session_title, style: theme.textTheme.titleLarge),
+          Text(t.home.session_title, style: AppTextStyles.pageTitle(context)),
           const SizedBox(height: 16),
           ListTile(
             contentPadding: EdgeInsets.zero,

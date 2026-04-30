@@ -12,6 +12,23 @@ SecureStorageService secureStorage(SecureStorageRef ref) {
 }
 
 /// Typed wrapper around [SecureTokenStorage] for auth tokens and cached user.
+///
+/// **SECURITY NOTE — In-memory token caching:**
+/// Access and refresh tokens are cached in [_cachedAccessToken] and
+/// [_cachedRefreshToken] after the first read to avoid repeated secure-storage
+/// I/O. This is a deliberate performance trade-off.
+///
+/// **Risk:** On a rooted/jailbroken device, an attacker with memory-dump
+/// capabilities could extract these tokens from the process heap.
+///
+/// **Mitigations:**
+/// - Tokens are short-lived (access ~15 min, refresh ~7 days server-side).
+/// - [clearAll] wipes both cache and persistent storage on logout.
+/// - The underlying [SecureTokenStorage] uses OS-level encryption at rest.
+///
+/// If your threat model includes sophisticated local attackers, consider
+/// re-reading from secure storage on each call (slower) or using hardware-
+/// backed attestation (e.g., Android StrongBox / iOS Secure Enclave).
 class SecureStorageService {
   SecureStorageService(this._tokens);
 

@@ -110,7 +110,7 @@ class _RealtimeDashboardWireState extends ConsumerState<RealtimeDashboardWire>
       ref.invalidate(creatorWalletPageProvider);
       ref.invalidate(creatorStripeStatusProvider);
       ref.invalidate(creatorBusinessProfileProvider);
-      ref.invalidate(creatorBrowseCampaignsProvider);
+      ref.invalidate(creatorBrowseCampaignsPagedProvider);
       // Detail + submissions: both are family providers; invalidating the
       // family re-fetches every currently-watched instance (e.g. the detail
       // screen the creator is looking at right now).
@@ -118,7 +118,8 @@ class _RealtimeDashboardWireState extends ConsumerState<RealtimeDashboardWire>
       ref.invalidate(creatorMySubmissionsProvider);
     } else {
       ref.invalidate(advertiserWalletPageProvider);
-      ref.invalidate(advertiserCampaignsListProvider);
+      ref.invalidate(advertiserCampaignsPagedProvider);
+      ref.invalidate(advertiserCampaignsCountsProvider);
     }
   }
 

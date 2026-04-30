@@ -109,7 +109,10 @@
       "creators": "{count} مبدعين",
       "empty_title": "لا حملات بعد",
       "empty_subtitle": "أنشئ حملتك الأولى للبدء",
-      "create_cta": "إنشاء حملة"
+      "create_cta": "إنشاء حملة",
+      "pagination_previous": "السابق",
+      "pagination_next": "التالي",
+      "pagination_page": "الصفحة $current / $total"
     },
     "errors": {
       "load_balance": "تعذر تحميل الرصيد",
@@ -271,6 +274,9 @@
     "campaigns": {
       "browse_title": "استكشاف الحملات",
       "browse_subtitle": "ابحث عن الحملات المناسبة لجمهورك وقدّم طلبك بنقرة واحدة.",
+      "browse_search_placeholder": "ابحث بالاسم، النوع أو العلامة",
+      "browse_empty_search_title": "لا توجد حملات مطابقة",
+      "browse_empty_search_subtitle": "جرّب كلمة أخرى — الاسم، النوع (فيديو، شورتس، رابط) أو اسم المعلن.",
       "applications_title": "طلباتي",
       "applications_subtitle": "تابع حالة كل طلب: قُبل، قيد المراجعة، أو مرفوض.",
       "submit_title": "تقديم منشور",
@@ -280,6 +286,9 @@
       "load_error": "تعذّر تحميل الحملات.",
       "empty_title": "لا توجد حملات حالياً",
       "empty_subtitle": "ستظهر هنا الحملات الجديدة فور إطلاقها من طرف المعلنين.",
+      "pagination_previous": "السابق",
+      "pagination_next": "التالي",
+      "pagination_page": "الصفحة $current / $total",
       "description_title": "الوصف",
       "requirements_title": "المتطلبات",
       "assets_title": "عناصر العلامة",
@@ -398,7 +407,7 @@
     "quick_50": "50€",
     "quick_100": "100€",
     "quick_250": "250€",
-    "min_deposit": "الحد الأدنى للإيداع 0,50 حسب العملة.",
+    "min_deposit": "الحد الأدنى للإيداع 50,00 حسب العملة.",
     "test_pay": "محاكاة الدفع (تطوير)",
     "test_hint": "وضع اختباري: بدون بطاقة حقيقية.",
     "pay_secure": "بطاقة أو Apple Pay أو Google Pay",
@@ -415,10 +424,6 @@
     "success": "تم تحديث الرصيد",
     "failed": "تعذّر إضافة الرصيد. أعد المحاولة.",
     "in_progress": "جاري المعالجة…",
-    "save_card": "حفظ هذه البطاقة للمرة القادمة",
-    "save_card_hint": "للدفع بالبطاقة فقط. يتطلب دعماً من الخادم عند التفعيل.",
-    "saved_card_title": "بطاقة محفوظة",
-    "saved_card_generic": "تم حفظ البطاقة على هذا الجهاز",
     "tx_page": "الصفحة $current من $total",
     "tx_prev": "السابق",
     "tx_next": "التالي"

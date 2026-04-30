@@ -109,7 +109,10 @@
       "creators": "{count} créateurs",
       "empty_title": "Aucune campagne",
       "empty_subtitle": "Créez votre première campagne pour commencer",
-      "create_cta": "Créer une campagne"
+      "create_cta": "Créer une campagne",
+      "pagination_previous": "Précédent",
+      "pagination_next": "Suivant",
+      "pagination_page": "Page $current / $total"
     },
     "errors": {
       "load_balance": "Impossible de charger le solde",
@@ -271,6 +274,9 @@
     "campaigns": {
       "browse_title": "Explorer les campagnes",
       "browse_subtitle": "Trouvez des campagnes adaptées à votre audience et postulez en un tap.",
+      "browse_search_placeholder": "Rechercher par nom, type ou marque",
+      "browse_empty_search_title": "Aucune campagne correspondante",
+      "browse_empty_search_subtitle": "Essayez un autre mot-clé — nom, type (vidéo, shorts, lien) ou marque annonceur.",
       "applications_title": "Mes candidatures",
       "applications_subtitle": "Suivez le statut — approuvée, en attente, refusée — de chaque campagne.",
       "submit_title": "Soumettre un post",
@@ -280,6 +286,9 @@
       "load_error": "Impossible de charger les campagnes.",
       "empty_title": "Aucune campagne active",
       "empty_subtitle": "Les nouvelles campagnes apparaîtront ici dès qu'un annonceur les lancera.",
+      "pagination_previous": "Précédent",
+      "pagination_next": "Suivant",
+      "pagination_page": "Page $current / $total",
       "description_title": "Brief",
       "requirements_title": "Exigences",
       "assets_title": "Assets de la marque",
@@ -398,7 +407,7 @@
     "quick_50": "50 €",
     "quick_100": "100 €",
     "quick_250": "250 €",
-    "min_deposit": "Dépôt minimum : 0,50 dans la devise affichée.",
+    "min_deposit": "Dépôt minimum : 50,00 dans la devise affichée.",
     "test_pay": "Simuler le paiement (dev)",
     "test_hint": "Mode test : pas de vraie carte. Crédit portefeuille de dev pour QA.",
     "pay_secure": "Carte, Apple Pay ou Google Pay",
@@ -415,10 +424,6 @@
     "success": "Solde mis à jour",
     "failed": "Impossible d’ajouter des fonds. Réessayez.",
     "in_progress": "Traitement…",
-    "save_card": "Enregistrer cette carte pour la prochaine fois",
-    "save_card_hint": "Uniquement pour le paiement par carte. Nécessite le support côté serveur.",
-    "saved_card_title": "Carte enregistrée",
-    "saved_card_generic": "Carte enregistrée sur cet appareil",
     "tx_page": "Page $current sur $total",
     "tx_prev": "Précédent",
     "tx_next": "Suivant"

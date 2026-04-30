@@ -7,6 +7,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/providers/app_providers.dart';
+import '../../../../core/theme/app_text_styles.dart';
 import '../../../auth/presentation/providers/current_account_providers.dart';
 import '../../../../i18n/strings.g.dart';
 
@@ -216,10 +217,7 @@ class _PanelHeader extends StatelessWidget {
               children: [
                 Text(
                   t.app_settings.title,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -0.2,
-                  ),
+                  style: AppTextStyles.pageTitle(context),
                 ),
                 const SizedBox(height: 2),
                 Text(

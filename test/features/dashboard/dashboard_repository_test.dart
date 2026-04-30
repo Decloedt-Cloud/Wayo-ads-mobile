@@ -5,6 +5,7 @@ import 'package:wayoadsgo/core/network/rate_limiter.dart';
 import 'package:wayoadsgo/core/network/request_deduplicator.dart';
 import 'package:wayoadsgo/core/storage/secure_storage.dart';
 import 'package:wayoadsgo/core/storage/secure_token_storage.dart';
+import 'package:wayoadsgo/features/creator_campaigns/domain/creator_browse_campaign.dart';
 import 'package:wayoadsgo/features/dashboard/data/datasources/dashboard_remote_datasource.dart';
 import 'package:wayoadsgo/features/dashboard/data/repositories/dashboard_repository.dart';
 import 'package:wayoadsgo/features/dashboard/domain/entities/advertiser_balance.dart';
@@ -13,6 +14,7 @@ import 'package:wayoadsgo/features/dashboard/domain/entities/campaign_status.dar
 import 'package:wayoadsgo/features/dashboard/domain/entities/campaign_summary.dart';
 import 'package:wayoadsgo/features/dashboard/domain/entities/notification_item.dart';
 import 'package:wayoadsgo/features/dashboard/domain/entities/user_profile.dart';
+import 'package:wayoadsgo/features/dashboard/domain/advertiser_campaigns_page_result.dart';
 
 class _FakeRemote implements DashboardRemote {
   _FakeRemote({
@@ -24,14 +26,17 @@ class _FakeRemote implements DashboardRemote {
         status: CampaignStatus.active,
         platform: CampaignPlatform.youtube,
         creatorsCount: 2,
+        campaignType: CreatorCampaignType.video,
         lockedBudgetCents: 500,
         spentBudgetCents: 100,
       ),
     ],
+    this.budgetRollup,
   });
 
   final bool failBalance;
   final List<CampaignSummary> campaigns;
+  final AdvertiserBudgetRollup? budgetRollup;
 
   @override
   Future<AdvertiserBalance> fetchBalance() async {
@@ -47,11 +52,17 @@ class _FakeRemote implements DashboardRemote {
   }
 
   @override
-  Future<List<CampaignSummary>> fetchCampaigns({
+  Future<AdvertiserCampaignsPageResult> fetchCampaignsPage({
     int page = 1,
     int limit = 10,
   }) async {
-    return campaigns;
+    return AdvertiserCampaignsPageResult(
+      campaigns: campaigns,
+      total: campaigns.length,
+      page: page,
+      totalPages: campaigns.isEmpty ? 1 : (campaigns.length + limit - 1) ~/ limit,
+      budgetRollup: budgetRollup,
+    );
   }
 
   @override
@@ -92,6 +103,7 @@ void main() {
     final last = await repo.watchDashboard().first;
     expect(last.user?.firstName, 'Sam');
     expect(last.campaigns, hasLength(1));
+    expect(last.campaignsTotalCount, 1);
     expect(last.campaigns.single.platform, CampaignPlatform.youtube);
   });
 
@@ -120,6 +132,7 @@ void main() {
               status: CampaignStatus.active,
               platform: CampaignPlatform.youtube,
               creatorsCount: 1,
+              campaignType: CreatorCampaignType.video,
               lockedBudgetCents: 300,
               spentBudgetCents: 50,
             ),
@@ -129,10 +142,12 @@ void main() {
               status: CampaignStatus.completed,
               platform: CampaignPlatform.youtube,
               creatorsCount: 2,
+              campaignType: CreatorCampaignType.video,
               lockedBudgetCents: 0,
               spentBudgetCents: 700,
             ),
           ],
+          budgetRollup: null,
         ),
         deduplicator: RequestDeduplicator(),
         rateLimiter: RateLimiter(minInterval: Duration.zero),
@@ -144,4 +159,34 @@ void main() {
       expect(last.balance?.spent, 7.0);
     },
   );
+
+  test('uses budgetRollup for wallet merge when API provides it', () async {
+    final repo = DashboardRepositoryImpl(
+      remote: _FakeRemote(
+        campaigns: const [
+          CampaignSummary(
+            id: '1',
+            name: 'Running',
+            status: CampaignStatus.active,
+            platform: CampaignPlatform.youtube,
+            creatorsCount: 1,
+            campaignType: CreatorCampaignType.video,
+            lockedBudgetCents: 999,
+            spentBudgetCents: 999,
+          ),
+        ],
+        budgetRollup: const AdvertiserBudgetRollup(
+          lockedCents: 150,
+          spentCents: 250,
+        ),
+      ),
+      deduplicator: RequestDeduplicator(),
+      rateLimiter: RateLimiter(minInterval: Duration.zero),
+      secureStorage: SecureStorageService(SecureTokenStorage()),
+    );
+    final last = await repo.watchDashboard().first;
+    expect(last.balance?.available, 1);
+    expect(last.balance?.locked, 1.5);
+    expect(last.balance?.spent, 2.5);
+  });
 }

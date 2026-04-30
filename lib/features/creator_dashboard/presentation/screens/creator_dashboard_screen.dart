@@ -374,7 +374,7 @@ class _WelcomeBlock extends ConsumerWidget {
       children: [
         Text(
           t.creator.dashboard.title,
-          style: AppTextStyles.displayLarge(context),
+          style: AppTextStyles.pageTitle(context),
         ),
         const SizedBox(height: 6),
         Text(welcome, style: AppTextStyles.headlineMedium(context)),

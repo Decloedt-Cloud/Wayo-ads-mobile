@@ -36,25 +36,9 @@ class _ChatInboxScreenState extends ConsumerState<ChatInboxScreen> {
   final Map<int, Timer> _typingClearTimers = {};
   final Map<int, int> _pulseTokenByConv = {};
   final ScrollController _scroll = ScrollController();
-  Timer? _scrollDebounce;
-
-  @override
-  void initState() {
-    super.initState();
-    _scroll.addListener(_onScrollThrottled);
-  }
-
-  void _onScrollThrottled() {
-    _scrollDebounce?.cancel();
-    _scrollDebounce = Timer(const Duration(milliseconds: 12), () {
-      if (mounted) setState(() {});
-    });
-  }
 
   @override
   void dispose() {
-    _scrollDebounce?.cancel();
-    _scroll.removeListener(_onScrollThrottled);
     _scroll.dispose();
     for (final t in _typingClearTimers.values) {
       t.cancel();
@@ -173,7 +157,8 @@ class _ChatInboxScreenState extends ConsumerState<ChatInboxScreen> {
     final ln = LiquidNeuralTheme.of(context);
     final p = PremiumChatTokens.of(context);
     final async = ref.watch(chatConversationsProvider);
-    final myChatUserId = ref.watch(chatBootstrapProvider).value?.chatUserId;
+    // Use valueOrNull to avoid throwing on error state (e.g. 404 from backend)
+    final myChatUserId = ref.watch(chatBootstrapProvider).valueOrNull?.chatUserId;
     final rt = ref.watch(chatRealtimeServiceProvider);
 
     return Scaffold(

@@ -61,6 +61,9 @@ final class AdvertiserStripeDeposit {
         merchantDisplayName: 'Wayo Ads',
         style: ThemeMode.system,
         appearance: appearance,
+        // iOS: required for 3DS / redirect PMs (Stripe native maps `{scheme}://safepay`).
+        // Without this, Payment Sheet often works on Android but fails on iOS after authentication.
+        returnURL: Platform.isIOS ? '$kStripeUrlScheme://safepay' : null,
       ),
     );
     await Stripe.instance.presentPaymentSheet();

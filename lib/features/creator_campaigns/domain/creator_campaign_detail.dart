@@ -168,7 +168,9 @@ final class CreatorCampaignDetail extends Equatable {
       ),
       myApplicationId: myAppMap?['id'] as String?,
       myVideos: myVideos,
-      coverUrl: (m['coverImageUrl'] as String?) ?? (m['coverUrl'] as String?),
+      coverUrl: parseCampaignCoverUrlFromJson(m) ??
+          (m['coverImageUrl'] as String?) ??
+          (m['coverUrl'] as String?),
       brandLogoUrl: parseCampaignBrandLogoFromJson(m),
       description: m['description'] as String?,
       notes: m['notes'] as String?,

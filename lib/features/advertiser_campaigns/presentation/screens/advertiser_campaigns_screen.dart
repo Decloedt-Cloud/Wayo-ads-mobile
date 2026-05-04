@@ -44,7 +44,7 @@ BoxDecoration _campaignsPageBackground(BuildContext context) {
   );
 }
 
-/// Advertiser campaigns — read-only list, filters, search (no create/edit).
+/// Advertiser campaigns — list, filters, search, and draft creation (Wayo-ads API).
 class AdvertiserCampaignsScreen extends ConsumerStatefulWidget {
   const AdvertiserCampaignsScreen({super.key});
 
@@ -100,6 +100,14 @@ class _AdvertiserCampaignsScreenState
       backgroundColor: isDark
           ? Colors.transparent
           : Theme.of(context).scaffoldBackgroundColor,
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          HapticFeedback.mediumImpact();
+          context.push('/campaigns/new');
+        },
+        icon: const Icon(Icons.add_rounded),
+        label: Text(context.t.advertiser_campaigns.create.title),
+      ),
       body: DecoratedBox(
         decoration: _campaignsPageBackground(context),
         child: SafeArea(

@@ -150,7 +150,7 @@ final class DashboardRemoteDatasource implements DashboardRemote {
             (m['approvedCreators'] as num?)?.toInt() ??
             (m['approved_creators'] as num?)?.toInt() ??
             0,
-        coverUrl:
+        coverUrl: parseCampaignCoverUrlFromJson(m) ??
             m['cover_url'] as String? ??
             m['coverUrl'] as String? ??
             m['coverImageUrl'] as String?,

@@ -44,6 +44,12 @@ class AuthNotifier extends _$AuthNotifier {
   /// Prevents overlapping email/password or Google login calls (double-tap / IME).
   bool _credentialLoginInFlight = false;
 
+  /// Coalesce concurrent `/api/auth/user` pulls (avoids upstream 429 on cold start).
+  Future<void>? _profileRefreshFut;
+
+  /// Last successful [`refreshProfileFromAuthServer`] completion (JWT unchanged).
+  DateTime? _lastProfileRefreshUtc;
+
   @override
   Future<AuthState> build() async {
     setAuthForceLogoutHandler(forceLogout);
@@ -105,7 +111,7 @@ class AuthNotifier extends _$AuthNotifier {
             await _bootstrapChatAfterLogin();
           } catch (_) {}
           state = AsyncValue.data(AuthAuthenticated(data.user));
-          await refreshProfileFromAuthServer();
+          await refreshProfileFromAuthServer(force: true);
           _invalidateDashboardProviders();
         case Failure(:final error):
           state = AsyncValue.error(error, StackTrace.current);
@@ -133,7 +139,7 @@ class AuthNotifier extends _$AuthNotifier {
             await _bootstrapChatAfterLogin();
           } catch (_) {}
           state = AsyncValue.data(AuthAuthenticated(data.user));
-          await refreshProfileFromAuthServer();
+          await refreshProfileFromAuthServer(force: true);
           _invalidateDashboardProviders();
         case Failure(:final error):
           state = AsyncValue.error(error, StackTrace.current);
@@ -161,19 +167,45 @@ class AuthNotifier extends _$AuthNotifier {
   /// If Auth_Wayo returns no role but the current user already has one (e.g. saved
   /// via Wayo-ads fallback), the existing role is preserved. This handles the case
   /// where the role is stored only in Wayo-ads and Auth_Wayo doesn't know about it.
-  Future<void> refreshProfileFromAuthServer() async {
-    final s = state.valueOrNull;
-    if (s is! AuthAuthenticated) {
+  ///
+  /// [force] — skip client-side throttle (pull-to-refresh, post-login sync).
+  Future<void> refreshProfileFromAuthServer({bool force = false}) async {
+    if (_profileRefreshFut != null) {
+      await _profileRefreshFut;
       return;
     }
-    final currentUser = s.user;
-    final result = await ref.read(authRepositoryProvider).fetchCurrentUser();
-    switch (result) {
-      case Success(:final data):
-        final merged = _preserveExistingRoleIfNeeded(currentUser, data);
-        await _persistUserOnly(merged);
-      case Failure():
-        break;
+
+    if (!force &&
+        _lastProfileRefreshUtc != null &&
+        DateTime.now().toUtc().difference(_lastProfileRefreshUtc!) <
+            const Duration(seconds: 75)) {
+      return;
+    }
+
+    final fut = Future<void>(() async {
+      final snap = state.valueOrNull;
+      if (snap is! AuthAuthenticated) {
+        return;
+      }
+      final currentUser = snap.user;
+      final result = await ref.read(authRepositoryProvider).fetchCurrentUser();
+      switch (result) {
+        case Success(:final data):
+          final merged = _preserveExistingRoleIfNeeded(currentUser, data);
+          await _persistUserOnly(merged);
+          _lastProfileRefreshUtc = DateTime.now().toUtc();
+        case Failure():
+          break;
+      }
+    });
+
+    _profileRefreshFut = fut;
+    try {
+      await fut;
+    } finally {
+      if (identical(_profileRefreshFut, fut)) {
+        _profileRefreshFut = null;
+      }
     }
   }
 
@@ -205,6 +237,7 @@ class AuthNotifier extends _$AuthNotifier {
   }
 
   Future<void> logout() async {
+    _lastProfileRefreshUtc = null;
     try {
       await ref.read(authRepositoryProvider).logout();
     } catch (_) {
@@ -218,6 +251,7 @@ class AuthNotifier extends _$AuthNotifier {
   }
 
   void forceLogout() {
+    _lastProfileRefreshUtc = null;
     state = const AsyncValue.data(AuthUnauthenticated());
     unawaited(_clearLocalSessionAfterForcedLogout());
   }

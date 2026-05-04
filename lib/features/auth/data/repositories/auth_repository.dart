@@ -63,6 +63,8 @@ class AuthRepositoryImpl implements IAuthRepository {
   final Dio _dio;
   final SecureStorageService _storage;
 
+  Future<Result<AppUser>>? _fetchCurrentUserInFlight;
+
   @override
   Future<Result<AuthResponse>> login({
     required String email,
@@ -135,7 +137,42 @@ class AuthRepositoryImpl implements IAuthRepository {
   }
 
   @override
-  Future<Result<AppUser>> fetchCurrentUser() async {
+  Future<Result<AppUser>> fetchCurrentUser() {
+    final existing = _fetchCurrentUserInFlight;
+    if (existing != null) {
+      return existing;
+    }
+    final runner = _fetchCurrentUserWith429Retry();
+    _fetchCurrentUserInFlight = runner;
+    return runner.whenComplete(() {
+      if (identical(_fetchCurrentUserInFlight, runner)) {
+        _fetchCurrentUserInFlight = null;
+      }
+    });
+  }
+
+  /// One in-flight `GET /api/auth/user` for the whole app + bounded 429 backoff.
+  Future<Result<AppUser>> _fetchCurrentUserWith429Retry() async {
+    const maxAttempts = 4;
+    for (var attempt = 0; attempt < maxAttempts; attempt++) {
+      final once = await _fetchCurrentUserOnce();
+      switch (once) {
+        case Success():
+          return once;
+        case Failure(:final error):
+          final isLast = attempt >= maxAttempts - 1;
+          if (error is RateLimitedException && !isLast) {
+            final wait = error.retryAfterSeconds.clamp(1, 90);
+            await Future<void>.delayed(Duration(seconds: wait));
+            continue;
+          }
+          return once;
+      }
+    }
+    return const Failure(ServerException('Profile fetch failed'));
+  }
+
+  Future<Result<AppUser>> _fetchCurrentUserOnce() async {
     try {
       final cfg = AuthRuntimeConfig.instance;
       final path = cfg.authHttpPath('user');

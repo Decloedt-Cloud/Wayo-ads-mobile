@@ -13,6 +13,7 @@ import '../features/auth/presentation/screens/email_verification_otp_onboarding_
 import '../features/auth/presentation/screens/wayo_ads_role_onboarding_screen.dart';
 import '../features/auth/presentation/screens/new_password_screen.dart';
 import '../features/auth/presentation/screens/otp_verification_screen.dart';
+import '../features/advertiser_campaigns/presentation/screens/advertiser_create_campaign_screen.dart';
 import '../features/creator_campaigns/presentation/screens/creator_application_detail_screen.dart';
 import '../features/creator_campaigns/presentation/screens/creator_campaign_detail_screen.dart';
 import '../features/creator_dashboard/presentation/screens/creator_dashboard_screen.dart';
@@ -248,6 +249,11 @@ GoRouter goRouter(GoRouterRef ref) {
         parentNavigatorKey: rootNavigatorKey,
         path: '/notifications',
         builder: (context, state) => const NotificationsScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: '/campaigns/new',
+        builder: (context, state) => const AdvertiserCreateCampaignScreen(),
       ),
       GoRoute(
         parentNavigatorKey: rootNavigatorKey,

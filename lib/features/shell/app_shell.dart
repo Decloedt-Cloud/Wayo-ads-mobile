@@ -9,6 +9,7 @@ import '../chat/presentation/providers/chat_providers.dart';
 import '../dashboard/domain/entities/campaign_status.dart';
 import '../dashboard/presentation/providers/dashboard_state_providers.dart';
 import '../onboarding/presentation/shell_tutorial_controller.dart';
+import 'presentation/widgets/shell_tutorial_replay_scope.dart';
 import 'widgets/wayo_bottom_nav.dart';
 
 /// Main shell with bottom navigation (Dashboard, Campaigns, Wallet, Chat).
@@ -88,6 +89,39 @@ class _AppShellState extends ConsumerState<AppShell> {
     });
   }
 
+  /// Lets the dashboard (and similar) reopen the coach-mark shell tour on demand.
+  Future<void> _replayShellTutorial() async {
+    if (!mounted) return;
+    final auth = ref.read(authNotifierProvider).valueOrNull;
+    if (auth is! AuthAuthenticated) return;
+
+    final role = auth.user.wayoAdsRole;
+    if (role == WayoAdsAccountRole.unknown) return;
+
+    final prefs = ref.read(appPrefsProvider);
+    await ShellTutorialController.instance.reset(
+      prefs: prefs,
+      userId: auth.user.id,
+      role: role,
+    );
+    if (!mounted) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ShellTutorialController.instance.show(
+        context: context,
+        prefs: prefs,
+        userId: auth.user.id,
+        role: role,
+        keys: {
+          ShellTutorialTarget.dashboard: _dashboardKey,
+          ShellTutorialTarget.campaigns: _campaignsKey,
+          ShellTutorialTarget.wallet: _walletKey,
+          ShellTutorialTarget.chat: _chatKey,
+        },
+      );
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     // React to role / auth transitions so the tour triggers after the role
@@ -126,7 +160,10 @@ class _AppShellState extends ConsumerState<AppShell> {
 
     return Scaffold(
       extendBody: true,
-      body: SizedBox.expand(child: widget.navigationShell),
+      body: ShellTutorialReplayScope(
+        replay: _replayShellTutorial,
+        child: SizedBox.expand(child: widget.navigationShell),
+      ),
       bottomNavigationBar: WayoBottomNav(
         navigationShell: widget.navigationShell,
         notificationUnread: notificationUnread,

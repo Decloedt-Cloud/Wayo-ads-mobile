@@ -80,6 +80,8 @@ class _ChatUserSearchBarState extends ConsumerState<ChatUserSearchBar> {
     }
 
     try {
+      // Drop cached JWT so each search pulls a minted token via Wayo-ads (matches web).
+      ref.invalidate(chatBootstrapProvider);
       final repo = ref.read(chatRepositoryProvider);
       final rt = ref.read(chatRealtimeServiceProvider);
       final creds = await ref.read(chatBootstrapProvider.future);

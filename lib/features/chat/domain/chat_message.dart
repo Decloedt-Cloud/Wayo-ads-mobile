@@ -1,5 +1,18 @@
 import 'chat_user_preview.dart';
 
+/// Quoted reply target from chat-service (`reply_to`, `quoted_message`, etc.).
+final class ChatReplyRef {
+  const ChatReplyRef({
+    required this.messageId,
+    required this.preview,
+    this.senderName,
+  });
+
+  final int messageId;
+  final String preview;
+  final String? senderName;
+}
+
 final class ChatMessage {
   const ChatMessage({
     required this.id,
@@ -17,6 +30,7 @@ final class ChatMessage {
     this.user,
     this.pending = false,
     this.failed = false,
+    this.replyTo,
   });
 
   final int id;
@@ -37,6 +51,9 @@ final class ChatMessage {
   final bool pending;
   final bool failed;
 
+  /// Quoted/thread parent when API returns structured reply metadata.
+  final ChatReplyRef? replyTo;
+
   ChatMessage copyWith({
     int? id,
     bool? pending,
@@ -47,6 +64,7 @@ final class ChatMessage {
     String? editedAt,
     bool? isEdited,
     ChatUserPreview? user,
+    ChatReplyRef? replyTo,
   }) {
     return ChatMessage(
       id: id ?? this.id,
@@ -64,6 +82,7 @@ final class ChatMessage {
       user: user ?? this.user,
       pending: pending ?? this.pending,
       failed: failed ?? this.failed,
+      replyTo: replyTo ?? this.replyTo,
     );
   }
 }

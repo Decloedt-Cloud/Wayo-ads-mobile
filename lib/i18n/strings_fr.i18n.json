@@ -132,7 +132,9 @@
     "application_rejected": "Candidature refusée",
     "application_action_failed": "Impossible de mettre à jour la candidature. Réessayez.",
     "theme_toggle_tooltip": "Basculer entre thème clair et sombre",
-    "refresh": "Actualiser le tableau de bord"
+    "refresh": "Actualiser le tableau de bord",
+    "shell_tour_restart": "Revoir le tour d’onboarding",
+    "shell_tour_restart_hint": "Relancer la visite guidée de la navigation Tableau de bord, Campagnes, Portefeuille et Messages"
   },
   "advertiser_campaigns": {
     "title": "Campagnes",
@@ -459,6 +461,9 @@
     "date_today": "Aujourd'hui",
     "date_yesterday": "Hier",
     "bubble_reply": "Répondre",
+    "reply_composer_title": "Répondre",
+    "reply_composer_you": "Vous",
+    "composer_reply_hint": "Écrivez une réponse…",
     "bubble_copy": "Copier",
     "bubble_react": "Réagir",
     "bubble_delete": "Supprimer",

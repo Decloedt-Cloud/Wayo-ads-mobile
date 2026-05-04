@@ -26,6 +26,11 @@ class CinematicComposerBar extends StatefulWidget {
     this.editingPreview,
     this.editingCancelLabel,
     this.onCancelEdit,
+    this.replying = false,
+    this.replyBannerTitle,
+    this.replyBannerSubtitle,
+    this.replyCancelTooltip,
+    this.onCancelReply,
   });
 
   final TextEditingController controller;
@@ -45,6 +50,13 @@ class CinematicComposerBar extends StatefulWidget {
   final String? editingPreview;
   final String? editingCancelLabel;
   final VoidCallback? onCancelEdit;
+
+  /// Reply mode (WhatsApp-style banner above composer, aligned trailing).
+  final bool replying;
+  final String? replyBannerTitle;
+  final String? replyBannerSubtitle;
+  final String? replyCancelTooltip;
+  final VoidCallback? onCancelReply;
 
   @override
   State<CinematicComposerBar> createState() => _CinematicComposerBarState();
@@ -207,6 +219,13 @@ class _CinematicComposerBarState extends State<CinematicComposerBar> {
                     preview: widget.editingPreview ?? '',
                     cancelLabel: widget.editingCancelLabel ?? 'Cancel',
                     onCancel: widget.onCancelEdit,
+                  )
+                : widget.replying
+                ? _ReplyComposerBanner(
+                    title: widget.replyBannerTitle ?? 'Reply',
+                    preview: widget.replyBannerSubtitle ?? '',
+                    cancelTooltip: widget.replyCancelTooltip ?? 'Dismiss',
+                    onCancel: widget.onCancelReply,
                   )
                 : const SizedBox(width: double.infinity),
           ),
@@ -665,6 +684,102 @@ class _EditingBanner extends StatelessWidget {
             icon: Icon(Icons.close_rounded, size: 18, color: ct.muted),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Reply context banner — mirrored accent on the trailing edge (WhatsApp-like).
+class _ReplyComposerBanner extends StatelessWidget {
+  const _ReplyComposerBanner({
+    required this.title,
+    required this.preview,
+    required this.cancelTooltip,
+    this.onCancel,
+  });
+
+  final String title;
+  final String preview;
+  final String cancelTooltip;
+  final VoidCallback? onCancel;
+
+  @override
+  Widget build(BuildContext context) {
+    final ct = CinematicChatTheme.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Align(
+      alignment: Alignment.centerRight,
+      child: Container(
+        width: MediaQuery.sizeOf(context).width * 0.92,
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.fromLTRB(8, 10, 4, 10),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.centerRight,
+            end: Alignment.centerLeft,
+            colors: [
+              ct.amber.withValues(alpha: isDark ? 0.24 : 0.18),
+              ct.amber.withValues(alpha: isDark ? 0.06 : 0.04),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(16),
+          border: Border(right: BorderSide(color: ct.amber, width: 3.5)),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(top: 4, left: 2, right: 8),
+              child: Transform.scale(
+                scaleX: -1,
+                child: Icon(
+                  Icons.reply_rounded,
+                  size: 22,
+                  color: ct.amber,
+                ),
+              ),
+            ),
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    title,
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: ct.amber,
+                      letterSpacing: 0.1,
+                    ),
+                  ),
+                  if (preview.trim().isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2),
+                      child: Text(
+                        preview.trim(),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.right,
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          color: ct.textPrimary.withValues(alpha: 0.75),
+                          height: 1.25,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            IconButton(
+              visualDensity: VisualDensity.compact,
+              onPressed: onCancel,
+              tooltip: cancelTooltip,
+              icon: Icon(Icons.close_rounded, size: 18, color: ct.muted),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -60,6 +60,7 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
   int? _selectedMessageId;
   int? _editingMessageId;
   String _editingOriginalContent = '';
+  ChatMessage? _replyingTo;
 
   /// Show scroll-to-end FAB when farther than this from the list bottom.
   static const double _fabGapThreshold = 200;
@@ -360,6 +361,42 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
     return DateFormat.yMMMd().format(day);
   }
 
+  String _replySnippet(ChatMessage m) {
+    final raw = m.content.trim();
+    if (raw.isNotEmpty) {
+      return raw.length > 120 ? '${raw.substring(0, 120)}…' : raw;
+    }
+    if (m.type == 'image') return '📷';
+    if (m.type == 'file') {
+      final n = m.fileName?.trim();
+      return (n != null && n.isNotEmpty) ? n : 'PDF';
+    }
+    return m.type;
+  }
+
+  /// Banner title row (Reply to **Name**).
+  String _replyBannerTitle(ChatMessage m, ChatCredentials creds) {
+    if (m.userId == creds.chatUserId) {
+      return context.t.chat.reply_composer_you;
+    }
+    final n = m.user?.name?.trim();
+    return (n != null && n.isNotEmpty) ? n : '?';
+  }
+
+  void _beginReply(ChatMessage m) {
+    setState(() {
+      _replyingTo = m;
+      _selectedMessageId = null;
+      _editingMessageId = null;
+      _editingOriginalContent = '';
+    });
+    HapticFeedback.selectionClick();
+  }
+
+  void _cancelReply() {
+    setState(() => _replyingTo = null);
+  }
+
   Future<void> _onSend(
     ChatCredentials creds,
     ChatRepository repo,
@@ -418,6 +455,17 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
 
     HapticFeedback.mediumImpact();
     final tempId = -DateTime.now().millisecondsSinceEpoch;
+    final quote = _replyingTo;
+    ChatReplyRef? optimisticReply;
+    if (quote != null && quote.id > 0) {
+      optimisticReply = ChatReplyRef(
+        messageId: quote.id,
+        preview: _replySnippet(quote),
+        senderName: quote.user?.name?.trim().isNotEmpty == true
+            ? quote.user!.name!.trim()
+            : null,
+      );
+    }
     final optimistic = ChatMessage(
       id: tempId,
       conversationId: widget.conversationId,
@@ -426,12 +474,15 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
       type: 'text',
       createdAt: DateTime.now().toUtc().toIso8601String(),
       pending: true,
+      replyTo: optimisticReply,
     );
     setState(() {
       _messages = [..._messages, optimistic];
       _sending = true;
       _draft.clear();
     });
+    final replyTargetId =
+        quote != null && quote.id > 0 ? quote.id : null;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _scrollToEnd(animated: true);
     });
@@ -441,10 +492,12 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
         widget.conversationId,
         text,
         socketId: () => rt.socketId,
+        replyToMessageId: replyTargetId,
       );
       if (!mounted) return;
       setState(() {
         _messages = _messages.map((m) => m.id == tempId ? sent : m).toList();
+        _replyingTo = null;
       });
       ref.invalidate(chatConversationsProvider);
     } catch (_) {
@@ -471,6 +524,7 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
     }
     setState(() {
       _selectedMessageId = null;
+      _replyingTo = null;
       _editingMessageId = m.id;
       _editingOriginalContent = m.content;
       _draft.text = m.content;
@@ -748,6 +802,10 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
               reduce: reduce,
               peerAvatarUrl: partnerAvatarResolved,
             );
+            final replyTo = _replyingTo;
+            final replyBnTitle =
+                replyTo != null ? _replyBannerTitle(replyTo, creds) : '';
+            final replyBnSub = replyTo != null ? _replySnippet(replyTo) : '';
             final listCount =
                 messageTiles.length + (_typingName != null ? 1 : 0);
 
@@ -781,6 +839,7 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
                             NotificationListener<ScrollNotification>(
                               onNotification: _onScroll,
                               child: CustomScrollView(
+                                clipBehavior: Clip.none,
                                 controller: _scroll,
                                 physics: const BouncingScrollPhysics(
                                   parent: AlwaysScrollableScrollPhysics(),
@@ -962,6 +1021,8 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
                             reduceMotion: reduce,
                             hint: _editingMessageId != null
                                 ? t.chat.edit_mode_hint
+                                : replyTo != null
+                                ? t.chat.composer_reply_hint
                                 : t.chat.composer_hint,
                             errorText: _phoneError,
                             editing: _editingMessageId != null,
@@ -969,6 +1030,14 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
                             editingPreview: _editingOriginalContent,
                             editingCancelLabel: t.chat.edit_mode_cancel,
                             onCancelEdit: _cancelEdit,
+                            replying:
+                                _editingMessageId == null && replyTo != null,
+                            replyBannerTitle: replyBnTitle,
+                            replyBannerSubtitle: replyBnSub,
+                            replyCancelTooltip:
+                                MaterialLocalizations.of(context)
+                                    .cancelButtonLabel,
+                            onCancelReply: _cancelReply,
                             onAttach: _editingMessageId != null
                                 ? null
                                 : () => _pickAndUpload(creds, repo, rt),
@@ -1099,6 +1168,7 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
       },
       onEditRequest: () => _onEditMessage(m, creds.chatUserId),
       onDeleteRequest: () => _onDeleteMessage(m, creds, repo, rt),
+      onReplyRequest: () => _beginReply(m),
     );
   }
 }

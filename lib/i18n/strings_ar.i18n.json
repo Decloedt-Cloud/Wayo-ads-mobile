@@ -132,7 +132,9 @@
     "application_rejected": "تم رفض الطلب",
     "application_action_failed": "تعذّر تحديث الطلب. أعد المحاولة.",
     "theme_toggle_tooltip": "التبديل بين الوضع الفاتح والداكن",
-    "refresh": "تحديث لوحة التحكم"
+    "refresh": "تحديث لوحة التحكم",
+    "shell_tour_restart": "إعادة جولة التعريف",
+    "shell_tour_restart_hint": "إعادة عرض الجولة التعريفية للتنقل بين لوحة التحكم والحملات والمحفظة والمحادثة"
   },
   "advertiser_campaigns": {
     "title": "الحملات",
@@ -459,6 +461,9 @@
     "date_today": "اليوم",
     "date_yesterday": "أمس",
     "bubble_reply": "رد",
+    "reply_composer_title": "رد",
+    "reply_composer_you": "أنت",
+    "composer_reply_hint": "اكتب رداً…",
     "bubble_copy": "نسخ",
     "bubble_react": "تفاعل",
     "bubble_delete": "حذف",

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dio/dio.dart';
 
+import '../errors/auth_exceptions.dart';
 import '../result.dart';
 import '../storage/secure_storage.dart';
 import 'auth_force_logout_hub.dart';
@@ -26,7 +27,25 @@ class AuthInterceptor extends QueuedInterceptor {
     if (options.extra[kSkipAuthInjection] == true) {
       return handler.next(options);
     }
-    final token = await storage.getAccessToken();
+    var token = await storage.getAccessToken();
+    if (token != null &&
+        token.isNotEmpty &&
+        await storage.isTokenExpired()) {
+      try {
+        await _runSerializedRefresh();
+        token = await storage.getAccessToken();
+      } on SessionExpiredException catch (e) {
+        return handler.reject(
+          DioException(
+            requestOptions: options,
+            error: e,
+            type: DioExceptionType.unknown,
+          ),
+        );
+      } catch (_) {
+        // Transient refresh failure — still attempt with current bearer below.
+      }
+    }
     if (token != null && token.isNotEmpty) {
       options.headers['Authorization'] = 'Bearer $token';
     }
@@ -96,9 +115,12 @@ class AuthInterceptor extends QueuedInterceptor {
             expiresIn: data.expiresIn,
             userJson: data.user.toJson(),
           );
-        case Failure():
-          notifyAuthForceLogout();
-          throw SessionExpiredException();
+        case Failure(:final error):
+          if (error is SessionInvalidException) {
+            notifyAuthForceLogout();
+            throw SessionExpiredException();
+          }
+          throw error;
       }
     } finally {
       c.complete();

@@ -58,7 +58,7 @@ class WalletTabScreen extends ConsumerWidget {
         onRefresh: () async {
           await ref
               .read(authNotifierProvider.notifier)
-              .refreshProfileFromAuthServer();
+              .refreshProfileFromAuthServer(force: true);
           ref.invalidate(dashboardStreamProvider);
           await ref.read(dashboardStreamProvider.future);
           HapticFeedback.lightImpact();

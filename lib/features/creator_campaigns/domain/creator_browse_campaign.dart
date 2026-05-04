@@ -99,7 +99,9 @@ final class CreatorBrowseCampaign extends Equatable {
       totalBudgetCents: parseCents(m['totalBudgetCents'] ?? m['totalBudget']),
       cpmCents: parseCents(m['cpmCents']),
       cpcCents: parseCents(m['cpcCents']),
-      coverUrl: (m['coverImageUrl'] as String?) ?? (m['coverUrl'] as String?),
+      coverUrl: parseCampaignCoverUrlFromJson(m) ??
+          (m['coverImageUrl'] as String?) ??
+          (m['coverUrl'] as String?),
       brandLogoUrl: parseCampaignBrandLogoFromJson(m),
       advertiserName:
           (advertiserMap?['name'] as String?) ??

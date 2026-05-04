@@ -118,7 +118,7 @@ class DashboardScreen extends ConsumerWidget {
   static Future<void> _refresh(WidgetRef ref) async {
     await ref
         .read(authNotifierProvider.notifier)
-        .refreshProfileFromAuthServer();
+        .refreshProfileFromAuthServer(force: true);
     ref.read(advertiserDashboardCampaignPageProvider.notifier).state = 1;
     ref.invalidate(advertiserDashboardCampaignsPageFetchProvider);
     ref.invalidate(dashboardStreamProvider);
@@ -1026,9 +1026,10 @@ class _CampaignTile extends StatelessWidget {
   }
 
   Widget _coverThumb(CampaignSummary c) {
-    if (c.coverUrl != null && c.coverUrl!.isNotEmpty) {
+    final url = normalizeWayoAdsMediaUrl(c.coverUrl) ?? c.coverUrl?.trim();
+    if (url != null && url.isNotEmpty) {
       return CachedNetworkImage(
-        imageUrl: c.coverUrl!,
+        imageUrl: url,
         width: 56,
         height: 56,
         fit: BoxFit.cover,

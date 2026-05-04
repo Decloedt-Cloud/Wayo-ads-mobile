@@ -9,6 +9,8 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../i18n/strings.g.dart';
+import '../../../auth/domain/wayo_ads_account_role.dart';
+import '../../../auth/presentation/providers/current_account_providers.dart';
 import '../../data/chat_media_utils.dart';
 import '../../data/chat_realtime_service.dart';
 import '../../domain/chat_conversation.dart';
@@ -108,8 +110,21 @@ class _ChatInboxScreenState extends ConsumerState<ChatInboxScreen> {
   Future<void> _openChatWithUser(
     ChatCredentials creds,
     ChatDirectoryUser user,
+    List<ChatConversation> conversations,
   ) async {
     final t = context.t;
+    final me = creds.chatUserId;
+    for (final c in conversations) {
+      if (c.partnerChatUserId(me) == user.id) {
+        if (!mounted) return;
+        context.push(
+          '/chat/thread/${c.id}',
+          extra: c.title(t.chat.conversation_unknown),
+        );
+        return;
+      }
+    }
+
     final repo = ref.read(chatRepositoryProvider);
     final rt = ref.read(chatRealtimeServiceProvider);
     final candidates = <int>[
@@ -160,6 +175,7 @@ class _ChatInboxScreenState extends ConsumerState<ChatInboxScreen> {
     // Use valueOrNull to avoid throwing on error state (e.g. 404 from backend)
     final myChatUserId = ref.watch(chatBootstrapProvider).valueOrNull?.chatUserId;
     final rt = ref.watch(chatRealtimeServiceProvider);
+    final role = ref.watch(currentWayoAdsAccountRoleProvider);
 
     return Scaffold(
       backgroundColor: p.surfaceBase,
@@ -219,18 +235,30 @@ class _ChatInboxScreenState extends ConsumerState<ChatInboxScreen> {
                     child: ref
                         .watch(chatBootstrapProvider)
                         .when(
-                          data: (creds) => ChatUserSearchBar(
-                            creds: creds,
-                            useLiquidNeuralStyle: true,
-                            hiddenParticipantIds: _existingPartnerChatUserIds(
-                              ref
-                                      .watch(chatConversationsProvider)
-                                      .valueOrNull ??
-                                  const [],
-                              creds.chatUserId,
-                            ),
-                            onUserSelected: (u) => _openChatWithUser(creds, u),
-                          ),
+                          data: (creds) {
+                            final convListSnapshot =
+                                async.valueOrNull ?? const [];
+                            final priorOnly =
+                                role == WayoAdsAccountRole.creator;
+                            final hiddenIds = priorOnly
+                                ? const <int>{}
+                                : _existingPartnerChatUserIds(
+                                    convListSnapshot,
+                                    creds.chatUserId,
+                                  );
+                            return ChatUserSearchBar(
+                              creds: creds,
+                              useLiquidNeuralStyle: true,
+                              priorContactsOnly: priorOnly,
+                              priorConversationList: convListSnapshot,
+                              hiddenParticipantIds: hiddenIds,
+                              onUserSelected: (u) => _openChatWithUser(
+                                creds,
+                                u,
+                                convListSnapshot,
+                              ),
+                            );
+                          },
                           loading: () => const SizedBox.shrink(),
                           error: (error, stackTrace) => const SizedBox.shrink(),
                         ),

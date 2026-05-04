@@ -9,6 +9,7 @@ import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../../../core/format/money_formatter.dart';
+import '../../../../core/network/wayo_ads_public_url.dart';
 import '../../../../core/providers/app_providers.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -129,7 +130,7 @@ class _CreatorDashboardScreenState extends ConsumerState<CreatorDashboardScreen>
         onRefresh: () async {
           await ref
               .read(authNotifierProvider.notifier)
-              .refreshProfileFromAuthServer();
+              .refreshProfileFromAuthServer(force: true);
           ref.invalidate(creatorStatsProvider);
           ref.invalidate(creatorApplicationsProvider);
           ref.invalidate(dashboardStreamProvider);
@@ -818,7 +819,9 @@ class _ApplicationTile extends StatelessWidget {
                   height: 48,
                   child: app.coverUrl != null && app.coverUrl!.isNotEmpty
                       ? CachedNetworkImage(
-                          imageUrl: app.coverUrl!,
+                          imageUrl:
+                              normalizeWayoAdsMediaUrl(app.coverUrl) ??
+                              app.coverUrl!,
                           fit: BoxFit.cover,
                           memCacheWidth: 96,
                           memCacheHeight: 96,

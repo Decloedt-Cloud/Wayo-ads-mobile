@@ -245,7 +245,7 @@ class _TranslationsAdvertiserCampaignsFr extends TranslationsAdvertiserCampaigns
 
 	// Translations
 	@override String get title => 'Campagnes';
-	@override String get subtitle => 'Suivez les performances de vos campagnes — consultation uniquement.';
+	@override String get subtitle => 'Créez des campagnes brouillon, suivez les performances et examinez les candidatures.';
 	@override late final _TranslationsAdvertiserCampaignsTabsFr tabs = _TranslationsAdvertiserCampaignsTabsFr._(_root);
 	@override String get search_placeholder => 'Rechercher une campagne';
 	@override late final _TranslationsAdvertiserCampaignsEmptyFr empty = _TranslationsAdvertiserCampaignsEmptyFr._(_root);
@@ -253,6 +253,7 @@ class _TranslationsAdvertiserCampaignsFr extends TranslationsAdvertiserCampaigns
 	@override late final _TranslationsAdvertiserCampaignsStatusFr status = _TranslationsAdvertiserCampaignsStatusFr._(_root);
 	@override late final _TranslationsAdvertiserCampaignsPlatformFr platform = _TranslationsAdvertiserCampaignsPlatformFr._(_root);
 	@override late final _TranslationsAdvertiserCampaignsDetailFr detail = _TranslationsAdvertiserCampaignsDetailFr._(_root);
+	@override late final _TranslationsAdvertiserCampaignsCreateFr create = _TranslationsAdvertiserCampaignsCreateFr._(_root);
 	@override late final _TranslationsAdvertiserCampaignsApplicationsFr applications = _TranslationsAdvertiserCampaignsApplicationsFr._(_root);
 }
 
@@ -353,6 +354,9 @@ class _TranslationsChatFr extends TranslationsChatEn {
 	@override String get search_users_hint => 'Rechercher une personne par nom…';
 	@override String get search_users_no_results => 'Aucun utilisateur ne correspond.';
 	@override String get search_users_min_hint => 'Saisissez au moins 2 caractères pour lancer la recherche.';
+	@override String get search_prior_chats_hint => 'Rechercher parmi les personnes avec qui vous avez échangé…';
+	@override String get search_prior_chats_no_results => 'Personne ne correspond dans vos conversations.';
+	@override String get search_prior_chats_min_hint => 'Saisissez au moins 2 caractères.';
 	@override String get conversation_open_failed => 'Impossible d’ouvrir cette conversation. Réessayez.';
 	@override String get file_picker_restart_hint => 'Les pièces jointes nécessitent un redémarrage complet de l’app après une mise à jour. Arrêtez l’app puis relancez-la (évitez le hot restart).';
 	@override String get attachment_type_not_allowed => 'Seules les images (JPG, PNG, GIF, WebP, BMP) ou les PDF sont autorisées.';
@@ -629,6 +633,47 @@ class _TranslationsAdvertiserCampaignsDetailFr extends TranslationsAdvertiserCam
 	@override String get approved_creators => 'Créateurs approuvés';
 	@override String get platform_label => 'Plateforme';
 	@override String get campaign_type_label => 'Type de campagne';
+	@override String get niche_label => 'Niche';
+	@override String get objective_label => 'Objectif';
+	@override String get objective_awareness => 'Notoriété';
+	@override String get objective_traffic => 'Trafic';
+	@override String get objective_conversion => 'Conversion';
+	@override String get cpm_metric => 'CPM (pour 1k vues)';
+	@override String get cpc_metric => 'CPC (par clic)';
+}
+
+// Path: advertiser_campaigns.create
+class _TranslationsAdvertiserCampaignsCreateFr extends TranslationsAdvertiserCampaignsCreateEn {
+	_TranslationsAdvertiserCampaignsCreateFr._(TranslationsFr root) : this._root = root, super.internal(root);
+
+	final TranslationsFr _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'Nouvelle campagne';
+	@override String get section_basics => 'Informations';
+	@override String get section_budget => 'Budget et enchères';
+	@override String get field_type => 'Type de campagne';
+	@override String get field_objective => 'Objectif';
+	@override String get field_niche => 'Niche / secteur';
+	@override String get field_title => 'Titre';
+	@override String get field_description => 'Description (optionnel)';
+	@override String get field_landing => 'URL de la page cible';
+	@override String get field_assets => 'Lien brief / assets';
+	@override String get field_budget => 'Budget total';
+	@override String get field_cpm_hint => 'CPM — coût pour 1 000 impressions (centimes)';
+	@override String get field_cpc_hint => 'CPC — coût par clic (centimes)';
+	@override String get field_video_min_duration => 'Durée minimum de la vidéo (minutes)';
+	@override String get field_shorts_max_duration => 'Durée max des shorts (secondes)';
+	@override String get type_link => 'Lien';
+	@override String get type_video => 'Vidéo';
+	@override String get type_shorts => 'Shorts';
+	@override String get landing_help => 'Obligatoire pour les campagnes lien (https).';
+	@override String get assets_help => 'Vidéo et shorts : lien https Google Drive, OneDrive ou SharePoint.';
+	@override String get submit_draft => 'Enregistrer en brouillon';
+	@override String get validation_title => 'Vérifiez les champs.';
+	@override String get assets_url_invalid => 'Utilisez une URL https Google Drive, OneDrive ou SharePoint.';
+	@override String get success => 'Campagne créée (brouillon)';
+	@override String get submit_in_progress => 'Enregistrement…';
 }
 
 // Path: advertiser_campaigns.applications
@@ -1040,7 +1085,7 @@ extension on TranslationsFr {
 			case 'dashboard.shell_tour_restart': return 'Revoir le tour d’onboarding';
 			case 'dashboard.shell_tour_restart_hint': return 'Relancer la visite guidée de la navigation Tableau de bord, Campagnes, Portefeuille et Messages';
 			case 'advertiser_campaigns.title': return 'Campagnes';
-			case 'advertiser_campaigns.subtitle': return 'Suivez les performances de vos campagnes — consultation uniquement.';
+			case 'advertiser_campaigns.subtitle': return 'Créez des campagnes brouillon, suivez les performances et examinez les candidatures.';
 			case 'advertiser_campaigns.tabs.active': return 'Actives';
 			case 'advertiser_campaigns.tabs.draft': return 'Brouillons';
 			case 'advertiser_campaigns.tabs.paused': return 'En pause';
@@ -1072,6 +1117,38 @@ extension on TranslationsFr {
 			case 'advertiser_campaigns.detail.approved_creators': return 'Créateurs approuvés';
 			case 'advertiser_campaigns.detail.platform_label': return 'Plateforme';
 			case 'advertiser_campaigns.detail.campaign_type_label': return 'Type de campagne';
+			case 'advertiser_campaigns.detail.niche_label': return 'Niche';
+			case 'advertiser_campaigns.detail.objective_label': return 'Objectif';
+			case 'advertiser_campaigns.detail.objective_awareness': return 'Notoriété';
+			case 'advertiser_campaigns.detail.objective_traffic': return 'Trafic';
+			case 'advertiser_campaigns.detail.objective_conversion': return 'Conversion';
+			case 'advertiser_campaigns.detail.cpm_metric': return 'CPM (pour 1k vues)';
+			case 'advertiser_campaigns.detail.cpc_metric': return 'CPC (par clic)';
+			case 'advertiser_campaigns.create.title': return 'Nouvelle campagne';
+			case 'advertiser_campaigns.create.section_basics': return 'Informations';
+			case 'advertiser_campaigns.create.section_budget': return 'Budget et enchères';
+			case 'advertiser_campaigns.create.field_type': return 'Type de campagne';
+			case 'advertiser_campaigns.create.field_objective': return 'Objectif';
+			case 'advertiser_campaigns.create.field_niche': return 'Niche / secteur';
+			case 'advertiser_campaigns.create.field_title': return 'Titre';
+			case 'advertiser_campaigns.create.field_description': return 'Description (optionnel)';
+			case 'advertiser_campaigns.create.field_landing': return 'URL de la page cible';
+			case 'advertiser_campaigns.create.field_assets': return 'Lien brief / assets';
+			case 'advertiser_campaigns.create.field_budget': return 'Budget total';
+			case 'advertiser_campaigns.create.field_cpm_hint': return 'CPM — coût pour 1 000 impressions (centimes)';
+			case 'advertiser_campaigns.create.field_cpc_hint': return 'CPC — coût par clic (centimes)';
+			case 'advertiser_campaigns.create.field_video_min_duration': return 'Durée minimum de la vidéo (minutes)';
+			case 'advertiser_campaigns.create.field_shorts_max_duration': return 'Durée max des shorts (secondes)';
+			case 'advertiser_campaigns.create.type_link': return 'Lien';
+			case 'advertiser_campaigns.create.type_video': return 'Vidéo';
+			case 'advertiser_campaigns.create.type_shorts': return 'Shorts';
+			case 'advertiser_campaigns.create.landing_help': return 'Obligatoire pour les campagnes lien (https).';
+			case 'advertiser_campaigns.create.assets_help': return 'Vidéo et shorts : lien https Google Drive, OneDrive ou SharePoint.';
+			case 'advertiser_campaigns.create.submit_draft': return 'Enregistrer en brouillon';
+			case 'advertiser_campaigns.create.validation_title': return 'Vérifiez les champs.';
+			case 'advertiser_campaigns.create.assets_url_invalid': return 'Utilisez une URL https Google Drive, OneDrive ou SharePoint.';
+			case 'advertiser_campaigns.create.success': return 'Campagne créée (brouillon)';
+			case 'advertiser_campaigns.create.submit_in_progress': return 'Enregistrement…';
 			case 'advertiser_campaigns.applications.title': return 'Candidatures des créateurs';
 			case 'advertiser_campaigns.applications.pending_badge': return ({required Object count}) => '${count} en attente';
 			case 'advertiser_campaigns.applications.subtitle': return 'Examinez et approuvez ou refusez les candidatures';
@@ -1322,6 +1399,9 @@ extension on TranslationsFr {
 			case 'chat.search_users_hint': return 'Rechercher une personne par nom…';
 			case 'chat.search_users_no_results': return 'Aucun utilisateur ne correspond.';
 			case 'chat.search_users_min_hint': return 'Saisissez au moins 2 caractères pour lancer la recherche.';
+			case 'chat.search_prior_chats_hint': return 'Rechercher parmi les personnes avec qui vous avez échangé…';
+			case 'chat.search_prior_chats_no_results': return 'Personne ne correspond dans vos conversations.';
+			case 'chat.search_prior_chats_min_hint': return 'Saisissez au moins 2 caractères.';
 			case 'chat.conversation_open_failed': return 'Impossible d’ouvrir cette conversation. Réessayez.';
 			case 'chat.file_picker_restart_hint': return 'Les pièces jointes nécessitent un redémarrage complet de l’app après une mise à jour. Arrêtez l’app puis relancez-la (évitez le hot restart).';
 			case 'chat.attachment_type_not_allowed': return 'Seules les images (JPG, PNG, GIF, WebP, BMP) ou les PDF sont autorisées.';

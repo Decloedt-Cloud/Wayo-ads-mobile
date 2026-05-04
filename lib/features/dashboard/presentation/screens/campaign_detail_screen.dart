@@ -11,6 +11,7 @@ import '../../../../core/providers/app_providers.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../i18n/strings.g.dart';
+import '../../../advertiser_campaigns/domain/campaign_niche_catalog.dart';
 import '../../../advertiser_campaigns/presentation/providers/advertiser_campaigns_providers.dart';
 import '../../../advertiser_campaigns/presentation/widgets/campaign_applications_section.dart';
 import '../../../creator_campaigns/domain/creator_browse_campaign.dart';
@@ -54,6 +55,19 @@ String _campaignKindLabel(Translations t, CreatorCampaignType k) => switch (k) {
   CreatorCampaignType.shorts => t.creator.campaigns.type_shorts,
   CreatorCampaignType.unknown => '—',
 };
+
+String _campaignObjectiveDetailLabel(Translations t, String? raw) {
+  switch ((raw ?? '').trim().toUpperCase()) {
+    case 'AWARENESS':
+      return t.advertiser_campaigns.detail.objective_awareness;
+    case 'TRAFFIC':
+      return t.advertiser_campaigns.detail.objective_traffic;
+    case 'CONVERSION':
+      return t.advertiser_campaigns.detail.objective_conversion;
+    default:
+      return '—';
+  }
+}
 
 /// Read-only campaign detail (Wayo-ads `GET /api/campaigns/:id`). No edit actions.
 class CampaignDetailScreen extends ConsumerWidget {
@@ -248,11 +262,23 @@ class _DetailContent extends StatelessWidget {
 
     final cpcRoot = cpcCents();
 
+    int cpmCents() {
+      if (f != null) {
+        final c = f['cpmCents'] ?? f['cpm'];
+        if (c is int) {
+          return c;
+        }
+        if (c is num) {
+          return c.toInt();
+        }
+      }
+      return (json['cpmCents'] as num?)?.toInt() ?? 0;
+    }
+
+    final cpmRoot = cpmCents();
+
     final thumbRaw =
-        heroCoverUrl ??
-        _firstAssetUrl(json['assets']) ??
-        (json['coverUrl'] as String?) ??
-        (json['coverImageUrl'] as String?);
+        heroCoverUrl ?? parseCampaignCoverUrlFromJson(json);
 
     final thumb = normalizeWayoAdsMediaUrl(thumbRaw) ?? thumbRaw;
 
@@ -263,6 +289,9 @@ class _DetailContent extends StatelessWidget {
 
     final campaignKind = CreatorCampaignType.fromApi(json['type']);
     final kindLabel = _campaignKindLabel(t, campaignKind);
+    final showCpmMetric =
+        campaignKind == CreatorCampaignType.video ||
+        campaignKind == CreatorCampaignType.shorts;
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -317,6 +346,16 @@ class _DetailContent extends StatelessWidget {
           status: status,
           platformLabel: _platformLabel(t, platform),
           campaignKindLabel: kindLabel,
+          nicheLabel:
+              ((json['niche'] as String?)?.trim().isNotEmpty ?? false)
+                  ? campaignNicheFallbackLabel(
+                      (json['niche'] as String?)!.trim(),
+                    )
+                  : '—',
+          objectiveLabel: _campaignObjectiveDetailLabel(
+            t,
+            json['campaignObjective'] as String?,
+          ),
           desc: desc,
           t: t,
         ),
@@ -388,6 +427,19 @@ class _DetailContent extends StatelessWidget {
                   locale: moneyLocale,
                 ),
               ),
+              if (showCpmMetric) ...[
+                _MetricDivider(isDark: isDark),
+                _MetricTile(
+                  isDark: isDark,
+                  icon: Icons.movie_filter_outlined,
+                  label: t.advertiser_campaigns.detail.cpm_metric,
+                  value: MoneyFormatter.format(
+                    cpmRoot / 100.0,
+                    currency: currency,
+                    locale: moneyLocale,
+                  ),
+                ),
+              ],
               _MetricDivider(isDark: isDark),
               _MetricTile(
                 isDark: isDark,
@@ -416,21 +468,6 @@ class _DetailContent extends StatelessWidget {
         CampaignApplicationsSection(campaignId: id),
       ],
     );
-  }
-
-  String? _firstAssetUrl(dynamic assets) {
-    if (assets is! List) {
-      return null;
-    }
-    for (final e in assets) {
-      if (e is Map<String, dynamic>) {
-        final u = e['url'] as String?;
-        if (u != null && u.isNotEmpty) {
-          return u;
-        }
-      }
-    }
-    return null;
   }
 
   Widget _coverFallback(BuildContext context) {
@@ -510,6 +547,8 @@ class _SummaryCard extends StatelessWidget {
     required this.status,
     required this.platformLabel,
     required this.campaignKindLabel,
+    required this.nicheLabel,
+    required this.objectiveLabel,
     required this.desc,
     required this.t,
   });
@@ -521,6 +560,12 @@ class _SummaryCard extends StatelessWidget {
 
   /// LINK / VIDEO / SHORTS localized label (same strings as creator).
   final String campaignKindLabel;
+
+  /// Human-readable niche label (API enum).
+  final String nicheLabel;
+
+  /// Localized campaign objective.
+  final String objectiveLabel;
 
   final String? desc;
   final Translations t;
@@ -588,6 +633,62 @@ class _SummaryCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   platformLabel,
+                  textAlign: TextAlign.end,
+                  style: AppTextStyles.bodyLarge(
+                    context,
+                  ).copyWith(fontWeight: FontWeight.w700),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Icon(
+                Icons.category_outlined,
+                size: 18,
+                color: AppColors.textSecondaryOf(context),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                t.advertiser_campaigns.detail.niche_label,
+                style: AppTextStyles.caption(context).copyWith(
+                  color: AppColors.textMutedOf(context),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  nicheLabel,
+                  textAlign: TextAlign.end,
+                  style: AppTextStyles.bodyLarge(
+                    context,
+                  ).copyWith(fontWeight: FontWeight.w700),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Icon(
+                Icons.flag_outlined,
+                size: 18,
+                color: AppColors.textSecondaryOf(context),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                t.advertiser_campaigns.detail.objective_label,
+                style: AppTextStyles.caption(context).copyWith(
+                  color: AppColors.textMutedOf(context),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  objectiveLabel,
                   textAlign: TextAlign.end,
                   style: AppTextStyles.bodyLarge(
                     context,

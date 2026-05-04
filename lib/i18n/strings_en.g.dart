@@ -247,7 +247,7 @@ class TranslationsAdvertiserCampaignsEn {
 
 	// Translations
 	String get title => 'Campaigns';
-	String get subtitle => 'Track your campaign performance — read only.';
+	String get subtitle => 'Create draft campaigns, track performance, and review creator applications.';
 	late final TranslationsAdvertiserCampaignsTabsEn tabs = TranslationsAdvertiserCampaignsTabsEn.internal(_root);
 	String get search_placeholder => 'Search campaigns';
 	late final TranslationsAdvertiserCampaignsEmptyEn empty = TranslationsAdvertiserCampaignsEmptyEn.internal(_root);
@@ -255,6 +255,7 @@ class TranslationsAdvertiserCampaignsEn {
 	late final TranslationsAdvertiserCampaignsStatusEn status = TranslationsAdvertiserCampaignsStatusEn.internal(_root);
 	late final TranslationsAdvertiserCampaignsPlatformEn platform = TranslationsAdvertiserCampaignsPlatformEn.internal(_root);
 	late final TranslationsAdvertiserCampaignsDetailEn detail = TranslationsAdvertiserCampaignsDetailEn.internal(_root);
+	late final TranslationsAdvertiserCampaignsCreateEn create = TranslationsAdvertiserCampaignsCreateEn.internal(_root);
 	late final TranslationsAdvertiserCampaignsApplicationsEn applications = TranslationsAdvertiserCampaignsApplicationsEn.internal(_root);
 }
 
@@ -355,6 +356,9 @@ class TranslationsChatEn {
 	String get search_users_hint => 'Search people by name…';
 	String get search_users_no_results => 'No users match your search.';
 	String get search_users_min_hint => 'Type at least 2 characters to search.';
+	String get search_prior_chats_hint => 'Search people you\'ve messaged…';
+	String get search_prior_chats_no_results => 'No one in your conversations matches.';
+	String get search_prior_chats_min_hint => 'Type at least 2 characters.';
 	String get conversation_open_failed => 'Could not open that conversation. Try again.';
 	String get file_picker_restart_hint => 'Attachments need a full app restart after updates. Stop the app, then Run again (avoid hot restart).';
 	String get attachment_type_not_allowed => 'Only images (JPG, PNG, GIF, WebP, BMP) or PDF are allowed.';
@@ -631,6 +635,47 @@ class TranslationsAdvertiserCampaignsDetailEn {
 	String get approved_creators => 'Approved creators';
 	String get platform_label => 'Platform';
 	String get campaign_type_label => 'Campaign type';
+	String get niche_label => 'Niche';
+	String get objective_label => 'Objective';
+	String get objective_awareness => 'Awareness';
+	String get objective_traffic => 'Traffic';
+	String get objective_conversion => 'Conversion';
+	String get cpm_metric => 'CPM (per 1k views)';
+	String get cpc_metric => 'CPC (per click)';
+}
+
+// Path: advertiser_campaigns.create
+class TranslationsAdvertiserCampaignsCreateEn {
+	TranslationsAdvertiserCampaignsCreateEn.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+	String get title => 'New campaign';
+	String get section_basics => 'Basics';
+	String get section_budget => 'Budget & rates';
+	String get field_type => 'Campaign type';
+	String get field_objective => 'Campaign objective';
+	String get field_niche => 'Industry niche';
+	String get field_title => 'Title';
+	String get field_description => 'Description (optional)';
+	String get field_landing => 'Landing page URL';
+	String get field_assets => 'Brief / assets link';
+	String get field_budget => 'Total budget';
+	String get field_cpm_hint => 'CPM — cost per 1,000 impressions (¢)';
+	String get field_cpc_hint => 'CPC — cost per click (¢)';
+	String get field_video_min_duration => 'Minimum video length (minutes)';
+	String get field_shorts_max_duration => 'Max shorts length (seconds)';
+	String get type_link => 'Link';
+	String get type_video => 'Video';
+	String get type_shorts => 'Shorts';
+	String get landing_help => 'Required for link campaigns (https).';
+	String get assets_help => 'Video & shorts require a Drive, OneDrive, or SharePoint https link.';
+	String get submit_draft => 'Save as draft';
+	String get validation_title => 'Check the highlighted fields.';
+	String get assets_url_invalid => 'Use an https Google Drive, OneDrive, or SharePoint URL.';
+	String get success => 'Draft campaign created';
+	String get submit_in_progress => 'Saving…';
 }
 
 // Path: advertiser_campaigns.applications
@@ -1042,7 +1087,7 @@ extension on Translations {
 			case 'dashboard.shell_tour_restart': return 'Restart onboarding tour';
 			case 'dashboard.shell_tour_restart_hint': return 'Replay the guided tour of Dashboard, Campaigns, Wallet and Chat navigation';
 			case 'advertiser_campaigns.title': return 'Campaigns';
-			case 'advertiser_campaigns.subtitle': return 'Track your campaign performance — read only.';
+			case 'advertiser_campaigns.subtitle': return 'Create draft campaigns, track performance, and review creator applications.';
 			case 'advertiser_campaigns.tabs.active': return 'Active';
 			case 'advertiser_campaigns.tabs.draft': return 'Draft';
 			case 'advertiser_campaigns.tabs.paused': return 'Paused';
@@ -1074,6 +1119,38 @@ extension on Translations {
 			case 'advertiser_campaigns.detail.approved_creators': return 'Approved creators';
 			case 'advertiser_campaigns.detail.platform_label': return 'Platform';
 			case 'advertiser_campaigns.detail.campaign_type_label': return 'Campaign type';
+			case 'advertiser_campaigns.detail.niche_label': return 'Niche';
+			case 'advertiser_campaigns.detail.objective_label': return 'Objective';
+			case 'advertiser_campaigns.detail.objective_awareness': return 'Awareness';
+			case 'advertiser_campaigns.detail.objective_traffic': return 'Traffic';
+			case 'advertiser_campaigns.detail.objective_conversion': return 'Conversion';
+			case 'advertiser_campaigns.detail.cpm_metric': return 'CPM (per 1k views)';
+			case 'advertiser_campaigns.detail.cpc_metric': return 'CPC (per click)';
+			case 'advertiser_campaigns.create.title': return 'New campaign';
+			case 'advertiser_campaigns.create.section_basics': return 'Basics';
+			case 'advertiser_campaigns.create.section_budget': return 'Budget & rates';
+			case 'advertiser_campaigns.create.field_type': return 'Campaign type';
+			case 'advertiser_campaigns.create.field_objective': return 'Campaign objective';
+			case 'advertiser_campaigns.create.field_niche': return 'Industry niche';
+			case 'advertiser_campaigns.create.field_title': return 'Title';
+			case 'advertiser_campaigns.create.field_description': return 'Description (optional)';
+			case 'advertiser_campaigns.create.field_landing': return 'Landing page URL';
+			case 'advertiser_campaigns.create.field_assets': return 'Brief / assets link';
+			case 'advertiser_campaigns.create.field_budget': return 'Total budget';
+			case 'advertiser_campaigns.create.field_cpm_hint': return 'CPM — cost per 1,000 impressions (¢)';
+			case 'advertiser_campaigns.create.field_cpc_hint': return 'CPC — cost per click (¢)';
+			case 'advertiser_campaigns.create.field_video_min_duration': return 'Minimum video length (minutes)';
+			case 'advertiser_campaigns.create.field_shorts_max_duration': return 'Max shorts length (seconds)';
+			case 'advertiser_campaigns.create.type_link': return 'Link';
+			case 'advertiser_campaigns.create.type_video': return 'Video';
+			case 'advertiser_campaigns.create.type_shorts': return 'Shorts';
+			case 'advertiser_campaigns.create.landing_help': return 'Required for link campaigns (https).';
+			case 'advertiser_campaigns.create.assets_help': return 'Video & shorts require a Drive, OneDrive, or SharePoint https link.';
+			case 'advertiser_campaigns.create.submit_draft': return 'Save as draft';
+			case 'advertiser_campaigns.create.validation_title': return 'Check the highlighted fields.';
+			case 'advertiser_campaigns.create.assets_url_invalid': return 'Use an https Google Drive, OneDrive, or SharePoint URL.';
+			case 'advertiser_campaigns.create.success': return 'Draft campaign created';
+			case 'advertiser_campaigns.create.submit_in_progress': return 'Saving…';
 			case 'advertiser_campaigns.applications.title': return 'Creator Applications';
 			case 'advertiser_campaigns.applications.pending_badge': return ({required Object count}) => '${count} pending';
 			case 'advertiser_campaigns.applications.subtitle': return 'Review and approve or reject creator applications';
@@ -1324,6 +1401,9 @@ extension on Translations {
 			case 'chat.search_users_hint': return 'Search people by name…';
 			case 'chat.search_users_no_results': return 'No users match your search.';
 			case 'chat.search_users_min_hint': return 'Type at least 2 characters to search.';
+			case 'chat.search_prior_chats_hint': return 'Search people you\'ve messaged…';
+			case 'chat.search_prior_chats_no_results': return 'No one in your conversations matches.';
+			case 'chat.search_prior_chats_min_hint': return 'Type at least 2 characters.';
 			case 'chat.conversation_open_failed': return 'Could not open that conversation. Try again.';
 			case 'chat.file_picker_restart_hint': return 'Attachments need a full app restart after updates. Stop the app, then Run again (avoid hot restart).';
 			case 'chat.attachment_type_not_allowed': return 'Only images (JPG, PNG, GIF, WebP, BMP) or PDF are allowed.';

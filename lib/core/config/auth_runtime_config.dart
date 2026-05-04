@@ -320,8 +320,12 @@ final class AuthRuntimeConfig {
       overlay('REVERB_PORT', (v) => i._reverbPort = v);
       overlay('REVERB_SCHEME', (v) => i._reverbScheme = v);
     } catch (_) {
-      // dart_defines.json is optional in debug — compile-time defines are used.
-      debugPrint('[DEBUG] Using compile-time defines (no dart_defines.json).');
+      // No asset in pubspec by design (--dart-define / --dart-define-from-file bake
+      // values into AppConfig at compile time; the JSON file path on disk is unrelated).
+      debugPrint(
+        '[DEBUG] dart_defines.json asset not bundled. Using compile-time defines '
+        'from --dart-define / --dart-define-from-file.',
+      );
     }
   }
 }

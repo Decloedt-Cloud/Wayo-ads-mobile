@@ -10,11 +10,14 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../theme/liquid_neural_palette.dart';
 import '../../../../i18n/strings.g.dart';
 import '../../data/chat_media_utils.dart';
+import '../../data/chat_prior_contacts.dart';
+import '../../domain/chat_conversation.dart';
 import '../../domain/chat_credentials.dart';
 import '../../domain/chat_directory_user.dart';
 import '../providers/chat_providers.dart';
 
-/// Debounced user search against chat-service `GET /api/v1/users` (Wayo-ads parity).
+/// User search bar: advertiser flow calls chat-service [`GET api/v1/users`]; creators
+/// can restrict to **[priorContactsOnly]** (local filter on existing threads only).
 class ChatUserSearchBar extends ConsumerStatefulWidget {
   const ChatUserSearchBar({
     super.key,
@@ -22,12 +25,18 @@ class ChatUserSearchBar extends ConsumerStatefulWidget {
     required this.hiddenParticipantIds,
     required this.onUserSelected,
     this.useLiquidNeuralStyle = false,
+    this.priorContactsOnly = false,
+    this.priorConversationList = const [],
   });
 
   final ChatCredentials creds;
   final Set<int> hiddenParticipantIds;
   final Future<void> Function(ChatDirectoryUser user) onUserSelected;
   final bool useLiquidNeuralStyle;
+
+  /// When true, never hits `api/v1/users` — searches only [`priorConversationList`].
+  final bool priorContactsOnly;
+  final List<ChatConversation> priorConversationList;
 
   @override
   ConsumerState<ChatUserSearchBar> createState() => _ChatUserSearchBarState();
@@ -75,6 +84,11 @@ class _ChatUserSearchBarState extends ConsumerState<ChatUserSearchBar> {
       return;
     }
 
+    if (widget.priorContactsOnly) {
+      await _runPriorContactsSearch(q);
+      return;
+    }
+
     if (mounted) {
       setState(() => _loading = true);
     }
@@ -110,6 +124,28 @@ class _ChatUserSearchBarState extends ConsumerState<ChatUserSearchBar> {
         _loading = false;
       });
     }
+  }
+
+  /// Local search only — no chat-service directory API.
+  Future<void> _runPriorContactsSearch(String q) async {
+    final t = context.t;
+    final me = widget.creds.chatUserId;
+    final qLower = q.toLowerCase();
+    final roster = chatDirectoryUsersFromPriorConversations(
+      conversations: widget.priorConversationList,
+      myChatUserId: me,
+      fallbackName: t.chat.conversation_unknown,
+    );
+    final filtered = roster
+        .where((u) => u.id != me && chatPriorContactMatchesQuery(u, qLower))
+        .where((u) => !widget.hiddenParticipantIds.contains(u.id))
+        .toList();
+
+    if (!mounted || _lastQuery != q) return;
+    setState(() {
+      _results = filtered;
+      _loading = false;
+    });
   }
 
   void _scheduleSearch(String value) {
@@ -200,7 +236,9 @@ class _ChatUserSearchBarState extends ConsumerState<ChatUserSearchBar> {
                     key: const ValueKey('empty'),
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     child: Text(
-                      t.chat.search_users_no_results,
+                      widget.priorContactsOnly
+                          ? t.chat.search_prior_chats_no_results
+                          : t.chat.search_users_no_results,
                       textAlign: TextAlign.center,
                       style: AppTextStyles.caption(
                         context,
@@ -361,7 +399,9 @@ class _ChatUserSearchBarState extends ConsumerState<ChatUserSearchBar> {
         ] else if (_focus.hasFocus) ...[
           const SizedBox(height: 6),
           Text(
-            t.chat.search_users_min_hint,
+            widget.priorContactsOnly
+                ? t.chat.search_prior_chats_min_hint
+                : t.chat.search_users_min_hint,
             style: AppTextStyles.caption(
               context,
             ).copyWith(color: AppColors.textMutedOf(context)),
@@ -394,14 +434,16 @@ class _ChatUserSearchBarState extends ConsumerState<ChatUserSearchBar> {
       ),
       cursorColor: accent,
       decoration: InputDecoration(
-        hintText: t.chat.search_users_hint,
+        hintText: widget.priorContactsOnly
+            ? t.chat.search_prior_chats_hint
+            : t.chat.search_users_hint,
         hintStyle: AppTextStyles.bodyLarge(context).copyWith(
           color: widget.useLiquidNeuralStyle && ln != null
               ? ln.textSecondary
               : AppColors.textMutedOf(context),
         ),
         prefixIcon: Icon(Icons.search_rounded, color: accent),
-        suffixIcon: _loading
+        suffixIcon: !widget.priorContactsOnly && _loading
             ? Padding(
                 padding: const EdgeInsets.all(12),
                 child: SizedBox(

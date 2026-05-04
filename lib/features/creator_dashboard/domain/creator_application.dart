@@ -1,5 +1,7 @@
 import 'package:equatable/equatable.dart';
 
+import '../../../core/network/wayo_ads_public_url.dart';
+
 /// One row from `GET /api/creator/applications`.
 final class CreatorApplication extends Equatable {
   const CreatorApplication({
@@ -47,10 +49,11 @@ final class CreatorApplication extends Equatable {
           'Campaign',
       status: CreatorApplicationStatus.fromApi(json['status']),
       submittedAt: parseDate(json['submittedAt'] ?? json['createdAt']),
-      coverUrl:
-          (campaignMap?['coverImageUrl'] as String?) ??
-          (campaignMap?['coverUrl'] as String?) ??
-          (json['coverUrl'] as String?),
+      coverUrl: campaignMap != null
+          ? (parseCampaignCoverUrlFromJson(campaignMap) ??
+              (campaignMap['coverImageUrl'] as String?) ??
+              (campaignMap['coverUrl'] as String?))
+          : (json['coverUrl'] as String?),
       advertiserName:
           (advertiserMap?['name'] as String?) ??
           (advertiserMap?['company'] as String?),

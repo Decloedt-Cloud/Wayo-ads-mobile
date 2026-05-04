@@ -245,7 +245,7 @@ class _TranslationsAdvertiserCampaignsAr extends TranslationsAdvertiserCampaigns
 
 	// Translations
 	@override String get title => 'الحملات';
-	@override String get subtitle => 'تابع أداء حملاتك — عرض فقط.';
+	@override String get subtitle => 'أنشئ حملات كمسودات، تابع الأداء وراجع طلبات المنشئين.';
 	@override late final _TranslationsAdvertiserCampaignsTabsAr tabs = _TranslationsAdvertiserCampaignsTabsAr._(_root);
 	@override String get search_placeholder => 'ابحث عن حملة';
 	@override late final _TranslationsAdvertiserCampaignsEmptyAr empty = _TranslationsAdvertiserCampaignsEmptyAr._(_root);
@@ -253,6 +253,7 @@ class _TranslationsAdvertiserCampaignsAr extends TranslationsAdvertiserCampaigns
 	@override late final _TranslationsAdvertiserCampaignsStatusAr status = _TranslationsAdvertiserCampaignsStatusAr._(_root);
 	@override late final _TranslationsAdvertiserCampaignsPlatformAr platform = _TranslationsAdvertiserCampaignsPlatformAr._(_root);
 	@override late final _TranslationsAdvertiserCampaignsDetailAr detail = _TranslationsAdvertiserCampaignsDetailAr._(_root);
+	@override late final _TranslationsAdvertiserCampaignsCreateAr create = _TranslationsAdvertiserCampaignsCreateAr._(_root);
 	@override late final _TranslationsAdvertiserCampaignsApplicationsAr applications = _TranslationsAdvertiserCampaignsApplicationsAr._(_root);
 }
 
@@ -353,6 +354,9 @@ class _TranslationsChatAr extends TranslationsChatEn {
 	@override String get search_users_hint => 'ابحث عن شخص بالاسم…';
 	@override String get search_users_no_results => 'لا يوجد مستخدمون مطابقون.';
 	@override String get search_users_min_hint => 'اكتب حرفين على الأقل للبحث.';
+	@override String get search_prior_chats_hint => 'ابحث بين من راسلتهم…';
+	@override String get search_prior_chats_no_results => 'لا يوجد تطابق بين أشخاص محادثاتك.';
+	@override String get search_prior_chats_min_hint => 'اكتب حرفين على الأقل.';
 	@override String get conversation_open_failed => 'تعذّر فتح هذه المحادثة. حاول مرة أخرى.';
 	@override String get file_picker_restart_hint => 'المرفقات تحتاج إعادة تشغيل كاملة للتطبيق بعد التحديثات. أوقف التطبيق ثم شغّله من جديد (تجنّب hot restart).';
 	@override String get attachment_type_not_allowed => 'يُسمح فقط بالصور (JPG أو PNG أو GIF أو WebP أو BMP) أو ملفات PDF.';
@@ -629,6 +633,47 @@ class _TranslationsAdvertiserCampaignsDetailAr extends TranslationsAdvertiserCam
 	@override String get approved_creators => 'منشئون معتمدون';
 	@override String get platform_label => 'المنصة';
 	@override String get campaign_type_label => 'نوع الحملة';
+	@override String get niche_label => 'المجال';
+	@override String get objective_label => 'الهدف';
+	@override String get objective_awareness => 'الوعي بالعلامة';
+	@override String get objective_traffic => 'الزيارات';
+	@override String get objective_conversion => 'التحويل';
+	@override String get cpm_metric => 'CPM (لكل 1000 مشاهدة)';
+	@override String get cpc_metric => 'CPC (لكل نقرة)';
+}
+
+// Path: advertiser_campaigns.create
+class _TranslationsAdvertiserCampaignsCreateAr extends TranslationsAdvertiserCampaignsCreateEn {
+	_TranslationsAdvertiserCampaignsCreateAr._(TranslationsAr root) : this._root = root, super.internal(root);
+
+	final TranslationsAr _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'حملة جديدة';
+	@override String get section_basics => 'المعلومات الأساسية';
+	@override String get section_budget => 'الميزانية والتسعير';
+	@override String get field_type => 'نوع الحملة';
+	@override String get field_objective => 'هدف الحملة';
+	@override String get field_niche => 'المجال / القطاع';
+	@override String get field_title => 'العنوان';
+	@override String get field_description => 'الوصف (اختياري)';
+	@override String get field_landing => 'رابط الصفحة المستهدفة';
+	@override String get field_assets => 'رابط الموجز / الأصول';
+	@override String get field_budget => 'الميزانية الإجمالية';
+	@override String get field_cpm_hint => 'CPM — التكلفة لكل 1000 ظهور (بالسنت)';
+	@override String get field_cpc_hint => 'CPC — التكلفة لكل نقرة (بالسنت)';
+	@override String get field_video_min_duration => 'الحد الأدنى لطول الفيديو (بالدقائق)';
+	@override String get field_shorts_max_duration => 'الحد الأقصى لطول القصير (بالثواني)';
+	@override String get type_link => 'رابط';
+	@override String get type_video => 'فيديو';
+	@override String get type_shorts => 'قصير';
+	@override String get landing_help => 'مطلوب لحملات الرابط (https).';
+	@override String get assets_help => 'الفيديو والقصير يتطلبان رابطًا https لـ Drive أو OneDrive أو SharePoint.';
+	@override String get submit_draft => 'حفظ كمسودة';
+	@override String get validation_title => 'راجع الحقول.';
+	@override String get assets_url_invalid => 'استخدم عنوان https لـ Google Drive أو OneDrive أو SharePoint.';
+	@override String get success => 'تم إنشاء الحملة (مسودة)';
+	@override String get submit_in_progress => 'جارٍ الحفظ…';
 }
 
 // Path: advertiser_campaigns.applications
@@ -1040,7 +1085,7 @@ extension on TranslationsAr {
 			case 'dashboard.shell_tour_restart': return 'إعادة جولة التعريف';
 			case 'dashboard.shell_tour_restart_hint': return 'إعادة عرض الجولة التعريفية للتنقل بين لوحة التحكم والحملات والمحفظة والمحادثة';
 			case 'advertiser_campaigns.title': return 'الحملات';
-			case 'advertiser_campaigns.subtitle': return 'تابع أداء حملاتك — عرض فقط.';
+			case 'advertiser_campaigns.subtitle': return 'أنشئ حملات كمسودات، تابع الأداء وراجع طلبات المنشئين.';
 			case 'advertiser_campaigns.tabs.active': return 'نشطة';
 			case 'advertiser_campaigns.tabs.draft': return 'مسودات';
 			case 'advertiser_campaigns.tabs.paused': return 'معلّقة';
@@ -1072,6 +1117,38 @@ extension on TranslationsAr {
 			case 'advertiser_campaigns.detail.approved_creators': return 'منشئون معتمدون';
 			case 'advertiser_campaigns.detail.platform_label': return 'المنصة';
 			case 'advertiser_campaigns.detail.campaign_type_label': return 'نوع الحملة';
+			case 'advertiser_campaigns.detail.niche_label': return 'المجال';
+			case 'advertiser_campaigns.detail.objective_label': return 'الهدف';
+			case 'advertiser_campaigns.detail.objective_awareness': return 'الوعي بالعلامة';
+			case 'advertiser_campaigns.detail.objective_traffic': return 'الزيارات';
+			case 'advertiser_campaigns.detail.objective_conversion': return 'التحويل';
+			case 'advertiser_campaigns.detail.cpm_metric': return 'CPM (لكل 1000 مشاهدة)';
+			case 'advertiser_campaigns.detail.cpc_metric': return 'CPC (لكل نقرة)';
+			case 'advertiser_campaigns.create.title': return 'حملة جديدة';
+			case 'advertiser_campaigns.create.section_basics': return 'المعلومات الأساسية';
+			case 'advertiser_campaigns.create.section_budget': return 'الميزانية والتسعير';
+			case 'advertiser_campaigns.create.field_type': return 'نوع الحملة';
+			case 'advertiser_campaigns.create.field_objective': return 'هدف الحملة';
+			case 'advertiser_campaigns.create.field_niche': return 'المجال / القطاع';
+			case 'advertiser_campaigns.create.field_title': return 'العنوان';
+			case 'advertiser_campaigns.create.field_description': return 'الوصف (اختياري)';
+			case 'advertiser_campaigns.create.field_landing': return 'رابط الصفحة المستهدفة';
+			case 'advertiser_campaigns.create.field_assets': return 'رابط الموجز / الأصول';
+			case 'advertiser_campaigns.create.field_budget': return 'الميزانية الإجمالية';
+			case 'advertiser_campaigns.create.field_cpm_hint': return 'CPM — التكلفة لكل 1000 ظهور (بالسنت)';
+			case 'advertiser_campaigns.create.field_cpc_hint': return 'CPC — التكلفة لكل نقرة (بالسنت)';
+			case 'advertiser_campaigns.create.field_video_min_duration': return 'الحد الأدنى لطول الفيديو (بالدقائق)';
+			case 'advertiser_campaigns.create.field_shorts_max_duration': return 'الحد الأقصى لطول القصير (بالثواني)';
+			case 'advertiser_campaigns.create.type_link': return 'رابط';
+			case 'advertiser_campaigns.create.type_video': return 'فيديو';
+			case 'advertiser_campaigns.create.type_shorts': return 'قصير';
+			case 'advertiser_campaigns.create.landing_help': return 'مطلوب لحملات الرابط (https).';
+			case 'advertiser_campaigns.create.assets_help': return 'الفيديو والقصير يتطلبان رابطًا https لـ Drive أو OneDrive أو SharePoint.';
+			case 'advertiser_campaigns.create.submit_draft': return 'حفظ كمسودة';
+			case 'advertiser_campaigns.create.validation_title': return 'راجع الحقول.';
+			case 'advertiser_campaigns.create.assets_url_invalid': return 'استخدم عنوان https لـ Google Drive أو OneDrive أو SharePoint.';
+			case 'advertiser_campaigns.create.success': return 'تم إنشاء الحملة (مسودة)';
+			case 'advertiser_campaigns.create.submit_in_progress': return 'جارٍ الحفظ…';
 			case 'advertiser_campaigns.applications.title': return 'طلبات المنشئين';
 			case 'advertiser_campaigns.applications.pending_badge': return ({required Object count}) => '${count} في الانتظار';
 			case 'advertiser_campaigns.applications.subtitle': return 'راجع واعتمد أو ارفض طلبات المنشئين';
@@ -1322,6 +1399,9 @@ extension on TranslationsAr {
 			case 'chat.search_users_hint': return 'ابحث عن شخص بالاسم…';
 			case 'chat.search_users_no_results': return 'لا يوجد مستخدمون مطابقون.';
 			case 'chat.search_users_min_hint': return 'اكتب حرفين على الأقل للبحث.';
+			case 'chat.search_prior_chats_hint': return 'ابحث بين من راسلتهم…';
+			case 'chat.search_prior_chats_no_results': return 'لا يوجد تطابق بين أشخاص محادثاتك.';
+			case 'chat.search_prior_chats_min_hint': return 'اكتب حرفين على الأقل.';
 			case 'chat.conversation_open_failed': return 'تعذّر فتح هذه المحادثة. حاول مرة أخرى.';
 			case 'chat.file_picker_restart_hint': return 'المرفقات تحتاج إعادة تشغيل كاملة للتطبيق بعد التحديثات. أوقف التطبيق ثم شغّله من جديد (تجنّب hot restart).';
 			case 'chat.attachment_type_not_allowed': return 'يُسمح فقط بالصور (JPG أو PNG أو GIF أو WebP أو BMP) أو ملفات PDF.';

@@ -88,6 +88,9 @@ final class AdvertiserCampaignsRepository {
   Future<void> rejectApplication(String campaignId, String applicationId) =>
       _remote.rejectApplication(campaignId, applicationId);
 
+  Future<String> createCampaignDraft(Map<String, dynamic> body) =>
+      _remote.createCampaignDraft(body);
+
   static AuthException mapError(Object e) {
     if (e is AuthException) {
       return e;

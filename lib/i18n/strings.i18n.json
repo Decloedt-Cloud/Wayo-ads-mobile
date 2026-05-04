@@ -132,7 +132,9 @@
     "application_rejected": "Application rejected",
     "application_action_failed": "Could not update the application. Try again.",
     "theme_toggle_tooltip": "Switch between light and dark theme",
-    "refresh": "Refresh dashboard"
+    "refresh": "Refresh dashboard",
+    "shell_tour_restart": "Restart onboarding tour",
+    "shell_tour_restart_hint": "Replay the guided tour of Dashboard, Campaigns, Wallet and Chat navigation"
   },
   "advertiser_campaigns": {
     "title": "Campaigns",
@@ -459,6 +461,9 @@
     "date_today": "Today",
     "date_yesterday": "Yesterday",
     "bubble_reply": "Reply",
+    "reply_composer_title": "Reply",
+    "reply_composer_you": "You",
+    "composer_reply_hint": "Write a reply…",
     "bubble_copy": "Copy",
     "bubble_react": "React",
     "bubble_delete": "Delete",

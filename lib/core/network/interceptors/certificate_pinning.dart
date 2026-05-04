@@ -24,19 +24,16 @@ abstract final class CertificatePinning {
   ///
   /// In **debug/profile** builds: no-op (allows dev servers without valid certs).
   static void attach(Dio dio, {required List<String> pinnedSha256Base64}) {
-    // TODO(security): Re-enable pinning after testing on physical devices.
-    // TEMPORARILY DISABLED for debugging login issue on release APK.
-    debugPrint('[CertificatePinning] DISABLED for testing');
-    return;
-
-    // ignore: dead_code
-    if (pinnedSha256Base64.isEmpty) {
-      debugPrint('[CertificatePinning] SKIPPED — no pins configured');
+    if (!kReleaseMode) {
       return;
     }
 
-    if (!kReleaseMode) {
-      return;
+    // SECURITY: Empty pins in release is a configuration error — fail loudly.
+    if (pinnedSha256Base64.isEmpty) {
+      throw StateError(
+        'Certificate pinning requires at least one pin in release builds. '
+        'Set CERT_PIN_PRIMARY / CERT_PIN_BACKUP via --dart-define.',
+      );
     }
 
     dio.httpClientAdapter = IOHttpClientAdapter(

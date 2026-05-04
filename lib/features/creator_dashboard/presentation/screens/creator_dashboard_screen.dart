@@ -22,6 +22,7 @@ import '../../../auth/presentation/widgets/wayo_logo.dart';
 import '../../../dashboard/presentation/providers/dashboard_state_providers.dart';
 import '../../../dashboard/presentation/widgets/error_banner.dart';
 import '../../../dashboard/presentation/widgets/notification_center_popup.dart';
+import '../../../shell/presentation/widgets/shell_tutorial_replay_scope.dart';
 import '../../domain/creator_application.dart';
 import '../../domain/creator_stats.dart';
 import '../providers/creator_dashboard_providers.dart';
@@ -239,6 +240,9 @@ class _CreatorHeader extends ConsumerWidget {
     final async = ref.watch(dashboardStreamProvider);
     final snap = async.valueOrNull;
     final unread = snap?.unreadCount ?? 0;
+    final replayOnboardingTour =
+        ShellTutorialReplayScope.maybeOf(context)?.replay;
+    final accent = CreatorColors.primaryOf(context);
     return Padding(
       padding: EdgeInsets.fromLTRB(
         16,
@@ -273,6 +277,43 @@ class _CreatorHeader extends ConsumerWidget {
               ),
             ),
           ),
+          if (replayOnboardingTour != null) ...[
+            const SizedBox(width: 8),
+            Tooltip(
+              message: t.dashboard.shell_tour_restart_hint,
+              child: Semantics(
+                button: true,
+                label: t.dashboard.shell_tour_restart,
+                child: Material(
+                  color: AppColors.surfaceElevatedOf(
+                    context,
+                  ).withValues(alpha: 0.5),
+                  shape: const CircleBorder(),
+                  child: InkWell(
+                    customBorder: const CircleBorder(),
+                    onTap: () {
+                      HapticFeedback.lightImpact();
+                      replayOnboardingTour();
+                    },
+                    child: Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: accent.withValues(alpha: 0.45),
+                          width: 1,
+                        ),
+                      ),
+                      padding: const EdgeInsets.all(10),
+                      child: Icon(
+                        Icons.replay_rounded,
+                        color: accent,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
           const SizedBox(width: 8),
           Material(
             color: AppColors.surfaceElevatedOf(context).withValues(alpha: 0.5),

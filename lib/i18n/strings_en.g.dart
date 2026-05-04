@@ -235,6 +235,8 @@ class TranslationsDashboardEn {
 	String get application_action_failed => 'Could not update the application. Try again.';
 	String get theme_toggle_tooltip => 'Switch between light and dark theme';
 	String get refresh => 'Refresh dashboard';
+	String get shell_tour_restart => 'Restart onboarding tour';
+	String get shell_tour_restart_hint => 'Replay the guided tour of Dashboard, Campaigns, Wallet and Chat navigation';
 }
 
 // Path: advertiser_campaigns
@@ -360,6 +362,9 @@ class TranslationsChatEn {
 	String get date_today => 'Today';
 	String get date_yesterday => 'Yesterday';
 	String get bubble_reply => 'Reply';
+	String get reply_composer_title => 'Reply';
+	String get reply_composer_you => 'You';
+	String get composer_reply_hint => 'Write a reply…';
 	String get bubble_copy => 'Copy';
 	String get bubble_react => 'React';
 	String get bubble_delete => 'Delete';
@@ -1034,6 +1039,8 @@ extension on Translations {
 			case 'dashboard.application_action_failed': return 'Could not update the application. Try again.';
 			case 'dashboard.theme_toggle_tooltip': return 'Switch between light and dark theme';
 			case 'dashboard.refresh': return 'Refresh dashboard';
+			case 'dashboard.shell_tour_restart': return 'Restart onboarding tour';
+			case 'dashboard.shell_tour_restart_hint': return 'Replay the guided tour of Dashboard, Campaigns, Wallet and Chat navigation';
 			case 'advertiser_campaigns.title': return 'Campaigns';
 			case 'advertiser_campaigns.subtitle': return 'Track your campaign performance — read only.';
 			case 'advertiser_campaigns.tabs.active': return 'Active';
@@ -1324,6 +1331,9 @@ extension on Translations {
 			case 'chat.date_today': return 'Today';
 			case 'chat.date_yesterday': return 'Yesterday';
 			case 'chat.bubble_reply': return 'Reply';
+			case 'chat.reply_composer_title': return 'Reply';
+			case 'chat.reply_composer_you': return 'You';
+			case 'chat.composer_reply_hint': return 'Write a reply…';
 			case 'chat.bubble_copy': return 'Copy';
 			case 'chat.bubble_react': return 'React';
 			case 'chat.bubble_delete': return 'Delete';

@@ -1,6 +1,6 @@
 {
-   "AUTH_WAYO_BASE_URL": "https://myaccount.wayo.ac",
-  "AUTH_API_URL": "https://myaccount.wayo.ac",
+  "AUTH_WAYO_BASE_URL": "https://preprodauth.wayo.ac",
+  "AUTH_API_URL": "https://preprodauth.wayo.ac",
   "AUTH_OAUTH_CLIENT_ID": "019d9750-1485-72d2-9fc4-9a4d993ac0fc",
   "AUTH_OAUTH_CLIENT_SECRET": "JXQou3gWAnftgssNiG1oP9UNEocFbuKCfWyQDX3W",
   "AUTH_APP_NAME": "wayo_ads",

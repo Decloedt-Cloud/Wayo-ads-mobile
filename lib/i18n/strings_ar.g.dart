@@ -233,6 +233,8 @@ class _TranslationsDashboardAr extends TranslationsDashboardEn {
 	@override String get application_action_failed => 'تعذّر تحديث الطلب. أعد المحاولة.';
 	@override String get theme_toggle_tooltip => 'التبديل بين الوضع الفاتح والداكن';
 	@override String get refresh => 'تحديث لوحة التحكم';
+	@override String get shell_tour_restart => 'إعادة جولة التعريف';
+	@override String get shell_tour_restart_hint => 'إعادة عرض الجولة التعريفية للتنقل بين لوحة التحكم والحملات والمحفظة والمحادثة';
 }
 
 // Path: advertiser_campaigns
@@ -358,6 +360,9 @@ class _TranslationsChatAr extends TranslationsChatEn {
 	@override String get date_today => 'اليوم';
 	@override String get date_yesterday => 'أمس';
 	@override String get bubble_reply => 'رد';
+	@override String get reply_composer_title => 'رد';
+	@override String get reply_composer_you => 'أنت';
+	@override String get composer_reply_hint => 'اكتب رداً…';
 	@override String get bubble_copy => 'نسخ';
 	@override String get bubble_react => 'تفاعل';
 	@override String get bubble_delete => 'حذف';
@@ -1032,6 +1037,8 @@ extension on TranslationsAr {
 			case 'dashboard.application_action_failed': return 'تعذّر تحديث الطلب. أعد المحاولة.';
 			case 'dashboard.theme_toggle_tooltip': return 'التبديل بين الوضع الفاتح والداكن';
 			case 'dashboard.refresh': return 'تحديث لوحة التحكم';
+			case 'dashboard.shell_tour_restart': return 'إعادة جولة التعريف';
+			case 'dashboard.shell_tour_restart_hint': return 'إعادة عرض الجولة التعريفية للتنقل بين لوحة التحكم والحملات والمحفظة والمحادثة';
 			case 'advertiser_campaigns.title': return 'الحملات';
 			case 'advertiser_campaigns.subtitle': return 'تابع أداء حملاتك — عرض فقط.';
 			case 'advertiser_campaigns.tabs.active': return 'نشطة';
@@ -1322,6 +1329,9 @@ extension on TranslationsAr {
 			case 'chat.date_today': return 'اليوم';
 			case 'chat.date_yesterday': return 'أمس';
 			case 'chat.bubble_reply': return 'رد';
+			case 'chat.reply_composer_title': return 'رد';
+			case 'chat.reply_composer_you': return 'أنت';
+			case 'chat.composer_reply_hint': return 'اكتب رداً…';
 			case 'chat.bubble_copy': return 'نسخ';
 			case 'chat.bubble_react': return 'تفاعل';
 			case 'chat.bubble_delete': return 'حذف';

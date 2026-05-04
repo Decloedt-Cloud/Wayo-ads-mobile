@@ -233,6 +233,8 @@ class _TranslationsDashboardFr extends TranslationsDashboardEn {
 	@override String get application_action_failed => 'Impossible de mettre à jour la candidature. Réessayez.';
 	@override String get theme_toggle_tooltip => 'Basculer entre thème clair et sombre';
 	@override String get refresh => 'Actualiser le tableau de bord';
+	@override String get shell_tour_restart => 'Revoir le tour d’onboarding';
+	@override String get shell_tour_restart_hint => 'Relancer la visite guidée de la navigation Tableau de bord, Campagnes, Portefeuille et Messages';
 }
 
 // Path: advertiser_campaigns
@@ -358,6 +360,9 @@ class _TranslationsChatFr extends TranslationsChatEn {
 	@override String get date_today => 'Aujourd\'hui';
 	@override String get date_yesterday => 'Hier';
 	@override String get bubble_reply => 'Répondre';
+	@override String get reply_composer_title => 'Répondre';
+	@override String get reply_composer_you => 'Vous';
+	@override String get composer_reply_hint => 'Écrivez une réponse…';
 	@override String get bubble_copy => 'Copier';
 	@override String get bubble_react => 'Réagir';
 	@override String get bubble_delete => 'Supprimer';
@@ -1032,6 +1037,8 @@ extension on TranslationsFr {
 			case 'dashboard.application_action_failed': return 'Impossible de mettre à jour la candidature. Réessayez.';
 			case 'dashboard.theme_toggle_tooltip': return 'Basculer entre thème clair et sombre';
 			case 'dashboard.refresh': return 'Actualiser le tableau de bord';
+			case 'dashboard.shell_tour_restart': return 'Revoir le tour d’onboarding';
+			case 'dashboard.shell_tour_restart_hint': return 'Relancer la visite guidée de la navigation Tableau de bord, Campagnes, Portefeuille et Messages';
 			case 'advertiser_campaigns.title': return 'Campagnes';
 			case 'advertiser_campaigns.subtitle': return 'Suivez les performances de vos campagnes — consultation uniquement.';
 			case 'advertiser_campaigns.tabs.active': return 'Actives';
@@ -1322,6 +1329,9 @@ extension on TranslationsFr {
 			case 'chat.date_today': return 'Aujourd\'hui';
 			case 'chat.date_yesterday': return 'Hier';
 			case 'chat.bubble_reply': return 'Répondre';
+			case 'chat.reply_composer_title': return 'Répondre';
+			case 'chat.reply_composer_you': return 'Vous';
+			case 'chat.composer_reply_hint': return 'Écrivez une réponse…';
 			case 'chat.bubble_copy': return 'Copier';
 			case 'chat.bubble_react': return 'Réagir';
 			case 'chat.bubble_delete': return 'Supprimer';

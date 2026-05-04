@@ -27,6 +27,7 @@ import '../../domain/entities/campaign_summary.dart';
 import '../../../../shared/widgets/animated_logout_icon.dart';
 import '../../../app_settings/presentation/widgets/app_settings_side_panel.dart';
 import '../../../creator_campaigns/domain/creator_browse_campaign.dart';
+import '../../../shell/presentation/widgets/shell_tutorial_replay_scope.dart';
 import '../widgets/error_banner.dart';
 import '../widgets/notification_center_popup.dart';
 
@@ -138,6 +139,8 @@ class _HeaderState extends ConsumerState<_Header> {
     final snap = async.valueOrNull;
     final unread = snap?.unreadCount ?? 0;
     final t = context.t;
+    final replayOnboardingTour =
+        ShellTutorialReplayScope.maybeOf(context)?.replay;
     return Padding(
       padding: EdgeInsets.fromLTRB(
         16,
@@ -177,6 +180,43 @@ class _HeaderState extends ConsumerState<_Header> {
               ),
             ),
           ),
+          if (replayOnboardingTour != null) ...[
+            const SizedBox(width: 8),
+            Tooltip(
+              message: t.dashboard.shell_tour_restart_hint,
+              child: Semantics(
+                button: true,
+                label: t.dashboard.shell_tour_restart,
+                child: Material(
+                  color: AppColors.surfaceElevatedOf(
+                    context,
+                  ).withValues(alpha: 0.65),
+                  shape: const CircleBorder(),
+                  child: InkWell(
+                    customBorder: const CircleBorder(),
+                    onTap: () {
+                      HapticFeedback.lightImpact();
+                      replayOnboardingTour();
+                    },
+                    child: Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: AppColors.primary.withValues(alpha: 0.45),
+                          width: 1,
+                        ),
+                      ),
+                      padding: const EdgeInsets.all(10),
+                      child: Icon(
+                        Icons.replay_rounded,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
           const SizedBox(width: 8),
           Material(
             color: AppColors.surfaceElevatedOf(context).withValues(alpha: 0.65),

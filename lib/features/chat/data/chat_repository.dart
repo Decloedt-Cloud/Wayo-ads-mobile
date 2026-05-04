@@ -201,7 +201,8 @@ final class ChatRepository {
     throw const ServerException('Chat bootstrap failed after retries');
   }
 
-  static const _kChat401Retried = 'chat_service_401_retried';
+  /// Max JWT refresh attempts per failing request before surfacing 401 (stale/expired bootstrap).
+  static const _kChat401RefreshAttempts = 'chat_service_401_refresh_attempts';
 
   void _addChatDioAuthRetry(Dio dio, {String? Function()? socketId}) {
     // Queued wrapper: async 401 recovery must complete [ErrorInterceptorHandler].
@@ -218,15 +219,20 @@ final class ChatRepository {
           if (e.response?.statusCode != 401) {
             return handler.next(e);
           }
-          if (e.requestOptions.extra[_kChat401Retried] == true) {
+          final attempts =
+              (e.requestOptions.extra[_kChat401RefreshAttempts] as int?) ?? 0;
+          const maxJwtRefreshPasses = 3;
+          if (attempts >= maxJwtRefreshPasses) {
             return handler.next(e);
           }
-          e.requestOptions.extra[_kChat401Retried] = true;
+          e.requestOptions.extra[_kChat401RefreshAttempts] = attempts + 1;
+
           _refreshChatCredentials()
               .then((creds) {
                 e.requestOptions.headers['Authorization'] =
                     'Bearer ${creds.token.trim()}';
-                e.requestOptions.headers['X-Application-ID'] = creds.appId.trim();
+                e.requestOptions.headers['X-Application-ID'] =
+                    creds.appId.trim();
                 return dio.fetch<dynamic>(e.requestOptions);
               })
               .then(handler.resolve)
@@ -280,7 +286,7 @@ final class ChatRepository {
     final q = term.trim();
     if (q.isEmpty) return const [];
     ChatCredentials creds = c;
-    for (var attempt = 0; attempt < 2; attempt++) {
+    for (var attempt = 0; attempt < 4; attempt++) {
       try {
         final dio = _chatDio(creds, socketId: socketId);
         final res = await dio.get<Map<String, dynamic>>(
@@ -306,7 +312,7 @@ final class ChatRepository {
             .toList();
       } on DioException catch (e) {
         final code = e.response?.statusCode;
-        if (code == 401 && attempt == 0) {
+        if (code == 401 && attempt < 3) {
           if (kDebugMode) {
             debugPrint(
               '[Chat] GET api/v1/users → 401; forcing chat bootstrap refresh '
@@ -410,11 +416,32 @@ final class ChatRepository {
     int conversationId,
     String content, {
     String? Function()? socketId,
+    /// Laravel chat parity: binds message to parent row when API supports `reply_to_message_id`.
+    int? replyToMessageId,
   }) async {
     final dio = _chatDio(c, socketId: socketId);
+    final replyId = switch (replyToMessageId) {
+      final id? when id > 0 => id,
+      _ => null,
+    };
+
+    /// Chat-service payloads vary (`reply_to`, `parent_id`, etc.) — duplicate keys hurt
+    /// strict APIs less than missing the one Laravel validates.
+    final body = <String, dynamic>{
+      'content': content,
+      'type': 'text',
+    };
+    if (replyId != null) {
+      body['reply_to_message_id'] = replyId;
+      body['reply_to_id'] = replyId;
+      body['parent_id'] = replyId;
+      body['parent_message_id'] = replyId;
+      body['reply_to'] = replyId;
+    }
+
     final res = await dio.post<Map<String, dynamic>>(
       'api/v1/conversations/$conversationId/messages',
-      data: <String, dynamic>{'content': content, 'type': 'text'},
+      data: body,
     );
     final data = res.data;
     if (data == null || data['success'] != true) {
@@ -594,7 +621,48 @@ final class ChatRepository {
   /// Used by realtime payloads (`message.sent`, `message.edited`).
   ChatMessage parseRemoteMessage(Map<String, dynamic> m) => _parseMessage(m);
 
+  ChatReplyRef? _parseReplyRef(Map<String, dynamic> m) {
+    final raw =
+        m['reply_to'] ??
+            m['replyTo'] ??
+            m['referenced_message'] ??
+            m['referencedMessage'] ??
+            m['quoted_message'] ??
+            m['quotedMessage'] ??
+            m['parent'];
+    if (raw is! Map<String, dynamic>) return null;
+
+    final idRaw = raw['id'] ?? raw['message_id'] ?? raw['messageId'];
+    if (idRaw is! num) return null;
+    final id = idRaw.toInt();
+
+    final pv = raw['content'] ?? raw['body'] ?? raw['text'] ?? raw['preview'];
+    var preview = pv == null ? '' : '$pv'.trim();
+    if (preview.isEmpty) {
+      final t = '${raw['type'] ?? ''}'.trim();
+      if (t.isNotEmpty && t != 'text') {
+        preview = t;
+      }
+    }
+
+    String? senderName;
+    final u = raw['user'] ?? raw['sender'];
+    if (u is Map<String, dynamic>) {
+      final n = u['name'] ?? u['display_name'];
+      if (n is String && n.trim().isNotEmpty) {
+        senderName = n.trim();
+      }
+    }
+
+    return ChatReplyRef(
+      messageId: id,
+      preview: preview,
+      senderName: senderName,
+    );
+  }
+
   ChatMessage _parseMessage(Map<String, dynamic> m) {
+    final replyTo = _parseReplyRef(m);
     final u = m['user'];
     final s = m['sender'];
     Map<String, dynamic>? userEnvelope;
@@ -630,6 +698,7 @@ final class ChatRepository {
               avatar: userEnvelope['avatar'] as String?,
             )
           : null,
+      replyTo: replyTo,
     );
   }
 }

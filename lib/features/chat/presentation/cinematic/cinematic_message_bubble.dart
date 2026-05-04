@@ -29,6 +29,7 @@ class CinematicMessageBubble extends StatefulWidget {
     this.selected = false,
     this.onSelect,
     this.onDismissSelection,
+    this.onReplyRequest,
     this.onEditRequest,
     this.onDeleteRequest,
   });
@@ -53,6 +54,9 @@ class CinematicMessageBubble extends StatefulWidget {
   final VoidCallback? onSelect;
   final VoidCallback? onDismissSelection;
 
+  /// Long-press → start reply composer (parity with WhatsApp reply affordance).
+  final VoidCallback? onReplyRequest;
+
   /// Tap the "edit" pill in the inline bar — thread screen switches composer to
   /// edit mode.
   final VoidCallback? onEditRequest;
@@ -66,6 +70,22 @@ class CinematicMessageBubble extends StatefulWidget {
 }
 
 class _CinematicMessageBubbleState extends State<CinematicMessageBubble> {
+  /// Horizontal inward drag (toward conversation center). WhatsApp-style reply.
+  double _dragX = 0;
+
+  static const double _swipeMaxShift = 64;
+  static const double _replyTriggerDx = 40;
+
+  @override
+  void didUpdateWidget(covariant CinematicMessageBubble oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // New server row / ack from optimistic replace — reset stray drag offset.
+    if (widget.message.id != oldWidget.message.id ||
+        widget.message.pending != oldWidget.message.pending) {
+      _dragX = 0;
+    }
+  }
+
   String _timeLabel() {
     try {
       final d = DateTime.parse(widget.message.createdAt).toLocal();
@@ -83,6 +103,39 @@ class _CinematicMessageBubbleState extends State<CinematicMessageBubble> {
     }
   }
 
+  bool _snapBackIfReducedMotion() {
+    if (!widget.reduceMotion) return false;
+    if (_dragX != 0) setState(() => _dragX = 0);
+    return true;
+  }
+
+  void _horizontalDragReplyUpdate(double dx) {
+    // Physical screen coords: inward = mine moves left (−dx), theirs moves right (+dx).
+    final inward = widget.isMine ? dx < 0 : dx > 0;
+    if (!inward) return;
+    setState(() {
+      final next = _dragX + dx;
+      _dragX = widget.isMine
+          ? next.clamp(-_swipeMaxShift, 0.0)
+          : next.clamp(0.0, _swipeMaxShift);
+    });
+  }
+
+  void _endHorizontalSwipeReply({required bool canceled}) {
+    final cb = widget.onReplyRequest;
+    if (_snapBackIfReducedMotion()) return;
+    if (canceled || cb == null || widget.message.pending || widget.message.failed) {
+      if (_dragX != 0) setState(() => _dragX = 0);
+      return;
+    }
+    final abs = _dragX.abs();
+    if (abs >= _replyTriggerDx) {
+      HapticFeedback.mediumImpact();
+      cb();
+    }
+    if (_dragX != 0) setState(() => _dragX = 0);
+  }
+
   @override
   Widget build(BuildContext context) {
     final ct = CinematicChatTheme.of(context);
@@ -95,6 +148,7 @@ class _CinematicMessageBubbleState extends State<CinematicMessageBubble> {
     final text = m.content.trim();
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final threaded = m.replyTo;
 
     final bubbleRadius = isMine
         ? const BorderRadius.only(
@@ -151,6 +205,18 @@ class _CinematicMessageBubbleState extends State<CinematicMessageBubble> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (threaded != null) ...[
+            _ThreadedReplyPreview(
+              quote: threaded.preview,
+              senderLabel: threaded.senderName,
+              isMine: isMine,
+              amber: ct.amber,
+              textPrimary: ct.textPrimary,
+              muted: ct.muted,
+              isDark: isDark,
+            ),
+            if (isImage || isFile || text.isNotEmpty) const SizedBox(height: 8),
+          ],
           if (isImage)
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
@@ -228,7 +294,9 @@ class _CinematicMessageBubbleState extends State<CinematicMessageBubble> {
           if (isFile && text.isNotEmpty) const SizedBox(height: 8),
           if (text.isNotEmpty)
             ...(() {
-              final parsed = _parseReplyQuote(text);
+              final parsed = threaded != null
+                  ? _ParsedReply(body: text)
+                  : _parseReplyQuote(text);
               return [
                 if (parsed.quote != null) ...[
                   _ReplyQuoteBlock(
@@ -353,6 +421,7 @@ class _CinematicMessageBubbleState extends State<CinematicMessageBubble> {
     final canDelete = isMine && !m.pending;
 
     final bubbleStack = GestureDetector(
+      behavior: HitTestBehavior.translucent,
       onTap: () {
         if (isMine && !m.pending && !m.failed && (canEdit || canDelete)) {
           HapticFeedback.selectionClick();
@@ -363,11 +432,41 @@ class _CinematicMessageBubbleState extends State<CinematicMessageBubble> {
           }
         }
       },
+      onLongPress:
+          (!m.pending && !m.failed && widget.onReplyRequest != null)
+              ? () {
+                  HapticFeedback.mediumImpact();
+                  widget.onReplyRequest!.call();
+                }
+              : null,
+      /// Glissement vers le centre du fil : tes bulles à droite → vers la gauche ; reçues à gauche → vers la droite.
+      onHorizontalDragUpdate:
+          widget.onReplyRequest != null &&
+                  !widget.reduceMotion &&
+                  !m.pending &&
+                  !m.failed
+              ? (d) => _horizontalDragReplyUpdate(d.delta.dx)
+              : null,
+      onHorizontalDragCancel: widget.onReplyRequest != null &&
+              !widget.reduceMotion &&
+              !m.pending &&
+              !m.failed
+          ? () => _endHorizontalSwipeReply(canceled: true)
+          : null,
+      onHorizontalDragEnd: widget.onReplyRequest != null &&
+              !widget.reduceMotion &&
+              !m.pending &&
+              !m.failed
+          ? (_) => _endHorizontalSwipeReply(canceled: false)
+          : null,
       child: AnimatedScale(
         scale: widget.selected ? 0.985 : 1.0,
         duration: const Duration(milliseconds: 160),
         curve: Curves.easeOut,
-        child: bubbleCore,
+        child: Transform.translate(
+          offset: Offset(_dragX, 0),
+          child: bubbleCore,
+        ),
       ),
     );
 
@@ -799,6 +898,124 @@ class _ReplyQuoteBlock extends StatelessWidget {
                           height: 1.3,
                           color: textColor,
                           fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Structured `reply_to` from API (distinct from Markdown `>` fallback).
+class _ThreadedReplyPreview extends StatelessWidget {
+  const _ThreadedReplyPreview({
+    required this.quote,
+    required this.senderLabel,
+    required this.isMine,
+    required this.amber,
+    required this.textPrimary,
+    required this.muted,
+    required this.isDark,
+  });
+
+  final String quote;
+  final String? senderLabel;
+  final bool isMine;
+  final Color amber;
+  final Color textPrimary;
+  final Color muted;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    final barColor = isMine ? Colors.white.withValues(alpha: 0.95) : amber;
+    final surface = isMine
+        ? Colors.white.withValues(alpha: 0.14)
+        : (isDark
+              ? Colors.white.withValues(alpha: 0.05)
+              : amber.withValues(alpha: 0.08));
+    final labelColor = isMine ? Colors.white.withValues(alpha: 0.96) : amber;
+    final textColor = isMine
+        ? Colors.white.withValues(alpha: 0.9)
+        : textPrimary.withValues(alpha: 0.85);
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: (isMine ? Colors.white : amber).withValues(alpha: 0.2),
+            width: 0.6,
+          ),
+        ),
+        child: IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Container(
+                width: 3,
+                decoration: BoxDecoration(
+                  color: barColor,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(12),
+                    bottomLeft: Radius.circular(12),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(10, 8, 12, 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.reply_rounded, size: 14, color: labelColor),
+                          const SizedBox(width: 6),
+                          Text(
+                            context.t.chat.bubble_reply.toUpperCase(),
+                            style: GoogleFonts.inter(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.75,
+                              color: labelColor,
+                            ),
+                          ),
+                          if (senderLabel != null &&
+                              senderLabel!.trim().isNotEmpty)
+                            Expanded(
+                              child: Text(
+                                senderLabel!.trim(),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                textAlign: TextAlign.end,
+                                style: GoogleFonts.inter(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  color: isMine ? labelColor : muted,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        quote.trim(),
+                        maxLines: 4,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          height: 1.3,
+                          color: textColor,
                         ),
                       ),
                     ],

@@ -115,15 +115,23 @@ class AuthInterceptor extends QueuedInterceptor {
             expiresIn: data.expiresIn,
             userJson: data.user.toJson(),
           );
+          c.complete();
+          return;
         case Failure(:final error):
           if (error is SessionInvalidException) {
             notifyAuthForceLogout();
+            c.completeError(SessionExpiredException(), StackTrace.current);
             throw SessionExpiredException();
           }
+          c.completeError(error, StackTrace.current);
           throw error;
       }
+    } catch (e, st) {
+      if (!c.isCompleted) {
+        c.completeError(e, st);
+      }
+      rethrow;
     } finally {
-      c.complete();
       _refreshCompleter = null;
     }
   }

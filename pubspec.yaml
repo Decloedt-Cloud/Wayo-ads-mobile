@@ -60,6 +60,7 @@ dev_dependencies:
   riverpod_lint: ^2.3.10
   mocktail: ^1.0.4
   flutter_native_splash: ^2.4.3
+  flutter_launcher_icons: ^0.14.4
 
 flutter:
   uses-material-design: true
@@ -104,3 +105,14 @@ flutter_native_splash:
   android: true
   ios: true
   web: false
+
+# App launcher icons (home screen). After changing sources, run:
+#   dart run flutter_launcher_icons
+flutter_launcher_icons:
+  android: true
+  ios: true
+  remove_alpha_ios: false
+  image_path_android: assets/android-chrome-192x192.png
+  image_path_ios: assets/apple-touch-icon.png
+  adaptive_icon_background: "#000000"
+  adaptive_icon_foreground: assets/android-chrome-192x192.png

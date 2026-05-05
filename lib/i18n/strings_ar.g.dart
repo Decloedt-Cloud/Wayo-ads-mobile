@@ -84,9 +84,9 @@ class _TranslationsLoginAr extends TranslationsLoginEn {
 	@override String get brand => 'وايو أدز';
 	@override String get headline_line1 => 'مرحبًا بك';
 	@override String get headline_line2_prefix => 'في ';
-	@override String get headline_brand => 'وايو';
+	@override String get headline_brand => 'وايو أدز';
 	@override String get subtitle => 'سجّل الدخول بحساب Wayo ID لإدارة حملاتك وتعاوناتك.';
-	@override String get cta => 'تسجيل الدخول عبر وايو';
+	@override String get cta => 'تسجيل الدخول إلى وايو أدز';
 	@override String get secure_note => 'مصادقة آمنة عبر Wayo ID';
 	@override String get terms_prefix => 'بالمتابعة، فإنك توافق على ';
 	@override String get terms => 'شروط الاستخدام';
@@ -983,9 +983,9 @@ extension on TranslationsAr {
 			case 'login.brand': return 'وايو أدز';
 			case 'login.headline_line1': return 'مرحبًا بك';
 			case 'login.headline_line2_prefix': return 'في ';
-			case 'login.headline_brand': return 'وايو';
+			case 'login.headline_brand': return 'وايو أدز';
 			case 'login.subtitle': return 'سجّل الدخول بحساب Wayo ID لإدارة حملاتك وتعاوناتك.';
-			case 'login.cta': return 'تسجيل الدخول عبر وايو';
+			case 'login.cta': return 'تسجيل الدخول إلى وايو أدز';
 			case 'login.secure_note': return 'مصادقة آمنة عبر Wayo ID';
 			case 'login.terms_prefix': return 'بالمتابعة، فإنك توافق على ';
 			case 'login.terms': return 'شروط الاستخدام';

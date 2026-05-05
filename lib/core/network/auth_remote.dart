@@ -69,16 +69,58 @@ class AuthRemote {
   static Future<Result<AuthResponse>> refreshFromStorage(
     SecureStorageService storage,
   ) async {
-    final access = await storage.getAccessToken();
-    final refreshToken = await storage.getRefreshToken();
-    if (access == null ||
-        access.isEmpty ||
-        refreshToken == null ||
-        refreshToken.isEmpty) {
-      final b = AuthRuntimeConfig.instance.resolvedDioBaseUrl;
-      return Failure(ServerException('Missing tokens ($b)'));
+    const maxAttempts = 4;
+    for (var attempt = 0; attempt < maxAttempts; attempt++) {
+      final access = await storage.getAccessToken();
+      final refreshToken = await storage.getRefreshToken();
+      if (access == null ||
+          access.isEmpty ||
+          refreshToken == null ||
+          refreshToken.isEmpty) {
+        final b = AuthRuntimeConfig.instance.resolvedDioBaseUrl;
+        return Failure(ServerException('Missing tokens ($b)'));
+      }
+
+      final result = await AuthRemote.refresh(
+        accessToken: access,
+        refreshToken: refreshToken,
+      );
+      switch (result) {
+        case Success():
+          return result;
+        case Failure(:final error):
+          if (error is SessionInvalidException) {
+            return result;
+          }
+          final canRetry =
+              attempt < maxAttempts - 1 && _isTransientRefreshFailure(error);
+          if (canRetry) {
+            final wait = _refreshRetryDelaySeconds(error, attempt);
+            await Future<void>.delayed(Duration(seconds: wait));
+            continue;
+          }
+          return result;
+      }
     }
-    return AuthRemote.refresh(accessToken: access, refreshToken: refreshToken);
+    return const Failure(NetworkException('Refresh failed after retries'));
+  }
+
+  static bool _isTransientRefreshFailure(AuthException error) {
+    if (error is RateLimitedException || error is NetworkException) {
+      return true;
+    }
+    if (error is ServerException) {
+      final c = error.statusCode;
+      return c != null && c >= 500;
+    }
+    return false;
+  }
+
+  static int _refreshRetryDelaySeconds(AuthException error, int zeroBasedAttempt) {
+    if (error is RateLimitedException) {
+      return error.retryAfterSeconds.clamp(1, 90);
+    }
+    return (zeroBasedAttempt + 1).clamp(1, 8);
   }
 
   static AuthException _mapDio(DioException e) {
@@ -93,9 +135,33 @@ class AuthRemote {
     if (body is Map && body['message'] is String) {
       message = body['message'] as String;
     }
+    if (status == 429) {
+      return RateLimitedException(
+        retryAfterSeconds: _parseRetryAfterSeconds(e),
+      );
+    }
     if (status == 422) {
       return InvalidCredentialsException(message);
     }
-    return ServerException(message);
+    return ServerException(message, status);
+  }
+
+  static int _parseRetryAfterSeconds(DioException e) {
+    final data = e.response?.data;
+    if (data is Map) {
+      final r = data['retry_after'];
+      if (r is int) return r.clamp(1, 86400);
+      if (r is num) return r.toInt().clamp(1, 86400);
+      if (r is String) {
+        final p = int.tryParse(r);
+        if (p != null) return p.clamp(1, 86400);
+      }
+    }
+    final header = e.response?.headers.value('retry-after');
+    final fromHeader = int.tryParse(header ?? '');
+    if (fromHeader != null && fromHeader > 0) {
+      return fromHeader.clamp(1, 86400);
+    }
+    return 60;
   }
 }

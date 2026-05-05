@@ -86,7 +86,7 @@ class _TranslationsLoginFr extends TranslationsLoginEn {
 	@override String get headline_line2_prefix => 'sur ';
 	@override String get headline_brand => 'Wayo Ads';
 	@override String get subtitle => 'Connectez-vous avec votre compte Wayo ID pour gérer vos campagnes et vos collaborations.';
-	@override String get cta => 'Se connecter avec Wayo';
+	@override String get cta => 'Se connecter à Wayo Ads';
 	@override String get secure_note => 'Authentification sécurisée via Wayo ID';
 	@override String get terms_prefix => 'En continuant, vous acceptez nos ';
 	@override String get terms => 'CGU';
@@ -985,7 +985,7 @@ extension on TranslationsFr {
 			case 'login.headline_line2_prefix': return 'sur ';
 			case 'login.headline_brand': return 'Wayo Ads';
 			case 'login.subtitle': return 'Connectez-vous avec votre compte Wayo ID pour gérer vos campagnes et vos collaborations.';
-			case 'login.cta': return 'Se connecter avec Wayo';
+			case 'login.cta': return 'Se connecter à Wayo Ads';
 			case 'login.secure_note': return 'Authentification sécurisée via Wayo ID';
 			case 'login.terms_prefix': return 'En continuant, vous acceptez nos ';
 			case 'login.terms': return 'CGU';

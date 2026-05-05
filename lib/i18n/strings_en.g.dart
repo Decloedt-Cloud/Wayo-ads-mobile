@@ -86,7 +86,7 @@ class TranslationsLoginEn {
 	String get brand => 'Wayo Ads';
 	String get headline_line1 => 'Welcome';
 	String get headline_line2_prefix => 'to ';
-	String get headline_brand => 'Wayo';
+	String get headline_brand => 'Wayo Ads';
 	String get subtitle => 'Sign in with your Wayo ID to manage your campaigns and collaborations.';
 	String get cta => 'Sign in with Wayo';
 	String get secure_note => 'Secure authentication via Wayo ID';
@@ -985,7 +985,7 @@ extension on Translations {
 			case 'login.brand': return 'Wayo Ads';
 			case 'login.headline_line1': return 'Welcome';
 			case 'login.headline_line2_prefix': return 'to ';
-			case 'login.headline_brand': return 'Wayo';
+			case 'login.headline_brand': return 'Wayo Ads';
 			case 'login.subtitle': return 'Sign in with your Wayo ID to manage your campaigns and collaborations.';
 			case 'login.cta': return 'Sign in with Wayo';
 			case 'login.secure_note': return 'Secure authentication via Wayo ID';

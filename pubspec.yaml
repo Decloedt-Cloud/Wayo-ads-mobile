@@ -111,7 +111,8 @@ flutter_native_splash:
 flutter_launcher_icons:
   android: true
   ios: true
-  remove_alpha_ios: false
+  remove_alpha_ios: true
+  background_color_ios: '#000000'
   image_path_android: assets/android-chrome-192x192.png
   image_path_ios: assets/apple-touch-icon.png
   adaptive_icon_background: "#000000"

@@ -18,5 +18,5 @@ final connectivityServiceProvider = Provider<ConnectivityService>((ref) {
 /// Broadcast current status; UI watches this.
 final connectivityStatusProvider = StreamProvider<ConnectivityStatus>((ref) {
   final service = ref.watch(connectivityServiceProvider);
-  return service.onStatusChange;
+  return service.onStatusChangeWithCurrent;
 });

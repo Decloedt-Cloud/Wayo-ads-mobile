@@ -57,6 +57,13 @@ class ConnectivityService {
   /// Broadcast stream — emits only when the status actually changes.
   Stream<ConnectivityStatus> get onStatusChange => _controller.stream;
 
+  /// Same as [onStatusChange] but emits [_status] immediately, so Riverpod listeners
+  /// never miss the first [ConnectivityService.start] emission (broadcast streams do not replay).
+  Stream<ConnectivityStatus> get onStatusChangeWithCurrent async* {
+    yield _status;
+    yield* _controller.stream;
+  }
+
   Future<void> start() async {
     if (_started) return;
     _started = true;
@@ -183,12 +190,23 @@ class ConnectivityService {
   }
 
   bool _hasUsableRadio(List<ConnectivityResult> results) {
-    if (results.isEmpty) return false;
+    // iOS (incl. VPN / constrained paths) often reports [other] rather than [vpn].
+    // Cold start can briefly yield an empty list before NWPath is ready — still run DNS probes
+    // instead of treating the app as offline (full-screen blocker looked like a stuck splash).
+    if (results.isEmpty) {
+      return true;
+    }
+    var onlyNone = true;
     for (final r in results) {
+      if (r == ConnectivityResult.none) continue;
+      onlyNone = false;
       if (r == ConnectivityResult.wifi ||
           r == ConnectivityResult.mobile ||
           r == ConnectivityResult.ethernet ||
-          r == ConnectivityResult.vpn) {
+          r == ConnectivityResult.vpn ||
+          r == ConnectivityResult.other ||
+          r == ConnectivityResult.bluetooth ||
+          r == ConnectivityResult.satellite) {
         return true;
       }
     }

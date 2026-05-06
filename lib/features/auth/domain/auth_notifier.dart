@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../core/network/auth_force_logout_hub.dart';
@@ -55,6 +56,21 @@ class AuthNotifier extends _$AuthNotifier {
     setAuthForceLogoutHandler(forceLogout);
     ref.onDispose(clearAuthForceLogoutHandler);
 
+    try {
+      return await _restoreSessionOnColdStart().timeout(
+        const Duration(seconds: 25),
+      );
+    } on TimeoutException catch (e, st) {
+      if (kDebugMode) {
+        debugPrint('Auth cold start timed out (clearing local session): $e\n$st');
+      }
+      final storage = ref.read(secureStorageProvider);
+      await storage.clearAll();
+      return const AuthUnauthenticated();
+    }
+  }
+
+  Future<AuthState> _restoreSessionOnColdStart() async {
     final storage = ref.read(secureStorageProvider);
     final access = await storage.getAccessToken();
     if (access == null || access.isEmpty) {

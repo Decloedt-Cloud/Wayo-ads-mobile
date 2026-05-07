@@ -27,9 +27,29 @@ final class WayoReverbRealtime {
   int? _connectedUserId;
 
   /// Subscribes to advertiser + user private channels for [userId].
+  ///
+  /// Never throws: failures/timeouts clear state so the UI can proceed without realtime.
   Future<void> connectForUser(int userId) async {
+    try {
+      await _connectForUserImpl(userId);
+    } catch (e, st) {
+      if (kDebugMode) {
+        debugPrint('[WayoReverb] connectForUser suppressed: $e\n$st');
+      }
+      try {
+        await disconnect();
+      } catch (_) {}
+    }
+  }
+
+  Future<void> _connectForUserImpl(int userId) async {
     final runtime = AuthRuntimeConfig.instance;
     if (!runtime.reverbConfigured) {
+      return;
+    }
+    final host = runtime.reverbHost.trim();
+    final key = runtime.reverbKey.trim();
+    if (host.isEmpty || key.isEmpty) {
       return;
     }
     final base = runtime.resolvedWayoAdsBaseUrl;
@@ -54,9 +74,9 @@ final class WayoReverbRealtime {
     final useTls = runtime.reverbScheme.toLowerCase() == 'https';
 
     pr.ReverbClient.instance(
-      host: runtime.reverbHost,
+      host: host,
       port: port,
-      appKey: runtime.reverbKey,
+      appKey: key,
       authorizer: _authorizer,
       authEndpoint: authUrl,
       useTLS: useTls,
@@ -67,7 +87,10 @@ final class WayoReverbRealtime {
       },
     );
 
-    await pr.ReverbClient.instance().connect();
+    await pr.ReverbClient.instance().connect().timeout(
+          const Duration(seconds: 15),
+          onTimeout: () => throw TimeoutException('Reverb.connect'),
+        );
 
     final adv = pr.ReverbClient.instance().subscribeToPrivateChannel(
       RealtimeChannels.advertiser(userId),
@@ -110,15 +133,23 @@ final class WayoReverbRealtime {
   }
 
   /// Stops websocket subscriptions (e.g. on logout).
+  ///
+  /// Best-effort: does not throw.
   Future<void> disconnect() async {
-    for (final s in _subs) {
-      await s.cancel();
-    }
-    _subs.clear();
-    _connectedUserId = null;
-    // ignore: invalid_use_of_visible_for_testing_member
-    pr.ReverbClient.resetInstance();
+    try {
+      for (final s in _subs) {
+        await s.cancel();
+      }
+      _subs.clear();
+      _connectedUserId = null;
+      // ignore: invalid_use_of_visible_for_testing_member
+      pr.ReverbClient.resetInstance();
+    } catch (_) {}
   }
 
-  Future<void> dispose() => disconnect();
+  Future<void> dispose() async {
+    try {
+      await disconnect();
+    } catch (_) {}
+  }
 }

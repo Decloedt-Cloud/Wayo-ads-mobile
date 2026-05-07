@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer' as developer;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -27,7 +28,16 @@ Future<void> main() async {
   PaintingBinding.instance.imageCache.maximumSize = 100;
   PaintingBinding.instance.imageCache.maximumSizeBytes = 50 * 1024 * 1024;
 
-  await AuthRuntimeConfig.ensureLoaded();
+  try {
+    await AuthRuntimeConfig.ensureLoaded();
+  } catch (e, st) {
+    developer.log(
+      'AuthRuntimeConfig.ensureLoaded failed (continuing): $e',
+      name: 'wayo.main',
+      error: e,
+      stackTrace: st,
+    );
+  }
 
   final results = await Future.wait<Object?>([
     SharedPreferences.getInstance(),
@@ -83,16 +93,49 @@ class _WayoAdsBootstrapState extends State<_WayoAdsBootstrap> {
   @override
   void initState() {
     super.initState();
-    _bootFuture = _boot();
+    _bootFuture = _bootSafelyTimed();
+  }
+
+  /// Boots app services with a hard cap so cold start cannot hang past the splash.
+  Future<AppPrefs> _bootSafelyTimed() {
+    return _boot().timeout(
+      const Duration(seconds: 15),
+      onTimeout: () async {
+        debugPrint(
+          '[bootstrap] TIMEOUT (>15s) — using AppPrefs.memory() + fallback locale',
+        );
+        try {
+          await LocaleSettings.setLocale(AppLocale.en);
+        } catch (_) {}
+        return AppPrefs.memory();
+      },
+    );
   }
 
   Future<AppPrefs> _boot() async {
+    debugPrint('[bootstrap] step: waitUntilFirstFrameRasterized');
     await WidgetsBinding.instance.waitUntilFirstFrameRasterized;
-    await AuthRuntimeConfig.ensureLoaded();
+
+    debugPrint('[bootstrap] step: AuthRuntimeConfig.ensureLoaded');
+    try {
+      await AuthRuntimeConfig.ensureLoaded();
+    } catch (e, st) {
+      developer.log(
+        'AuthRuntimeConfig.ensureLoaded in _boot failed (continuing): $e',
+        name: 'wayo.bootstrap',
+        error: e,
+        stackTrace: st,
+      );
+    }
+
+    debugPrint('[bootstrap] step: Hive.initFlutter');
     await Hive.initFlutter();
+
+    debugPrint('[bootstrap] step: DashboardHiveStore.init');
     await DashboardHiveStore.init();
 
     late final AppPrefs prefs;
+    debugPrint('[bootstrap] step: AppPrefs / SharedPreferences');
     for (var attempt = 0; attempt < 3; attempt++) {
       try {
         if (attempt == 0) {
@@ -126,6 +169,7 @@ class _WayoAdsBootstrapState extends State<_WayoAdsBootstrap> {
             orElse: () => AppLocale.en,
           );
 
+    debugPrint('[bootstrap] step: LocaleSettings.setLocale');
     try {
       await LocaleSettings.setLocale(initialLocale);
     } catch (e, st) {
@@ -133,6 +177,7 @@ class _WayoAdsBootstrapState extends State<_WayoAdsBootstrap> {
       await LocaleSettings.setLocale(AppLocale.en);
     }
 
+    debugPrint('[bootstrap] step: complete');
     return prefs;
   }
 

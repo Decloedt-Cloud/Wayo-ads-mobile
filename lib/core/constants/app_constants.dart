@@ -7,6 +7,7 @@
 /// See [validateProductionUrls] for runtime enforcement.
 const String authWayoBaseUrl = String.fromEnvironment(
   'AUTH_WAYO_BASE_URL',
+  
   defaultValue: 'http://10.0.2.2:8000',
 );
 
@@ -31,5 +32,23 @@ const String wayoAdsAppKey = String.fromEnvironment(
 /// Google Cloud **Web client ID** (must match Auth_Wayo `GOOGLE_CLIENT_ID`). Used so the ID token `aud` matches the backend.
 const String authGoogleServerClientId = String.fromEnvironment(
   'AUTH_GOOGLE_SERVER_CLIENT_ID',
+  defaultValue: '',
+);
+
+/// Passport / Auth_Wayo mobile OAuth client UUID — same app as web, with native redirect URI.
+const String authOAuthClientId = String.fromEnvironment(
+  'AUTH_OAUTH_CLIENT_ID',
+  defaultValue: '',
+);
+
+/// Deep link returned after OAuth (must match Android/iOS intent filters + Auth server allow-list).
+const String authOAuthRedirectUri = String.fromEnvironment(
+  'AUTH_OAUTH_REDIRECT_URI',
+  defaultValue: '',
+);
+
+/// Optional; only if Auth_Wayo requires `client_secret` on token/login routes for this client.
+const String authOAuthClientSecret = String.fromEnvironment(
+  'AUTH_OAUTH_CLIENT_SECRET',
   defaultValue: '',
 );

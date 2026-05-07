@@ -19,7 +19,7 @@ class WayoAdsRoleOnboardingScreen extends ConsumerStatefulWidget {
 
 class _WayoAdsRoleOnboardingScreenState
     extends ConsumerState<WayoAdsRoleOnboardingScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   bool _busy = false;
   String? _selectedRole;
   late AnimationController _animController;

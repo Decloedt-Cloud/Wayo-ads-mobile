@@ -1,18 +1,20 @@
 {
   "AUTH_WAYO_BASE_URL": "https://preprodauth.wayo.ac",
   "AUTH_API_URL": "https://preprodauth.wayo.ac",
-  "AUTH_OAUTH_CLIENT_ID": "019d9750-1485-72d2-9fc4-9a4d993ac0fc",
-  "AUTH_OAUTH_CLIENT_SECRET": "JXQou3gWAnftgssNiG1oP9UNEocFbuKCfWyQDX3W",
+  "AUTH_OAUTH_CLIENT_ID": "019e0354-a09b-72c2-b6af-ecf723e6123d",
+
   "AUTH_APP_NAME": "wayo_ads",
-  "AUTH_OAUTH_REDIRECT_URI": "com.wayo.wayoadsgo:/oauthredirect",
+  "AUTH_OAUTH_REDIRECT_URI": "com.wayo.wayoadsgo://oauthredirect",
   "AUTH_GOOGLE_SERVER_CLIENT_ID": "418718041924-fcujk5vfppueq260k43r582rovrj5ghh.apps.googleusercontent.com",
   "WAYO_ADS_APP_KEY": "oxz2HNCvFTGROqMw3KyAp9cV7qH5XxbquyJn6wrhRyk=",
   "WAYO_ADS_API_BASE_URL": "https://ads.wayo.agency",
   "CHAT_SERVICE_API_BASE_URL": "https://wayochat.wayo.agency",
 
-  "CERT_PIN_PRIMARY": "TTbpBlKPoadLPXyjnvG/wbzJ7eaNVGprhdQ97xYzcxM=",
-  "CERT_PIN_BACKUP": "",
-
+  "CERT_PIN_PRIMARY": "rrH9dBDoO8lvXaPGp8LBu4NtH6XLhucIUViQ5Ciodws=",
+  "CERT_PIN_ALT": "TTbpBlKPoadLPXyjnvG/wbzJ7eaNVGprhdQ97xYzcxM=",
+  "CERT_PIN_BACKUP": "slxI8eJ5lU7C1ZiJI1Tl49W3hTFiVJFDPlIscXxhBuc=",
+  "CERT_PIN_EXTRA": "21Txm8jPEUxmab+pUEJ6TAq5p5M1TpiOtoOIoLKdujg=",
+  "WAYO_VERBOSE_LOGS": "true",
   "STRIPE_GOOGLE_PAY_TEST_ENV": "true",
   "STRIPE_GOOGLE_PAY_MERCHANT_ID": "BCR2DN5T42SPJCIF",
   "STRIPE_APPLE_MERCHANT_ID": "merchant.ma.wayo.wayoadsgo"

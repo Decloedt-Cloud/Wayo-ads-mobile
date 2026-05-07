@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/config/auth_runtime_config.dart';
 import '../../../../core/errors/auth_exceptions.dart';
 import '../../../../core/network/api_client.dart';
+import '../../../../core/network/auth_oauth_extras.dart';
 import '../../../../core/network/request_flags.dart';
 import '../../../../core/result.dart';
 
@@ -23,7 +24,7 @@ class PasswordResetRemoteDataSource {
       final path = AuthRuntimeConfig.instance.authHttpPath('forgot-password');
       final res = await _dio.post<Map<String, dynamic>>(
         path,
-        data: {'email': email},
+        data: mergeWayoAuthPayload({'email': email}),
         options: Options(
           extra: {kSkipAuthInjection: true, kDisableSmartRetry: true},
         ),
@@ -56,7 +57,7 @@ class PasswordResetRemoteDataSource {
       final path = AuthRuntimeConfig.instance.authHttpPath('verify-otp');
       final res = await _dio.post<Map<String, dynamic>>(
         path,
-        data: {'email': email, 'otp': otp},
+        data: mergeWayoAuthPayload({'email': email, 'otp': otp}),
         options: Options(
           extra: {kSkipAuthInjection: true, kDisableSmartRetry: true},
         ),
@@ -94,11 +95,11 @@ class PasswordResetRemoteDataSource {
       final path = AuthRuntimeConfig.instance.authHttpPath('reset-password');
       final res = await _dio.post<Map<String, dynamic>>(
         path,
-        data: {
+        data: mergeWayoAuthPayload({
           'reset_token': resetToken,
           'password': password,
           'password_confirmation': password,
-        },
+        }),
         options: Options(
           extra: {kSkipAuthInjection: true, kDisableSmartRetry: true},
         ),

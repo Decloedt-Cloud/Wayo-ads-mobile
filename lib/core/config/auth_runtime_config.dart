@@ -26,6 +26,8 @@ final class AuthRuntimeConfig {
   String _overlayAppRelease = '';
   String _certPinPrimary = '';
   String _certPinBackup = '';
+  String _certPinExtra = '';
+  String _certPinAlt = '';
   String _wayoAdsApiBaseUrl = '';
 
   /// Optional override for chat-service HTTP base (Laravel). When set, replaces
@@ -56,8 +58,12 @@ final class AuthRuntimeConfig {
 
     add(AppConfig.certPinPrimary);
     add(AppConfig.certPinBackup);
+    add(AppConfig.certPinExtra);
+    add(AppConfig.certPinAlt);
     add(_certPinPrimary);
     add(_certPinBackup);
+    add(_certPinExtra);
+    add(_certPinAlt);
     return out;
   }
 
@@ -310,6 +316,8 @@ final class AuthRuntimeConfig {
       overlay('APP_RELEASE', (v) => i._overlayAppRelease = v);
       overlay('CERT_PIN_PRIMARY', (v) => i._certPinPrimary = v);
       overlay('CERT_PIN_BACKUP', (v) => i._certPinBackup = v);
+      overlay('CERT_PIN_EXTRA', (v) => i._certPinExtra = v);
+      overlay('CERT_PIN_ALT', (v) => i._certPinAlt = v);
       overlay('WAYO_ADS_API_BASE_URL', (v) => i._wayoAdsApiBaseUrl = v);
       overlay('CHAT_SERVICE_API_BASE_URL', (v) => i._chatServiceApiBaseUrl = v);
       if (i._wayoAdsApiBaseUrl.isEmpty) {

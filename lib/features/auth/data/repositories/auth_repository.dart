@@ -5,6 +5,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../../core/config/auth_runtime_config.dart';
 import '../../../../core/errors/auth_exceptions.dart';
 import '../../../../core/network/api_client.dart';
+import '../../../../core/network/auth_oauth_extras.dart';
 import '../../../../core/network/auth_remote.dart';
 import '../../../../core/network/request_flags.dart';
 import '../../../../core/result.dart';
@@ -77,12 +78,14 @@ class AuthRepositoryImpl implements IAuthRepository {
       final cfg = AuthRuntimeConfig.instance;
       final res = await _dio.post<Map<String, dynamic>>(
         path,
-        data: LoginRequest(
-          email: email,
-          password: password,
-          app: cfg.authAppName.isNotEmpty ? cfg.authAppName : null,
-          appKey: cfg.wayoAdsAppKey.isNotEmpty ? cfg.wayoAdsAppKey : null,
-        ).toJson(),
+        data: mergeWayoAuthPayload(
+          LoginRequest(
+            email: email,
+            password: password,
+            app: cfg.authAppName.isNotEmpty ? cfg.authAppName : null,
+            appKey: cfg.wayoAdsAppKey.isNotEmpty ? cfg.wayoAdsAppKey : null,
+          ).toJson(),
+        ),
         options: loginOptions,
       );
       final data = res.data;
@@ -107,11 +110,11 @@ class AuthRepositoryImpl implements IAuthRepository {
   }) async {
     try {
       final cfg = AuthRuntimeConfig.instance;
-      final body = <String, dynamic>{
+      final body = mergeWayoAuthPayload(<String, dynamic>{
         'id_token': idToken,
         if (cfg.authAppName.isNotEmpty) 'app': cfg.authAppName,
         if (cfg.wayoAdsAppKey.isNotEmpty) 'app_key': cfg.wayoAdsAppKey,
-      };
+      });
       final path = AuthRuntimeConfig.instance.authHttpPath('google');
       final googleOptions = Options(extra: {kSkipAuthInjection: true})
         ..disableRetry = true;
@@ -229,11 +232,11 @@ class AuthRepositoryImpl implements IAuthRepository {
     final path = cfg.authHttpPath('wayo-ads/role');
     final res = await _dio.post<Map<String, dynamic>>(
       path,
-      data: <String, dynamic>{
+      data: mergeWayoAuthPayload(<String, dynamic>{
         'role': role,
         if (cfg.authAppName.isNotEmpty) 'app': cfg.authAppName,
         if (cfg.wayoAdsAppKey.isNotEmpty) 'app_key': cfg.wayoAdsAppKey,
-      },
+      }),
       options: Options(extra: {kSkipAuthInjection: false})..disableRetry = true,
     );
     final data = res.data;
@@ -339,10 +342,10 @@ class AuthRepositoryImpl implements IAuthRepository {
       final path = cfg.authHttpPath('resend-verification');
       final res = await _dio.post<Map<String, dynamic>>(
         path,
-        data: <String, dynamic>{
+        data: mergeWayoAuthPayload(<String, dynamic>{
           'email': email,
           if (cfg.authAppName.isNotEmpty) 'app': cfg.authAppName,
-        },
+        }),
         options: Options(extra: {kSkipAuthInjection: false})
           ..disableRetry = true,
       );
@@ -364,9 +367,9 @@ class AuthRepositoryImpl implements IAuthRepository {
       final path = cfg.authHttpPath('email/verify/send');
       final res = await _dio.post<Map<String, dynamic>>(
         path,
-        data: <String, dynamic>{
+        data: mergeWayoAuthPayload(<String, dynamic>{
           if (cfg.authAppName.isNotEmpty) 'app': cfg.authAppName,
-        },
+        }),
         options: Options(extra: {kSkipAuthInjection: false})
           ..disableRetry = true,
       );
@@ -444,7 +447,7 @@ class AuthRepositoryImpl implements IAuthRepository {
       final path = AuthRuntimeConfig.instance.authHttpPath('verify-email');
       final res = await _dio.post<Map<String, dynamic>>(
         path,
-        data: <String, dynamic>{'email': email, 'code': code},
+        data: mergeWayoAuthPayload(<String, dynamic>{'email': email, 'code': code}),
         options: Options(extra: {kSkipAuthInjection: false})
           ..disableRetry = true,
       );
@@ -466,7 +469,7 @@ class AuthRepositoryImpl implements IAuthRepository {
       );
       final res = await _dio.post<Map<String, dynamic>>(
         path,
-        data: <String, dynamic>{'otp': otp},
+        data: mergeWayoAuthPayload(<String, dynamic>{'otp': otp}),
         options: Options(extra: {kSkipAuthInjection: false})
           ..disableRetry = true,
       );
@@ -549,8 +552,10 @@ class AuthRepositoryImpl implements IAuthRepository {
   Future<void> logout() async {
     try {
       final path = AuthRuntimeConfig.instance.authHttpPath('logout');
+      final oauthBody = wayoAuthOAuthJsonExtras();
       await _dio.post<Map<String, dynamic>>(
         path,
+        data: oauthBody.isEmpty ? null : oauthBody,
         options: Options(extra: {kSkipAuthInjection: false}),
       );
     } catch (_) {

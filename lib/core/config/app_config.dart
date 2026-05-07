@@ -19,6 +19,12 @@ abstract final class AppConfig {
   );
   static const String certPinBackup = String.fromEnvironment('CERT_PIN_BACKUP');
 
+  /// Optional third pin (e.g. separate TLS cert for chat API).
+  static const String certPinExtra = String.fromEnvironment('CERT_PIN_EXTRA');
+
+  /// Optional fourth pin (e.g. **origin** cert while [certPinPrimary] is the **public/CDN** leaf).
+  static const String certPinAlt = String.fromEnvironment('CERT_PIN_ALT');
+
   /// Wayo-ads (Next.js) API origin — advertiser dashboard calls.
   static const String wayoAdsApiBaseUrl = String.fromEnvironment(
     'WAYO_ADS_API_BASE_URL',
@@ -42,7 +48,17 @@ abstract final class AppConfig {
   static bool get sentryEnabled => sentryDsn.isNotEmpty;
 
   static List<String> get pinnedKeys =>
-      [certPinPrimary, certPinBackup].where((s) => s.isNotEmpty).toList();
+      [certPinPrimary, certPinBackup, certPinExtra, certPinAlt]
+          .where((s) => s.isNotEmpty)
+          .toList();
 
   static bool get pinningEnabled => pinnedKeys.isNotEmpty;
+
+  /// **Temporary / diagnostic only.** When `true`, [CertificatePinning.attach] is a
+  /// no-op in release (normal system CA trust). Build with
+  /// `--dart-define=DISABLE_CERT_PINNING=true` — remove before shipping.
+  static const bool disableCertPinning = bool.fromEnvironment(
+    'DISABLE_CERT_PINNING',
+    defaultValue: false,
+  );
 }

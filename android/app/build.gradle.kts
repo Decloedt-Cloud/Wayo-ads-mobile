@@ -1,24 +1,36 @@
+
 import java.util.Properties
-import java.io.FileInputStream
+        import java.io.FileInputStream
 
-plugins {
-    id("com.android.application")
-    id("kotlin-android")
-    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
-    id("dev.flutter.flutter-gradle-plugin")
-}
+        plugins {
+            id("com.android.application")
+            id("kotlin-android")
+            id("dev.flutter.flutter-gradle-plugin")
+        }
 
-// Load key.properties for release signing (not checked into git).
+// =====================================================
+// Load key.properties
+// =====================================================
+
 val keystorePropertiesFile = rootProject.file("key.properties")
 val keystoreProperties = Properties()
+
 if (keystorePropertiesFile.exists()) {
-    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+    keystoreProperties.load(
+        FileInputStream(keystorePropertiesFile)
+    )
 }
 
 android {
+
     namespace = "ma.wayo.wayoadsgo"
+
     compileSdk = 36
     ndkVersion = flutter.ndkVersion
+
+    // =====================================================
+    // Java / Kotlin
+    // =====================================================
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
@@ -26,49 +38,84 @@ android {
     }
 
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_17.toString()
+        jvmTarget = "17"
     }
 
+    // =====================================================
+    // Default config
+    // =====================================================
+
     defaultConfig {
+
         applicationId = "ma.wayo.wayoadsgo"
-        minSdk = maxOf(flutter.minSdkVersion, 21)
+
+        minSdk = maxOf(
+            flutter.minSdkVersion,
+            21
+        )
+
         targetSdk = 36
+
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
 
+    // =====================================================
+    // Signing
+    // =====================================================
+
     signingConfigs {
+
         create("release") {
+
             if (keystorePropertiesFile.exists()) {
-                keyAlias = keystoreProperties["keyAlias"] as String
-                keyPassword = keystoreProperties["keyPassword"] as String
-                storeFile = file(keystoreProperties["storeFile"] as String)
-                storePassword = keystoreProperties["storePassword"] as String
+
+                keyAlias =
+                    keystoreProperties["keyAlias"] as String
+
+                keyPassword =
+                    keystoreProperties["keyPassword"] as String
+
+                storeFile = file(
+                    keystoreProperties["storeFile"] as String
+                )
+
+                storePassword =
+                    keystoreProperties["storePassword"] as String
             }
         }
     }
 
-    buildTypes {
-        release {
-            // Use release keystore if key.properties exists; otherwise fail explicitly.
-            signingConfig = if (keystorePropertiesFile.exists()) {
-                signingConfigs.getByName("release")
-            } else {
-                // SECURITY: Do NOT fall back to debug keystore in release builds.
-                // Create android/key.properties with your release keystore info.
-                throw GradleException(
-                    "Release builds require a signing key. " +
-                    "Create android/key.properties with storeFile, storePassword, keyAlias, keyPassword."
-                )
-            }
+    // =====================================================
+    // Build types
+    // =====================================================
 
-            // OPTIMIZATION: Enable R8 code shrinking and resource optimization
-            isMinifyEnabled = true
-            isShrinkResources = true
+    buildTypes {
+
+        release {
+
+            signingConfig =
+                if (keystorePropertiesFile.exists()) {
+                    signingConfigs.getByName("release")
+                } else {
+                    throw GradleException(
+                        "Release builds require a signing key."
+                    )
+                }
+
+            // =====================================================
+            // TEMP TEST
+            // Disable R8 / Proguard
+            // =====================================================
+
+            isMinifyEnabled = false
+            isShrinkResources = false
 
             proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro",
+                getDefaultProguardFile(
+                    "proguard-android-optimize.txt"
+                ),
+                "proguard-rules.pro"
             )
         }
     }
@@ -78,8 +125,17 @@ flutter {
     source = "../.."
 }
 
+// =====================================================
+// Dependencies
+// =====================================================
+
 dependencies {
-    // flutter_stripe requires AppCompat/MaterialComponents for its Activity theme.
-    implementation("androidx.appcompat:appcompat:1.7.0")
-    implementation("com.google.android.material:material:1.12.0")
+
+    implementation(
+        "androidx.appcompat:appcompat:1.7.0"
+    )
+
+    implementation(
+        "com.google.android.material:material:1.12.0"
+    )
 }

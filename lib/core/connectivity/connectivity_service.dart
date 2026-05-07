@@ -2,8 +2,8 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:flutter/foundation.dart';
 
+import '../observability/app_log.dart';
 import 'connectivity_status.dart';
 
 /// Production connectivity tracker. Layers three signals:
@@ -102,8 +102,8 @@ class ConnectivityService {
   /// sans WAN, etc.).
   void reportRemoteFailure([Object? error]) {
     if (!_started) return;
-    if (kDebugMode && error != null) {
-      debugPrint('[connectivity] remote failure hint: $error');
+    if (kWayoDiagnosticsLogging && error != null) {
+      wayoDiagPrint('[connectivity] remote failure hint: $error', name: 'wayo.net');
     }
     _debounceTimer?.cancel();
     _debounceTimer = Timer(_reportDebounce, () {
@@ -154,8 +154,8 @@ class ConnectivityService {
       sw.stop();
       if (!ok) {
         _emit(ConnectivityStatus.offline);
-        if (kDebugMode) {
-          debugPrint('[connectivity] probe failed (reason=$reason)');
+        if (kWayoDiagnosticsLogging) {
+          wayoDiagPrint('[connectivity] probe failed (reason=$reason)', name: 'wayo.net');
         }
         return;
       }
@@ -196,10 +196,8 @@ class ConnectivityService {
     if (results.isEmpty) {
       return true;
     }
-    var onlyNone = true;
     for (final r in results) {
       if (r == ConnectivityResult.none) continue;
-      onlyNone = false;
       if (r == ConnectivityResult.wifi ||
           r == ConnectivityResult.mobile ||
           r == ConnectivityResult.ethernet ||

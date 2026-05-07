@@ -38,7 +38,8 @@ class ThemeModeNotifier extends StateNotifier<ThemeMode> {
   }
 
   Future<void> toggle() async {
-    final next = switch (state) {
+    final ThemeMode current = state;
+    final ThemeMode next = switch (current) {
       ThemeMode.dark => ThemeMode.light,
       ThemeMode.light => ThemeMode.dark,
       ThemeMode.system => ThemeMode.dark,

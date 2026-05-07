@@ -1,9 +1,10 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 
+import '../../observability/app_log.dart';
 import '../scrubber.dart';
 
-/// Debug-only Dio interceptor: logs method, URL, status, duration with scrubbed payloads.
+/// Dio interceptor: logs method, URL, status, duration with scrubbed payloads when
+/// [kWayoDiagnosticsLogging] is true (debug or `WAYO_VERBOSE_LOGS`).
 final class WayoLoggingInterceptor extends Interceptor {
   WayoLoggingInterceptor();
 
@@ -11,7 +12,7 @@ final class WayoLoggingInterceptor extends Interceptor {
 
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
-    if (kDebugMode) {
+    if (kWayoDiagnosticsLogging) {
       options.extra[_kStart] = DateTime.now();
     }
     handler.next(options);
@@ -22,7 +23,7 @@ final class WayoLoggingInterceptor extends Interceptor {
     Response<dynamic> response,
     ResponseInterceptorHandler handler,
   ) {
-    if (kDebugMode) {
+    if (kWayoDiagnosticsLogging) {
       _emit(response.requestOptions, response.statusCode);
     }
     handler.next(response);
@@ -30,7 +31,7 @@ final class WayoLoggingInterceptor extends Interceptor {
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
-    if (kDebugMode) {
+    if (kWayoDiagnosticsLogging) {
       _emit(err.requestOptions, err.response?.statusCode, error: err);
     }
     handler.next(err);
@@ -57,7 +58,7 @@ final class WayoLoggingInterceptor extends Interceptor {
         ..writeln()
         ..write('error: ${error.type} ${error.message}');
     }
-    debugPrint(buffer.toString());
+    wayoDiagPrint(buffer.toString(), name: 'wayo.dio');
   }
 
   Map<String, dynamic> _dataAsMap(dynamic data) {

@@ -5,6 +5,7 @@ import 'package:sentry_dio/sentry_dio.dart';
 
 import '../config/auth_runtime_config.dart';
 import '../connectivity/connectivity_providers.dart';
+import '../observability/app_log.dart';
 import '../connectivity/connectivity_reporter_interceptor.dart';
 import '../storage/secure_storage.dart';
 import 'auth_interceptor.dart';
@@ -46,13 +47,13 @@ Dio wayoAdsDio(WayoAdsDioRef ref) {
   client.interceptors.add(
     buildWayoRetryInterceptor(
       client,
-      logPrint: kDebugMode ? (m) => debugPrint(m) : null,
+      logPrint: kWayoDiagnosticsLogging ? (m) => wayoDiagPrint(m, name: 'wayo.retry') : null,
     ),
   );
   client.interceptors.add(
     ConnectivityReporterInterceptor(ref.read(connectivityServiceProvider)),
   );
-  if (kDebugMode) {
+  if (kWayoDiagnosticsLogging) {
     client.interceptors.add(WayoLoggingInterceptor());
   }
 

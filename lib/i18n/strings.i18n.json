@@ -285,6 +285,7 @@
       "stripe_complete_action": "Finish onboarding",
       "stripe_open_dashboard": "Open Stripe dashboard",
       "stripe_error": "Something went wrong with Stripe. Please try again.",
+      "stripe_edit_business_action": "Edit business details",
       "stripe_card_title_disconnected": "Connect Stripe",
       "stripe_card_subtitle_disconnected": "Link your bank account securely via Stripe to receive payouts.",
       "stripe_card_title_incomplete": "Finish your onboarding",

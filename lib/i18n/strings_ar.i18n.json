@@ -285,6 +285,7 @@
       "stripe_complete_action": "إكمال الإعداد",
       "stripe_open_dashboard": "فتح لوحة Stripe",
       "stripe_error": "حدث خطأ مع Stripe. يرجى المحاولة مجددًا.",
+      "stripe_edit_business_action": "تعديل بيانات النشاط",
       "stripe_card_title_disconnected": "ربط Stripe",
       "stripe_card_subtitle_disconnected": "اربط حسابك المصرفي عبر Stripe لاستلام المدفوعات.",
       "stripe_card_title_incomplete": "أكمل الإعداد",

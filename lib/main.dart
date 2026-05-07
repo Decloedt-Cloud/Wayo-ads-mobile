@@ -10,7 +10,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 import 'app.dart';
+import 'core/config/app_config.dart';
 import 'core/config/auth_runtime_config.dart';
+import 'core/observability/app_log.dart';
 import 'core/observability/crash_reporter.dart';
 import 'core/observability/sentry_bootstrap.dart';
 import 'core/providers/app_providers.dart';
@@ -28,6 +30,7 @@ Future<void> main() async {
   PaintingBinding.instance.imageCache.maximumSize = 100;
   PaintingBinding.instance.imageCache.maximumSizeBytes = 50 * 1024 * 1024;
 
+  // ✅ UN SEUL appel à ensureLoaded — supprimé dans _boot()
   try {
     await AuthRuntimeConfig.ensureLoaded();
   } catch (e, st) {
@@ -38,6 +41,23 @@ Future<void> main() async {
       stackTrace: st,
     );
   }
+
+  // Résumé utile en release avec: --dart-define=WAYO_AUTH_DIAG=true
+  // ou --dart-define=WAYO_VERBOSE_LOGS=true  (voir adb logcat tag wayo.config / wayo.tls)
+  wayoConfigDiagPrint(
+    '[config] kReleaseMode=$kReleaseMode '
+    'resolvedDioBaseUrl=${AuthRuntimeConfig.instance.resolvedDioBaseUrl} '
+    'AUTH_WAYO_BASE_URL=${AuthRuntimeConfig.instance.authWayoBaseUrl} '
+    'pins=${AuthRuntimeConfig.instance.mergedPinnedSha256Base64.length} '
+    'pinningOff=${AppConfig.disableCertPinning} '
+    'googleClientIdSet=${AuthRuntimeConfig.instance.googleServerClientId.isNotEmpty}',
+  );
+  debugPrint(
+    '[config] resolvedDioBaseUrl = ${AuthRuntimeConfig.instance.resolvedDioBaseUrl}',
+  );
+  debugPrint(
+    '[config] authWayoBaseUrl = ${AuthRuntimeConfig.instance.authWayoBaseUrl}',
+  );
 
   final results = await Future.wait<Object?>([
     SharedPreferences.getInstance(),
@@ -116,17 +136,9 @@ class _WayoAdsBootstrapState extends State<_WayoAdsBootstrap> {
     debugPrint('[bootstrap] step: waitUntilFirstFrameRasterized');
     await WidgetsBinding.instance.waitUntilFirstFrameRasterized;
 
-    debugPrint('[bootstrap] step: AuthRuntimeConfig.ensureLoaded');
-    try {
-      await AuthRuntimeConfig.ensureLoaded();
-    } catch (e, st) {
-      developer.log(
-        'AuthRuntimeConfig.ensureLoaded in _boot failed (continuing): $e',
-        name: 'wayo.bootstrap',
-        error: e,
-        stackTrace: st,
-      );
-    }
+    // ✅ SUPPRIMÉ — ensureLoaded() déjà appelé une seule fois dans main()
+    // Appeler deux fois en release déclenche validateProductionUrls() inutilement
+    // et peut masquer des erreurs de config.
 
     debugPrint('[bootstrap] step: Hive.initFlutter');
     await Hive.initFlutter();
@@ -149,8 +161,8 @@ class _WayoAdsBootstrapState extends State<_WayoAdsBootstrap> {
           if (kDebugMode) {
             debugPrint(
               'SharedPreferences unavailable after 3 attempts ($e). '
-              'Using in-memory prefs (theme/locale not persisted until full app restart). '
-              'Avoid hot restart to test persistence.',
+                  'Using in-memory prefs (theme/locale not persisted until full app restart). '
+                  'Avoid hot restart to test persistence.',
             );
             debugPrintStack(stackTrace: st);
           }
@@ -165,9 +177,9 @@ class _WayoAdsBootstrapState extends State<_WayoAdsBootstrap> {
     final initialLocale = locCode == null
         ? AppLocaleUtils.findDeviceLocale()
         : AppLocale.values.firstWhere(
-            (l) => l.languageCode == locCode,
-            orElse: () => AppLocale.en,
-          );
+          (l) => l.languageCode == locCode,
+      orElse: () => AppLocale.en,
+    );
 
     debugPrint('[bootstrap] step: LocaleSettings.setLocale');
     try {

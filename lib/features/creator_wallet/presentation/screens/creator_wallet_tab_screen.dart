@@ -102,6 +102,16 @@ class CreatorWalletTabScreen extends ConsumerWidget {
                   loading: () => const _CardSkeleton(height: 120),
                   error: (_, _) => const SizedBox.shrink(),
                   data: (profile) {
+                    Future<void> openBusinessEditor() async {
+                      HapticFeedback.lightImpact();
+                      final p = ref
+                              .read(creatorBusinessProfileProvider)
+                              .valueOrNull ??
+                          profile;
+                      if (!context.mounted) return;
+                      await showBusinessInfoDialog(context, initial: p);
+                    }
+
                     // Business info acts as a gate before Stripe onboarding.
                     // Backend `/api/creator/stripe-connect/onboard` rejects the
                     // request with 400 if business info isn't complete.
@@ -114,7 +124,34 @@ class CreatorWalletTabScreen extends ConsumerWidget {
                     return stripeAsync.when(
                       loading: () => const _CardSkeleton(height: 120),
                       error: (_, _) => const SizedBox.shrink(),
-                      data: (s) => CreatorStripeConnectCard(status: s),
+                      data: (s) => Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          CreatorStripeConnectCard(
+                            status: s,
+                            onBusinessInfoCorrection: openBusinessEditor,
+                          ),
+                          const SizedBox(height: 4),
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: TextButton.icon(
+                              onPressed: openBusinessEditor,
+                              icon: Icon(
+                                Icons.business_outlined,
+                                size: 18,
+                                color: CreatorColors.primaryOf(context),
+                              ),
+                              label: Text(
+                                t.creator.wallet.stripe_edit_business_action,
+                              ),
+                              style: TextButton.styleFrom(
+                                foregroundColor:
+                                    CreatorColors.primaryOf(context),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     );
                   },
                 ),

@@ -9,6 +9,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/creator_colors.dart';
 import '../../../../i18n/strings.g.dart';
+import '../../data/creator_wallet_remote_datasource.dart';
 import '../../domain/creator_wallet_models.dart';
 import '../providers/creator_wallet_providers.dart';
 
@@ -21,10 +22,19 @@ import '../providers/creator_wallet_providers.dart';
 /// All mutations go through [url_launcher] in `externalApplication` mode so the
 /// OS browser/Stripe app handles the sensitive flow (the mobile app never
 /// stores keys or KYC PII).
+///
+/// [onBusinessInfoCorrection] is invoked from the SnackBar when Stripe fails
+/// with an error that likely requires updating business / address fields on
+/// Wayo-ads.
 class CreatorStripeConnectCard extends ConsumerStatefulWidget {
-  const CreatorStripeConnectCard({super.key, required this.status});
+  const CreatorStripeConnectCard({
+    super.key,
+    required this.status,
+    this.onBusinessInfoCorrection,
+  });
 
   final CreatorStripeStatus status;
+  final Future<void> Function()? onBusinessInfoCorrection;
 
   @override
   ConsumerState<CreatorStripeConnectCard> createState() =>
@@ -44,7 +54,7 @@ class _CreatorStripeConnectCardState
       await _launchUrl(url);
     } catch (e) {
       if (!mounted) return;
-      _showError(e.toString());
+      _handleStripeFailure(e);
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -59,7 +69,7 @@ class _CreatorStripeConnectCardState
       await _launchUrl(url);
     } catch (e) {
       if (!mounted) return;
-      _showError(e.toString());
+      _handleStripeFailure(e);
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -74,6 +84,37 @@ class _CreatorStripeConnectCardState
     if (!mounted) return;
     // ignore: unused_result
     ref.refresh(creatorStripeStatusProvider);
+  }
+
+  void _handleStripeFailure(Object error) {
+    final t = context.t;
+    if (error is CreatorWalletApiException) {
+      final msg =
+          error.message.isNotEmpty ? error.message : t.creator.wallet.stripe_error;
+      final showFixAction = error.mayBeFixedViaBusinessProfileEdit &&
+          widget.onBusinessInfoCorrection != null;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: AppColors.error,
+          content: Text(
+            msg,
+            style: const TextStyle(color: Colors.white),
+          ),
+          action: showFixAction
+              ? SnackBarAction(
+                  label: t.creator.wallet.stripe_edit_business_action,
+                  textColor: Colors.white,
+                  onPressed: () {
+                    // ignore: discarded_futures
+                    widget.onBusinessInfoCorrection!();
+                  },
+                )
+              : null,
+        ),
+      );
+      return;
+    }
+    _showError('$error');
   }
 
   void _showError(String msg) {

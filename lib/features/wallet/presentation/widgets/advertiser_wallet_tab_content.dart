@@ -226,7 +226,7 @@ class _AdvertiserWalletTabContentState
     final t = context.t;
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final appLoc = ref.watch(localeProvider);
+    final AppLocale appLoc = ref.watch(localeProvider);
     final moneyLocale = switch (appLoc) {
       AppLocale.en => 'en_US',
       AppLocale.fr => 'fr_FR',

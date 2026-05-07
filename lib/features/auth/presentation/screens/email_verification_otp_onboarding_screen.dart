@@ -22,7 +22,7 @@ class EmailVerificationOtpOnboardingScreen extends ConsumerStatefulWidget {
 
 class _EmailVerificationOtpOnboardingScreenState
     extends ConsumerState<EmailVerificationOtpOnboardingScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   static const _cooldownSeconds = 60;
   int _cooldown = _cooldownSeconds;
   Timer? _timer;

@@ -1,7 +1,9 @@
 import 'package:dio/dio.dart';
 
 import '../config/auth_runtime_config.dart';
+import '../constants/app_constants.dart' as ac;
 import '../errors/auth_exceptions.dart';
+import 'auth_oauth_extras.dart';
 import '../result.dart';
 import '../storage/secure_storage.dart';
 import '../../features/auth/data/models/auth_response.dart';
@@ -27,6 +29,10 @@ class AuthRemote {
           'Content-Type': 'application/json',
           'X-Client': 'wayo-ads-go',
           'X-Client-Version': runtime.effectiveAppRelease,
+          if (ac.authOAuthRedirectUri.trim().isNotEmpty)
+            'X-OAuth-Redirect-Uri': ac.authOAuthRedirectUri.trim(),
+          if (ac.authOAuthClientId.trim().isNotEmpty)
+            'X-OAuth-Client-Id': ac.authOAuthClientId.trim(),
         },
       ),
     );
@@ -46,7 +52,7 @@ class AuthRemote {
     try {
       final res = await client.post<Map<String, dynamic>>(
         path,
-        data: {'refresh_token': refreshToken},
+        data: mergeWayoAuthPayload({'refresh_token': refreshToken}),
         options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
       );
       final data = res.data;

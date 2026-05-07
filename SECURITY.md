@@ -15,11 +15,14 @@ openssl s_client -servername HOST -connect HOST:443 </dev/null 2>/dev/null \
   | openssl base64 -A
 ```
 
-Use the single-line Base64 output as `CERT_PIN_PRIMARY` or `CERT_PIN_BACKUP` in `dart_defines.json` / `--dart-define-from-file`.
+Use the single-line Base64 output as `CERT_PIN_PRIMARY`, `CERT_PIN_BACKUP`,
+`CERT_PIN_EXTRA`, or `CERT_PIN_ALT` in `dart_defines.json` / `--dart-define-from-file`
+when you have multiple API origins or **two valid leaf certs for the same host**
+(e.g. CDN/Cloudflare edge vs **origin** on the VPS — `openssl` on the server often shows the origin cert while mobile clients see the edge cert).
 
 ### Rotation (two pins)
 
-1. Add the **new** certificate hash as `CERT_PIN_BACKUP` while keeping the current `CERT_PIN_PRIMARY`.
+1. Add the **new** certificate hash as `CERT_PIN_BACKUP` (or `CERT_PIN_ALT`) while keeping the current `CERT_PIN_PRIMARY`.
 2. Ship the app; confirm traffic works.
 3. Swap: move backup to primary, generate a new backup for the next rotation.
 

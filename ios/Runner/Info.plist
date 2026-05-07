@@ -105,7 +105,31 @@
 		</dict>
 
 	</array>
+    <key>NSAppTransportSecurity</key>
+    <dict>
 
+        <key>NSExceptionDomains</key>
+        <dict>
+
+            <key>wayo.agency</key>
+            <dict>
+                <key>NSIncludesSubdomains</key>
+                <true/>
+                <key>NSTemporaryExceptionAllowsInsecureHTTPLoads</key>
+                <true/>
+            </dict>
+
+            <key>wayo.ac</key>
+            <dict>
+                <key>NSIncludesSubdomains</key>
+                <true/>
+                <key>NSTemporaryExceptionAllowsInsecureHTTPLoads</key>
+                <true/>
+            </dict>
+
+        </dict>
+
+    </dict>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>

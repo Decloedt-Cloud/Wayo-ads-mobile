@@ -10,8 +10,10 @@
 include: package:flutter_lints/flutter.yaml
 
 analyzer:
-  plugins:
-    - custom_lint
+  # `custom_lint` as an analyzer plugin breaks when `PUB_CACHE` points at another
+  # user’s directory (permission denied). Run `dart run custom_lint` in CI if needed.
+  # plugins:
+  #   - custom_lint
   exclude:
     - "**/*.g.dart"
 

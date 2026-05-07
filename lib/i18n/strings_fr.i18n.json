@@ -285,6 +285,7 @@
       "stripe_complete_action": "Terminer l’onboarding",
       "stripe_open_dashboard": "Ouvrir le tableau Stripe",
       "stripe_error": "Un souci est survenu avec Stripe. Veuillez réessayer.",
+      "stripe_edit_business_action": "Corriger mes infos",
       "stripe_card_title_disconnected": "Connecter Stripe",
       "stripe_card_subtitle_disconnected": "Associez votre compte bancaire via Stripe pour recevoir vos paiements.",
       "stripe_card_title_incomplete": "Terminez votre onboarding",

@@ -21,16 +21,72 @@ class WithdrawalInsufficientFundsException implements Exception {
       'available=$availableCents)';
 }
 
-/// Server returned a structured error (`{ error: string, errorCode? }`).
+/// One Zod issue from Wayo-ads (`{ path: string[], message: string }`).
+class CreatorWalletValidationIssue {
+  const CreatorWalletValidationIssue({required this.path, required this.message});
+
+  final List<String> path;
+  final String message;
+
+  String? get fieldKey => path.isEmpty ? null : path.last;
+}
+
+/// Server returned a structured error (`{ error: string, errorCode?: string, details?: ... }`).
 class CreatorWalletApiException implements Exception {
-  CreatorWalletApiException(this.message, {this.code, this.statusCode});
+  CreatorWalletApiException(
+    this.message, {
+    this.code,
+    this.statusCode,
+    this.validationIssues,
+  });
 
   final String message;
   final String? code;
   final int? statusCode;
+  final List<CreatorWalletValidationIssue>? validationIssues;
 
   @override
   String toString() => 'CreatorWalletApiException($statusCode $code: $message)';
+
+  static List<CreatorWalletValidationIssue>? _parseValidationDetails(
+    dynamic raw,
+    String fallbackMessage,
+  ) {
+    if (raw is! List) return null;
+    final out = <CreatorWalletValidationIssue>[];
+    for (final item in raw) {
+      if (item is! Map) continue;
+      final m = Map<String, dynamic>.from(item);
+      final pathRaw = m['path'];
+      final path = pathRaw is List
+          ? pathRaw.map((e) => e.toString()).toList(growable: false)
+          : const <String>[];
+      final msg = (m['message'] as String?)?.trim() ?? '';
+      if (path.isEmpty && msg.isEmpty) continue;
+      out.add(
+        CreatorWalletValidationIssue(
+          path: path,
+          message: msg.isEmpty ? fallbackMessage : msg,
+        ),
+      );
+    }
+    return out.isEmpty ? null : out;
+  }
+}
+
+extension CreatorWalletApiExceptionX on CreatorWalletApiException {
+  /// True when the message likely refers to billing/address data the creator
+  /// can fix in [PUT /api/creator/business-profile] (e.g. Stripe "Invalid FR postal code").
+  bool get mayBeFixedViaBusinessProfileEdit {
+    if (validationIssues != null && validationIssues!.isNotEmpty) return true;
+    final m = message.toLowerCase();
+    return m.contains('postal') ||
+        m.contains('zip') ||
+        m.contains('address') ||
+        (m.contains('invalid') && m.contains('code')) ||
+        m.contains('vat') ||
+        m.contains('country');
+  }
 }
 
 /// Thin HTTP wrapper over `/api/creator/{withdrawal,stripe-connect/*}` on
@@ -230,6 +286,10 @@ class CreatorWalletRemoteDatasource {
     final code = map?['errorCode'] as String?;
     final message =
         (map?['error'] as String?) ?? e.message ?? 'Wallet request failed';
+    final validationIssues = CreatorWalletApiException._parseValidationDetails(
+      map?['details'],
+      message,
+    );
 
     if (code == 'INSUFFICIENT_FUNDS') {
       final details = map?['details'];
@@ -244,6 +304,11 @@ class CreatorWalletRemoteDatasource {
         availableCents: avail ?? 0,
       );
     }
-    return CreatorWalletApiException(message, code: code, statusCode: status);
+    return CreatorWalletApiException(
+      message,
+      code: code,
+      statusCode: status,
+      validationIssues: validationIssues,
+    );
   }
 }

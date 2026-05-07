@@ -762,6 +762,7 @@ class _TranslationsCreatorWalletFr extends TranslationsCreatorWalletEn {
 	@override String get stripe_complete_action => 'Terminer l’onboarding';
 	@override String get stripe_open_dashboard => 'Ouvrir le tableau Stripe';
 	@override String get stripe_error => 'Un souci est survenu avec Stripe. Veuillez réessayer.';
+	@override String get stripe_edit_business_action => 'Corriger mes infos';
 	@override String get stripe_card_title_disconnected => 'Connecter Stripe';
 	@override String get stripe_card_subtitle_disconnected => 'Associez votre compte bancaire via Stripe pour recevoir vos paiements.';
 	@override String get stripe_card_title_incomplete => 'Terminez votre onboarding';
@@ -1215,6 +1216,7 @@ extension on TranslationsFr {
 			case 'creator.wallet.stripe_complete_action': return 'Terminer l’onboarding';
 			case 'creator.wallet.stripe_open_dashboard': return 'Ouvrir le tableau Stripe';
 			case 'creator.wallet.stripe_error': return 'Un souci est survenu avec Stripe. Veuillez réessayer.';
+			case 'creator.wallet.stripe_edit_business_action': return 'Corriger mes infos';
 			case 'creator.wallet.stripe_card_title_disconnected': return 'Connecter Stripe';
 			case 'creator.wallet.stripe_card_subtitle_disconnected': return 'Associez votre compte bancaire via Stripe pour recevoir vos paiements.';
 			case 'creator.wallet.stripe_card_title_incomplete': return 'Terminez votre onboarding';

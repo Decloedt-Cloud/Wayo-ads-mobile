@@ -762,6 +762,7 @@ class _TranslationsCreatorWalletAr extends TranslationsCreatorWalletEn {
 	@override String get stripe_complete_action => 'إكمال الإعداد';
 	@override String get stripe_open_dashboard => 'فتح لوحة Stripe';
 	@override String get stripe_error => 'حدث خطأ مع Stripe. يرجى المحاولة مجددًا.';
+	@override String get stripe_edit_business_action => 'تعديل بيانات النشاط';
 	@override String get stripe_card_title_disconnected => 'ربط Stripe';
 	@override String get stripe_card_subtitle_disconnected => 'اربط حسابك المصرفي عبر Stripe لاستلام المدفوعات.';
 	@override String get stripe_card_title_incomplete => 'أكمل الإعداد';
@@ -1215,6 +1216,7 @@ extension on TranslationsAr {
 			case 'creator.wallet.stripe_complete_action': return 'إكمال الإعداد';
 			case 'creator.wallet.stripe_open_dashboard': return 'فتح لوحة Stripe';
 			case 'creator.wallet.stripe_error': return 'حدث خطأ مع Stripe. يرجى المحاولة مجددًا.';
+			case 'creator.wallet.stripe_edit_business_action': return 'تعديل بيانات النشاط';
 			case 'creator.wallet.stripe_card_title_disconnected': return 'ربط Stripe';
 			case 'creator.wallet.stripe_card_subtitle_disconnected': return 'اربط حسابك المصرفي عبر Stripe لاستلام المدفوعات.';
 			case 'creator.wallet.stripe_card_title_incomplete': return 'أكمل الإعداد';

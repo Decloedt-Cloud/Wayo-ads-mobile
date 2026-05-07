@@ -9,7 +9,7 @@
         android:allowBackup="false"
         android:fullBackupContent="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
-        android:usesCleartextTraffic="false"
+        android:usesCleartextTraffic="true"
         android:enableOnBackInvokedCallback="true">
 
         <activity
@@ -35,7 +35,9 @@
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="com.wayo.wayoadsgo" android:path="/oauthredirect" />
+                <data
+                    android:scheme="com.wayo.wayoadsgo"
+                    android:host="oauthredirect" />
             </intent-filter>
 
         </activity>

@@ -11,6 +11,19 @@ import '../../domain/creator_business_profile.dart';
 import '../../domain/stripe_connect_catalog.dart';
 import '../providers/creator_wallet_providers.dart';
 
+const _businessProfileApiFieldKeys = <String>{
+  'businessType',
+  'companyName',
+  'vatNumber',
+  'addressLine1',
+  'addressLine2',
+  'city',
+  'postalCode',
+  'state',
+  'countryCode',
+  'currency',
+};
+
 /// Opens the Business Info modal as a bottom sheet so the wallet page stays
 /// visible behind it.
 ///
@@ -63,6 +76,7 @@ class _BusinessInfoDialogState extends ConsumerState<_BusinessInfoDialog> {
   String? _currency;
   bool _submitting = false;
   String? _apiError;
+  Map<String, String> _serverFieldErrors = {};
 
   @override
   void initState() {
@@ -138,6 +152,7 @@ class _BusinessInfoDialogState extends ConsumerState<_BusinessInfoDialog> {
     setState(() {
       _submitting = true;
       _apiError = null;
+      _serverFieldErrors = {};
     });
     try {
       final profile = await ref
@@ -155,10 +170,7 @@ class _BusinessInfoDialogState extends ConsumerState<_BusinessInfoDialog> {
       Navigator.of(context).pop(profile.businessInfoComplete);
     } on CreatorWalletApiException catch (e) {
       if (!mounted) return;
-      setState(() {
-        _apiError = e.message;
-        _submitting = false;
-      });
+      _applyServerIssueFromApi(e);
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -166,6 +178,44 @@ class _BusinessInfoDialogState extends ConsumerState<_BusinessInfoDialog> {
         _submitting = false;
       });
     }
+  }
+
+  void _onFieldEdited(String apiFieldKey) {
+    setState(() => _serverFieldErrors.remove(apiFieldKey));
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _formKey.currentState?.validate();
+    });
+  }
+
+  void _applyServerIssueFromApi(CreatorWalletApiException e) {
+    final issues = e.validationIssues;
+    if (issues == null || issues.isEmpty) {
+      setState(() {
+        _apiError = e.message;
+        _submitting = false;
+      });
+      return;
+    }
+    final fieldErr = <String, String>{};
+    final other = <String>[];
+    for (final issue in issues) {
+      final key = issue.fieldKey;
+      if (key != null && _businessProfileApiFieldKeys.contains(key)) {
+        fieldErr[key] = issue.message;
+      } else if (issue.message.isNotEmpty) {
+        other.add(issue.message);
+      }
+    }
+    setState(() {
+      _serverFieldErrors = fieldErr;
+      _apiError = other.isNotEmpty
+          ? other.join('\n')
+          : (fieldErr.isEmpty ? e.message : null);
+      _submitting = false;
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _formKey.currentState?.validate();
+    });
   }
 
   @override
@@ -207,7 +257,16 @@ class _BusinessInfoDialogState extends ConsumerState<_BusinessInfoDialog> {
                         const SizedBox(height: 8),
                         _BusinessTypeSelector(
                           value: _businessType,
-                          onChanged: (v) => setState(() => _businessType = v),
+                          serverError: _serverFieldErrors['businessType'],
+                          onChanged: (v) {
+                            setState(() {
+                              _businessType = v;
+                              _serverFieldErrors.remove('businessType');
+                            });
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              if (mounted) _formKey.currentState?.validate();
+                            });
+                          },
                         ),
                         const SizedBox(height: 20),
                         if (_businessType ==
@@ -220,6 +279,9 @@ class _BusinessInfoDialogState extends ConsumerState<_BusinessInfoDialog> {
                             controller: _companyName,
                             label: t.creator.business.company_name,
                             validatorKey: t.creator.business.error_required,
+                            serverError: _serverFieldErrors['companyName'],
+                            onClearServerError: () =>
+                                _onFieldEdited('companyName'),
                           ),
                           const SizedBox(height: 12),
                           _RequiredField(
@@ -227,6 +289,9 @@ class _BusinessInfoDialogState extends ConsumerState<_BusinessInfoDialog> {
                             label: t.creator.business.vat_number,
                             validatorKey: t.creator.business.error_required,
                             capitalize: true,
+                            serverError: _serverFieldErrors['vatNumber'],
+                            onClearServerError: () =>
+                                _onFieldEdited('vatNumber'),
                           ),
                           const SizedBox(height: 20),
                         ],
@@ -238,11 +303,17 @@ class _BusinessInfoDialogState extends ConsumerState<_BusinessInfoDialog> {
                           controller: _addressLine1,
                           label: t.creator.business.address_line1,
                           validatorKey: t.creator.business.error_required,
+                          serverError: _serverFieldErrors['addressLine1'],
+                          onClearServerError: () =>
+                              _onFieldEdited('addressLine1'),
                         ),
                         const SizedBox(height: 12),
                         _OptionalField(
                           controller: _addressLine2,
                           label: t.creator.business.address_line2,
+                          serverError: _serverFieldErrors['addressLine2'],
+                          onClearServerError: () =>
+                              _onFieldEdited('addressLine2'),
                         ),
                         const SizedBox(height: 12),
                         Row(
@@ -252,6 +323,9 @@ class _BusinessInfoDialogState extends ConsumerState<_BusinessInfoDialog> {
                                 controller: _city,
                                 label: t.creator.business.city,
                                 validatorKey: t.creator.business.error_required,
+                                serverError: _serverFieldErrors['city'],
+                                onClearServerError: () =>
+                                    _onFieldEdited('city'),
                               ),
                             ),
                             const SizedBox(width: 12),
@@ -260,6 +334,9 @@ class _BusinessInfoDialogState extends ConsumerState<_BusinessInfoDialog> {
                                 controller: _postalCode,
                                 label: t.creator.business.postal_code,
                                 validatorKey: t.creator.business.error_required,
+                                serverError: _serverFieldErrors['postalCode'],
+                                onClearServerError: () =>
+                                    _onFieldEdited('postalCode'),
                               ),
                             ),
                           ],
@@ -268,6 +345,8 @@ class _BusinessInfoDialogState extends ConsumerState<_BusinessInfoDialog> {
                         _OptionalField(
                           controller: _state,
                           label: t.creator.business.state_region,
+                          serverError: _serverFieldErrors['state'],
+                          onClearServerError: () => _onFieldEdited('state'),
                         ),
                         const SizedBox(height: 20),
                         _SectionLabel(label: t.creator.business.section_stripe),
@@ -279,7 +358,18 @@ class _BusinessInfoDialogState extends ConsumerState<_BusinessInfoDialog> {
                           items: StripeConnectCatalog.countries,
                           value: _countryCode,
                           showCountryFlag: true,
-                          onChanged: (v) => setState(() => _countryCode = v),
+                          serverError: _serverFieldErrors['countryCode'],
+                          onChanged: (v) {
+                            setState(() {
+                              _countryCode = v;
+                              _serverFieldErrors.remove('countryCode');
+                            });
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              if (mounted) {
+                                _formKey.currentState?.validate();
+                              }
+                            });
+                          },
                         ),
                         const SizedBox(height: 12),
                         _ModernConnectSelect(
@@ -289,7 +379,18 @@ class _BusinessInfoDialogState extends ConsumerState<_BusinessInfoDialog> {
                           items: StripeConnectCatalog.currencies,
                           value: _currency,
                           showCountryFlag: false,
-                          onChanged: (v) => setState(() => _currency = v),
+                          serverError: _serverFieldErrors['currency'],
+                          onChanged: (v) {
+                            setState(() {
+                              _currency = v;
+                              _serverFieldErrors.remove('currency');
+                            });
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              if (mounted) {
+                                _formKey.currentState?.validate();
+                              }
+                            });
+                          },
                         ),
                       ],
                     ),
@@ -501,15 +602,22 @@ class _SectionLabel extends StatelessWidget {
 }
 
 class _BusinessTypeSelector extends StatelessWidget {
-  const _BusinessTypeSelector({required this.value, required this.onChanged});
+  const _BusinessTypeSelector({
+    required this.value,
+    required this.onChanged,
+    this.serverError,
+  });
 
   final CreatorBusinessType value;
   final ValueChanged<CreatorBusinessType> onChanged;
+  final String? serverError;
 
   @override
   Widget build(BuildContext context) {
     final t = context.t;
+    final err = serverError?.trim();
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _typeTile(
           context,
@@ -534,6 +642,16 @@ class _BusinessTypeSelector extends StatelessWidget {
           title: t.creator.business.type_company_title,
           subtitle: t.creator.business.type_company_subtitle,
         ),
+        if (err != null && err.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          Text(
+            err,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.error,
+                  fontWeight: FontWeight.w600,
+                ),
+          ),
+        ],
       ],
     );
   }
@@ -631,12 +749,16 @@ class _RequiredField extends StatelessWidget {
     required this.label,
     required this.validatorKey,
     this.capitalize = false,
+    this.serverError,
+    this.onClearServerError,
   });
 
   final TextEditingController controller;
   final String label;
   final String validatorKey;
   final bool capitalize;
+  final String? serverError;
+  final VoidCallback? onClearServerError;
 
   @override
   Widget build(BuildContext context) {
@@ -649,16 +771,28 @@ class _RequiredField extends StatelessWidget {
         labelText: label,
         border: const OutlineInputBorder(),
       ),
-      validator: (v) => (v == null || v.trim().isEmpty) ? validatorKey : null,
+      onChanged: (_) => onClearServerError?.call(),
+      validator: (v) {
+        final se = serverError?.trim();
+        if (se != null && se.isNotEmpty) return se;
+        return (v == null || v.trim().isEmpty) ? validatorKey : null;
+      },
     );
   }
 }
 
 class _OptionalField extends StatelessWidget {
-  const _OptionalField({required this.controller, required this.label});
+  const _OptionalField({
+    required this.controller,
+    required this.label,
+    this.serverError,
+    this.onClearServerError,
+  });
 
   final TextEditingController controller;
   final String label;
+  final String? serverError;
+  final VoidCallback? onClearServerError;
 
   @override
   Widget build(BuildContext context) {
@@ -669,6 +803,12 @@ class _OptionalField extends StatelessWidget {
         labelText: label,
         border: const OutlineInputBorder(),
       ),
+      onChanged: (_) => onClearServerError?.call(),
+      validator: (v) {
+        final se = serverError?.trim();
+        if (se != null && se.isNotEmpty) return se;
+        return null;
+      },
     );
   }
 }
@@ -683,6 +823,7 @@ class _ModernConnectSelect extends StatefulWidget {
     required this.value,
     required this.onChanged,
     required this.showCountryFlag,
+    this.serverError,
   });
 
   final String label;
@@ -691,6 +832,7 @@ class _ModernConnectSelect extends StatefulWidget {
   final String? value;
   final ValueChanged<String?> onChanged;
   final bool showCountryFlag;
+  final String? serverError;
 
   @override
   State<_ModernConnectSelect> createState() => _ModernConnectSelectState();
@@ -740,10 +882,14 @@ class _ModernConnectSelectState extends State<_ModernConnectSelect>
 
     return FormField<String>(
       initialValue: widget.value,
-      validator: (v) =>
-          (v == null || v.isEmpty) ? widget.errorRequired : null,
+      validator: (v) {
+        final se = widget.serverError?.trim();
+        if (se != null && se.isNotEmpty) return se;
+        return (v == null || v.isEmpty) ? widget.errorRequired : null;
+      },
       builder: (field) {
-        final hasError = field.hasError;
+        final se = widget.serverError?.trim();
+        final hasError = field.hasError || (se != null && se.isNotEmpty);
         final sel = _optionFor(field.value);
 
         return Column(
@@ -939,10 +1085,12 @@ class _ModernConnectSelectState extends State<_ModernConnectSelect>
                 );
               },
             ),
-            if (hasError && field.errorText != null) ...[
+            if (hasError &&
+                (field.errorText != null ||
+                    (se != null && se.isNotEmpty))) ...[
               const SizedBox(height: 6),
               Text(
-                field.errorText!,
+                field.errorText ?? se ?? '',
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.error,
                   fontWeight: FontWeight.w600,

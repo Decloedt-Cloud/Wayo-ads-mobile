@@ -4,7 +4,9 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:sentry_dio/sentry_dio.dart';
 
 import '../config/auth_runtime_config.dart';
+import '../constants/app_constants.dart' as ac;
 import '../connectivity/connectivity_providers.dart';
+import '../observability/app_log.dart';
 import '../connectivity/connectivity_reporter_interceptor.dart';
 import '../storage/secure_storage.dart';
 import 'auth_interceptor.dart';
@@ -29,6 +31,8 @@ Dio dio(DioRef ref) {
       );
     }
   }
+  final oauthRedirect = ac.authOAuthRedirectUri.trim();
+  final oauthClientId = ac.authOAuthClientId.trim();
   final client = Dio(
     BaseOptions(
       baseUrl: base,
@@ -40,6 +44,8 @@ Dio dio(DioRef ref) {
         'Content-Type': 'application/json',
         'X-Client': 'wayo-ads-go',
         'X-Client-Version': runtime.effectiveAppRelease,
+        if (oauthRedirect.isNotEmpty) 'X-OAuth-Redirect-Uri': oauthRedirect,
+        if (oauthClientId.isNotEmpty) 'X-OAuth-Client-Id': oauthClientId,
       },
     ),
   );
@@ -48,13 +54,13 @@ Dio dio(DioRef ref) {
   client.interceptors.add(
     buildWayoRetryInterceptor(
       client,
-      logPrint: kDebugMode ? (m) => debugPrint(m) : null,
+      logPrint: kWayoDiagnosticsLogging ? (m) => wayoDiagPrint(m, name: 'wayo.retry') : null,
     ),
   );
   client.interceptors.add(
     ConnectivityReporterInterceptor(ref.read(connectivityServiceProvider)),
   );
-  if (kDebugMode) {
+  if (kWayoDiagnosticsLogging) {
     client.interceptors.add(WayoLoggingInterceptor());
   }
 

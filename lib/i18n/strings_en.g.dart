@@ -764,6 +764,7 @@ class TranslationsCreatorWalletEn {
 	String get stripe_complete_action => 'Finish onboarding';
 	String get stripe_open_dashboard => 'Open Stripe dashboard';
 	String get stripe_error => 'Something went wrong with Stripe. Please try again.';
+	String get stripe_edit_business_action => 'Edit business details';
 	String get stripe_card_title_disconnected => 'Connect Stripe';
 	String get stripe_card_subtitle_disconnected => 'Link your bank account securely via Stripe to receive payouts.';
 	String get stripe_card_title_incomplete => 'Finish your onboarding';
@@ -1217,6 +1218,7 @@ extension on Translations {
 			case 'creator.wallet.stripe_complete_action': return 'Finish onboarding';
 			case 'creator.wallet.stripe_open_dashboard': return 'Open Stripe dashboard';
 			case 'creator.wallet.stripe_error': return 'Something went wrong with Stripe. Please try again.';
+			case 'creator.wallet.stripe_edit_business_action': return 'Edit business details';
 			case 'creator.wallet.stripe_card_title_disconnected': return 'Connect Stripe';
 			case 'creator.wallet.stripe_card_subtitle_disconnected': return 'Link your bank account securely via Stripe to receive payouts.';
 			case 'creator.wallet.stripe_card_title_incomplete': return 'Finish your onboarding';

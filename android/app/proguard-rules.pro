@@ -15,6 +15,19 @@
 -keep class com.google.android.gms.wallet.** { *; }
 -dontwarn com.google.android.gms.wallet.**
 
+## Google Sign-In / Play services (release R8 can strip API surface used via JNI).
+-keep class com.google.android.gms.auth.** { *; }
+-keep class com.google.android.gms.auth.api.** { *; }
+-keep class com.google.android.gms.common.** { *; }
+-keep class com.google.android.gms.common.api.** { *; }
+-dontwarn com.google.android.gms.auth.**
+-dontwarn com.google.android.gms.common.**
+
 ## Keep Flutter plugin registrants and generic Flutter embedding symbols.
 -keep class io.flutter.** { *; }
 -dontwarn io.flutter.**
+
+
+-keep class io.flutter.** { *; }
+-keep class ma.wayo.** { *; }
+-dontwarn **

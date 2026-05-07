@@ -462,7 +462,13 @@
     "in_progress": "Traitement…",
     "tx_page": "Page $current sur $total",
     "tx_prev": "Précédent",
-    "tx_next": "Suivant"
+    "tx_next": "Suivant",
+    "business_profile_gate_title": "Informations d’entreprise requises",
+    "business_profile_gate_body": "Renseignez des coordonnées de facturation valides avant d’ajouter des fonds — conformité et facturation Wayo Ads.",
+    "business_profile_gate_secure": "Connexion chiffrée — contrôle côté serveur avant tout paiement.",
+    "business_profile_gate_cta": "Renseigner mon activité",
+    "business_profile_error": "Impossible de charger le profil entreprise.",
+    "pay_locked_until_business": "Le paiement sera disponible une fois le profil complété."
   },
   "chat": {
     "inbox_title": "Messages",

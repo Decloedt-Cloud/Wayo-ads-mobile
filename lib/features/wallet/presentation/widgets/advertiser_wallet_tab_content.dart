@@ -14,6 +14,10 @@ import '../../../../core/providers/app_providers.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../i18n/strings.g.dart';
+import '../../../auth/presentation/providers/current_account_providers.dart';
+import '../../../creator_wallet/domain/creator_business_profile.dart';
+import '../../../creator_wallet/presentation/providers/creator_wallet_providers.dart';
+import '../../../creator_wallet/presentation/widgets/business_info_dialog.dart';
 import '../../../dashboard/presentation/providers/dashboard_state_providers.dart';
 import '../../data/advertiser_wallet_repository.dart';
 import '../../domain/wallet_models.dart';
@@ -192,6 +196,31 @@ class _AdvertiserWalletTabContentState
     }
   }
 
+  Future<void> _openBusinessProfileEditor() async {
+    final user = ref.read(currentAppUserProvider);
+    if (user == null || !mounted) {
+      return;
+    }
+    CreatorBusinessProfile initial;
+    try {
+      initial = await ref.read(creatorBusinessProfileProvider.future);
+    } catch (_) {
+      initial = CreatorBusinessProfile.empty();
+    }
+    final useGlobal = user.shouldUseAdvertiserGlobalBusinessSchema;
+    final ok = await showBusinessInfoDialog(
+      context,
+      initial: initial,
+      useGlobalBilling: useGlobal,
+    );
+    if (!mounted || !ok) {
+      return;
+    }
+    ref.invalidate(creatorBusinessProfileProvider);
+    ref.invalidate(advertiserWalletPageProvider);
+    await _refresh();
+  }
+
   @override
   Widget build(BuildContext context) {
     final t = context.t;
@@ -226,123 +255,441 @@ class _AdvertiserWalletTabContentState
         ],
       ),
       data: (data) {
-        final c = data.balance.currency;
-        final nTx = data.transactions.length;
-        final maxTxPage = nTx == 0 ? 0 : (nTx - 1) ~/ _kWalletTxPageSize;
-        if (_txPage > maxTxPage) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) {
-              setState(() => _txPage = maxTxPage);
-            }
-          });
-        }
-        return RefreshIndicator(
-          color: AppColors.primary,
-          onRefresh: _refresh,
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(0, 0, 0, 120),
-            physics: const AlwaysScrollableScrollPhysics(
-              parent: BouncingScrollPhysics(),
-            ),
-            children: [
-              _HeroHeader(
-                data: data,
-                moneyLocale: moneyLocale,
-                isDark: isDark,
-                t: t,
+        final profileAsync = ref.watch(creatorBusinessProfileProvider);
+        return profileAsync.when(
+          loading: () => RefreshIndicator(
+            color: AppColors.primary,
+            onRefresh: _refresh,
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(0, 0, 0, 120),
+              physics: const AlwaysScrollableScrollPhysics(
+                parent: BouncingScrollPhysics(),
               ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _WalletPayStrip(
-                      data: data,
-                      t: t,
-                      busyMethod: _busyMethod,
-                      onCard: () =>
-                          _submit(method: _PayMethod.card, currency: c),
-                      onApplePay: () =>
-                          _submit(method: _PayMethod.applePay, currency: c),
-                      onGooglePay: () =>
-                          _submit(method: _PayMethod.googlePay, currency: c),
-                    ),
-                    const SizedBox(height: 24),
-                    Text(
-                      t.advertiser_wallet.amount_label,
-                      style: AppTextStyles.caption(
-                        context,
-                      ).copyWith(color: AppColors.textSecondaryOf(context)),
-                    ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: _amountCtrl,
-                      keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true,
+              children: [
+                _HeroHeader(
+                  data: data,
+                  moneyLocale: moneyLocale,
+                  isDark: isDark,
+                  t: t,
+                ),
+                const Padding(
+                  padding: EdgeInsets.fromLTRB(40, 48, 40, 0),
+                  child: Center(
+                    child: CircularProgressIndicator(color: AppColors.primary),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          error: (err, _) => RefreshIndicator(
+            color: AppColors.primary,
+            onRefresh: () async {
+              ref.invalidate(creatorBusinessProfileProvider);
+              await _refresh();
+            },
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(0, 0, 0, 120),
+              physics: const AlwaysScrollableScrollPhysics(
+                parent: BouncingScrollPhysics(),
+              ),
+              children: [
+                _HeroHeader(
+                  data: data,
+                  moneyLocale: moneyLocale,
+                  isDark: isDark,
+                  t: t,
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _BusinessProfileLoadError(
+                        message: err is ServerException
+                            ? err.message
+                            : t.advertiser_wallet.business_profile_error,
+                        onRetry: () => ref.invalidate(creatorBusinessProfileProvider),
+                        t: t,
                       ),
-                      inputFormatters: [
-                        FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
-                      ],
-                      decoration: InputDecoration(
-                        prefixText: '$c ',
-                        filled: true,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        hintText: '0.00',
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        _QuickChip(
-                          label: t.advertiser_wallet.quick_50,
-                          onTap: () => _amountCtrl.text = '50',
-                        ),
-                        _QuickChip(
-                          label: t.advertiser_wallet.quick_100,
-                          onTap: () => _amountCtrl.text = '100',
-                        ),
-                        _QuickChip(
-                          label: t.advertiser_wallet.quick_250,
-                          onTap: () => _amountCtrl.text = '250',
-                        ),
-                      ],
-                    ),
-                    if (data.canSimulate) ...[
-                      const SizedBox(height: 8),
-                      Text(
-                        t.advertiser_wallet.test_hint,
-                        style: AppTextStyles.caption(
-                          context,
-                        ).copyWith(color: AppColors.textMutedOf(context)),
+                      const SizedBox(height: 20),
+                      _BusinessInfoRequiredGate(
+                        onComplete: _openBusinessProfileEditor,
+                        t: t,
+                        isDark: isDark,
                       ),
                     ],
-                    const SizedBox(height: 28),
-                    Text(
-                      t.advertiser_wallet.tx_title,
-                      style: AppTextStyles.headlineMedium(
-                        context,
-                      ).copyWith(fontSize: 20),
-                    ),
-                    const SizedBox(height: 12),
-                    _RecentActivityPager(
-                      transactions: data.transactions,
-                      moneyLocale: moneyLocale,
-                      pageIndex: _txPage,
-                      onPageIndexChange: (p) => setState(() => _txPage = p),
-                      txLabel: _txLabel,
-                      t: t,
-                    ),
-                  ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
+          data: (profile) {
+            final businessReady = profile.businessInfoComplete;
+            final c = data.balance.currency;
+            final nTx = data.transactions.length;
+            final maxTxPage = nTx == 0 ? 0 : (nTx - 1) ~/ _kWalletTxPageSize;
+            if (_txPage > maxTxPage) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted) {
+                  setState(() => _txPage = maxTxPage);
+                }
+              });
+            }
+            return RefreshIndicator(
+              color: AppColors.primary,
+              onRefresh: _refresh,
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(0, 0, 0, 120),
+                physics: const AlwaysScrollableScrollPhysics(
+                  parent: BouncingScrollPhysics(),
+                ),
+                children: [
+                  _HeroHeader(
+                    data: data,
+                    moneyLocale: moneyLocale,
+                    isDark: isDark,
+                    t: t,
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        if (!businessReady) ...[
+                          _BusinessInfoRequiredGate(
+                            onComplete: _openBusinessProfileEditor,
+                            t: t,
+                            isDark: isDark,
+                          ),
+                          const SizedBox(height: 20),
+                        ],
+                        if (businessReady)
+                          _WalletPayStrip(
+                            data: data,
+                            t: t,
+                            busyMethod: _busyMethod,
+                            onCard: () =>
+                                _submit(method: _PayMethod.card, currency: c),
+                            onApplePay: () =>
+                                _submit(method: _PayMethod.applePay, currency: c),
+                            onGooglePay: () =>
+                                _submit(method: _PayMethod.googlePay, currency: c),
+                          )
+                        else
+                          _WalletPayStripPlaceholder(t: t),
+                        const SizedBox(height: 24),
+                        Text(
+                          t.advertiser_wallet.amount_label,
+                          style: AppTextStyles.caption(
+                            context,
+                          ).copyWith(color: AppColors.textSecondaryOf(context)),
+                        ),
+                        const SizedBox(height: 8),
+                        TextField(
+                          controller: _amountCtrl,
+                          readOnly: !businessReady,
+                          onTap: !businessReady ? () => _openBusinessProfileEditor() : null,
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                          inputFormatters: [
+                            FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+                          ],
+                          decoration: InputDecoration(
+                            prefixText: '$c ',
+                            filled: true,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            hintText: '0.00',
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            _QuickChip(
+                              label: t.advertiser_wallet.quick_50,
+                              onTap: businessReady
+                                  ? () => _amountCtrl.text = '50'
+                                  : () {
+                                      _openBusinessProfileEditor();
+                                    },
+                            ),
+                            _QuickChip(
+                              label: t.advertiser_wallet.quick_100,
+                              onTap: businessReady
+                                  ? () => _amountCtrl.text = '100'
+                                  : () {
+                                      _openBusinessProfileEditor();
+                                    },
+                            ),
+                            _QuickChip(
+                              label: t.advertiser_wallet.quick_250,
+                              onTap: businessReady
+                                  ? () => _amountCtrl.text = '250'
+                                  : () {
+                                      _openBusinessProfileEditor();
+                                    },
+                            ),
+                          ],
+                        ),
+                        if (data.canSimulate) ...[
+                          const SizedBox(height: 8),
+                          Text(
+                            t.advertiser_wallet.test_hint,
+                            style: AppTextStyles.caption(
+                              context,
+                            ).copyWith(color: AppColors.textMutedOf(context)),
+                          ),
+                        ],
+                        const SizedBox(height: 28),
+                        Text(
+                          t.advertiser_wallet.tx_title,
+                          style: AppTextStyles.headlineMedium(
+                            context,
+                          ).copyWith(fontSize: 20),
+                        ),
+                        const SizedBox(height: 12),
+                        _RecentActivityPager(
+                          transactions: data.transactions,
+                          moneyLocale: moneyLocale,
+                          pageIndex: _txPage,
+                          onPageIndexChange: (p) => setState(() => _txPage = p),
+                          txLabel: _txLabel,
+                          t: t,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
         );
       },
+    );
+  }
+}
+
+class _BusinessProfileLoadError extends StatelessWidget {
+  const _BusinessProfileLoadError({
+    required this.message,
+    required this.onRetry,
+    required this.t,
+  });
+
+  final String message;
+  final VoidCallback onRetry;
+  final Translations t;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppColors.surfaceElevatedOf(context),
+      borderRadius: BorderRadius.circular(20),
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.error_outline_rounded,
+                  color: AppColors.textSecondaryOf(context),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    message,
+                    style: AppTextStyles.bodyLarge(context),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: onRetry,
+              icon: const Icon(Icons.refresh_rounded, size: 20),
+              label: Text(t.dashboard.errors.retry),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Compliance gate before wallet top-up (mirrors Wayo-ads web wallet).
+class _BusinessInfoRequiredGate extends StatelessWidget {
+  const _BusinessInfoRequiredGate({
+    required this.onComplete,
+    required this.t,
+    required this.isDark,
+  });
+
+  final VoidCallback onComplete;
+  final Translations t;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: isDark
+              ? [
+                  const Color(0xFF1A1814),
+                  const Color(0xFF252015).withValues(alpha: 0.95),
+                  const Color(0xFF0D0D0D),
+                ]
+              : [
+                  const Color(0xFFFFF8ED),
+                  const Color(0xFFFFEFD6),
+                  Colors.white,
+                ],
+        ),
+        border: Border.all(
+          color: const Color(0xFFF4A237).withValues(alpha: 0.45),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.06),
+            blurRadius: 24,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 22, 20, 20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF10B981).withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: const Icon(
+                    Icons.verified_user_rounded,
+                    color: Color(0xFF059669),
+                    size: 26,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        t.advertiser_wallet.business_profile_gate_title,
+                        style: AppTextStyles.headlineMedium(context).copyWith(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        t.advertiser_wallet.business_profile_gate_body,
+                        style: AppTextStyles.bodyLarge(context).copyWith(
+                          height: 1.4,
+                          color: AppColors.textSecondaryOf(context),
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Icon(
+                  Icons.lock_outline_rounded,
+                  size: 16,
+                  color: AppColors.textMutedOf(context),
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    t.advertiser_wallet.business_profile_gate_secure,
+                    style: AppTextStyles.caption(context).copyWith(
+                      color: AppColors.textMutedOf(context),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 18),
+            FilledButton(
+              onPressed: onComplete,
+              style: FilledButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+              child: Text(
+                t.advertiser_wallet.business_profile_gate_cta,
+                style: const TextStyle(fontWeight: FontWeight.w800),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _WalletPayStripPlaceholder extends StatelessWidget {
+  const _WalletPayStripPlaceholder({required this.t});
+
+  final Translations t;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 22, horizontal: 18),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+          color: AppColors.borderOf(context).withValues(alpha: 0.85),
+        ),
+        color: AppColors.surfaceElevatedOf(context).withValues(alpha: 0.6),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.payments_outlined,
+            color: AppColors.textMutedOf(context),
+            size: 28,
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Text(
+              t.advertiser_wallet.pay_locked_until_business,
+              style: AppTextStyles.bodyLarge(context).copyWith(
+                color: AppColors.textMutedOf(context),
+                fontWeight: FontWeight.w600,
+                height: 1.35,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

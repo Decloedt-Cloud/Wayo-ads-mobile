@@ -322,6 +322,12 @@ class _TranslationsAdvertiserWalletAr extends TranslationsAdvertiserWalletEn {
 	@override String tx_page({required Object current, required Object total}) => 'الصفحة ${current} من ${total}';
 	@override String get tx_prev => 'السابق';
 	@override String get tx_next => 'التالي';
+	@override String get business_profile_gate_title => 'بيانات النشاط مطلوبة';
+	@override String get business_profile_gate_body => 'أكمل معلومات الفوترة الصالحة قبل إضافة الرصيد — متوافق مع Wayo Ads.';
+	@override String get business_profile_gate_secure => 'اتصال مشفّر والتحقق على الخادم قبل أي دفع.';
+	@override String get business_profile_gate_cta => 'إكمال بيانات النشاط';
+	@override String get business_profile_error => 'تعذّر تحميل الملف التجاري.';
+	@override String get pay_locked_until_business => 'تُفعّل طرق الدفع بعد إكمال الملف التجاري.';
 }
 
 // Path: chat
@@ -1376,6 +1382,12 @@ extension on TranslationsAr {
 			case 'advertiser_wallet.tx_page': return ({required Object current, required Object total}) => 'الصفحة ${current} من ${total}';
 			case 'advertiser_wallet.tx_prev': return 'السابق';
 			case 'advertiser_wallet.tx_next': return 'التالي';
+			case 'advertiser_wallet.business_profile_gate_title': return 'بيانات النشاط مطلوبة';
+			case 'advertiser_wallet.business_profile_gate_body': return 'أكمل معلومات الفوترة الصالحة قبل إضافة الرصيد — متوافق مع Wayo Ads.';
+			case 'advertiser_wallet.business_profile_gate_secure': return 'اتصال مشفّر والتحقق على الخادم قبل أي دفع.';
+			case 'advertiser_wallet.business_profile_gate_cta': return 'إكمال بيانات النشاط';
+			case 'advertiser_wallet.business_profile_error': return 'تعذّر تحميل الملف التجاري.';
+			case 'advertiser_wallet.pay_locked_until_business': return 'تُفعّل طرق الدفع بعد إكمال الملف التجاري.';
 			case 'chat.inbox_title': return 'الرسائل';
 			case 'chat.inbox_subtitle': return 'محادثات آمنة لحملاتك';
 			case 'chat.conversation_unknown': return 'محادثة';

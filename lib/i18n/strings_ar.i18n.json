@@ -462,7 +462,13 @@
     "in_progress": "جاري المعالجة…",
     "tx_page": "الصفحة $current من $total",
     "tx_prev": "السابق",
-    "tx_next": "التالي"
+    "tx_next": "التالي",
+    "business_profile_gate_title": "بيانات النشاط مطلوبة",
+    "business_profile_gate_body": "أكمل معلومات الفوترة الصالحة قبل إضافة الرصيد — متوافق مع Wayo Ads.",
+    "business_profile_gate_secure": "اتصال مشفّر والتحقق على الخادم قبل أي دفع.",
+    "business_profile_gate_cta": "إكمال بيانات النشاط",
+    "business_profile_error": "تعذّر تحميل الملف التجاري.",
+    "pay_locked_until_business": "تُفعّل طرق الدفع بعد إكمال الملف التجاري."
   },
   "chat": {
     "inbox_title": "الرسائل",

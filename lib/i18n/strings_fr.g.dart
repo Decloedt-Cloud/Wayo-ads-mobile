@@ -322,6 +322,12 @@ class _TranslationsAdvertiserWalletFr extends TranslationsAdvertiserWalletEn {
 	@override String tx_page({required Object current, required Object total}) => 'Page ${current} sur ${total}';
 	@override String get tx_prev => 'Précédent';
 	@override String get tx_next => 'Suivant';
+	@override String get business_profile_gate_title => 'Informations d’entreprise requises';
+	@override String get business_profile_gate_body => 'Renseignez des coordonnées de facturation valides avant d’ajouter des fonds — conformité et facturation Wayo Ads.';
+	@override String get business_profile_gate_secure => 'Connexion chiffrée — contrôle côté serveur avant tout paiement.';
+	@override String get business_profile_gate_cta => 'Renseigner mon activité';
+	@override String get business_profile_error => 'Impossible de charger le profil entreprise.';
+	@override String get pay_locked_until_business => 'Le paiement sera disponible une fois le profil complété.';
 }
 
 // Path: chat
@@ -1376,6 +1382,12 @@ extension on TranslationsFr {
 			case 'advertiser_wallet.tx_page': return ({required Object current, required Object total}) => 'Page ${current} sur ${total}';
 			case 'advertiser_wallet.tx_prev': return 'Précédent';
 			case 'advertiser_wallet.tx_next': return 'Suivant';
+			case 'advertiser_wallet.business_profile_gate_title': return 'Informations d’entreprise requises';
+			case 'advertiser_wallet.business_profile_gate_body': return 'Renseignez des coordonnées de facturation valides avant d’ajouter des fonds — conformité et facturation Wayo Ads.';
+			case 'advertiser_wallet.business_profile_gate_secure': return 'Connexion chiffrée — contrôle côté serveur avant tout paiement.';
+			case 'advertiser_wallet.business_profile_gate_cta': return 'Renseigner mon activité';
+			case 'advertiser_wallet.business_profile_error': return 'Impossible de charger le profil entreprise.';
+			case 'advertiser_wallet.pay_locked_until_business': return 'Le paiement sera disponible une fois le profil complété.';
 			case 'chat.inbox_title': return 'Messages';
 			case 'chat.inbox_subtitle': return 'Conversations sécurisées pour vos campagnes';
 			case 'chat.conversation_unknown': return 'Conversation';

@@ -1,6 +1,5 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import '../../../core/config/auth_runtime_config.dart';
 import '../../../core/errors/auth_exceptions.dart';
 import '../../../core/network/api_endpoints.dart';
@@ -112,66 +111,100 @@ final class AdvertiserWalletRepository {
     required int amountCents,
     String? currency,
   }) async {
-    final res = await _dio.post<Map<String, dynamic>>(
-      _path(ApiEndpoints.walletDepositIntent),
-      data: <String, dynamic>{
-        'amountCents': amountCents,
-        'currency': currency,
-      }..removeWhere((_, v) => v == null),
-    );
-    final data = res.data;
-    if (data == null) {
-      throw const ServerException('Empty deposit response');
+    try {
+      final res = await _dio.post<Map<String, dynamic>>(
+        _path(ApiEndpoints.walletDepositIntent),
+        data: <String, dynamic>{
+          'amountCents': amountCents,
+          'currency': currency,
+        }..removeWhere((_, v) => v == null),
+      );
+      final data = res.data;
+      if (data == null) {
+        throw const ServerException('Empty deposit response');
+      }
+      final err = _err(data);
+      if (err != null) {
+        throw ServerException(err);
+      }
+      final intent = _asMap(data['intent']);
+      if (intent == null) {
+        throw const ServerException('Invalid deposit intent');
+      }
+      return DepositIntentResult(
+        intentId: '${intent['intentId'] ?? ''}',
+        clientSecret: intent['clientSecret'] as String? ?? '',
+        amountCents: (intent['amountCents'] as num?)?.toInt() ?? amountCents,
+        currency: (intent['currency'] as String?)?.toUpperCase() ?? 'EUR',
+        canSimulate: data['canSimulate'] == true,
+      );
+    } on DioException catch (e) {
+      throw ServerException(_depositErrorMessage(e), e.response?.statusCode);
     }
-    final err = _err(data);
-    if (err != null) {
-      throw ServerException(err);
-    }
-    final intent = _asMap(data['intent']);
-    if (intent == null) {
-      throw const ServerException('Invalid deposit intent');
-    }
-    return DepositIntentResult(
-      intentId: '${intent['intentId'] ?? ''}',
-      clientSecret: intent['clientSecret'] as String? ?? '',
-      amountCents: (intent['amountCents'] as num?)?.toInt() ?? amountCents,
-      currency: (intent['currency'] as String?)?.toUpperCase() ?? 'EUR',
-      canSimulate: data['canSimulate'] == true,
-    );
   }
 
   Future<void> confirmDeposit(String intentId) async {
-    final res = await _dio.post<Map<String, dynamic>>(
-      _path(ApiEndpoints.walletConfirmDeposit),
-      data: <String, dynamic>{'intentId': intentId},
-    );
-    final data = res.data;
-    if (data == null) {
-      return;
-    }
-    final err = _err(data);
-    if (err != null) {
-      throw ServerException(err);
-    }
-    if (data['success'] != true) {
-      final d = _err(data) ?? 'Confirm failed';
-      throw ServerException(d);
+    try {
+      final res = await _dio.post<Map<String, dynamic>>(
+        _path(ApiEndpoints.walletConfirmDeposit),
+        data: <String, dynamic>{'intentId': intentId},
+      );
+      final data = res.data;
+      if (data == null) {
+        return;
+      }
+      final err = _err(data);
+      if (err != null) {
+        throw ServerException(err);
+      }
+      if (data['success'] != true) {
+        final d = _err(data) ?? 'Confirm failed';
+        throw ServerException(d);
+      }
+    } on DioException catch (e) {
+      throw ServerException(_depositErrorMessage(e), e.response?.statusCode);
     }
   }
 
   /// Dev / mock PSP only.
   Future<void> simulatePspSuccess(String intentId) async {
-    final res = await _dio.post<Map<String, dynamic>>(
-      _path(ApiEndpoints.webhooksPspSimulate),
-      data: <String, dynamic>{'intentId': intentId},
-    );
-    final data = res.data;
-    if (data == null) {
-      throw const ServerException('Empty simulate response');
+    try {
+      final res = await _dio.post<Map<String, dynamic>>(
+        _path(ApiEndpoints.webhooksPspSimulate),
+        data: <String, dynamic>{'intentId': intentId},
+      );
+      final data = res.data;
+      if (data == null) {
+        throw const ServerException('Empty simulate response');
+      }
+      if (data['success'] != true) {
+        final err = _err(data) ?? 'Simulate failed';
+        throw ServerException(err);
+      }
+    } on DioException catch (e) {
+      throw ServerException(_depositErrorMessage(e), e.response?.statusCode);
     }
-    if (data['success'] != true) {
-      final err = _err(data) ?? 'Simulate failed';
-      throw ServerException(err);
+  }
+
+  static String _depositErrorMessage(DioException e) {
+    final data = e.response?.data;
+    if (data is Map) {
+      final map = Map<String, dynamic>.from(data);
+      final code = map['code'] as String?;
+      if (code == 'BUSINESS_PROFILE_INCOMPLETE') {
+        final msg = map['error'] as String?;
+        if (msg != null && msg.trim().isNotEmpty) {
+          return msg.trim();
+        }
+        return 'Complete your business information before adding funds to your wallet.';
+      }
+      final err = map['error'];
+      if (err is String && err.trim().isNotEmpty) {
+        return err.trim();
+      }
     }
+    return e.message?.trim().isNotEmpty == true
+        ? e.message!.trim()
+        : 'Could not process wallet payment.';
   }
 }

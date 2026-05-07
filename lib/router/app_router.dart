@@ -3,9 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../features/auth/data/models/app_user.dart';
 import '../features/auth/domain/auth_notifier.dart';
 import '../features/auth/domain/wayo_ads_account_role.dart';
-import '../features/auth/presentation/providers/current_account_providers.dart';
 import '../features/auth/presentation/screens/forgot_password_screen.dart';
 import '../features/auth/presentation/screens/login_screen.dart';
 import '../features/auth/domain/onboarding_gate.dart';
@@ -22,6 +22,7 @@ import '../features/dashboard/presentation/screens/dashboard_screen.dart';
 import '../features/dashboard/presentation/screens/notifications_screen.dart';
 import '../features/chat/presentation/screens/chat_thread_screen.dart';
 import '../features/shell/app_shell.dart';
+import '../features/shell/shell_tab_signed_in_gate.dart';
 import '../features/shell/shell_tabs.dart';
 import '../features/wallet/presentation/screens/wallet_tab_screen.dart';
 import '../screens/privacy_policy_screen.dart';
@@ -36,11 +37,14 @@ class _HomeTabScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final role = ref.watch(currentWayoAdsAccountRoleProvider);
-    if (role == WayoAdsAccountRole.creator) {
-      return const CreatorDashboardScreen();
-    }
-    return const DashboardScreen();
+    return ShellTabSignedInGate(
+      builder: (context, ref, AppUser user) {
+        if (user.wayoAdsRole == WayoAdsAccountRole.creator) {
+          return const CreatorDashboardScreen();
+        }
+        return const DashboardScreen();
+      },
+    );
   }
 }
 

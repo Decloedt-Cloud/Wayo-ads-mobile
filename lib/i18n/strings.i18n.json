@@ -462,7 +462,13 @@
     "in_progress": "Processing…",
     "tx_page": "Page $current of $total",
     "tx_prev": "Previous",
-    "tx_next": "Next"
+    "tx_next": "Next",
+    "business_profile_gate_title": "Business details required",
+    "business_profile_gate_body": "Add valid billing information before adding funds. This keeps invoices and compliance aligned with Wayo Ads.",
+    "business_profile_gate_secure": "Encrypted connection — verified on our servers before any charge.",
+    "business_profile_gate_cta": "Complete business information",
+    "business_profile_error": "Could not load business profile.",
+    "pay_locked_until_business": "Payment unlocks once your business profile is complete."
   },
   "chat": {
     "inbox_title": "Messages",

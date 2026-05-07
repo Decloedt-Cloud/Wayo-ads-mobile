@@ -137,6 +137,7 @@ final class CreatorBusinessProfileInput extends Equatable {
     this.vatNumber,
     this.addressLine2,
     this.state,
+    this.profileValidationGlobal = false,
   });
 
   final CreatorBusinessType businessType;
@@ -149,6 +150,9 @@ final class CreatorBusinessProfileInput extends Equatable {
   final String? vatNumber;
   final String? addressLine2;
   final String? state;
+
+  /// Advertiser-only billing: sets `profileValidation: global` on Wayo-ads PUT.
+  final bool profileValidationGlobal;
 
   Map<String, dynamic> toJson() => {
     'businessType': businessType.apiValue,
@@ -164,6 +168,7 @@ final class CreatorBusinessProfileInput extends Equatable {
       'companyName': companyName,
     if (vatNumber != null && vatNumber!.isNotEmpty)
       'vatNumber': vatNumber!.toUpperCase(),
+    if (profileValidationGlobal) 'profileValidation': 'global',
   };
 
   @override
@@ -178,5 +183,6 @@ final class CreatorBusinessProfileInput extends Equatable {
     vatNumber,
     addressLine2,
     state,
+    profileValidationGlobal,
   ];
 }

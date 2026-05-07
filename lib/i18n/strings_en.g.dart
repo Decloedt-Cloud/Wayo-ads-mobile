@@ -324,6 +324,12 @@ class TranslationsAdvertiserWalletEn {
 	String tx_page({required Object current, required Object total}) => 'Page ${current} of ${total}';
 	String get tx_prev => 'Previous';
 	String get tx_next => 'Next';
+	String get business_profile_gate_title => 'Business details required';
+	String get business_profile_gate_body => 'Add valid billing information before adding funds. This keeps invoices and compliance aligned with Wayo Ads.';
+	String get business_profile_gate_secure => 'Encrypted connection — verified on our servers before any charge.';
+	String get business_profile_gate_cta => 'Complete business information';
+	String get business_profile_error => 'Could not load business profile.';
+	String get pay_locked_until_business => 'Payment unlocks once your business profile is complete.';
 }
 
 // Path: chat
@@ -1378,6 +1384,12 @@ extension on Translations {
 			case 'advertiser_wallet.tx_page': return ({required Object current, required Object total}) => 'Page ${current} of ${total}';
 			case 'advertiser_wallet.tx_prev': return 'Previous';
 			case 'advertiser_wallet.tx_next': return 'Next';
+			case 'advertiser_wallet.business_profile_gate_title': return 'Business details required';
+			case 'advertiser_wallet.business_profile_gate_body': return 'Add valid billing information before adding funds. This keeps invoices and compliance aligned with Wayo Ads.';
+			case 'advertiser_wallet.business_profile_gate_secure': return 'Encrypted connection — verified on our servers before any charge.';
+			case 'advertiser_wallet.business_profile_gate_cta': return 'Complete business information';
+			case 'advertiser_wallet.business_profile_error': return 'Could not load business profile.';
+			case 'advertiser_wallet.pay_locked_until_business': return 'Payment unlocks once your business profile is complete.';
 			case 'chat.inbox_title': return 'Messages';
 			case 'chat.inbox_subtitle': return 'Secure conversations for your campaigns';
 			case 'chat.conversation_unknown': return 'Conversation';

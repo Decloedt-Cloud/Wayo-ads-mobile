@@ -126,6 +126,7 @@ class _RealtimeDashboardWireState extends ConsumerState<RealtimeDashboardWire>
       ref.invalidate(creatorMySubmissionsProvider);
     } else {
       ref.invalidate(advertiserWalletPageProvider);
+      ref.invalidate(creatorBusinessProfileProvider);
       ref.invalidate(advertiserCampaignsPagedProvider);
       ref.invalidate(advertiserCampaignsCountsProvider);
     }

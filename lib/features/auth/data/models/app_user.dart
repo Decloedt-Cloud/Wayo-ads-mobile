@@ -44,6 +44,23 @@ class AppUser {
 
   bool get isAdvertiser => wayoAdsRole == WayoAdsAccountRole.advertiser;
 
+  /// When true, business profile updates must send `profileValidation: global` so
+  /// Wayo-ads applies advertiser world-billing validation (wider country/currency lists than Stripe Connect).
+  /// Matches server rule: advertiser role without creator role.
+  bool get shouldUseAdvertiserGlobalBusinessSchema {
+    final slug = _wayoAdsAppSlug();
+    final roles = <String>{};
+    for (final e in appRoles) {
+      if (e.app == slug) {
+        roles.add(e.role.trim().toUpperCase());
+      }
+    }
+    if (roles.isEmpty) {
+      return wayoAdsRole == WayoAdsAccountRole.advertiser;
+    }
+    return roles.contains('ADVERTISER') && !roles.contains('CREATOR');
+  }
+
   factory AppUser.fromJson(Map<String, dynamic> json) {
     final idVal = json['id'];
     final id = idVal is int ? idVal : int.tryParse('$idVal') ?? 0;

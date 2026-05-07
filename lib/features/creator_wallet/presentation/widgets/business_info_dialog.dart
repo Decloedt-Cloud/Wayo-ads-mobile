@@ -19,21 +19,29 @@ import '../providers/creator_wallet_providers.dart';
 Future<bool> showBusinessInfoDialog(
   BuildContext context, {
   required CreatorBusinessProfile initial,
+  bool useGlobalBilling = false,
 }) async {
   final result = await showModalBottomSheet<bool>(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
     useSafeArea: true,
-    builder: (ctx) => _BusinessInfoDialog(initial: initial),
+    builder: (ctx) => _BusinessInfoDialog(
+      initial: initial,
+      useGlobalBilling: useGlobalBilling,
+    ),
   );
   return result == true;
 }
 
 class _BusinessInfoDialog extends ConsumerStatefulWidget {
-  const _BusinessInfoDialog({required this.initial});
+  const _BusinessInfoDialog({
+    required this.initial,
+    this.useGlobalBilling = false,
+  });
 
   final CreatorBusinessProfile initial;
+  final bool useGlobalBilling;
 
   @override
   ConsumerState<_BusinessInfoDialog> createState() =>
@@ -124,6 +132,7 @@ class _BusinessInfoDialogState extends ConsumerState<_BusinessInfoDialog> {
           ? null
           : _companyName.text.trim(),
       vatNumber: _vatNumber.text.trim().isEmpty ? null : _vatNumber.text.trim(),
+      profileValidationGlobal: widget.useGlobalBilling,
     );
 
     setState(() {

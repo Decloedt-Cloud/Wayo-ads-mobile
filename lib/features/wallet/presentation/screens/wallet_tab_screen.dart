@@ -7,13 +7,14 @@ import '../../../../core/providers/app_providers.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../i18n/strings.g.dart';
+import '../../../auth/data/models/app_user.dart';
 import '../../../auth/domain/auth_notifier.dart';
 import '../../../auth/domain/wayo_ads_account_role.dart';
-import '../../../auth/presentation/providers/current_account_providers.dart';
 import '../../../creator_wallet/presentation/screens/creator_wallet_tab_screen.dart';
 import '../../../dashboard/data/repositories/dashboard_repository.dart';
 import '../../../dashboard/presentation/providers/dashboard_state_providers.dart';
 import '../../../dashboard/presentation/widgets/error_banner.dart';
+import '../../../shell/shell_tab_signed_in_gate.dart';
 import '../widgets/advertiser_wallet_tab_content.dart';
 
 String _moneyLocale(AppLocale l) => switch (l) {
@@ -29,11 +30,23 @@ class WalletTabScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    return ShellTabSignedInGate(
+      builder: (context, ref, AppUser user) {
+        return _buildWalletForUser(context, ref, user);
+      },
+    );
+  }
+
+  Widget _buildWalletForUser(
+    BuildContext context,
+    WidgetRef ref,
+    AppUser user,
+  ) {
     final t = context.t;
     final locale = ref.watch(localeProvider);
     final moneyLocale = _moneyLocale(locale);
     final async = ref.watch(dashboardStreamProvider);
-    final role = ref.watch(currentWayoAdsAccountRoleProvider);
+    final role = user.wayoAdsRole;
     final roleLine = switch (role) {
       WayoAdsAccountRole.creator => t.dashboard.account_creator,
       WayoAdsAccountRole.advertiser => t.dashboard.account_advertiser,

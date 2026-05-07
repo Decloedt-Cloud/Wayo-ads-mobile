@@ -35,6 +35,16 @@ class _RealtimeDashboardWireState extends ConsumerState<RealtimeDashboardWire>
   Timer? _foregroundPollTimer;
   AppLifecycleState _lifecycle = AppLifecycleState.resumed;
 
+  void _connectReverbBestEffort(int userId) {
+    unawaited(
+      ref.read(wayoReverbRealtimeProvider).connectForUser(userId),
+    );
+  }
+
+  void _disconnectReverbBestEffort() {
+    unawaited(ref.read(wayoReverbRealtimeProvider).disconnect());
+  }
+
   @override
   void initState() {
     super.initState();
@@ -43,9 +53,7 @@ class _RealtimeDashboardWireState extends ConsumerState<RealtimeDashboardWire>
       if (!mounted) return;
       final s = ref.read(authNotifierProvider).valueOrNull;
       if (s is AuthAuthenticated) {
-        unawaited(
-          ref.read(wayoReverbRealtimeProvider).connectForUser(s.user.id),
-        );
+        _connectReverbBestEffort(s.user.id);
         _startForegroundPolling();
       }
     });
@@ -73,7 +81,7 @@ class _RealtimeDashboardWireState extends ConsumerState<RealtimeDashboardWire>
       return;
     }
     // WebSockets are often closed while the app is in background; reconnect on resume.
-    unawaited(ref.read(wayoReverbRealtimeProvider).connectForUser(s.user.id));
+    _connectReverbBestEffort(s.user.id);
     _refreshAdvertiserNow();
     _startForegroundPolling();
   }
@@ -128,12 +136,12 @@ class _RealtimeDashboardWireState extends ConsumerState<RealtimeDashboardWire>
     ref.watch(realtimeInvalidationProvider);
 
     ref.listen<AsyncValue<AuthState>>(authNotifierProvider, (previous, next) {
-      next.whenData((s) async {
+      next.whenData((s) {
         if (s is AuthAuthenticated) {
-          await ref.read(wayoReverbRealtimeProvider).connectForUser(s.user.id);
+          _connectReverbBestEffort(s.user.id);
           _startForegroundPolling();
         } else {
-          await ref.read(wayoReverbRealtimeProvider).disconnect();
+          _disconnectReverbBestEffort();
           _foregroundPollTimer?.cancel();
           _foregroundPollTimer = null;
         }

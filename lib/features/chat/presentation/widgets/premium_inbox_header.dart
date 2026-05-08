@@ -240,6 +240,8 @@ class _PremiumSearchFieldState extends State<PremiumSearchField> {
                     focusNode: _focus,
                     onChanged: widget.onChanged,
                     onSubmitted: widget.onSubmitted,
+                    onTapOutside: (_) =>
+                        FocusManager.instance.primaryFocus?.unfocus(),
                     cursorColor: p.accentWarm,
                     cursorRadius: const Radius.circular(2),
                     cursorWidth: 2,

@@ -427,6 +427,7 @@ class _ChatUserSearchBarState extends ConsumerState<ChatUserSearchBar> {
     return TextField(
       controller: _controller,
       focusNode: _focus,
+      onTapOutside: (_) => FocusManager.instance.primaryFocus?.unfocus(),
       style: AppTextStyles.bodyLarge(context).copyWith(
         color: widget.useLiquidNeuralStyle && ln != null
             ? ln.textPrimary

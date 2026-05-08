@@ -144,6 +144,7 @@ class _CreatorCampaignsTabScreenState
                         moneyLocale: moneyLocale,
                         applicationStatus: statusByCampaign[c.id],
                         onTap: () {
+                          FocusManager.instance.primaryFocus?.unfocus();
                           context.push(
                             '/creator/campaigns/${c.id}',
                             extra: <String, Object?>{
@@ -230,6 +231,7 @@ class _CreatorCampaignsTabScreenState
                       _ApplicationTile(
                         application: a,
                         onTap: () {
+                          FocusManager.instance.primaryFocus?.unfocus();
                           context.push(
                             '/creator/campaigns/${a.campaignId}/application',
                             extra: <String, Object?>{'title': a.campaignTitle},
@@ -279,6 +281,7 @@ class _BrowseSearchField extends StatelessWidget {
         return TextField(
           controller: controller,
           onChanged: onChanged,
+          onTapOutside: (_) => FocusManager.instance.primaryFocus?.unfocus(),
           textInputAction: TextInputAction.search,
           onSubmitted: onChanged,
           style: TextStyle(color: AppColors.textPrimaryOf(context)),

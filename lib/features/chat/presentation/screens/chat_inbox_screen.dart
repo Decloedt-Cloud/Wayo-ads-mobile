@@ -112,6 +112,7 @@ class _ChatInboxScreenState extends ConsumerState<ChatInboxScreen> {
     ChatDirectoryUser user,
     List<ChatConversation> conversations,
   ) async {
+    FocusManager.instance.primaryFocus?.unfocus();
     final t = context.t;
     final me = creds.chatUserId;
     for (final c in conversations) {
@@ -365,6 +366,8 @@ class _ChatInboxScreenState extends ConsumerState<ChatInboxScreen> {
                                           typing: isTyping,
                                           typingName: typingName,
                                           onTap: () {
+                                            FocusManager.instance.primaryFocus
+                                                ?.unfocus();
                                             context.push(
                                               '/chat/thread/${c.id}',
                                               extra: title,

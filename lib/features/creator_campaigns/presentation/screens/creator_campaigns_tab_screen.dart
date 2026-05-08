@@ -233,8 +233,11 @@ class _CreatorCampaignsTabScreenState
                         onTap: () {
                           FocusManager.instance.primaryFocus?.unfocus();
                           context.push(
-                            '/creator/campaigns/${a.campaignId}/application',
-                            extra: <String, Object?>{'title': a.campaignTitle},
+                            '/creator/campaigns/${a.campaignId}',
+                            extra: <String, Object?>{
+                              'coverUrl': a.coverUrl,
+                              'title': a.campaignTitle,
+                            },
                           );
                         },
                       ),

@@ -54,7 +54,8 @@ class CinematicMessageBubble extends StatefulWidget {
   final VoidCallback? onSelect;
   final VoidCallback? onDismissSelection;
 
-  /// Long-press → start reply composer (parity with WhatsApp reply affordance).
+  /// Long-press on **others'** messages → reply composer. On **your** messages
+  /// with edit/delete → shows the action bar (same as tap); swipe still starts reply.
   final VoidCallback? onReplyRequest;
 
   /// Tap the "edit" pill in the inline bar — thread screen switches composer to
@@ -433,10 +434,16 @@ class _CinematicMessageBubbleState extends State<CinematicMessageBubble> {
         }
       },
       onLongPress:
-          (!m.pending && !m.failed && widget.onReplyRequest != null)
+          (!m.pending && !m.failed)
               ? () {
                   HapticFeedback.mediumImpact();
-                  widget.onReplyRequest!.call();
+                  if (isMine && (canEdit || canDelete)) {
+                    if (!widget.selected) {
+                      widget.onSelect?.call();
+                    }
+                  } else if (widget.onReplyRequest != null) {
+                    widget.onReplyRequest!.call();
+                  }
                 }
               : null,
       /// Glissement vers le centre du fil : tes bulles à droite → vers la gauche ; reçues à gauche → vers la droite.

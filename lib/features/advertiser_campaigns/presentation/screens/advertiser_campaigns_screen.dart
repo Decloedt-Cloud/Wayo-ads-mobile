@@ -359,14 +359,17 @@ class _Body extends StatelessWidget {
                       child: AdvertiserCampaignCard(
                         campaign: c,
                         moneyLocale: moneyLocale,
-                        onTap: () => context.push(
-                          '/campaigns/${c.id}',
-                          extra: <String, String?>{
-                            'coverUrl': c.coverUrl,
-                            'brandLogoUrl': c.brandLogoUrl,
-                            'title': c.name,
-                          },
-                        ),
+                        onTap: () {
+                          FocusManager.instance.primaryFocus?.unfocus();
+                          context.push(
+                            '/campaigns/${c.id}',
+                            extra: <String, String?>{
+                              'coverUrl': c.coverUrl,
+                              'brandLogoUrl': c.brandLogoUrl,
+                              'title': c.name,
+                            },
+                          );
+                        },
                       ),
                     );
                   }
@@ -729,6 +732,7 @@ class _SearchField extends StatelessWidget {
         return TextField(
           controller: controller,
           onChanged: onChanged,
+          onTapOutside: (_) => FocusManager.instance.primaryFocus?.unfocus(),
           style: TextStyle(color: AppColors.textPrimaryOf(context)),
           cursorColor: AppColors.primary,
           decoration: InputDecoration(

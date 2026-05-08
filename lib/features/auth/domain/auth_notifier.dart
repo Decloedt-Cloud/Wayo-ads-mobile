@@ -165,6 +165,44 @@ class AuthNotifier extends _$AuthNotifier {
     }
   }
 
+  Future<void> loginWithApple({
+    required String identityToken,
+    required String rawNonce,
+    String? authorizationCode,
+    String? appleUserId,
+  }) async {
+    if (_credentialLoginInFlight) {
+      return;
+    }
+    _credentialLoginInFlight = true;
+    try {
+      state = const AsyncValue.data(AuthLoading());
+      final repo = ref.read(authRepositoryProvider);
+      final result = await repo.loginWithApple(
+        identityToken: identityToken,
+        rawNonce: rawNonce,
+        authorizationCode: authorizationCode,
+        appleUserId: appleUserId,
+      );
+      switch (result) {
+        case Success(:final data):
+          await DashboardHiveStore.clearAll();
+          await _persistAuth(ref.read(secureStorageProvider), data);
+          invalidateChatProviders(ref);
+          try {
+            await _bootstrapChatAfterLogin();
+          } catch (_) {}
+          state = AsyncValue.data(AuthAuthenticated(data.user));
+          await refreshProfileFromAuthServer(force: true);
+          _invalidateDashboardProviders();
+        case Failure(:final error):
+          state = AsyncValue.error(error, StackTrace.current);
+      }
+    } finally {
+      _credentialLoginInFlight = false;
+    }
+  }
+
   /// Lets Auth / Wayo-ads persist the session before [GET /api/chat/token] to avoid
   /// transient 500s right after password or Google sign-in.
   Future<void> _bootstrapChatAfterLogin() async {

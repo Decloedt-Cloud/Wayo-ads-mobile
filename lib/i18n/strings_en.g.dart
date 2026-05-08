@@ -108,6 +108,10 @@ class TranslationsLoginEn {
 	String rate_limit_remaining({required Object seconds}) => 'Try again in ${seconds} s';
 	String get forgot_password_link => 'Forgot password?';
 	String get google_cta => 'Continue with Google';
+	String get apple_cta => 'Sign in with Apple';
+	String get apple_unavailable => 'Sign in with Apple is not available on this device.';
+	String get apple_failed => 'Apple sign-in failed. Try again.';
+	String get apple_canceled => 'Sign in with Apple was canceled.';
 	String get google_not_configured => 'Google sign-in is not configured. Add AUTH_GOOGLE_SERVER_CLIENT_ID to dart_defines.json (Web client ID ending in .apps.googleusercontent.com) and do a full restart.';
 	String get google_wrong_client_id => 'AUTH_GOOGLE_SERVER_CLIENT_ID must be your Google Cloud Web client ID (…apps.googleusercontent.com), not the Passport OAuth client UUID.';
 	String get google_failed => 'Google sign-in failed. Try again.';
@@ -1014,6 +1018,10 @@ extension on Translations {
 			case 'login.rate_limit_remaining': return ({required Object seconds}) => 'Try again in ${seconds} s';
 			case 'login.forgot_password_link': return 'Forgot password?';
 			case 'login.google_cta': return 'Continue with Google';
+			case 'login.apple_cta': return 'Sign in with Apple';
+			case 'login.apple_unavailable': return 'Sign in with Apple is not available on this device.';
+			case 'login.apple_failed': return 'Apple sign-in failed. Try again.';
+			case 'login.apple_canceled': return 'Sign in with Apple was canceled.';
 			case 'login.google_not_configured': return 'Google sign-in is not configured. Add AUTH_GOOGLE_SERVER_CLIENT_ID to dart_defines.json (Web client ID ending in .apps.googleusercontent.com) and do a full restart.';
 			case 'login.google_wrong_client_id': return 'AUTH_GOOGLE_SERVER_CLIENT_ID must be your Google Cloud Web client ID (…apps.googleusercontent.com), not the Passport OAuth client UUID.';
 			case 'login.google_failed': return 'Google sign-in failed. Try again.';

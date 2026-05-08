@@ -4,6 +4,8 @@
 	<dict>
 	    <key>GIDClientID</key>
         <string>418718041924-q9qnrrrgqf04hddkro28ensd4dcooajt.apps.googleusercontent.com</string>
+		<key>GIDServerClientID</key>
+        <string>418718041924-fcujk5vfppueq260k43r582rovrj5ghh.apps.googleusercontent.com</string>
 		<key>ITSAppUsesNonExemptEncryption</key>
 		<false/>
 		<key>CFBundleDevelopmentRegion</key>

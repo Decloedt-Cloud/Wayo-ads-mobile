@@ -2,14 +2,13 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>com.apple.developer.applesignin</key>
+	<array>
+		<string>Default</string>
+	</array>
 	<!--
-		Apple Pay (Stripe): add when you use Apple Pay — Xcode > Signing & Capabilities >
-		Apple Pay, then uncomment the key below and list your merchant id(s).
-
-		Do not ship `com.apple.developer.in-app-payments` with an empty array; it can break
-		PassKit / Payment Sheet on device.
-
-		<string>merchant.com.wayo.wayoadsgo</string>
+		Apple Pay (Stripe): Xcode > Signing & Capabilities > Apple Pay,
+		then add com.apple.developer.in-app-payments with merchant id(s).
 	-->
 </dict>
 </plist>

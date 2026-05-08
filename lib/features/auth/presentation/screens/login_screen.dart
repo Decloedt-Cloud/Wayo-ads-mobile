@@ -1,10 +1,12 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import '../../../../core/config/auth_runtime_config.dart';
 import '../../../../core/errors/auth_error_localizer.dart';
 import '../../../../core/errors/auth_exceptions.dart';
@@ -13,12 +15,14 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../i18n/strings.g.dart';
 import '../../../../shared/widgets/language_switcher.dart';
 import '../../../../shared/widgets/theme_toggle_button.dart';
+import '../../data/apple_sign_in_facade.dart';
 import '../../data/google_sign_in_facade.dart';
 import '../../domain/auth_notifier.dart';
 import '../../domain/onboarding_gate.dart';
 import '../login/widgets/animated_digital_zellij_background.dart';
 import '../login/widgets/login_field_styles.dart';
 import '../login/widgets/login_hero_premium.dart';
+import '../login/widgets/premium_apple_sign_in_button.dart';
 import '../login/widgets/premium_google_button.dart';
 import '../widgets/login_footer.dart';
 import '../widgets/rate_limit_cooldown_banner.dart';
@@ -39,6 +43,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _password = TextEditingController();
   bool _obscure = true;
   bool _googleSigningIn = false;
+  bool _appleSigningIn = false;
 
   /// Blocks duplicate POSTs when both "Done" on keyboard and the CTA fire together.
   bool _submitInProgress = false;
@@ -152,6 +157,52 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
+  Future<void> _signInWithApple(Translations t) async {
+    if (_appleSigningIn) return;
+    if (kIsWeb || Theme.of(context).platform != TargetPlatform.iOS) {
+      return;
+    }
+    FocusScope.of(context).unfocus();
+    setState(() => _appleSigningIn = true);
+    try {
+      final cred = await AppleSignInFacade.signInOnIos();
+      if (!mounted) return;
+      if (cred == null) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(t.login.apple_unavailable)));
+        return;
+      }
+      await ref.read(authNotifierProvider.notifier).loginWithApple(
+            identityToken: cred.identityToken,
+            rawNonce: cred.rawNonce,
+            authorizationCode: cred.authorizationCode,
+            appleUserId: cred.userIdentifier,
+          );
+      if (!context.mounted) return;
+      if (ref.read(authNotifierProvider).hasError) return;
+      _goAfterLogin(context, ref);
+    } on SignInWithAppleNotSupportedException {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(t.login.apple_unavailable)));
+    } catch (e) {
+      if (!mounted) return;
+      if (AppleSignInFacade.isUserCanceled(e)) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(t.login.apple_canceled)));
+        return;
+      }
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(t.login.apple_failed)));
+    } finally {
+      if (mounted) setState(() => _appleSigningIn = false);
+    }
+  }
+
   void _goAfterLogin(BuildContext context, WidgetRef ref) {
     if (!context.mounted) return;
     final s = ref.read(authNotifierProvider).valueOrNull;
@@ -185,7 +236,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       data: (s) => s is AuthLoading,
       orElse: () => false,
     );
-    final formLocked = loading || _googleSigningIn;
+    final formLocked = loading || _googleSigningIn || _appleSigningIn;
+    final showAppleLogin =
+        !kIsWeb && Theme.of(context).platform == TargetPlatform.iOS;
     final rateLimit = auth.maybeWhen(
       error: (e, _) => e is RateLimitedException ? e : null,
       orElse: () => null,
@@ -367,13 +420,27 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             reduce,
                             WayoLoginButton(
                               isLoading: loading,
-                              enabled: !loading && !_googleSigningIn,
+                              enabled: !loading && !_googleSigningIn && !_appleSigningIn,
                               onPressed: () => unawaited(_submit(t)),
                               label: t.login.cta,
                             ),
                             baseDelay: 620.ms,
                             slideFrom: 0.2,
                           ),
+                          if (showAppleLogin) ...[
+                            const SizedBox(height: 14),
+                            _wrapEntrance(
+                              reduce,
+                              PremiumAppleSignInButton(
+                                busy: _appleSigningIn,
+                                enabled: !formLocked,
+                                label: t.login.apple_cta,
+                                onPressed: () => unawaited(_signInWithApple(t)),
+                              ),
+                              baseDelay: 660.ms,
+                              slideFrom: 0.18,
+                            ),
+                          ],
                           const SizedBox(height: 14),
                           _wrapEntrance(
                             reduce,
@@ -383,7 +450,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               label: t.login.google_cta,
                               onPressed: () => unawaited(_signInWithGoogle(t)),
                             ),
-                            baseDelay: 680.ms,
+                            baseDelay: showAppleLogin ? 720.ms : 680.ms,
                             slideFrom: 0.16,
                           ),
                           const SizedBox(height: 12),

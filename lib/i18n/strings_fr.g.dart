@@ -106,6 +106,10 @@ class _TranslationsLoginFr extends TranslationsLoginEn {
 	@override String rate_limit_remaining({required Object seconds}) => 'Réessayez dans ${seconds} s';
 	@override String get forgot_password_link => 'Mot de passe oublié ?';
 	@override String get google_cta => 'Continuer avec Google';
+	@override String get apple_cta => 'Se connecter avec Apple';
+	@override String get apple_unavailable => 'Connexion avec Apple indisponible sur cet appareil.';
+	@override String get apple_failed => 'Échec de la connexion avec Apple. Réessayez.';
+	@override String get apple_canceled => 'Connexion avec Apple annulée.';
 	@override String get google_not_configured => 'Connexion Google non configurée. Ajoutez AUTH_GOOGLE_SERVER_CLIENT_ID dans dart_defines.json (ID client Web Google se terminant par .apps.googleusercontent.com), puis redémarrez complètement l’app.';
 	@override String get google_wrong_client_id => 'AUTH_GOOGLE_SERVER_CLIENT_ID doit être l’ID client Web Google Cloud (…apps.googleusercontent.com), pas l’UUID du client OAuth Passport.';
 	@override String get google_failed => 'Échec de la connexion Google. Réessayez.';
@@ -1012,6 +1016,10 @@ extension on TranslationsFr {
 			case 'login.rate_limit_remaining': return ({required Object seconds}) => 'Réessayez dans ${seconds} s';
 			case 'login.forgot_password_link': return 'Mot de passe oublié ?';
 			case 'login.google_cta': return 'Continuer avec Google';
+			case 'login.apple_cta': return 'Se connecter avec Apple';
+			case 'login.apple_unavailable': return 'Connexion avec Apple indisponible sur cet appareil.';
+			case 'login.apple_failed': return 'Échec de la connexion avec Apple. Réessayez.';
+			case 'login.apple_canceled': return 'Connexion avec Apple annulée.';
 			case 'login.google_not_configured': return 'Connexion Google non configurée. Ajoutez AUTH_GOOGLE_SERVER_CLIENT_ID dans dart_defines.json (ID client Web Google se terminant par .apps.googleusercontent.com), puis redémarrez complètement l’app.';
 			case 'login.google_wrong_client_id': return 'AUTH_GOOGLE_SERVER_CLIENT_ID doit être l’ID client Web Google Cloud (…apps.googleusercontent.com), pas l’UUID du client OAuth Passport.';
 			case 'login.google_failed': return 'Échec de la connexion Google. Réessayez.';

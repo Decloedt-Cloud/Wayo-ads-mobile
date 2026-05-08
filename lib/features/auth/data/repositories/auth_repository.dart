@@ -23,6 +23,12 @@ abstract class IAuthRepository {
     required String password,
   });
   Future<Result<AuthResponse>> loginWithGoogle({required String idToken});
+  Future<Result<AuthResponse>> loginWithApple({
+    required String identityToken,
+    required String rawNonce,
+    String? authorizationCode,
+    String? appleUserId,
+  });
   Future<Result<AuthResponse>> refresh({required String refreshToken});
 
   /// GET `/api/auth/user?app=…` — refreshes [AppUser] (roles, name) without new tokens.
@@ -129,6 +135,50 @@ class AuthRepositoryImpl implements IAuthRepository {
       }
       if (data['success'] == false) {
         final msg = data['message'] as String? ?? 'Google sign-in failed';
+        return Failure(InvalidCredentialsException(msg));
+      }
+      return Success(AuthResponse.fromJson(data));
+    } on DioException catch (e) {
+      return Failure(_mapDioLogin(e));
+    } catch (e) {
+      return Failure(ServerException('$e'));
+    }
+  }
+
+  @override
+  Future<Result<AuthResponse>> loginWithApple({
+    required String identityToken,
+    required String rawNonce,
+    String? authorizationCode,
+    String? appleUserId,
+  }) async {
+    try {
+      final cfg = AuthRuntimeConfig.instance;
+      final body = mergeWayoAuthPayload(<String, dynamic>{
+        'identity_token': identityToken,
+        'id_token': identityToken,
+        'nonce': rawNonce,
+        if (authorizationCode != null && authorizationCode.isNotEmpty)
+          'authorization_code': authorizationCode,
+        if (appleUserId != null && appleUserId.isNotEmpty)
+          'apple_user_id': appleUserId,
+        if (cfg.authAppName.isNotEmpty) 'app': cfg.authAppName,
+        if (cfg.wayoAdsAppKey.isNotEmpty) 'app_key': cfg.wayoAdsAppKey,
+      });
+      final path = AuthRuntimeConfig.instance.authHttpPath('apple');
+      final appleOptions = Options(extra: {kSkipAuthInjection: true})
+        ..disableRetry = true;
+      final res = await _dio.post<Map<String, dynamic>>(
+        path,
+        data: body,
+        options: appleOptions,
+      );
+      final data = res.data;
+      if (data == null) {
+        return const Failure(ServerException('Empty response'));
+      }
+      if (data['success'] == false) {
+        final msg = data['message'] as String? ?? 'Apple sign-in failed';
         return Failure(InvalidCredentialsException(msg));
       }
       return Success(AuthResponse.fromJson(data));

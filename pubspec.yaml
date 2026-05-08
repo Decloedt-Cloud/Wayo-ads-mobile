@@ -49,6 +49,7 @@ dependencies:
   connectivity_plus: ^7.1.1
   flutter_stripe: ^11.5.0
   tutorial_coach_mark: ^1.3.3
+  flutter_svg: ^2.0.10
 
 dev_dependencies:
   flutter_test:
@@ -71,6 +72,7 @@ flutter:
     # --dart-define or --dart-define-from-file at compile time only.
     # This prevents extracting API keys from the APK/IPA.
     - assets/splash/wayo_dot_icon.png
+    - assets/branding/google_g_logo.svg
 
 # Native splash (Android/iOS) — generated into native resources via
 # `dart run flutter_native_splash:create`. Keep this in sync with

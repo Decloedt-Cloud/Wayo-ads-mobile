@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+import 'package:go_router/go_router.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../../../core/format/money_formatter.dart';
@@ -806,7 +807,16 @@ class _ApplicationTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         onTap: () {
           HapticFeedback.lightImpact();
-          // Phase 4 will push to creator campaign detail / submission view.
+          FocusManager.instance.primaryFocus?.unfocus();
+          final id = app.campaignId.trim();
+          if (id.isEmpty) return;
+          context.push(
+            '/creator/campaigns/$id',
+            extra: <String, Object?>{
+              'coverUrl': app.coverUrl,
+              'title': app.campaignTitle,
+            },
+          );
         },
         child: Padding(
           padding: const EdgeInsets.all(12),

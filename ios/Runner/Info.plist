@@ -1,138 +1,117 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
-<dict>
-    <key>ITSAppUsesNonExemptEncryption</key>
-    <false/>
-	<key>CFBundleDevelopmentRegion</key>
-	<string>$(DEVELOPMENT_LANGUAGE)</string>
-
-	<key>CFBundleDisplayName</key>
-	<string>Wayoadsgo</string>
-
-	<key>CFBundleExecutable</key>
-	<string>$(EXECUTABLE_NAME)</string>
-
-	<key>CFBundleIdentifier</key>
-	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
-
-	<key>CFBundleInfoDictionaryVersion</key>
-	<string>6.0</string>
-
-	<key>CFBundleName</key>
-	<string>wayoadsgo</string>
-
-	<key>CFBundlePackageType</key>
-	<string>APPL</string>
-
-	<key>CFBundleShortVersionString</key>
-	<string>$(FLUTTER_BUILD_NAME)</string>
-
-	<key>CFBundleVersion</key>
-	<string>$(FLUTTER_BUILD_NUMBER)</string>
-
-	<key>LSRequiresIPhoneOS</key>
-	<true/>
-
-	<key>UIRequiresFullScreen</key>
-	<true/>
-
-	<key>UILaunchStoryboardName</key>
-	<string>LaunchScreen</string>
-
-	<key>UIMainStoryboardFile</key>
-	<string>Main</string>
-
-	<key>UISupportedInterfaceOrientations</key>
-	<array>
-		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-        <string>UIInterfaceOrientationLandscapeRight</string>
-	</array>
-
-	<key>UISupportedInterfaceOrientations~ipad</key>
-	<array>
-		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
-        <string>UIInterfaceOrientationPortraitUpsideDown</string>
-	</array>
-
-	<!-- Privacy: required when linked code references Photo Library / Camera APIs (e.g. file_picker, SDKs). -->
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Wayoadsgo needs access to your photo library so you can select photos or files to upload—for example to your profile, campaigns, or other features where you attach images.</string>
-	<key>NSCameraUsageDescription</key>
-	<string>Wayoadsgo needs access to the camera so you can take photos to upload when you choose that option—for example for your profile, campaigns, or document capture.</string>
-
-	<!-- ✅ URL SCHEMES -->
-	<key>CFBundleURLTypes</key>
-	<array>
-
-		<!-- OAuth -->
+	<dict>
+		<key>ITSAppUsesNonExemptEncryption</key>
+		<false/>
+		<key>CFBundleDevelopmentRegion</key>
+		<string>$(DEVELOPMENT_LANGUAGE)</string>
+		<key>CFBundleDisplayName</key>
+		<string>Wayoadsgo</string>
+		<key>CFBundleExecutable</key>
+		<string>$(EXECUTABLE_NAME)</string>
+		<key>CFBundleIdentifier</key>
+		<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+		<key>CFBundleInfoDictionaryVersion</key>
+		<string>6.0</string>
+		<key>CFBundleName</key>
+		<string>wayoadsgo</string>
+		<key>CFBundlePackageType</key>
+		<string>APPL</string>
+		<key>CFBundleShortVersionString</key>
+		<string>$(FLUTTER_BUILD_NAME)</string>
+		<key>CFBundleVersion</key>
+		<string>$(FLUTTER_BUILD_NUMBER)</string>
+		<key>LSRequiresIPhoneOS</key>
+		<true/>
+		<key>UIRequiresFullScreen</key>
+		<true/>
+		<key>UILaunchStoryboardName</key>
+		<string>LaunchScreen</string>
+		<key>UIMainStoryboardFile</key>
+		<string>Main</string>
+		<key>UISupportedInterfaceOrientations</key>
+		<array>
+			<string>UIInterfaceOrientationPortrait</string>
+			<string>UIInterfaceOrientationLandscapeLeft</string>
+			<string>UIInterfaceOrientationLandscapeRight</string>
+		</array>
+		<key>UISupportedInterfaceOrientations~ipad</key>
+		<array>
+			<string>UIInterfaceOrientationPortrait</string>
+			<string>UIInterfaceOrientationLandscapeLeft</string>
+			<string>UIInterfaceOrientationLandscapeRight</string>
+			<string>UIInterfaceOrientationPortraitUpsideDown</string>
+		</array>
+		<!-- Privacy: required when linked code references Photo Library / Camera APIs (e.g. file_picker, SDKs). -->
+		<key>NSPhotoLibraryUsageDescription</key>
+		<string>Wayoadsgo needs access to your photo library so you can select photos or files to upload—for example to your profile, campaigns, or other features where you attach images.</string>
+		<key>NSCameraUsageDescription</key>
+		<string>Wayoadsgo needs access to the camera so you can take photos to upload when you choose that option—for example for your profile, campaigns, or document capture.</string>
+		<!-- ✅ URL SCHEMES -->
+		<key>CFBundleURLTypes</key>
+		<array>
+			<!-- OAuth -->
+			<dict>
+				<key>CFBundleTypeRole</key>
+				<string>Editor</string>
+				<key>CFBundleURLName</key>
+				<string>com.wayo.wayoadsgo.oauth</string>
+				<key>CFBundleURLSchemes</key>
+				<array>
+					<string>com.wayo.wayoadsgo</string>
+				</array>
+			</dict>
+			<!-- Google -->
+			<dict>
+				<key>CFBundleTypeRole</key>
+				<string>Editor</string>
+				<key>CFBundleURLName</key>
+				<string>google</string>
+				<key>CFBundleURLSchemes</key>
+				<array>
+					<string>com.googleusercontent.apps.418718041924-q9qnrrrgqf04hddkro28ensd4dcooajt</string>
+				</array>
+			</dict>
+			<!-- ✅ STRIPE -->
+			<dict>
+				<key>CFBundleTypeRole</key>
+				<string>Editor</string>
+				<key>CFBundleURLName</key>
+				<string>stripe</string>
+				<key>CFBundleURLSchemes</key>
+				<array>
+					<string>wayo</string>
+				</array>
+			</dict>
+		</array>
+		<key>NSAppTransportSecurity</key>
 		<dict>
-			<key>CFBundleTypeRole</key>
-			<string>Editor</string>
-			<key>CFBundleURLName</key>
-			<string>com.wayo.wayoadsgo.oauth</string>
-			<key>CFBundleURLSchemes</key>
-			<array>
-				<string>com.wayo.wayoadsgo</string>
-			</array>
+			<key>NSExceptionDomains</key>
+			<dict>
+				<key>wayo.agency</key>
+				<dict>
+					<key>NSIncludesSubdomains</key>
+					<true/>
+					<key>NSTemporaryExceptionAllowsInsecureHTTPLoads</key>
+					<true/>
+				</dict>
+				<key>wayo.ac</key>
+				<dict>
+					<key>NSIncludesSubdomains</key>
+					<true/>
+					<key>NSTemporaryExceptionAllowsInsecureHTTPLoads</key>
+					<true/>
+				</dict>
+			</dict>
 		</dict>
-
-		<!-- Google -->
-		<dict>
-			<key>CFBundleTypeRole</key>
-			<string>Editor</string>
-			<key>CFBundleURLName</key>
-			<string>google</string>
-			<key>CFBundleURLSchemes</key>
-			<array>
-				<string>com.googleusercontent.apps.418718041924-q9qnrrrgqf04hddkro28ensd4dcooajt</string>
-			</array>
-		</dict>
-
-		<!-- ✅ STRIPE -->
-		<dict>
-			<key>CFBundleTypeRole</key>
-			<string>Editor</string>
-			<key>CFBundleURLName</key>
-			<string>stripe</string>
-			<key>CFBundleURLSchemes</key>
-			<array>
-				<string>wayo</string>
-			</array>
-		</dict>
-
-	</array>
-    <key>NSAppTransportSecurity</key>
-    <dict>
-
-        <key>NSExceptionDomains</key>
-        <dict>
-
-            <key>wayo.agency</key>
-            <dict>
-                <key>NSIncludesSubdomains</key>
-                <true/>
-                <key>NSTemporaryExceptionAllowsInsecureHTTPLoads</key>
-                <true/>
-            </dict>
-
-            <key>wayo.ac</key>
-            <dict>
-                <key>NSIncludesSubdomains</key>
-                <true/>
-                <key>NSTemporaryExceptionAllowsInsecureHTTPLoads</key>
-                <true/>
-            </dict>
-
-        </dict>
-
-    </dict>
-	<key>CADisableMinimumFrameDurationOnPhone</key>
-	<true/>
-	<key>UIApplicationSupportsIndirectInputEvents</key>
-	<true/>
-</dict>
+		<key>CADisableMinimumFrameDurationOnPhone</key>
+		<true/>
+		<key>UIApplicationSupportsIndirectInputEvents</key>
+		<true/>
+		<key>UIStatusBarHidden</key>
+		<true/>
+		<key>UIViewControllerBasedStatusBarAppearance</key>
+		<false/>
+	</dict>
 </plist>

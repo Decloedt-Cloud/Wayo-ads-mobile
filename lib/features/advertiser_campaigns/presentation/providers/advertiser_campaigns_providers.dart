@@ -1,10 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/campaigns/campaign_explorer_layout.dart';
+import '../../../creator_campaigns/domain/creator_browse_campaign.dart';
 import '../../data/advertiser_campaigns_repository.dart';
 import '../../domain/advertiser_campaigns_page_result.dart';
 import '../../domain/campaign_application.dart';
 
-/// Primary status filter (tabs + chips). Drafts are separate from "Active".
+/// Primary status filter (explorer dropdown + API). Drafts are separate from "Active".
 enum AdvertiserCampaignsTab { active, draft, paused, completed }
 
 String apiStatusForAdvertiserTab(AdvertiserCampaignsTab tab) => switch (tab) {
@@ -24,6 +26,22 @@ final advertiserCampaignsPageIndexProvider = StateProvider<int>((ref) => 1);
 /// Debounced search is written here from the screen (lowercase match on name).
 final advertiserCampaignsSearchQueryProvider = StateProvider<String>(
   (ref) => '',
+);
+
+/// List vs grid for the campaign catalog (same mental model as Wayo-ads web).
+final advertiserCampaignExplorerLayoutProvider =
+    StateProvider<CampaignExplorerLayout>((ref) => CampaignExplorerLayout.list);
+
+/// Client-side refinements on top of the status tab + server search.
+final advertiserCampaignExplorerTypeFilterProvider =
+    StateProvider<CreatorCampaignType?>((ref) => null);
+
+final advertiserCampaignExplorerNicheProvider = StateProvider<String?>(
+  (ref) => null,
+);
+
+final advertiserCampaignExplorerLocationProvider = StateProvider<String?>(
+  (ref) => null,
 );
 
 /// Immutable key for [advertiserCampaignsPagedProvider].

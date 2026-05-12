@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 
 import '../../../core/network/wayo_ads_public_url.dart';
+import '../../advertiser_campaigns/domain/campaign_niche_catalog.dart';
 
 /// Campaign type — maps the `type` column of `Campaign` on Wayo-ads
 /// (`LINK` | `VIDEO` | `SHORTS`). `unknown` guards against new values the
@@ -60,6 +61,12 @@ final class CreatorBrowseCampaign extends Equatable {
     this.currency = 'EUR',
     this.approvedCreators = 0,
     this.validViews = 0,
+    this.validClicks = 0,
+    this.remainingBudgetCents = 0,
+    this.spentBudgetCents = 0,
+    this.requiredPlatform,
+    this.niche,
+    this.location,
   });
 
   final String id;
@@ -79,6 +86,24 @@ final class CreatorBrowseCampaign extends Equatable {
   final int approvedCreators;
   final int validViews;
 
+  /// Valid clicks for link-style campaigns when the API exposes them.
+  final int validClicks;
+
+  /// Remaining pool from list payload (`remainingBudgetCents` / finance).
+  final int remainingBudgetCents;
+
+  /// Spent amount when provided; used with [totalBudgetCents] for progress.
+  final int spentBudgetCents;
+
+  /// When set, campaign expects posts on this platform (`YOUTUBE`, …). May be null when list API omits it.
+  final String? requiredPlatform;
+
+  /// Wayo-ads `Campaign.niche` enum string (e.g. `FOOD_BEVERAGE`); optional on list payloads.
+  final String? niche;
+
+  /// Optional geo / location label when the API provides one (`targetLocation`, `location`, …).
+  final String? location;
+
   factory CreatorBrowseCampaign.fromJson(Map<String, dynamic> m) {
     final advertiser = m['advertiser'];
     final advertiserMap = advertiser is Map
@@ -92,13 +117,53 @@ final class CreatorBrowseCampaign extends Equatable {
       return int.tryParse('$v') ?? 0;
     }
 
+    String? trimOrNull(dynamic v) {
+      final s = v?.toString().trim();
+      if (s == null || s.isEmpty) return null;
+      return s;
+    }
+
+    final finance = m['finance'];
+    final financeMap = finance is Map
+        ? Map<String, dynamic>.from(finance)
+        : const <String, dynamic>{};
+    final total = parseCents(m['totalBudgetCents'] ?? m['totalBudget']);
+    final hasRemKey =
+        m.containsKey('remainingBudgetCents') ||
+        m.containsKey('remainingBudget') ||
+        financeMap.containsKey('remainingBudgetCents');
+    final hasSpentKey =
+        m.containsKey('spentBudget') ||
+        m.containsKey('spentBudgetCents') ||
+        financeMap.containsKey('spentBudgetCents') ||
+        financeMap.containsKey('spentBudget');
+    var remaining = parseCents(
+      m['remainingBudgetCents'] ??
+          m['remainingBudget'] ??
+          financeMap['remainingBudgetCents'],
+    );
+    var spent = parseCents(
+      m['spentBudget'] ??
+          m['spentBudgetCents'] ??
+          financeMap['spentBudgetCents'] ??
+          financeMap['spentBudget'],
+    );
+    if (total > 0 && !hasRemKey && !hasSpentKey) {
+      remaining = total;
+      spent = 0;
+    } else if (total > 0 && spent == 0 && hasRemKey) {
+      spent = (total - remaining).clamp(0, total);
+    } else if (total > 0 && remaining == 0 && hasSpentKey && spent > 0) {
+      remaining = (total - spent).clamp(0, total);
+    }
+
     return CreatorBrowseCampaign(
       id: (m['id'] as String?) ?? '${m['id']}',
       title: (m['title'] as String?) ?? (m['name'] as String?) ?? 'Campaign',
       type: CreatorCampaignType.fromApi(m['type']),
-      totalBudgetCents: parseCents(m['totalBudgetCents'] ?? m['totalBudget']),
-      cpmCents: parseCents(m['cpmCents']),
-      cpcCents: parseCents(m['cpcCents']),
+      totalBudgetCents: total,
+      cpmCents: parseCents(m['cpmCents'] ?? financeMap['cpmCents']),
+      cpcCents: parseCents(m['cpcCents'] ?? financeMap['cpcCents']),
       coverUrl: parseCampaignCoverUrlFromJson(m) ??
           (m['coverImageUrl'] as String?) ??
           (m['coverUrl'] as String?),
@@ -110,7 +175,23 @@ final class CreatorBrowseCampaign extends Equatable {
       description: m['description'] as String?,
       currency: (m['currency'] as String?)?.toUpperCase() ?? 'EUR',
       approvedCreators: (m['approvedCreators'] as num?)?.toInt() ?? 0,
-      validViews: (m['validViews'] as num?)?.toInt() ?? 0,
+      validViews:
+          (m['validViews'] as num?)?.toInt() ??
+          (financeMap['validViews'] as num?)?.toInt() ??
+          0,
+      validClicks:
+          (m['validClicks'] as num?)?.toInt() ??
+          (financeMap['validClicks'] as num?)?.toInt() ??
+          0,
+      remainingBudgetCents: remaining,
+      spentBudgetCents: spent,
+      requiredPlatform:
+          (m['requiredPlatform'] as String?)?.trim().toUpperCase(),
+      niche: normalizeCampaignNicheApiValue(trimOrNull(m['niche'])),
+      location: campaignLocationFromCampaignJson(
+        m,
+        debugSource: 'creatorBrowseList',
+      ),
     );
   }
 
@@ -129,5 +210,11 @@ final class CreatorBrowseCampaign extends Equatable {
     currency,
     approvedCreators,
     validViews,
+    validClicks,
+    remainingBudgetCents,
+    spentBudgetCents,
+    requiredPlatform,
+    niche,
+    location,
   ];
 }

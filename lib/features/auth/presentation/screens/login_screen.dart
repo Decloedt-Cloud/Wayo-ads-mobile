@@ -44,6 +44,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   bool _obscure = true;
   bool _googleSigningIn = false;
   bool _appleSigningIn = false;
+  bool _sessionExpiredSnackScheduled = false;
 
   /// Blocks duplicate POSTs when both "Done" on keyboard and the CTA fire together.
   bool _submitInProgress = false;
@@ -55,6 +56,26 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     _email.dispose();
     _password.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_sessionExpiredSnackScheduled) return;
+    final q = GoRouterState.of(context).uri.queryParameters;
+    if (q['sessionExpired'] != '1') return;
+    _sessionExpiredSnackScheduled = true;
+    final t = context.t;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          behavior: SnackBarBehavior.floating,
+          content: Text(t.login.session_expired_snack),
+        ),
+      );
+      if (context.mounted) context.go('/login');
+    });
   }
 
   String? _validateEmail(String? v, Translations t) {

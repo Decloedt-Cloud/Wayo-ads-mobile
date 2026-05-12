@@ -102,9 +102,9 @@ class _AdvertiserCreateCampaignScreenState
     final t = context.t;
     final err = _validate(t);
     if (err != null) {
-      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-        SnackBar(content: Text(err)),
-      );
+      ScaffoldMessenger.maybeOf(
+        context,
+      )?.showSnackBar(SnackBar(content: Text(err)));
       return;
     }
 
@@ -183,9 +183,7 @@ class _AdvertiserCreateCampaignScreenState
           : msg is NetworkException && msg.message.isNotEmpty
           ? msg.message
           : t.errors.server_generic;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(tip)),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tip)));
     } finally {
       if (mounted) {
         setState(() => _submitting = false);
@@ -259,9 +257,7 @@ class _AdvertiserCreateCampaignScreenState
               ),
               DropdownMenuItem(
                 value: 'CONVERSION',
-                child: Text(
-                  t.advertiser_campaigns.detail.objective_conversion,
-                ),
+                child: Text(t.advertiser_campaigns.detail.objective_conversion),
               ),
             ],
             onChanged: (v) {
@@ -329,9 +325,10 @@ class _AdvertiserCreateCampaignScreenState
             const SizedBox(height: 16),
             DropdownButtonFormField<int>(
               value: _videoMinMinutes,
-            decoration: InputDecoration(
-              labelText: t.advertiser_campaigns.create.field_video_min_duration,
-            ),
+              decoration: InputDecoration(
+                labelText:
+                    t.advertiser_campaigns.create.field_video_min_duration,
+              ),
               items: [
                 for (var m = 1; m <= 10; m++)
                   DropdownMenuItem(value: m, child: Text('$m min')),
@@ -373,10 +370,10 @@ class _AdvertiserCreateCampaignScreenState
             const SizedBox(height: 12),
             DropdownButtonFormField<int>(
               value: _shortsMaxSeconds,
-            decoration: InputDecoration(
-              labelText:
-                  t.advertiser_campaigns.create.field_shorts_max_duration,
-            ),
+              decoration: InputDecoration(
+                labelText:
+                    t.advertiser_campaigns.create.field_shorts_max_duration,
+              ),
               items: const [
                 DropdownMenuItem(value: 15, child: Text('15 s')),
                 DropdownMenuItem(value: 20, child: Text('20 s')),

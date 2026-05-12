@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 
 import '../../../core/network/wayo_ads_public_url.dart';
+import '../../advertiser_campaigns/domain/campaign_niche_catalog.dart';
 import '../../creator_dashboard/domain/creator_application.dart';
 import 'creator_browse_campaign.dart';
 import 'creator_social_post.dart';
@@ -38,6 +39,8 @@ final class CreatorCampaignDetail extends Equatable {
     this.advertiserName,
     this.advertiserId,
     this.requiredPlatform,
+    this.niche,
+    this.location,
     this.videoMinDurationMinutes,
     this.allowMultiplePosts,
     this.shortsMaxDurationSeconds,
@@ -84,6 +87,12 @@ final class CreatorCampaignDetail extends Equatable {
   /// Only set when [type] is [CreatorCampaignType.video] or
   /// [CreatorCampaignType.shorts]. `null` means "no platform restriction".
   final String? requiredPlatform;
+
+  /// Target niche (API enum) when present — same sources as list payloads.
+  final String? niche;
+
+  /// Geo / location label when the API provides one (`targetLocation`, …).
+  final String? location;
 
   final int? videoMinDurationMinutes;
   final bool? allowMultiplePosts;
@@ -141,6 +150,12 @@ final class CreatorCampaignDetail extends Equatable {
         ? Map<String, dynamic>.from(earnings)
         : null;
 
+    String? trimOrNull(dynamic v) {
+      final s = v?.toString().trim();
+      if (s == null || s.isEmpty) return null;
+      return s;
+    }
+
     return CreatorCampaignDetail(
       id: (m['id'] as String?) ?? '${m['id']}',
       title: (m['title'] as String?) ?? 'Campaign',
@@ -180,6 +195,11 @@ final class CreatorCampaignDetail extends Equatable {
       advertiserId:
           advertiserMap?['id'] as String? ?? m['advertiserId'] as String?,
       requiredPlatform: videoReqMap?['requiredPlatform'] as String?,
+      niche: normalizeCampaignNicheApiValue(trimOrNull(m['niche'])),
+      location: campaignLocationFromCampaignJson(
+        m,
+        debugSource: 'creatorCampaignDetail',
+      ),
       videoMinDurationMinutes: (m['videoMinDurationMinutes'] as num?)?.toInt(),
       allowMultiplePosts: videoReqMap?['allowMultiplePosts'] as bool?,
       shortsMaxDurationSeconds: (m['shortsMaxDurationSeconds'] as num?)
@@ -220,6 +240,8 @@ final class CreatorCampaignDetail extends Equatable {
       advertiserName: advertiserName,
       advertiserId: advertiserId,
       requiredPlatform: requiredPlatform,
+      niche: niche,
+      location: location,
       videoMinDurationMinutes: videoMinDurationMinutes,
       allowMultiplePosts: allowMultiplePosts,
       shortsMaxDurationSeconds: shortsMaxDurationSeconds,
@@ -255,6 +277,8 @@ final class CreatorCampaignDetail extends Equatable {
     advertiserName,
     advertiserId,
     requiredPlatform,
+    niche,
+    location,
     videoMinDurationMinutes,
     allowMultiplePosts,
     shortsMaxDurationSeconds,

@@ -1,10 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/campaigns/campaign_explorer_layout.dart';
 import '../../../../core/network/rate_limiter.dart';
 import '../../../../core/network/wayo_ads_dio.dart';
 import '../../../dashboard/presentation/providers/dashboard_state_providers.dart';
 import '../../data/creator_campaigns_remote_datasource.dart';
 import '../../data/creator_campaigns_repository.dart';
+import '../../domain/creator_browse_campaign.dart';
 import '../../domain/creator_browse_page_result.dart';
 import '../../domain/creator_campaign_detail.dart';
 import '../../domain/creator_social_post.dart';
@@ -41,6 +43,22 @@ final creatorBrowseCampaignSearchQueryProvider = StateProvider<String>(
   (ref) => '',
 );
 
+/// Browse UI: compact list vs grid (persisted per session only).
+final creatorCampaignExplorerLayoutProvider =
+    StateProvider<CampaignExplorerLayout>((ref) => CampaignExplorerLayout.list);
+
+/// Client-side type filter; `null` means all types.
+final creatorCampaignExplorerTypeFilterProvider =
+    StateProvider<CreatorCampaignType?>((ref) => null);
+
+final creatorCampaignExplorerNicheProvider = StateProvider<String?>(
+  (ref) => null,
+);
+
+final creatorCampaignExplorerLocationProvider = StateProvider<String?>(
+  (ref) => null,
+);
+
 /// Paginated browse key: [creatorBrowseCampaignPageProvider] + [creatorBrowseCampaignSearchQueryProvider].
 typedef CreatorBrowsePagedKey = ({int page, String search});
 
@@ -48,7 +66,9 @@ typedef CreatorBrowsePagedKey = ({int page, String search});
 final creatorBrowseCampaignsPagedProvider = FutureProvider.autoDispose
     .family<CreatorBrowsePageResult, CreatorBrowsePagedKey>((ref, key) async {
       final q = key.search.trim();
-      return ref.watch(creatorCampaignsRepositoryProvider).fetchBrowseCampaignsPage(
+      return ref
+          .watch(creatorCampaignsRepositoryProvider)
+          .fetchBrowseCampaignsPage(
             page: key.page,
             limit: 10,
             search: q.isEmpty ? null : q,

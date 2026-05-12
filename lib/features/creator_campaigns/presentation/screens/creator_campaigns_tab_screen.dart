@@ -5,21 +5,103 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/campaigns/campaign_explorer_layout.dart';
+import '../../../../core/campaigns/campaigns_explorer_toolbar_expanded_provider.dart';
 import '../../../../core/providers/app_providers.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/creator_colors.dart';
+import '../../../../core/widgets/campaigns_explorer_toolbar.dart';
 import '../../../../i18n/strings.g.dart';
+import '../../../advertiser_campaigns/domain/campaign_niche_catalog.dart';
 import '../../../creator_dashboard/domain/creator_application.dart';
 import '../../../creator_dashboard/presentation/providers/creator_dashboard_providers.dart';
+import '../../domain/creator_browse_campaign.dart';
+import '../../domain/creator_browse_page_result.dart';
 import '../providers/creator_campaigns_providers.dart';
 import '../widgets/creator_browse_campaign_card.dart';
+import '../widgets/creator_browse_campaign_grid_tile.dart';
+import '../widgets/creator_browse_explorer_filters.dart';
 
 String _moneyLocale(AppLocale l) => switch (l) {
   AppLocale.en => 'en_US',
   AppLocale.fr => 'fr_FR',
   AppLocale.ar => 'ar_SA',
 };
+
+List<CreatorBrowseCampaign> _filterCreatorBrowsePage(
+  List<CreatorBrowseCampaign> raw,
+  CreatorCampaignType? type,
+  String? niche,
+  String? location,
+) {
+  return raw.where((c) {
+    if (type != null && c.type != type) return false;
+    if (niche != null &&
+        niche.isNotEmpty &&
+        normalizeCampaignNicheApiValue(c.niche) !=
+            normalizeCampaignNicheApiValue(niche)) {
+      return false;
+    }
+    if (location != null && location.isNotEmpty) {
+      final loc = normalizeCampaignLocationValue(c.location);
+      if (loc != normalizeCampaignLocationValue(location)) return false;
+    }
+    return true;
+  }).toList();
+}
+
+bool _creatorPageHasExplorerFilters(List<CreatorBrowseCampaign> list) {
+  return list.isNotEmpty;
+}
+
+void _sanitizeCreatorBrowseFilters(
+  WidgetRef ref,
+  List<CreatorBrowseCampaign> list,
+) {
+  var tSel = ref.read(creatorCampaignExplorerTypeFilterProvider);
+  final nSel = ref.read(creatorCampaignExplorerNicheProvider);
+  final lSel = ref.read(creatorCampaignExplorerLocationProvider);
+
+  if (tSel != null && !list.any((c) => c.type == tSel)) {
+    ref.read(creatorCampaignExplorerTypeFilterProvider.notifier).state = null;
+    tSel = null;
+  }
+
+  bool matchesType(CreatorBrowseCampaign c) {
+    if (tSel != null && c.type != tSel) return false;
+    return true;
+  }
+
+  if (nSel != null && nSel.isNotEmpty) {
+    final want = normalizeCampaignNicheApiValue(nSel);
+    if (want != null &&
+        !list.any(
+          (c) =>
+              matchesType(c) &&
+              normalizeCampaignNicheApiValue(c.niche) == want,
+        )) {
+      ref.read(creatorCampaignExplorerNicheProvider.notifier).state = null;
+    }
+  }
+
+  final nicheAfter = ref.read(creatorCampaignExplorerNicheProvider);
+  if (lSel != null && lSel.isNotEmpty) {
+    final wantLoc = normalizeCampaignLocationValue(lSel);
+    final wantNiche = normalizeCampaignNicheApiValue(nicheAfter);
+    if (wantLoc != null &&
+        !list.any((c) {
+          if (!matchesType(c)) return false;
+          if (wantNiche != null &&
+              normalizeCampaignNicheApiValue(c.niche) != wantNiche) {
+            return false;
+          }
+          return normalizeCampaignLocationValue(c.location) == wantLoc;
+        })) {
+      ref.read(creatorCampaignExplorerLocationProvider.notifier).state = null;
+    }
+  }
+}
 
 /// Creator **campaigns** tab — browse active campaigns and see the state
 /// of applications you've already submitted.
@@ -64,9 +146,28 @@ class _CreatorCampaignsTabScreenState
     final moneyLocale = _moneyLocale(locale);
     final browsePage = ref.watch(creatorBrowseCampaignPageProvider);
     final searchQ = ref.watch(creatorBrowseCampaignSearchQueryProvider);
+    final explorerLayout = ref.watch(creatorCampaignExplorerLayoutProvider);
+    final toolbarExpanded = ref.watch(campaignsExplorerToolbarExpandedProvider);
+    final typeFilter = ref.watch(creatorCampaignExplorerTypeFilterProvider);
+    final nicheFilter = ref.watch(creatorCampaignExplorerNicheProvider);
+    final locationFilter = ref.watch(creatorCampaignExplorerLocationProvider);
     final browseKey = (page: browsePage, search: searchQ);
-    final browseAsync = ref.watch(creatorBrowseCampaignsPagedProvider(browseKey));
+    final browseAsync = ref.watch(
+      creatorBrowseCampaignsPagedProvider(browseKey),
+    );
     final appsAsync = ref.watch(creatorApplicationsProvider);
+
+    ref.listen(creatorBrowseCampaignsPagedProvider(browseKey), (prev, next) {
+      next.whenData(
+        (page) => _sanitizeCreatorBrowseFilters(ref, page.campaigns),
+      );
+    });
+
+    final browsePageForExplorerFilters = browseAsync.maybeWhen(
+      data: (CreatorBrowsePageResult p) =>
+          !_creatorPageHasExplorerFilters(p.campaigns) ? null : p,
+      orElse: () => null,
+    );
 
     return Scaffold(
       appBar: AppBar(title: Text(t.nav.campaigns), elevation: 0),
@@ -94,18 +195,134 @@ class _CreatorCampaignsTabScreenState
               subtitle: t.creator.campaigns.browse_subtitle,
             ),
             const SizedBox(height: 12),
-            _BrowseSearchField(
-              controller: _searchCtrl,
-              onChanged: _scheduleSearchQuery,
-              onClear: () {
-                _debounce?.cancel();
-                _searchCtrl.clear();
-                ref.read(creatorBrowseCampaignPageProvider.notifier).state = 1;
-                ref.read(creatorBrowseCampaignSearchQueryProvider.notifier).state =
-                    '';
-              },
+            CampaignsExplorerToolbar(
+              searchField: Semantics(
+                label: t.campaigns_explorer.search_aria,
+                child: _BrowseSearchField(
+                  controller: _searchCtrl,
+                  onChanged: _scheduleSearchQuery,
+                  onClear: () {
+                    _debounce?.cancel();
+                    _searchCtrl.clear();
+                    ref.read(creatorBrowseCampaignPageProvider.notifier).state =
+                        1;
+                    ref
+                            .read(
+                              creatorBrowseCampaignSearchQueryProvider.notifier,
+                            )
+                            .state =
+                        '';
+                  },
+                ),
+              ),
+              filtersExpanded: toolbarExpanded,
+              onFiltersExpandedChanged: (v) => ref
+                  .read(campaignsExplorerToolbarExpandedProvider.notifier)
+                  .state = v,
+              filterScrollContent: browsePageForExplorerFilters == null
+                  ? null
+                  : CreatorBrowseExplorerFilters(
+                      campaigns: browsePageForExplorerFilters.campaigns,
+                      t: t,
+                      typeFilter: typeFilter,
+                      nicheFilter: nicheFilter,
+                      locationFilter: locationFilter,
+                      onTypeChanged: (v) {
+                        ref
+                                .read(
+                                  creatorBrowseCampaignPageProvider.notifier,
+                                )
+                                .state =
+                            1;
+                        ref
+                                .read(
+                                  creatorCampaignExplorerTypeFilterProvider
+                                      .notifier,
+                                )
+                                .state =
+                            v;
+                        _sanitizeCreatorBrowseFilters(
+                          ref,
+                          browsePageForExplorerFilters.campaigns,
+                        );
+                      },
+                      onNicheChanged: (v) {
+                        ref
+                                .read(
+                                  creatorBrowseCampaignPageProvider.notifier,
+                                )
+                                .state =
+                            1;
+                        ref
+                                .read(
+                                  creatorCampaignExplorerNicheProvider.notifier,
+                                )
+                                .state = v == null
+                                ? null
+                                : normalizeCampaignNicheApiValue(v);
+                        _sanitizeCreatorBrowseFilters(
+                          ref,
+                          browsePageForExplorerFilters.campaigns,
+                        );
+                      },
+                      onLocationChanged: (v) {
+                        ref
+                                .read(
+                                  creatorBrowseCampaignPageProvider.notifier,
+                                )
+                                .state =
+                            1;
+                        ref
+                                .read(
+                                  creatorCampaignExplorerLocationProvider
+                                      .notifier,
+                                )
+                                .state = v == null
+                                ? null
+                                : normalizeCampaignLocationValue(v);
+                        _sanitizeCreatorBrowseFilters(
+                          ref,
+                          browsePageForExplorerFilters.campaigns,
+                        );
+                      },
+                    ),
+              onResetExplorerFilters: browsePageForExplorerFilters == null
+                  ? null
+                  : () {
+                      ref
+                          .read(creatorBrowseCampaignPageProvider.notifier)
+                          .state = 1;
+                      ref
+                          .read(creatorCampaignExplorerTypeFilterProvider.notifier)
+                          .state = null;
+                      ref
+                          .read(creatorCampaignExplorerNicheProvider.notifier)
+                          .state = null;
+                      ref
+                          .read(
+                            creatorCampaignExplorerLocationProvider.notifier,
+                          )
+                          .state = null;
+                      _sanitizeCreatorBrowseFilters(
+                        ref,
+                        browsePageForExplorerFilters.campaigns,
+                      );
+                    },
+              resultCountText: _browseCountLabel(
+                browseAsync,
+                typeFilter,
+                nicheFilter,
+                locationFilter,
+                t,
+              ),
+              layout: explorerLayout,
+              onLayoutChanged: (v) =>
+                  ref
+                          .read(creatorCampaignExplorerLayoutProvider.notifier)
+                          .state =
+                      v,
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 14),
             browseAsync.when(
               loading: () => const _LoadingBlock(),
               error: (err, _) => _ErrorBlock(
@@ -116,6 +333,12 @@ class _CreatorCampaignsTabScreenState
               ),
               data: (pageResult) {
                 final list = pageResult.campaigns;
+                final filtered = _filterCreatorBrowsePage(
+                  list,
+                  typeFilter,
+                  nicheFilter,
+                  locationFilter,
+                );
                 final hasSearch = searchQ.trim().isNotEmpty;
                 if (list.isEmpty) {
                   return _EmptyBrowseBlock(
@@ -127,6 +350,12 @@ class _CreatorCampaignsTabScreenState
                         : t.creator.campaigns.empty_subtitle,
                   );
                 }
+                if (filtered.isEmpty) {
+                  return _EmptyBrowseBlock(
+                    title: t.campaigns_explorer.empty_filters,
+                    subtitle: t.campaigns_explorer.empty_filters_subtitle,
+                  );
+                }
                 final statusByCampaign = <String, CreatorApplicationStatus>{};
                 for (final a
                     in appsAsync.valueOrNull ?? const <CreatorApplication>[]) {
@@ -136,9 +365,41 @@ class _CreatorCampaignsTabScreenState
                     statusByCampaign[a.campaignId] = a.status;
                   }
                 }
-                return Column(
-                  children: [
-                    for (final c in list) ...[
+                final browseItems = <Widget>[
+                  if (explorerLayout == CampaignExplorerLayout.grid)
+                    GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            mainAxisSpacing: 10,
+                            crossAxisSpacing: 10,
+                            childAspectRatio: 0.465,
+                          ),
+                      itemCount: filtered.length,
+                      itemBuilder: (ctx, i) {
+                        final c = filtered[i];
+                        return CreatorBrowseCampaignGridTile(
+                          campaign: c,
+                          moneyLocale: moneyLocale,
+                          applicationStatus: statusByCampaign[c.id],
+                          onTap: () {
+                            FocusManager.instance.primaryFocus?.unfocus();
+                            context.push(
+                              '/creator/campaigns/${c.id}',
+                              extra: <String, Object?>{
+                                'coverUrl': c.coverUrl,
+                                'brandLogoUrl': c.brandLogoUrl,
+                                'title': c.title,
+                              },
+                            );
+                          },
+                        );
+                      },
+                    )
+                  else ...[
+                    for (final c in filtered) ...[
                       CreatorBrowseCampaignCard(
                         campaign: c,
                         moneyLocale: moneyLocale,
@@ -157,46 +418,44 @@ class _CreatorCampaignsTabScreenState
                       ),
                       const SizedBox(height: 10),
                     ],
-                    if (pageResult.totalPages > 1) ...[
-                      const SizedBox(height: 6),
-                      _BrowsePaginationBar(
-                        page: browsePage,
-                        totalPages: pageResult.totalPages,
-                        previousLabel: t.creator.campaigns.pagination_previous,
-                        nextLabel: t.creator.campaigns.pagination_next,
-                        pageLabel: (cur, tot) =>
-                            t.creator.campaigns.pagination_page(
-                              current: cur,
-                              total: tot,
-                            ),
-                        onPrevious: browsePage > 1
-                            ? () {
-                                HapticFeedback.selectionClick();
-                                ref
-                                        .read(
-                                          creatorBrowseCampaignPageProvider
-                                              .notifier,
-                                        )
-                                        .state =
-                                    browsePage - 1;
-                              }
-                            : null,
-                        onNext: browsePage < pageResult.totalPages
-                            ? () {
-                                HapticFeedback.selectionClick();
-                                ref
-                                        .read(
-                                          creatorBrowseCampaignPageProvider
-                                              .notifier,
-                                        )
-                                        .state =
-                                    browsePage + 1;
-                              }
-                            : null,
-                      ),
-                    ],
                   ],
-                );
+                  if (pageResult.totalPages > 1) ...[
+                    const SizedBox(height: 6),
+                    _BrowsePaginationBar(
+                      page: browsePage,
+                      totalPages: pageResult.totalPages,
+                      previousLabel: t.creator.campaigns.pagination_previous,
+                      nextLabel: t.creator.campaigns.pagination_next,
+                      pageLabel: (cur, tot) => t.creator.campaigns
+                          .pagination_page(current: cur, total: tot),
+                      onPrevious: browsePage > 1
+                          ? () {
+                              HapticFeedback.selectionClick();
+                              ref
+                                      .read(
+                                        creatorBrowseCampaignPageProvider
+                                            .notifier,
+                                      )
+                                      .state =
+                                  browsePage - 1;
+                            }
+                          : null,
+                      onNext: browsePage < pageResult.totalPages
+                          ? () {
+                              HapticFeedback.selectionClick();
+                              ref
+                                      .read(
+                                        creatorBrowseCampaignPageProvider
+                                            .notifier,
+                                      )
+                                      .state =
+                                  browsePage + 1;
+                            }
+                          : null,
+                    ),
+                  ],
+                ];
+                return Column(children: browseItems);
               },
             ),
             const SizedBox(height: 24),
@@ -252,6 +511,30 @@ class _CreatorCampaignsTabScreenState
       ),
     );
   }
+
+  String _browseCountLabel(
+    AsyncValue<CreatorBrowsePageResult> browseAsync,
+    CreatorCampaignType? typeFilter,
+    String? nicheFilter,
+    String? locationFilter,
+    Translations t,
+  ) {
+    if (browseAsync.isLoading) return '…';
+    return browseAsync.maybeWhen(
+      data: (pageResult) {
+        final n = _filterCreatorBrowsePage(
+          pageResult.campaigns,
+          typeFilter,
+          nicheFilter,
+          locationFilter,
+        ).length;
+        return n == 1
+            ? t.campaigns_explorer.results_one
+            : t.campaigns_explorer.results_many(n: n);
+      },
+      orElse: () => '…',
+    );
+  }
 }
 
 /// Search field using [ValueListenableBuilder] for clear button visibility.
@@ -295,8 +578,9 @@ class _BrowseSearchField extends StatelessWidget {
             prefixIcon: Icon(Icons.search_rounded, color: hintColor),
             suffixIcon: hasText
                 ? IconButton(
-                    tooltip:
-                        MaterialLocalizations.of(context).deleteButtonTooltip,
+                    tooltip: MaterialLocalizations.of(
+                      context,
+                    ).deleteButtonTooltip,
                     onPressed: onClear,
                     icon: Icon(Icons.close_rounded, color: hintColor),
                   )
@@ -315,8 +599,10 @@ class _BrowseSearchField extends StatelessWidget {
               borderRadius: BorderRadius.circular(16),
               borderSide: BorderSide(color: primary, width: 1.4),
             ),
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 4, vertical: 14),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 4,
+              vertical: 14,
+            ),
           ),
         );
       },
@@ -335,10 +621,7 @@ class _SectionHeader extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          title,
-          style: AppTextStyles.pageTitle(context),
-        ),
+        Text(title, style: AppTextStyles.pageTitle(context)),
         const SizedBox(height: 2),
         Text(
           subtitle,
@@ -602,10 +885,7 @@ class _BrowsePaginationBar extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
         child: Row(
           children: [
-            TextButton(
-              onPressed: onPrevious,
-              child: Text(previousLabel),
-            ),
+            TextButton(onPressed: onPrevious, child: Text(previousLabel)),
             Expanded(
               child: Text(
                 pageLabel(page, totalPages),
@@ -615,10 +895,7 @@ class _BrowsePaginationBar extends StatelessWidget {
                 ).copyWith(color: AppColors.textSecondaryOf(context)),
               ),
             ),
-            TextButton(
-              onPressed: onNext,
-              child: Text(nextLabel),
-            ),
+            TextButton(onPressed: onNext, child: Text(nextLabel)),
           ],
         ),
       ),

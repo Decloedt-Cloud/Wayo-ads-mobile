@@ -7,20 +7,99 @@ import 'package:go_router/go_router.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../../../core/errors/auth_exceptions.dart';
+import '../../../../core/campaigns/campaign_explorer_layout.dart';
+import '../../../../core/campaigns/campaigns_explorer_toolbar_expanded_provider.dart';
 import '../../../../core/providers/app_providers.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/campaigns_explorer_toolbar.dart';
 import '../../../../i18n/strings.g.dart';
+import '../../../creator_campaigns/domain/creator_browse_campaign.dart';
 import '../../../dashboard/presentation/widgets/error_banner.dart';
 import '../../domain/advertiser_campaign.dart';
+import '../../domain/campaign_niche_catalog.dart';
 import '../providers/advertiser_campaigns_providers.dart';
 import '../widgets/advertiser_campaign_card.dart';
+import '../widgets/advertiser_campaign_explorer_filters.dart';
+import '../widgets/advertiser_campaign_grid_tile.dart';
 
 String _moneyLocale(AppLocale l) => switch (l) {
   AppLocale.en => 'en_US',
   AppLocale.fr => 'fr_FR',
   AppLocale.ar => 'ar_SA',
 };
+
+List<AdvertiserCampaign> _filterAdvertiserCampaigns(
+  List<AdvertiserCampaign> raw,
+  CreatorCampaignType? type,
+  String? niche,
+  String? location,
+) {
+  return raw.where((c) {
+    if (type != null && c.campaignType != type) return false;
+    if (niche != null &&
+        niche.isNotEmpty &&
+        normalizeCampaignNicheApiValue(c.niche) !=
+            normalizeCampaignNicheApiValue(niche)) {
+      return false;
+    }
+    if (location != null && location.isNotEmpty) {
+      final cl = normalizeCampaignLocationValue(c.location);
+      if (cl != normalizeCampaignLocationValue(location)) return false;
+    }
+    return true;
+  }).toList();
+}
+
+void _sanitizeAdvertiserExplorerFilters(
+  WidgetRef ref,
+  List<AdvertiserCampaign> list,
+) {
+  var tSel = ref.read(advertiserCampaignExplorerTypeFilterProvider);
+
+  if (tSel != null && !list.any((c) => c.campaignType == tSel)) {
+    ref.read(advertiserCampaignExplorerTypeFilterProvider.notifier).state =
+        null;
+    tSel = null;
+  }
+
+  bool matchesType(AdvertiserCampaign c) {
+    if (tSel != null && c.campaignType != tSel) return false;
+    return true;
+  }
+
+  final nSel = ref.read(advertiserCampaignExplorerNicheProvider);
+  if (nSel != null && nSel.isNotEmpty) {
+    final want = normalizeCampaignNicheApiValue(nSel);
+    if (want != null &&
+        !list.any(
+          (c) =>
+              matchesType(c) &&
+              normalizeCampaignNicheApiValue(c.niche) == want,
+        )) {
+      ref.read(advertiserCampaignExplorerNicheProvider.notifier).state = null;
+    }
+  }
+
+  final lSel = ref.read(advertiserCampaignExplorerLocationProvider);
+  final nicheAfter = ref.read(advertiserCampaignExplorerNicheProvider);
+  if (lSel != null && lSel.isNotEmpty) {
+    final wantLoc = normalizeCampaignLocationValue(lSel);
+    final wantNiche = normalizeCampaignNicheApiValue(nicheAfter);
+    if (wantLoc != null &&
+        !list.any((c) {
+          if (!matchesType(c)) return false;
+          if (wantNiche != null &&
+              normalizeCampaignNicheApiValue(c.niche) != wantNiche) {
+            return false;
+          }
+          return normalizeCampaignLocationValue(c.location) == wantLoc;
+        })) {
+      ref.read(advertiserCampaignExplorerLocationProvider.notifier).state =
+          null;
+    }
+  }
+}
 
 /// Page background: premium dark gradient or light surfaces (not hard-coded black).
 BoxDecoration _campaignsPageBackground(BuildContext context) {
@@ -87,8 +166,6 @@ class _AdvertiserCampaignsScreenState
     final key = (tab: tab, page: pageIdx, search: searchQ);
     final pageAsync = ref.watch(advertiserCampaignsPagedProvider(key));
     final countsAsync = ref.watch(advertiserCampaignsCountsProvider);
-    final reduceMotion = MediaQuery.disableAnimationsOf(context);
-
     final isDark = Theme.of(context).brightness == Brightness.dark;
     Future<void> refresh() async {
       ref.invalidate(advertiserCampaignsPagedProvider);
@@ -113,13 +190,9 @@ class _AdvertiserCampaignsScreenState
         child: SafeArea(
           child: pageAsync.when(
             data: (pageResult) {
-              final counts = countsAsync.valueOrNull ??
-                  (
-                    active: 0,
-                    draft: 0,
-                    paused: 0,
-                    completed: 0,
-                  );
+              final counts =
+                  countsAsync.valueOrNull ??
+                  (active: 0, draft: 0, paused: 0, completed: 0);
               return _Body(
                 campaigns: pageResult.campaigns,
                 totalPages: pageResult.totalPages,
@@ -129,19 +202,24 @@ class _AdvertiserCampaignsScreenState
                 searchCtrl: _searchCtrl,
                 searchQ: searchQ,
                 moneyLocale: moneyLocale,
-                reduceMotion: reduceMotion,
                 onTab: (v) {
                   ref.read(advertiserCampaignsTabProvider.notifier).state = v;
-                  ref.read(advertiserCampaignsPageIndexProvider.notifier).state =
+                  ref
+                          .read(advertiserCampaignsPageIndexProvider.notifier)
+                          .state =
                       1;
                 },
                 onSearchChanged: _scheduleSearchDebounce,
                 onClearSearch: () {
                   _debounce?.cancel();
                   _searchCtrl.clear();
-                  ref.read(advertiserCampaignsPageIndexProvider.notifier).state =
+                  ref
+                          .read(advertiserCampaignsPageIndexProvider.notifier)
+                          .state =
                       1;
-                  ref.read(advertiserCampaignsSearchQueryProvider.notifier).state =
+                  ref
+                          .read(advertiserCampaignsSearchQueryProvider.notifier)
+                          .state =
                       '';
                 },
                 onRefresh: refresh,
@@ -149,20 +227,22 @@ class _AdvertiserCampaignsScreenState
                     ? () {
                         HapticFeedback.selectionClick();
                         ref
-                            .read(
-                              advertiserCampaignsPageIndexProvider.notifier,
-                            )
-                            .state = pageIdx - 1;
+                                .read(
+                                  advertiserCampaignsPageIndexProvider.notifier,
+                                )
+                                .state =
+                            pageIdx - 1;
                       }
                     : null,
                 onPageNext: pageIdx < pageResult.totalPages
                     ? () {
                         HapticFeedback.selectionClick();
                         ref
-                            .read(
-                              advertiserCampaignsPageIndexProvider.notifier,
-                            )
-                            .state = pageIdx + 1;
+                                .read(
+                                  advertiserCampaignsPageIndexProvider.notifier,
+                                )
+                                .state =
+                            pageIdx + 1;
                       }
                     : null,
               );
@@ -261,7 +341,7 @@ class _ErrorShell extends StatelessWidget {
   }
 }
 
-class _Body extends StatelessWidget {
+class _Body extends ConsumerWidget {
   const _Body({
     required this.campaigns,
     required this.totalPages,
@@ -271,7 +351,6 @@ class _Body extends StatelessWidget {
     required this.searchCtrl,
     required this.searchQ,
     required this.moneyLocale,
-    required this.reduceMotion,
     required this.onTab,
     required this.onSearchChanged,
     required this.onClearSearch,
@@ -288,7 +367,6 @@ class _Body extends StatelessWidget {
   final TextEditingController searchCtrl;
   final String searchQ;
   final String moneyLocale;
-  final bool reduceMotion;
   final void Function(AdvertiserCampaignsTab) onTab;
   final void Function(String) onSearchChanged;
   final VoidCallback onClearSearch;
@@ -297,11 +375,59 @@ class _Body extends StatelessWidget {
   final VoidCallback? onPageNext;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final t = context.t;
-    final duration = reduceMotion
-        ? Duration.zero
-        : const Duration(milliseconds: 220);
+    final layout = ref.watch(advertiserCampaignExplorerLayoutProvider);
+    final toolbarExpanded = ref.watch(campaignsExplorerToolbarExpandedProvider);
+    final typeF = ref.watch(advertiserCampaignExplorerTypeFilterProvider);
+    final nicheF = ref.watch(advertiserCampaignExplorerNicheProvider);
+    final locF = ref.watch(advertiserCampaignExplorerLocationProvider);
+    final filtered = _filterAdvertiserCampaigns(
+      campaigns,
+      typeF,
+      nicheF,
+      locF,
+    );
+
+    final pagedKey = (tab: tab, page: currentPage, search: searchQ);
+    ref.listen(advertiserCampaignsPagedProvider(pagedKey), (prev, next) {
+      next.whenData(
+        (r) => _sanitizeAdvertiserExplorerFilters(ref, r.campaigns),
+      );
+    });
+
+    void resetPageToFirst() {
+      ref.read(advertiserCampaignsPageIndexProvider.notifier).state = 1;
+    }
+
+    void resetAllExplorerFilters() {
+      resetPageToFirst();
+      ref.read(advertiserCampaignExplorerTypeFilterProvider.notifier).state =
+          null;
+      ref.read(advertiserCampaignExplorerNicheProvider.notifier).state = null;
+      ref.read(advertiserCampaignExplorerLocationProvider.notifier).state =
+          null;
+      _sanitizeAdvertiserExplorerFilters(ref, campaigns);
+    }
+
+    final countText = campaigns.isEmpty
+        ? '…'
+        : (filtered.length == 1
+              ? t.campaigns_explorer.results_one
+              : t.campaigns_explorer.results_many(n: filtered.length));
+
+    void pushDetail(AdvertiserCampaign c) {
+      FocusManager.instance.primaryFocus?.unfocus();
+      context.push(
+        '/campaigns/${c.id}',
+        extra: <String, String?>{
+          'coverUrl': c.coverUrl,
+          'brandLogoUrl': c.brandLogoUrl,
+          'title': c.name,
+        },
+      );
+    }
+
     return RefreshIndicator(
       color: AppColors.primary,
       onRefresh: onRefresh,
@@ -313,32 +439,79 @@ class _Body extends StatelessWidget {
           SliverToBoxAdapter(child: _HeaderBlock(t: t)),
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
-              child: _StatusTabs(
-                selected: tab,
-                onChanged: onTab,
-                duration: duration,
-              ),
-            ),
-          ),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-              child: _CountChips(
-                counts: counts,
-                selected: tab,
-                onSelect: onTab,
-                duration: duration,
-              ),
-            ),
-          ),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-              child: _SearchField(
-                controller: searchCtrl,
-                onChanged: onSearchChanged,
-                onClear: onClearSearch,
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+              child: CampaignsExplorerToolbar(
+                searchField: Semantics(
+                  label: t.campaigns_explorer.search_aria,
+                  child: _SearchField(
+                    controller: searchCtrl,
+                    onChanged: onSearchChanged,
+                    onClear: onClearSearch,
+                  ),
+                ),
+                filtersExpanded: toolbarExpanded,
+                onFiltersExpandedChanged: (v) => ref
+                    .read(campaignsExplorerToolbarExpandedProvider.notifier)
+                    .state = v,
+                filterScrollContent: AdvertiserCampaignExplorerFilters(
+                        campaigns: campaigns,
+                        t: t,
+                        statusTab: tab,
+                        statusCounts: counts,
+                        onStatusChanged: (v) {
+                          resetPageToFirst();
+                          onTab(v);
+                        },
+                        typeFilter: typeF,
+                        nicheFilter: nicheF,
+                        locationFilter: locF,
+                        onTypeChanged: (v) {
+                          resetPageToFirst();
+                          ref
+                                  .read(
+                                    advertiserCampaignExplorerTypeFilterProvider
+                                        .notifier,
+                                  )
+                                  .state =
+                              v;
+                          _sanitizeAdvertiserExplorerFilters(ref, campaigns);
+                        },
+                        onNicheChanged: (v) {
+                          resetPageToFirst();
+                          ref
+                              .read(
+                                advertiserCampaignExplorerNicheProvider
+                                    .notifier,
+                              )
+                              .state = v == null
+                              ? null
+                              : normalizeCampaignNicheApiValue(v);
+                          _sanitizeAdvertiserExplorerFilters(ref, campaigns);
+                        },
+                        onLocationChanged: (v) {
+                          resetPageToFirst();
+                          ref
+                              .read(
+                                advertiserCampaignExplorerLocationProvider
+                                    .notifier,
+                              )
+                              .state = v == null
+                              ? null
+                              : normalizeCampaignLocationValue(v);
+                          _sanitizeAdvertiserExplorerFilters(ref, campaigns);
+                        },
+                      ),
+                onResetExplorerFilters:
+                    campaigns.isNotEmpty ? resetAllExplorerFilters : null,
+                resultCountText: countText,
+                layout: layout,
+                onLayoutChanged: (v) =>
+                    ref
+                            .read(
+                              advertiserCampaignExplorerLayoutProvider.notifier,
+                            )
+                            .state =
+                        v,
               ),
             ),
           ),
@@ -347,29 +520,90 @@ class _Body extends StatelessWidget {
               hasScrollBody: false,
               child: _EmptyState(hasSearch: searchQ.trim().isNotEmpty),
             )
-          else
+          else if (filtered.isEmpty)
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 32),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.filter_alt_off_rounded,
+                        size: 56,
+                        color: AppColors.textMutedOf(context),
+                      ),
+                      const SizedBox(height: 14),
+                      Text(
+                        t.campaigns_explorer.empty_filters,
+                        textAlign: TextAlign.center,
+                        style: AppTextStyles.headlineMedium(
+                          context,
+                        ).copyWith(fontSize: 18),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        t.advertiser_campaigns.empty.search_hint,
+                        textAlign: TextAlign.center,
+                        style: AppTextStyles.bodyLarge(context),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            )
+          else if (layout == CampaignExplorerLayout.grid) ...[
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+              sliver: SliverGrid(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  mainAxisSpacing: 12,
+                  crossAxisSpacing: 12,
+                  childAspectRatio: 0.465,
+                ),
+                delegate: SliverChildBuilderDelegate((context, i) {
+                  final c = filtered[i];
+                  return AdvertiserCampaignGridTile(
+                    campaign: c,
+                    moneyLocale: moneyLocale,
+                    onTap: () => pushDetail(c),
+                  );
+                }, childCount: filtered.length),
+              ),
+            ),
+            if (totalPages > 1)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 120),
+                  child: _AdvertiserCampaignPaginationBar(
+                    page: currentPage,
+                    totalPages: totalPages,
+                    previousLabel: t.dashboard.campaigns.pagination_previous,
+                    nextLabel: t.dashboard.campaigns.pagination_next,
+                    pageLabel: (cur, tot) => t.dashboard.campaigns
+                        .pagination_page(current: cur, total: tot),
+                    onPrevious: onPagePrevious,
+                    onNext: onPageNext,
+                  ),
+                ),
+              )
+            else
+              const SliverToBoxAdapter(child: SizedBox(height: 120)),
+          ] else
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 120),
               sliver: SliverList(
                 delegate: SliverChildBuilderDelegate((context, i) {
-                  if (i < campaigns.length) {
-                    final c = campaigns[i];
+                  if (i < filtered.length) {
+                    final c = filtered[i];
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 12),
                       child: AdvertiserCampaignCard(
                         campaign: c,
                         moneyLocale: moneyLocale,
-                        onTap: () {
-                          FocusManager.instance.primaryFocus?.unfocus();
-                          context.push(
-                            '/campaigns/${c.id}',
-                            extra: <String, String?>{
-                              'coverUrl': c.coverUrl,
-                              'brandLogoUrl': c.brandLogoUrl,
-                              'title': c.name,
-                            },
-                          );
-                        },
+                        onTap: () => pushDetail(c),
                       ),
                     );
                   }
@@ -380,16 +614,13 @@ class _Body extends StatelessWidget {
                       totalPages: totalPages,
                       previousLabel: t.dashboard.campaigns.pagination_previous,
                       nextLabel: t.dashboard.campaigns.pagination_next,
-                      pageLabel: (cur, tot) =>
-                          t.dashboard.campaigns.pagination_page(
-                            current: cur,
-                            total: tot,
-                          ),
+                      pageLabel: (cur, tot) => t.dashboard.campaigns
+                          .pagination_page(current: cur, total: tot),
                       onPrevious: onPagePrevious,
                       onNext: onPageNext,
                     ),
                   );
-                }, childCount: campaigns.length + (totalPages > 1 ? 1 : 0)),
+                }, childCount: filtered.length + (totalPages > 1 ? 1 : 0)),
               ),
             ),
         ],
@@ -428,10 +659,7 @@ class _AdvertiserCampaignPaginationBar extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
           child: Row(
             children: [
-              TextButton(
-                onPressed: onPrevious,
-                child: Text(previousLabel),
-              ),
+              TextButton(onPressed: onPrevious, child: Text(previousLabel)),
               Expanded(
                 child: Text(
                   pageLabel(page, totalPages),
@@ -441,10 +669,7 @@ class _AdvertiserCampaignPaginationBar extends StatelessWidget {
                   ),
                 ),
               ),
-              TextButton(
-                onPressed: onNext,
-                child: Text(nextLabel),
-              ),
+              TextButton(onPressed: onNext, child: Text(nextLabel)),
             ],
           ),
         ),
@@ -475,228 +700,6 @@ class _HeaderBlock extends StatelessWidget {
             style: AppTextStyles.bodyLarge(context),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _StatusTabs extends StatelessWidget {
-  const _StatusTabs({
-    required this.selected,
-    required this.onChanged,
-    required this.duration,
-  });
-
-  final AdvertiserCampaignsTab selected;
-  final void Function(AdvertiserCampaignsTab) onChanged;
-  final Duration duration;
-
-  @override
-  Widget build(BuildContext context) {
-    final t = context.t;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: isDark
-            ? AppColors.surfaceElevatedOf(context).withValues(alpha: 0.45)
-            : AppColors.surfaceElevatedOf(context),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.borderOf(context)),
-      ),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: [
-            _TabPill(
-              label: t.advertiser_campaigns.tabs.active,
-              selected: selected == AdvertiserCampaignsTab.active,
-              duration: duration,
-              onTap: () => onChanged(AdvertiserCampaignsTab.active),
-            ),
-            const SizedBox(width: 4),
-            _TabPill(
-              label: t.advertiser_campaigns.tabs.draft,
-              selected: selected == AdvertiserCampaignsTab.draft,
-              duration: duration,
-              onTap: () => onChanged(AdvertiserCampaignsTab.draft),
-            ),
-            const SizedBox(width: 4),
-            _TabPill(
-              label: t.advertiser_campaigns.tabs.paused,
-              selected: selected == AdvertiserCampaignsTab.paused,
-              duration: duration,
-              onTap: () => onChanged(AdvertiserCampaignsTab.paused),
-            ),
-            const SizedBox(width: 4),
-            _TabPill(
-              label: t.advertiser_campaigns.tabs.completed,
-              selected: selected == AdvertiserCampaignsTab.completed,
-              duration: duration,
-              onTap: () => onChanged(AdvertiserCampaignsTab.completed),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _TabPill extends StatelessWidget {
-  const _TabPill({
-    required this.label,
-    required this.selected,
-    required this.duration,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool selected;
-  final Duration duration;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return ConstrainedBox(
-      constraints: const BoxConstraints(minWidth: 86),
-      child: AnimatedContainer(
-        duration: duration,
-        curve: Curves.easeOutCubic,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(11),
-          color: selected
-              ? AppColors.primary.withValues(alpha: 0.22)
-              : Colors.transparent,
-          border: Border.all(
-            color: selected
-                ? AppColors.primary.withValues(alpha: 0.55)
-                : Colors.transparent,
-          ),
-        ),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: onTap,
-            borderRadius: BorderRadius.circular(11),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-              child: Center(
-                child: Text(
-                  label,
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 12.5,
-                    letterSpacing: 0.1,
-                    color: selected
-                        ? AppColors.primary
-                        : AppColors.textSecondaryOf(context),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _CountChips extends StatelessWidget {
-  const _CountChips({
-    required this.counts,
-    required this.selected,
-    required this.onSelect,
-    required this.duration,
-  });
-
-  final ({int active, int draft, int paused, int completed}) counts;
-  final AdvertiserCampaignsTab selected;
-  final void Function(AdvertiserCampaignsTab) onSelect;
-  final Duration duration;
-
-  @override
-  Widget build(BuildContext context) {
-    final t = context.t;
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: [
-          _Chip(
-            label: '${t.advertiser_campaigns.tabs.active} (${counts.active})',
-            selected: selected == AdvertiserCampaignsTab.active,
-            duration: duration,
-            onTap: () => onSelect(AdvertiserCampaignsTab.active),
-          ),
-          const SizedBox(width: 8),
-          _Chip(
-            label: '${t.advertiser_campaigns.tabs.draft} (${counts.draft})',
-            selected: selected == AdvertiserCampaignsTab.draft,
-            duration: duration,
-            onTap: () => onSelect(AdvertiserCampaignsTab.draft),
-          ),
-          const SizedBox(width: 8),
-          _Chip(
-            label: '${t.advertiser_campaigns.tabs.paused} (${counts.paused})',
-            selected: selected == AdvertiserCampaignsTab.paused,
-            duration: duration,
-            onTap: () => onSelect(AdvertiserCampaignsTab.paused),
-          ),
-          const SizedBox(width: 8),
-          _Chip(
-            label:
-                '${t.advertiser_campaigns.tabs.completed} (${counts.completed})',
-            selected: selected == AdvertiserCampaignsTab.completed,
-            duration: duration,
-            onTap: () => onSelect(AdvertiserCampaignsTab.completed),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _Chip extends StatelessWidget {
-  const _Chip({
-    required this.label,
-    required this.selected,
-    required this.duration,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool selected;
-  final Duration duration;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: duration,
-      child: Material(
-        color: selected
-            ? AppColors.primary.withValues(alpha: 0.14)
-            : AppColors.surfaceElevatedOf(context).withValues(alpha: 0.4),
-        borderRadius: BorderRadius.circular(24),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(24),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-            child: Text(
-              label,
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: 12,
-                color: selected
-                    ? AppColors.primary
-                    : AppColors.textSecondaryOf(context),
-              ),
-            ),
-          ),
-        ),
       ),
     );
   }
@@ -741,8 +744,9 @@ class _SearchField extends StatelessWidget {
             prefixIcon: Icon(Icons.search_rounded, color: hintColor),
             suffixIcon: hasText
                 ? IconButton(
-                    tooltip:
-                        MaterialLocalizations.of(context).deleteButtonTooltip,
+                    tooltip: MaterialLocalizations.of(
+                      context,
+                    ).deleteButtonTooltip,
                     onPressed: onClear,
                     icon: Icon(Icons.close_rounded, color: hintColor),
                   )
@@ -759,10 +763,15 @@ class _SearchField extends StatelessWidget {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
-              borderSide: const BorderSide(color: AppColors.primary, width: 1.4),
+              borderSide: const BorderSide(
+                color: AppColors.primary,
+                width: 1.4,
+              ),
             ),
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 4, vertical: 14),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 4,
+              vertical: 14,
+            ),
           ),
         );
       },

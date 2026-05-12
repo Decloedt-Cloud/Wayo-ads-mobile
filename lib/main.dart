@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:developer' as developer;
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -30,7 +29,11 @@ Future<void> main() async {
   PaintingBinding.instance.imageCache.maximumSize = 100;
   PaintingBinding.instance.imageCache.maximumSizeBytes = 50 * 1024 * 1024;
 
-  // ✅ UN SEUL appel à ensureLoaded — supprimé dans _boot()
+  // [AuthRuntimeConfig.ensureLoaded] only awaits in **debug** (reads dart_defines.json asset);
+  // in release it short-circuits synchronously after applying compile-time constants — that
+  // path is required for any provider that reads `AuthRuntimeConfig.instance` (api_client,
+  // wayo_ads_dio, reverb_client, auth_repository…) when [runApp] mounts.
+  final prefsFuture = SharedPreferences.getInstance();
   try {
     await AuthRuntimeConfig.ensureLoaded();
   } catch (e, st) {
@@ -42,44 +45,169 @@ Future<void> main() async {
     );
   }
 
-  // Résumé utile en release avec: --dart-define=WAYO_AUTH_DIAG=true
-  // ou --dart-define=WAYO_VERBOSE_LOGS=true  (voir adb logcat tag wayo.config / wayo.tls)
-  wayoConfigDiagPrint(
-    '[config] kReleaseMode=$kReleaseMode '
-    'resolvedDioBaseUrl=${AuthRuntimeConfig.instance.resolvedDioBaseUrl} '
-    'AUTH_WAYO_BASE_URL=${AuthRuntimeConfig.instance.authWayoBaseUrl} '
-    'pins=${AuthRuntimeConfig.instance.mergedPinnedSha256Base64.length} '
-    'pinningOff=${AppConfig.disableCertPinning} '
-    'googleClientIdSet=${AuthRuntimeConfig.instance.googleServerClientId.isNotEmpty}',
-  );
-  debugPrint(
-    '[config] resolvedDioBaseUrl = ${AuthRuntimeConfig.instance.resolvedDioBaseUrl}',
-  );
-  debugPrint(
-    '[config] authWayoBaseUrl = ${AuthRuntimeConfig.instance.authWayoBaseUrl}',
+  final initialPrefs = await prefsFuture;
+  unawaited(
+    SystemChrome.setPreferredOrientations(const [DeviceOrientation.portraitUp]),
   );
 
-  final results = await Future.wait<Object?>([
-    SharedPreferences.getInstance(),
-    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]),
-  ]);
-  final initialPrefs = results[0] as SharedPreferences;
+  // Crash reporter starts as no-op so [runApp] paints the animated splash without waiting
+  // on [SentryFlutter.init] (~200–800 ms native channel setup). [_DeferredObservabilityBootstrap]
+  // initialises Sentry after the first frame and hot-swaps the global instance — early errors
+  // are still captured by [_installGlobalErrorHandlers] (just through the no-op until then).
+  CrashReporterHolder.instance = NoopCrashReporter();
+  _installGlobalErrorHandlers();
+  await _runAppImmediate(initialPrefs);
+}
 
-  if (AuthRuntimeConfig.instance.effectiveSentryEnabled) {
-    await SentryFlutter.init(
-      applySentryFlutterOptions,
-      appRunner: () {
-        CrashReporterHolder.instance = SentryCrashReporter();
-        _installGlobalErrorHandlers();
-        runApp(_WayoAdsBootstrap(sharedPreferences: initialPrefs));
-      },
+/// First [runApp] shows [/splash] as soon as possible. Hive opens after first frame.
+Future<void> _runAppImmediate(SharedPreferences initialPrefs) async {
+  try {
+    final prefs = _loadAppPrefsOrMemory(initialPrefs);
+    final locCode = prefs.getString('app.locale');
+    final initialLocale = locCode == null
+        ? AppLocaleUtils.findDeviceLocale()
+        : AppLocale.values.firstWhere(
+            (l) => l.languageCode == locCode,
+            orElse: () => AppLocale.en,
+          );
+    LocaleSettings.setLocaleSync(initialLocale);
+
+    runApp(
+      ProviderScope(
+        overrides: [
+          appPrefsProvider.overrideWithValue(prefs),
+          crashReporterProvider.overrideWithValue(CrashReporterHolder.instance),
+        ],
+        child: TranslationProvider(
+          child: _DeferredObservabilityBootstrap(
+            child: _DeferredHiveBootstrap(
+              child: RealtimeDashboardWire(child: WayoAdsGoApp()),
+            ),
+          ),
+        ),
+      ),
     );
-  } else {
-    CrashReporterHolder.instance = NoopCrashReporter();
-    await CrashReporterHolder.instance.init();
-    _installGlobalErrorHandlers();
-    runApp(_WayoAdsBootstrap(sharedPreferences: initialPrefs));
+  } catch (e, st) {
+    debugPrint('Startup failed: $e');
+    debugPrintStack(stackTrace: st);
+    runApp(
+      const MaterialApp(
+        debugShowCheckedModeBanner: false,
+        home: Scaffold(
+          body: Center(
+            child: Padding(
+              padding: EdgeInsets.all(24),
+              child: Text(
+                'Startup failed. Please reinstall or contact support.',
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
+}
+
+AppPrefs _loadAppPrefsOrMemory(SharedPreferences sp) {
+  try {
+    return AppPrefs.shared(sp);
+  } catch (e, st) {
+    if (kDebugMode) {
+      debugPrint('SharedPreferences-backed AppPrefs failed ($e); using memory.');
+      debugPrintStack(stackTrace: st);
+    }
+    return AppPrefs.memory();
+  }
+}
+
+/// Initialises [SentryFlutter] **after** the first frame so the animated splash paints
+/// immediately. Until init completes, [CrashReporterHolder.instance] stays a no-op; once
+/// ready, it is swapped to [SentryCrashReporter] and existing error handlers route through it.
+final class _DeferredObservabilityBootstrap extends StatefulWidget {
+  const _DeferredObservabilityBootstrap({required this.child});
+
+  final Widget child;
+
+  @override
+  State<_DeferredObservabilityBootstrap> createState() =>
+      _DeferredObservabilityBootstrapState();
+}
+
+final class _DeferredObservabilityBootstrapState
+    extends State<_DeferredObservabilityBootstrap> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _logConfigDiagnostics();
+      unawaited(_initSentryWhenIdle());
+    });
+  }
+
+  /// Out-of-hot-path diagnostics. All sinks are no-ops in normal release builds
+  /// (guarded by [kDebugMode] / `WAYO_AUTH_DIAG`).
+  void _logConfigDiagnostics() {
+    final r = AuthRuntimeConfig.instance;
+    wayoConfigDiagPrint(
+      '[config] kReleaseMode=$kReleaseMode '
+      'resolvedDioBaseUrl=${r.resolvedDioBaseUrl} '
+      'AUTH_WAYO_BASE_URL=${r.authWayoBaseUrl} '
+      'pins=${r.mergedPinnedSha256Base64.length} '
+      'pinningOff=${AppConfig.disableCertPinning} '
+      'googleClientIdSet=${r.googleServerClientId.isNotEmpty}',
+    );
+    debugPrint('[config] resolvedDioBaseUrl = ${r.resolvedDioBaseUrl}');
+    debugPrint('[config] authWayoBaseUrl = ${r.authWayoBaseUrl}');
+  }
+
+  Future<void> _initSentryWhenIdle() async {
+    if (!AuthRuntimeConfig.instance.effectiveSentryEnabled) return;
+    try {
+      await SentryFlutter.init(applySentryFlutterOptions);
+      CrashReporterHolder.instance = SentryCrashReporter();
+    } catch (e, st) {
+      debugPrint('[sentry deferred] $e');
+      debugPrintStack(stackTrace: st);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
+}
+
+/// Opens Hive + dashboard cache **after** the first Flutter frame so cold start paints
+/// [SplashScreen] immediately.
+final class _DeferredHiveBootstrap extends StatefulWidget {
+  const _DeferredHiveBootstrap({required this.child});
+
+  final Widget child;
+
+  @override
+  State<_DeferredHiveBootstrap> createState() => _DeferredHiveBootstrapState();
+}
+
+final class _DeferredHiveBootstrapState extends State<_DeferredHiveBootstrap> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      unawaited(_openHiveWhenIdle());
+    });
+  }
+
+  Future<void> _openHiveWhenIdle() async {
+    try {
+      await Hive.initFlutter();
+      await DashboardHiveStore.init().timeout(const Duration(seconds: 15));
+    } catch (e, st) {
+      debugPrint('[hive deferred] $e');
+      debugPrintStack(stackTrace: st);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }
 
 void _installGlobalErrorHandlers() {
@@ -96,148 +224,4 @@ void _installGlobalErrorHandlers() {
     unawaited(CrashReporterHolder.instance.captureException(error, stack));
     return true;
   };
-}
-
-class _WayoAdsBootstrap extends StatefulWidget {
-  const _WayoAdsBootstrap({required this.sharedPreferences});
-
-  final SharedPreferences sharedPreferences;
-
-  @override
-  State<_WayoAdsBootstrap> createState() => _WayoAdsBootstrapState();
-}
-
-class _WayoAdsBootstrapState extends State<_WayoAdsBootstrap> {
-  late final Future<AppPrefs> _bootFuture;
-
-  @override
-  void initState() {
-    super.initState();
-    _bootFuture = _bootSafelyTimed();
-  }
-
-  /// Boots app services with a hard cap so cold start cannot hang past the splash.
-  Future<AppPrefs> _bootSafelyTimed() {
-    return _boot().timeout(
-      const Duration(seconds: 15),
-      onTimeout: () async {
-        debugPrint(
-          '[bootstrap] TIMEOUT (>15s) — using AppPrefs.memory() + fallback locale',
-        );
-        try {
-          await LocaleSettings.setLocale(AppLocale.en);
-        } catch (_) {}
-        return AppPrefs.memory();
-      },
-    );
-  }
-
-  Future<AppPrefs> _boot() async {
-    debugPrint('[bootstrap] step: waitUntilFirstFrameRasterized');
-    await WidgetsBinding.instance.waitUntilFirstFrameRasterized;
-
-    // ✅ SUPPRIMÉ — ensureLoaded() déjà appelé une seule fois dans main()
-    // Appeler deux fois en release déclenche validateProductionUrls() inutilement
-    // et peut masquer des erreurs de config.
-
-    debugPrint('[bootstrap] step: Hive.initFlutter');
-    await Hive.initFlutter();
-
-    debugPrint('[bootstrap] step: DashboardHiveStore.init');
-    await DashboardHiveStore.init();
-
-    late final AppPrefs prefs;
-    debugPrint('[bootstrap] step: AppPrefs / SharedPreferences');
-    for (var attempt = 0; attempt < 3; attempt++) {
-      try {
-        if (attempt == 0) {
-          prefs = AppPrefs.shared(widget.sharedPreferences);
-        } else {
-          prefs = AppPrefs.shared(await SharedPreferences.getInstance());
-        }
-        break;
-      } catch (e, st) {
-        if (attempt == 2) {
-          if (kDebugMode) {
-            debugPrint(
-              'SharedPreferences unavailable after 3 attempts ($e). '
-                  'Using in-memory prefs (theme/locale not persisted until full app restart). '
-                  'Avoid hot restart to test persistence.',
-            );
-            debugPrintStack(stackTrace: st);
-          }
-          prefs = AppPrefs.memory();
-          break;
-        }
-        await Future<void>.delayed(Duration(milliseconds: 50 * (attempt + 1)));
-      }
-    }
-
-    final locCode = prefs.getString('app.locale');
-    final initialLocale = locCode == null
-        ? AppLocaleUtils.findDeviceLocale()
-        : AppLocale.values.firstWhere(
-          (l) => l.languageCode == locCode,
-      orElse: () => AppLocale.en,
-    );
-
-    debugPrint('[bootstrap] step: LocaleSettings.setLocale');
-    try {
-      await LocaleSettings.setLocale(initialLocale);
-    } catch (e, st) {
-      debugPrint('LocaleSettings.setLocale failed: $e\n$st');
-      await LocaleSettings.setLocale(AppLocale.en);
-    }
-
-    debugPrint('[bootstrap] step: complete');
-    return prefs;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return FutureBuilder<AppPrefs>(
-      future: _bootFuture,
-      builder: (context, snapshot) {
-        if (snapshot.hasError) {
-          return MaterialApp(
-            debugShowCheckedModeBanner: false,
-            home: Scaffold(
-              body: Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Text('${snapshot.error}', textAlign: TextAlign.center),
-                ),
-              ),
-            ),
-          );
-        }
-        if (!snapshot.hasData) {
-          return const MaterialApp(
-            debugShowCheckedModeBanner: false,
-            home: Scaffold(
-              body: Center(
-                child: SizedBox(
-                  width: 32,
-                  height: 32,
-                  child: CircularProgressIndicator(strokeWidth: 2.4),
-                ),
-              ),
-            ),
-          );
-        }
-
-        return ProviderScope(
-          overrides: [
-            appPrefsProvider.overrideWithValue(snapshot.data!),
-            crashReporterProvider.overrideWithValue(
-              CrashReporterHolder.instance,
-            ),
-          ],
-          child: TranslationProvider(
-            child: const RealtimeDashboardWire(child: WayoAdsGoApp()),
-          ),
-        );
-      },
-    );
-  }
 }

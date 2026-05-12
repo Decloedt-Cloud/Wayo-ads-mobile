@@ -34,6 +34,10 @@ Dio wayoAdsDio(WayoAdsDioRef ref) {
       connectTimeout: const Duration(seconds: 10),
       receiveTimeout: const Duration(seconds: 15),
       sendTimeout: const Duration(seconds: 10),
+      // Some stacks strip Authorization on cross-URL redirects; keep default
+      // short chain — prefer https + canonical host in WAYO_ADS_API_BASE_URL.
+      followRedirects: true,
+      maxRedirects: 3,
       headers: <String, dynamic>{
         'Accept': 'application/json',
         'Content-Type': 'application/json',

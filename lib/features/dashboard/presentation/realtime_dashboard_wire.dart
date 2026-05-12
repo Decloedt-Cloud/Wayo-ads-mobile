@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../account_deletion/presentation/providers/account_deletion_providers.dart';
 import '../../advertiser_campaigns/presentation/providers/advertiser_campaigns_providers.dart';
 import '../../auth/domain/auth_notifier.dart';
 import '../../auth/domain/wayo_ads_account_role.dart';
@@ -17,6 +18,9 @@ import 'providers/dashboard_state_providers.dart';
 /// Reverb push updates remain the primary path; this timer is a pragmatic
 /// foreground fallback so screens stay fresh without the user tapping refresh
 /// (e.g. when the backend did not yet broadcast a specific event).
+///
+/// Also drives [accountDeletionScheduledAtProvider] sync so web ↔ mobile
+/// deletion state converges without an app reload.
 const Duration _kForegroundAdvertiserRefreshInterval = Duration(seconds: 20);
 
 /// Global Reverb: connects as soon as the user is signed in (any tab), not only on [DashboardScreen].
@@ -105,6 +109,9 @@ class _RealtimeDashboardWireState extends ConsumerState<RealtimeDashboardWire>
   /// Invalidates role-specific providers so only the relevant screens
   /// hit the network (e.g. a creator never fires advertiser campaign fetches).
   void _refreshAdvertiserNow() {
+    unawaited(
+      ref.read(accountDeletionScheduledAtProvider.notifier).syncFromRemote(),
+    );
     ref.invalidate(dashboardStreamProvider);
     ref.invalidate(notificationsListProvider);
     final role = ref.read(authNotifierProvider).valueOrNull is AuthAuthenticated

@@ -17,11 +17,15 @@ final class AdvertiserCampaign extends Equatable {
     required this.spentBudgetCents,
     required this.lockedBudgetCents,
     required this.cpcCents,
+    this.cpmCents = 0,
     required this.validViews,
+    this.validClicks = 0,
     required this.approvedCreators,
     this.coverUrl,
     this.brandLogoUrl,
     this.currency = 'EUR',
+    this.niche,
+    this.location,
   });
 
   final String id;
@@ -41,14 +45,24 @@ final class AdvertiserCampaign extends Equatable {
   /// Cost per click in minor units (0 when campaign uses CPM/CPA only).
   final int cpcCents;
 
+  /// Cost per mille (1000 impressions / views) in minor units, when applicable.
+  final int cpmCents;
+
   /// Validated views / engagements from analytics (Wayo-ads naming).
   final int validViews;
+
+  /// Valid link clicks when tracked (`validClicks` on API).
+  final int validClicks;
   final int approvedCreators;
   final String? coverUrl;
 
   /// Campaign brand logo from editor (`brandLogoUrl` on API).
   final String? brandLogoUrl;
   final String currency;
+
+  /// Optional niche / location when present on list payloads (same as web cards).
+  final String? niche;
+  final String? location;
 
   /// Only live campaigns (not draft). Drafts are under [matchesDraftTab].
   bool get matchesActiveTab => status == CampaignStatus.active;
@@ -73,10 +87,14 @@ final class AdvertiserCampaign extends Equatable {
     spentBudgetCents,
     lockedBudgetCents,
     cpcCents,
+    cpmCents,
     validViews,
+    validClicks,
     approvedCreators,
     coverUrl,
     brandLogoUrl,
     currency,
+    niche,
+    location,
   ];
 }

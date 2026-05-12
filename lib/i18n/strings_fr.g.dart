@@ -36,6 +36,7 @@ class TranslationsFr extends Translations {
 
 	// Translations
 	@override late final _TranslationsConnectivityFr connectivity = _TranslationsConnectivityFr._(_root);
+	@override late final _TranslationsCampaignsExplorerFr campaigns_explorer = _TranslationsCampaignsExplorerFr._(_root);
 	@override late final _TranslationsLoginFr login = _TranslationsLoginFr._(_root);
 	@override late final _TranslationsVerifyEmailFr verify_email = _TranslationsVerifyEmailFr._(_root);
 	@override late final _TranslationsForgotPasswordFr forgot_password = _TranslationsForgotPasswordFr._(_root);
@@ -46,6 +47,7 @@ class TranslationsFr extends Translations {
 	@override late final _TranslationsDashboardFr dashboard = _TranslationsDashboardFr._(_root);
 	@override late final _TranslationsAdvertiserCampaignsFr advertiser_campaigns = _TranslationsAdvertiserCampaignsFr._(_root);
 	@override late final _TranslationsNavFr nav = _TranslationsNavFr._(_root);
+	@override late final _TranslationsInvoicesFr invoices = _TranslationsInvoicesFr._(_root);
 	@override late final _TranslationsCreatorFr creator = _TranslationsCreatorFr._(_root);
 	@override late final _TranslationsAdvertiserWalletFr advertiser_wallet = _TranslationsAdvertiserWalletFr._(_root);
 	@override late final _TranslationsChatFr chat = _TranslationsChatFr._(_root);
@@ -53,6 +55,7 @@ class TranslationsFr extends Translations {
 	@override late final _TranslationsErrorsFr errors = _TranslationsErrorsFr._(_root);
 	@override late final _TranslationsPrivacyPolicyFr privacy_policy = _TranslationsPrivacyPolicyFr._(_root);
 	@override late final _TranslationsAppSettingsFr app_settings = _TranslationsAppSettingsFr._(_root);
+	@override late final _TranslationsAccountDeletionFr account_deletion = _TranslationsAccountDeletionFr._(_root);
 	@override late final _TranslationsOnboardingFr onboarding = _TranslationsOnboardingFr._(_root);
 }
 
@@ -72,6 +75,32 @@ class _TranslationsConnectivityFr extends TranslationsConnectivityEn {
 	@override String get restored => 'Connexion rétablie';
 	@override String get action_retry => 'Réessayer';
 	@override String get action_settings => 'Réglages';
+}
+
+// Path: campaigns_explorer
+class _TranslationsCampaignsExplorerFr extends TranslationsCampaignsExplorerEn {
+	_TranslationsCampaignsExplorerFr._(TranslationsFr root) : this._root = root, super.internal(root);
+
+	final TranslationsFr _root; // ignore: unused_field
+
+	// Translations
+	@override String get filter_all_types => 'Tous les types';
+	@override String get filter_all_platforms => 'Toutes les plateformes';
+	@override String get filter_all_niches => 'Toutes les niches';
+	@override String get filter_all_locations => 'Tous les lieux';
+	@override String get platform_youtube => 'YouTube';
+	@override String get platform_tiktok => 'TikTok';
+	@override String get platform_instagram => 'Instagram';
+	@override String get results_one => '1 campagne';
+	@override String results_many({required Object n}) => '${n} campagnes';
+	@override String get layout_grid => 'Grille';
+	@override String get layout_list => 'Liste';
+	@override String get empty_filters => 'Aucune campagne ne correspond à ces filtres.';
+	@override String get empty_filters_subtitle => 'Retirez un filtre ou changez le type — les niches listées correspondent à vos autres choix.';
+	@override String get search_aria => 'Rechercher des campagnes';
+	@override String get reset_filters => 'Réinitialiser les filtres';
+	@override String get toolbar_show_search_filters => 'Afficher recherche et filtres';
+	@override String get toolbar_hide_search_filters => 'Masquer recherche et filtres';
 }
 
 // Path: login
@@ -115,6 +144,7 @@ class _TranslationsLoginFr extends TranslationsLoginEn {
 	@override String get google_failed => 'Échec de la connexion Google. Réessayez.';
 	@override String get google_channel_restart => 'Connexion Google interrompue avec Android (souvent après un hot restart). Arrêtez complètement l’app puis Relancer — évitez le hot restart.';
 	@override String get google_android_oauth_misconfigured => 'Google n’a pas pu vérifier l’app (code 10). Dans Google Cloud Console, même projet que l’ID client Web : ajoutez un client OAuth de type Android avec le package ma.wayo.wayoadsgo et l’empreinte SHA-1 du keystore (debug ou release), attendez quelques minutes puis réessayez.';
+	@override String get session_expired_snack => 'Votre session a expiré. Veuillez vous reconnecter.';
 }
 
 // Path: verify_email
@@ -273,6 +303,71 @@ class _TranslationsNavFr extends TranslationsNavEn {
 	@override String get analytics => 'Analytique';
 	@override String get wallet => 'Portefeuille';
 	@override String get chat => 'Messages';
+	@override String get invoices => 'Factures';
+}
+
+// Path: invoices
+class _TranslationsInvoicesFr extends TranslationsInvoicesEn {
+	_TranslationsInvoicesFr._(TranslationsFr root) : this._root = root, super.internal(root);
+
+	final TranslationsFr _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'Factures';
+	@override String get subtitle_advertiser => 'Chaque dépôt et chaque budget campagne — réunis en un seul endroit.';
+	@override String get subtitle_creator => 'Chaque revenu et chaque virement — sécurisés, téléchargeables, signés.';
+	@override String get summary_total_paid => 'Total payé';
+	@override String get summary_pending => 'En attente';
+	@override String get summary_count => 'Documents';
+	@override String get filter_all => 'Tout';
+	@override String get filter_deposits => 'Dépôts';
+	@override String get filter_billing => 'Budget campagne';
+	@override String get filter_payouts => 'Virements';
+	@override String get filter_earnings => 'Revenus';
+	@override String get type_deposit => 'Dépôt portefeuille';
+	@override String get type_billing => 'Budget campagne';
+	@override String get type_payout => 'Virement créateur';
+	@override String get type_earnings => 'Revenus publicitaires';
+	@override String get type_unknown => 'Autre';
+	@override String get status_paid => 'Payée';
+	@override String get status_pending => 'En attente';
+	@override String get status_cancelled => 'Annulée';
+	@override String get role_advertiser => 'Annonceur';
+	@override String get role_creator => 'Créateur';
+	@override String get search_hint => 'Rechercher par numéro, référence…';
+	@override String get empty_title => 'Aucune facture pour l\'instant';
+	@override String get empty_subtitle => 'Vos dépôts, budgets campagne et virements apparaîtront ici automatiquement — sans aucune action manuelle.';
+	@override String get empty_cta => 'Actualiser';
+	@override String get error_title => 'Impossible de charger les factures';
+	@override String get error_subtitle => 'Tirez pour rafraîchir — nous réessayons immédiatement.';
+	@override String get load_more => 'Charger plus';
+	@override String get pagination_meta => 'Page {current} sur {total}';
+	@override String get details_title => 'Facture {number}';
+	@override String get details_section_summary => 'Résumé';
+	@override String get details_section_actions => 'Actions';
+	@override String get details_section_legal => 'Légal & références';
+	@override String get details_invoice_number => 'Numéro de facture';
+	@override String get details_issued_at => 'Émise le';
+	@override String get details_paid_at => 'Payée le';
+	@override String get details_type => 'Type';
+	@override String get details_status => 'Statut';
+	@override String get details_role => 'Rôle';
+	@override String get details_reference => 'Référence';
+	@override String get details_amount => 'Total';
+	@override String get details_tax => 'TVA incluse';
+	@override String get details_currency => 'Devise';
+	@override String get action_download_pdf => 'Télécharger le PDF';
+	@override String get action_share_pdf => 'Partager';
+	@override String get action_open_pdf => 'Ouvrir';
+	@override String get action_copy_number => 'Copier le numéro';
+	@override String get action_view_details => 'Voir le détail';
+	@override String get download_progress => 'Préparation du PDF…';
+	@override String get download_success => 'Enregistré sous {filename}';
+	@override String get download_error => 'Échec du téléchargement. Réessayez.';
+	@override String get copied_to_clipboard => 'Numéro de facture copié.';
+	@override String get share_subject => 'Facture {number}';
+	@override String get polling_live => 'Live';
+	@override String get polling_paused => 'En pause';
 }
 
 // Path: creator
@@ -494,6 +589,84 @@ class _TranslationsAppSettingsFr extends TranslationsAppSettingsEn {
 	@override String get lang_en => 'English';
 	@override String get lang_fr => 'Français';
 	@override String get lang_ar => 'العربية';
+	@override String get section_account => 'Compte';
+	@override String get delete_account_entry => 'Supprimer le compte';
+	@override String get delete_account_entry_sub => 'Délai de 30 jours — suppression dans l’app';
+}
+
+// Path: account_deletion
+class _TranslationsAccountDeletionFr extends TranslationsAccountDeletionEn {
+	_TranslationsAccountDeletionFr._(TranslationsFr root) : this._root = root, super.internal(root);
+
+	final TranslationsFr _root; // ignore: unused_field
+
+	// Translations
+	@override String get nav_title => 'Suppression de compte';
+	@override String get title => 'Supprimer mon compte Wayo Ads';
+	@override String get danger_zone_chip => 'Zone de danger';
+	@override String get danger_zone_intro => 'Supprime définitivement votre compte et toutes les données associées. À l’issue de la période de grâce, cette action ne pourra pas être annulée.';
+	@override String get danger_what_title => 'Ce qui sera supprimé :';
+	@override String get danger_item_profile => 'Votre profil et vos informations personnelles';
+	@override String get danger_item_campaigns => 'Toutes vos campagnes et leurs données de performance';
+	@override String get danger_item_business => 'Votre profil entreprise et les informations de marque';
+	@override String get danger_item_wallet => 'Votre portefeuille annonceur et l’historique des transactions';
+	@override String get danger_item_notifications => 'Vos notifications et préférences e-mail';
+	@override String get danger_item_access => 'Votre accès à Wayo Ads (vous ne pourrez plus vous connecter ici)';
+	@override String get danger_wayo_note => 'Seules les données Wayo Ads sont concernées. Votre compte Wayo (utilisé pour vous connecter) reste actif pour les autres services Wayo.';
+	@override String get subtitle_warning => 'Important : au bout de 30 jours, vos données Wayo Ads seront supprimées définitivement. Vous pouvez annuler à tout moment avant cette date.';
+	@override String get bullet_loss => 'Campagnes, candidatures et données de profil côté application seront supprimées après le délai.';
+	@override String get bullet_wallet => 'Solde portefeuille, factures et historique des transactions liés à ce compte seront supprimés.';
+	@override String get bullet_cancel => 'Annulation gratuite pendant 30 jours à compter de la demande.';
+	@override String get bullet_recreate => 'Votre Wayo ID (connexion) n’est pas supprimé par cette étape — vous pourrez vous reconnecter avec un nouveau profil applicatif.';
+	@override String get role_advertiser => 'Annonceur : les campagnes actives s’arrêtent lorsque les données sont purgées.';
+	@override String get role_creator => 'Créateur : candidatures, chaînes et gains dans l’app seront supprimés.';
+	@override String get continue_cta => 'Continuer';
+	@override String get back => 'Retour';
+	@override String get more_info_title => 'Avant de continuer';
+	@override String get more_info_body => 'E-mails : confirmation immédiate, puis un rappel environ 3 jours avant la suppression.\nSupport : contactez-nous pour exporter des données ou clôturer des campagnes.';
+	@override String get step_auth_title => 'Confirmer votre identité';
+	@override String get status_active => 'Aucune suppression en cours pour ce compte.';
+	@override String status_pending({required Object date}) => 'Suppression déjà planifiée. Date finale : ${date}';
+	@override String get password_label => 'Mot de passe';
+	@override String get password_hint => 'Au moins 8 caractères';
+	@override String get forgot_password => 'Mot de passe oublié ?';
+	@override String get oauth_note => 'Si vous utilisez uniquement Google ou Apple, définissez d’abord un mot de passe (Mot de passe oublié).';
+	@override String get oauth_deletion_intro => 'Vous vous connectez avec Google ou Apple. Après « Continuer », confirmez à l’étape suivante — aucun mot de passe requis.';
+	@override String get oauth_deletion_step_hint => 'Votre identité a été vérifiée à la connexion Google ou Apple. Touchez le bouton ci-dessous pour afficher la feuille de confirmation finale.';
+	@override String legal_recap({required Object date}) => 'Vous lancez une période de grâce de 30 jours avant suppression définitive. Vous pouvez annuler jusqu’au ${date}.';
+	@override String get next_review => 'Vérifier et confirmer';
+	@override String get dialog_title => 'Confirmer ?';
+	@override String get dialog_body => 'Vos données Wayo Ads seront planifiées pour suppression. Suppression définitive le :';
+	@override String get dialog_cancel_hint => 'Vous pouvez annuler à tout moment dans les paramètres jusqu’à cette date.';
+	@override String get timeline_request => 'Demande';
+	@override String get timeline_reminder => 'Rappel e-mail';
+	@override String get timeline_purge => 'Suppression';
+	@override String get dialog_confirm => 'Oui, planifier la suppression';
+	@override String get dialog_dismiss => 'Garder mon compte';
+	@override String get success_title => 'Suppression planifiée';
+	@override String get success_intro => 'Que se passe-t-il maintenant ?';
+	@override String get success_use_until => 'Vous pouvez continuer à utiliser Wayo Ads jusqu’à la date limite.';
+	@override String get success_reminder => 'Nous vous enverrons un rappel quelques jours avant la suppression.';
+	@override String get success_cancel_anytime => 'Annulez à tout moment depuis cet écran ou les paramètres.';
+	@override String days_left({required Object n}) => 'Jours restants : ${n}';
+	@override String purge_date({required Object date}) => 'Suppression définitive : ${date}';
+	@override String reminder_approx({required Object date}) => 'Rappel vers le : ${date}';
+	@override String get cancel_request => 'Annuler la suppression';
+	@override String get go_home => 'Retour à l’accueil';
+	@override String get toast_cancelled => 'Suppression annulée. Votre compte est rétabli.';
+	@override String get error_load => 'Impossible de charger le statut du compte.';
+	@override String get error_load_unauthorized => 'Impossible de vérifier votre session Wayo Ads. Déconnectez-vous, reconnectez-vous, puis réessayez.';
+	@override String get error_load_network => 'Vérifiez votre connexion et l’accessibilité de Wayo Ads, puis réessayez.';
+	@override String get error_delete => 'Une erreur s’est produite. Réessayez.';
+	@override String get error_password => 'Mot de passe incorrect. Réessayez ou réinitialisez votre mot de passe.';
+	@override String banner_line({required Object date, required Object n}) => 'Votre compte sera supprimé le ${date} (${n} jours restants).';
+	@override String get banner_cancel_dialog_title => 'Annuler la suppression planifiée ?';
+	@override String get banner_cancel_dialog_body => 'Votre profil Wayo Ads restera actif.';
+	@override String get banner_cancel_dialog_confirm => 'Garder mon compte';
+	@override String pending_danger_card_body({required Object date}) => 'Votre compte est programmé pour une suppression définitive le ${date}. Vous pouvez annuler cette demande à tout moment avant cette date.';
+	@override String get pending_scheduled_status => 'Suppression du compte planifiée';
+	@override String get pending_days_remaining_one => 'Il reste 1 jour';
+	@override String pending_days_remaining_plural({required Object n}) => 'Il reste ${n} jours';
 }
 
 // Path: onboarding
@@ -644,6 +817,7 @@ class _TranslationsAdvertiserCampaignsDetailFr extends TranslationsAdvertiserCam
 	@override String get platform_label => 'Plateforme';
 	@override String get campaign_type_label => 'Type de campagne';
 	@override String get niche_label => 'Niche';
+	@override String get location_label => 'Lieu cible';
 	@override String get objective_label => 'Objectif';
 	@override String get objective_awareness => 'Notoriété';
 	@override String get objective_traffic => 'Trafic';
@@ -991,6 +1165,23 @@ extension on TranslationsFr {
 			case 'connectivity.restored': return 'Connexion rétablie';
 			case 'connectivity.action_retry': return 'Réessayer';
 			case 'connectivity.action_settings': return 'Réglages';
+			case 'campaigns_explorer.filter_all_types': return 'Tous les types';
+			case 'campaigns_explorer.filter_all_platforms': return 'Toutes les plateformes';
+			case 'campaigns_explorer.filter_all_niches': return 'Toutes les niches';
+			case 'campaigns_explorer.filter_all_locations': return 'Tous les lieux';
+			case 'campaigns_explorer.platform_youtube': return 'YouTube';
+			case 'campaigns_explorer.platform_tiktok': return 'TikTok';
+			case 'campaigns_explorer.platform_instagram': return 'Instagram';
+			case 'campaigns_explorer.results_one': return '1 campagne';
+			case 'campaigns_explorer.results_many': return ({required Object n}) => '${n} campagnes';
+			case 'campaigns_explorer.layout_grid': return 'Grille';
+			case 'campaigns_explorer.layout_list': return 'Liste';
+			case 'campaigns_explorer.empty_filters': return 'Aucune campagne ne correspond à ces filtres.';
+			case 'campaigns_explorer.empty_filters_subtitle': return 'Retirez un filtre ou changez le type — les niches listées correspondent à vos autres choix.';
+			case 'campaigns_explorer.search_aria': return 'Rechercher des campagnes';
+			case 'campaigns_explorer.reset_filters': return 'Réinitialiser les filtres';
+			case 'campaigns_explorer.toolbar_show_search_filters': return 'Afficher recherche et filtres';
+			case 'campaigns_explorer.toolbar_hide_search_filters': return 'Masquer recherche et filtres';
 			case 'login.brand': return 'Wayo Ads';
 			case 'login.headline_line1': return 'Bienvenue';
 			case 'login.headline_line2_prefix': return 'sur ';
@@ -1025,6 +1216,7 @@ extension on TranslationsFr {
 			case 'login.google_failed': return 'Échec de la connexion Google. Réessayez.';
 			case 'login.google_channel_restart': return 'Connexion Google interrompue avec Android (souvent après un hot restart). Arrêtez complètement l’app puis Relancer — évitez le hot restart.';
 			case 'login.google_android_oauth_misconfigured': return 'Google n’a pas pu vérifier l’app (code 10). Dans Google Cloud Console, même projet que l’ID client Web : ajoutez un client OAuth de type Android avec le package ma.wayo.wayoadsgo et l’empreinte SHA-1 du keystore (debug ou release), attendez quelques minutes puis réessayez.';
+			case 'login.session_expired_snack': return 'Votre session a expiré. Veuillez vous reconnecter.';
 			case 'verify_email.title': return 'Confirmez votre email';
 			case 'verify_email.subtitle': return 'Wayo ID exige une adresse vérifiée (comme sur le site). Ouvrez le lien envoyé à :';
 			case 'verify_email.check_again': return 'C’est fait — continuer';
@@ -1133,6 +1325,7 @@ extension on TranslationsFr {
 			case 'advertiser_campaigns.detail.platform_label': return 'Plateforme';
 			case 'advertiser_campaigns.detail.campaign_type_label': return 'Type de campagne';
 			case 'advertiser_campaigns.detail.niche_label': return 'Niche';
+			case 'advertiser_campaigns.detail.location_label': return 'Lieu cible';
 			case 'advertiser_campaigns.detail.objective_label': return 'Objectif';
 			case 'advertiser_campaigns.detail.objective_awareness': return 'Notoriété';
 			case 'advertiser_campaigns.detail.objective_traffic': return 'Trafic';
@@ -1180,6 +1373,62 @@ extension on TranslationsFr {
 			case 'nav.analytics': return 'Analytique';
 			case 'nav.wallet': return 'Portefeuille';
 			case 'nav.chat': return 'Messages';
+			case 'nav.invoices': return 'Factures';
+			case 'invoices.title': return 'Factures';
+			case 'invoices.subtitle_advertiser': return 'Chaque dépôt et chaque budget campagne — réunis en un seul endroit.';
+			case 'invoices.subtitle_creator': return 'Chaque revenu et chaque virement — sécurisés, téléchargeables, signés.';
+			case 'invoices.summary_total_paid': return 'Total payé';
+			case 'invoices.summary_pending': return 'En attente';
+			case 'invoices.summary_count': return 'Documents';
+			case 'invoices.filter_all': return 'Tout';
+			case 'invoices.filter_deposits': return 'Dépôts';
+			case 'invoices.filter_billing': return 'Budget campagne';
+			case 'invoices.filter_payouts': return 'Virements';
+			case 'invoices.filter_earnings': return 'Revenus';
+			case 'invoices.type_deposit': return 'Dépôt portefeuille';
+			case 'invoices.type_billing': return 'Budget campagne';
+			case 'invoices.type_payout': return 'Virement créateur';
+			case 'invoices.type_earnings': return 'Revenus publicitaires';
+			case 'invoices.type_unknown': return 'Autre';
+			case 'invoices.status_paid': return 'Payée';
+			case 'invoices.status_pending': return 'En attente';
+			case 'invoices.status_cancelled': return 'Annulée';
+			case 'invoices.role_advertiser': return 'Annonceur';
+			case 'invoices.role_creator': return 'Créateur';
+			case 'invoices.search_hint': return 'Rechercher par numéro, référence…';
+			case 'invoices.empty_title': return 'Aucune facture pour l\'instant';
+			case 'invoices.empty_subtitle': return 'Vos dépôts, budgets campagne et virements apparaîtront ici automatiquement — sans aucune action manuelle.';
+			case 'invoices.empty_cta': return 'Actualiser';
+			case 'invoices.error_title': return 'Impossible de charger les factures';
+			case 'invoices.error_subtitle': return 'Tirez pour rafraîchir — nous réessayons immédiatement.';
+			case 'invoices.load_more': return 'Charger plus';
+			case 'invoices.pagination_meta': return 'Page {current} sur {total}';
+			case 'invoices.details_title': return 'Facture {number}';
+			case 'invoices.details_section_summary': return 'Résumé';
+			case 'invoices.details_section_actions': return 'Actions';
+			case 'invoices.details_section_legal': return 'Légal & références';
+			case 'invoices.details_invoice_number': return 'Numéro de facture';
+			case 'invoices.details_issued_at': return 'Émise le';
+			case 'invoices.details_paid_at': return 'Payée le';
+			case 'invoices.details_type': return 'Type';
+			case 'invoices.details_status': return 'Statut';
+			case 'invoices.details_role': return 'Rôle';
+			case 'invoices.details_reference': return 'Référence';
+			case 'invoices.details_amount': return 'Total';
+			case 'invoices.details_tax': return 'TVA incluse';
+			case 'invoices.details_currency': return 'Devise';
+			case 'invoices.action_download_pdf': return 'Télécharger le PDF';
+			case 'invoices.action_share_pdf': return 'Partager';
+			case 'invoices.action_open_pdf': return 'Ouvrir';
+			case 'invoices.action_copy_number': return 'Copier le numéro';
+			case 'invoices.action_view_details': return 'Voir le détail';
+			case 'invoices.download_progress': return 'Préparation du PDF…';
+			case 'invoices.download_success': return 'Enregistré sous {filename}';
+			case 'invoices.download_error': return 'Échec du téléchargement. Réessayez.';
+			case 'invoices.copied_to_clipboard': return 'Numéro de facture copié.';
+			case 'invoices.share_subject': return 'Facture {number}';
+			case 'invoices.polling_live': return 'Live';
+			case 'invoices.polling_paused': return 'En pause';
 			case 'creator.dashboard.title': return 'Studio Créateur';
 			case 'creator.dashboard.subtitle': return 'Suivez vos statistiques, candidatures et gains en temps réel.';
 			case 'creator.dashboard.coming_soon_title': return 'Votre tableau de bord créateur';
@@ -1515,6 +1764,75 @@ extension on TranslationsFr {
 			case 'app_settings.lang_en': return 'English';
 			case 'app_settings.lang_fr': return 'Français';
 			case 'app_settings.lang_ar': return 'العربية';
+			case 'app_settings.section_account': return 'Compte';
+			case 'app_settings.delete_account_entry': return 'Supprimer le compte';
+			case 'app_settings.delete_account_entry_sub': return 'Délai de 30 jours — suppression dans l’app';
+			case 'account_deletion.nav_title': return 'Suppression de compte';
+			case 'account_deletion.title': return 'Supprimer mon compte Wayo Ads';
+			case 'account_deletion.danger_zone_chip': return 'Zone de danger';
+			case 'account_deletion.danger_zone_intro': return 'Supprime définitivement votre compte et toutes les données associées. À l’issue de la période de grâce, cette action ne pourra pas être annulée.';
+			case 'account_deletion.danger_what_title': return 'Ce qui sera supprimé :';
+			case 'account_deletion.danger_item_profile': return 'Votre profil et vos informations personnelles';
+			case 'account_deletion.danger_item_campaigns': return 'Toutes vos campagnes et leurs données de performance';
+			case 'account_deletion.danger_item_business': return 'Votre profil entreprise et les informations de marque';
+			case 'account_deletion.danger_item_wallet': return 'Votre portefeuille annonceur et l’historique des transactions';
+			case 'account_deletion.danger_item_notifications': return 'Vos notifications et préférences e-mail';
+			case 'account_deletion.danger_item_access': return 'Votre accès à Wayo Ads (vous ne pourrez plus vous connecter ici)';
+			case 'account_deletion.danger_wayo_note': return 'Seules les données Wayo Ads sont concernées. Votre compte Wayo (utilisé pour vous connecter) reste actif pour les autres services Wayo.';
+			case 'account_deletion.subtitle_warning': return 'Important : au bout de 30 jours, vos données Wayo Ads seront supprimées définitivement. Vous pouvez annuler à tout moment avant cette date.';
+			case 'account_deletion.bullet_loss': return 'Campagnes, candidatures et données de profil côté application seront supprimées après le délai.';
+			case 'account_deletion.bullet_wallet': return 'Solde portefeuille, factures et historique des transactions liés à ce compte seront supprimés.';
+			case 'account_deletion.bullet_cancel': return 'Annulation gratuite pendant 30 jours à compter de la demande.';
+			case 'account_deletion.bullet_recreate': return 'Votre Wayo ID (connexion) n’est pas supprimé par cette étape — vous pourrez vous reconnecter avec un nouveau profil applicatif.';
+			case 'account_deletion.role_advertiser': return 'Annonceur : les campagnes actives s’arrêtent lorsque les données sont purgées.';
+			case 'account_deletion.role_creator': return 'Créateur : candidatures, chaînes et gains dans l’app seront supprimés.';
+			case 'account_deletion.continue_cta': return 'Continuer';
+			case 'account_deletion.back': return 'Retour';
+			case 'account_deletion.more_info_title': return 'Avant de continuer';
+			case 'account_deletion.more_info_body': return 'E-mails : confirmation immédiate, puis un rappel environ 3 jours avant la suppression.\nSupport : contactez-nous pour exporter des données ou clôturer des campagnes.';
+			case 'account_deletion.step_auth_title': return 'Confirmer votre identité';
+			case 'account_deletion.status_active': return 'Aucune suppression en cours pour ce compte.';
+			case 'account_deletion.status_pending': return ({required Object date}) => 'Suppression déjà planifiée. Date finale : ${date}';
+			case 'account_deletion.password_label': return 'Mot de passe';
+			case 'account_deletion.password_hint': return 'Au moins 8 caractères';
+			case 'account_deletion.forgot_password': return 'Mot de passe oublié ?';
+			case 'account_deletion.oauth_note': return 'Si vous utilisez uniquement Google ou Apple, définissez d’abord un mot de passe (Mot de passe oublié).';
+			case 'account_deletion.oauth_deletion_intro': return 'Vous vous connectez avec Google ou Apple. Après « Continuer », confirmez à l’étape suivante — aucun mot de passe requis.';
+			case 'account_deletion.oauth_deletion_step_hint': return 'Votre identité a été vérifiée à la connexion Google ou Apple. Touchez le bouton ci-dessous pour afficher la feuille de confirmation finale.';
+			case 'account_deletion.legal_recap': return ({required Object date}) => 'Vous lancez une période de grâce de 30 jours avant suppression définitive. Vous pouvez annuler jusqu’au ${date}.';
+			case 'account_deletion.next_review': return 'Vérifier et confirmer';
+			case 'account_deletion.dialog_title': return 'Confirmer ?';
+			case 'account_deletion.dialog_body': return 'Vos données Wayo Ads seront planifiées pour suppression. Suppression définitive le :';
+			case 'account_deletion.dialog_cancel_hint': return 'Vous pouvez annuler à tout moment dans les paramètres jusqu’à cette date.';
+			case 'account_deletion.timeline_request': return 'Demande';
+			case 'account_deletion.timeline_reminder': return 'Rappel e-mail';
+			case 'account_deletion.timeline_purge': return 'Suppression';
+			case 'account_deletion.dialog_confirm': return 'Oui, planifier la suppression';
+			case 'account_deletion.dialog_dismiss': return 'Garder mon compte';
+			case 'account_deletion.success_title': return 'Suppression planifiée';
+			case 'account_deletion.success_intro': return 'Que se passe-t-il maintenant ?';
+			case 'account_deletion.success_use_until': return 'Vous pouvez continuer à utiliser Wayo Ads jusqu’à la date limite.';
+			case 'account_deletion.success_reminder': return 'Nous vous enverrons un rappel quelques jours avant la suppression.';
+			case 'account_deletion.success_cancel_anytime': return 'Annulez à tout moment depuis cet écran ou les paramètres.';
+			case 'account_deletion.days_left': return ({required Object n}) => 'Jours restants : ${n}';
+			case 'account_deletion.purge_date': return ({required Object date}) => 'Suppression définitive : ${date}';
+			case 'account_deletion.reminder_approx': return ({required Object date}) => 'Rappel vers le : ${date}';
+			case 'account_deletion.cancel_request': return 'Annuler la suppression';
+			case 'account_deletion.go_home': return 'Retour à l’accueil';
+			case 'account_deletion.toast_cancelled': return 'Suppression annulée. Votre compte est rétabli.';
+			case 'account_deletion.error_load': return 'Impossible de charger le statut du compte.';
+			case 'account_deletion.error_load_unauthorized': return 'Impossible de vérifier votre session Wayo Ads. Déconnectez-vous, reconnectez-vous, puis réessayez.';
+			case 'account_deletion.error_load_network': return 'Vérifiez votre connexion et l’accessibilité de Wayo Ads, puis réessayez.';
+			case 'account_deletion.error_delete': return 'Une erreur s’est produite. Réessayez.';
+			case 'account_deletion.error_password': return 'Mot de passe incorrect. Réessayez ou réinitialisez votre mot de passe.';
+			case 'account_deletion.banner_line': return ({required Object date, required Object n}) => 'Votre compte sera supprimé le ${date} (${n} jours restants).';
+			case 'account_deletion.banner_cancel_dialog_title': return 'Annuler la suppression planifiée ?';
+			case 'account_deletion.banner_cancel_dialog_body': return 'Votre profil Wayo Ads restera actif.';
+			case 'account_deletion.banner_cancel_dialog_confirm': return 'Garder mon compte';
+			case 'account_deletion.pending_danger_card_body': return ({required Object date}) => 'Votre compte est programmé pour une suppression définitive le ${date}. Vous pouvez annuler cette demande à tout moment avant cette date.';
+			case 'account_deletion.pending_scheduled_status': return 'Suppression du compte planifiée';
+			case 'account_deletion.pending_days_remaining_one': return 'Il reste 1 jour';
+			case 'account_deletion.pending_days_remaining_plural': return ({required Object n}) => 'Il reste ${n} jours';
 			case 'onboarding.role_gate_title': return 'Choisissez votre profil';
 			case 'onboarding.role_gate_subtitle': return 'Même étape que sur le site Wayo Ads avant d’utiliser l’app.';
 			case 'onboarding.role_creator_cta': return 'Créateur';

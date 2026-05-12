@@ -38,6 +38,7 @@ class Translations implements BaseTranslations<AppLocale, Translations> {
 
 	// Translations
 	late final TranslationsConnectivityEn connectivity = TranslationsConnectivityEn.internal(_root);
+	late final TranslationsCampaignsExplorerEn campaigns_explorer = TranslationsCampaignsExplorerEn.internal(_root);
 	late final TranslationsLoginEn login = TranslationsLoginEn.internal(_root);
 	late final TranslationsVerifyEmailEn verify_email = TranslationsVerifyEmailEn.internal(_root);
 	late final TranslationsForgotPasswordEn forgot_password = TranslationsForgotPasswordEn.internal(_root);
@@ -48,6 +49,7 @@ class Translations implements BaseTranslations<AppLocale, Translations> {
 	late final TranslationsDashboardEn dashboard = TranslationsDashboardEn.internal(_root);
 	late final TranslationsAdvertiserCampaignsEn advertiser_campaigns = TranslationsAdvertiserCampaignsEn.internal(_root);
 	late final TranslationsNavEn nav = TranslationsNavEn.internal(_root);
+	late final TranslationsInvoicesEn invoices = TranslationsInvoicesEn.internal(_root);
 	late final TranslationsCreatorEn creator = TranslationsCreatorEn.internal(_root);
 	late final TranslationsAdvertiserWalletEn advertiser_wallet = TranslationsAdvertiserWalletEn.internal(_root);
 	late final TranslationsChatEn chat = TranslationsChatEn.internal(_root);
@@ -55,6 +57,7 @@ class Translations implements BaseTranslations<AppLocale, Translations> {
 	late final TranslationsErrorsEn errors = TranslationsErrorsEn.internal(_root);
 	late final TranslationsPrivacyPolicyEn privacy_policy = TranslationsPrivacyPolicyEn.internal(_root);
 	late final TranslationsAppSettingsEn app_settings = TranslationsAppSettingsEn.internal(_root);
+	late final TranslationsAccountDeletionEn account_deletion = TranslationsAccountDeletionEn.internal(_root);
 	late final TranslationsOnboardingEn onboarding = TranslationsOnboardingEn.internal(_root);
 }
 
@@ -74,6 +77,32 @@ class TranslationsConnectivityEn {
 	String get restored => 'Connection restored';
 	String get action_retry => 'Retry';
 	String get action_settings => 'Settings';
+}
+
+// Path: campaigns_explorer
+class TranslationsCampaignsExplorerEn {
+	TranslationsCampaignsExplorerEn.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+	String get filter_all_types => 'All types';
+	String get filter_all_platforms => 'All platforms';
+	String get filter_all_niches => 'All niches';
+	String get filter_all_locations => 'All locations';
+	String get platform_youtube => 'YouTube';
+	String get platform_tiktok => 'TikTok';
+	String get platform_instagram => 'Instagram';
+	String get results_one => '1 campaign';
+	String results_many({required Object n}) => '${n} campaigns';
+	String get layout_grid => 'Grid view';
+	String get layout_list => 'List view';
+	String get empty_filters => 'No campaigns match these filters.';
+	String get empty_filters_subtitle => 'Clear a filter or change the type — niche options only include campaigns that fit your other choices.';
+	String get search_aria => 'Search campaigns';
+	String get reset_filters => 'Reset filters';
+	String get toolbar_show_search_filters => 'Show search and filters';
+	String get toolbar_hide_search_filters => 'Hide search and filters';
 }
 
 // Path: login
@@ -117,6 +146,7 @@ class TranslationsLoginEn {
 	String get google_failed => 'Google sign-in failed. Try again.';
 	String get google_channel_restart => 'Google Sign-In lost connection to Android (often after hot restart). Stop the app completely, then Run again — do not use hot restart.';
 	String get google_android_oauth_misconfigured => 'Google could not verify this app (code 10). In Google Cloud Console, open the same project as your Web client, create an Android OAuth client with package ma.wayo.wayoadsgo and your debug (or release) keystore SHA-1, then wait a few minutes and try again.';
+	String get session_expired_snack => 'Your session has expired. Please sign in again.';
 }
 
 // Path: verify_email
@@ -275,6 +305,71 @@ class TranslationsNavEn {
 	String get analytics => 'Analytics';
 	String get wallet => 'Wallet';
 	String get chat => 'Chat';
+	String get invoices => 'Invoices';
+}
+
+// Path: invoices
+class TranslationsInvoicesEn {
+	TranslationsInvoicesEn.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+	String get title => 'Invoices';
+	String get subtitle_advertiser => 'Every deposit and campaign budget — all in one place.';
+	String get subtitle_creator => 'Every earning and payout — secured, downloadable, signed.';
+	String get summary_total_paid => 'Total paid';
+	String get summary_pending => 'Pending';
+	String get summary_count => 'Documents';
+	String get filter_all => 'All';
+	String get filter_deposits => 'Deposits';
+	String get filter_billing => 'Campaign budget';
+	String get filter_payouts => 'Payouts';
+	String get filter_earnings => 'Earnings';
+	String get type_deposit => 'Wallet deposit';
+	String get type_billing => 'Campaign budget';
+	String get type_payout => 'Creator payout';
+	String get type_earnings => 'Ad earnings';
+	String get type_unknown => 'Other';
+	String get status_paid => 'Paid';
+	String get status_pending => 'Pending';
+	String get status_cancelled => 'Cancelled';
+	String get role_advertiser => 'Advertiser';
+	String get role_creator => 'Creator';
+	String get search_hint => 'Search by number, reference…';
+	String get empty_title => 'No invoice yet';
+	String get empty_subtitle => 'Your wallet deposits, campaign budgets and creator payouts will appear here automatically — no manual step required.';
+	String get empty_cta => 'Refresh';
+	String get error_title => 'Could not load invoices';
+	String get error_subtitle => 'Pull to refresh — we\'ll try again right away.';
+	String get load_more => 'Load more';
+	String get pagination_meta => 'Page {current} of {total}';
+	String get details_title => 'Invoice {number}';
+	String get details_section_summary => 'Summary';
+	String get details_section_actions => 'Actions';
+	String get details_section_legal => 'Legal & references';
+	String get details_invoice_number => 'Invoice number';
+	String get details_issued_at => 'Issued on';
+	String get details_paid_at => 'Paid on';
+	String get details_type => 'Type';
+	String get details_status => 'Status';
+	String get details_role => 'Role';
+	String get details_reference => 'Reference';
+	String get details_amount => 'Total';
+	String get details_tax => 'VAT included';
+	String get details_currency => 'Currency';
+	String get action_download_pdf => 'Download PDF';
+	String get action_share_pdf => 'Share';
+	String get action_open_pdf => 'Open';
+	String get action_copy_number => 'Copy invoice #';
+	String get action_view_details => 'View details';
+	String get download_progress => 'Preparing your PDF…';
+	String get download_success => 'Saved to {filename}';
+	String get download_error => 'Download failed. Please try again.';
+	String get copied_to_clipboard => 'Invoice number copied.';
+	String get share_subject => 'Invoice {number}';
+	String get polling_live => 'Live';
+	String get polling_paused => 'Paused';
 }
 
 // Path: creator
@@ -496,6 +591,84 @@ class TranslationsAppSettingsEn {
 	String get lang_en => 'English';
 	String get lang_fr => 'Français';
 	String get lang_ar => 'العربية';
+	String get section_account => 'Account';
+	String get delete_account_entry => 'Delete account';
+	String get delete_account_entry_sub => '30-day grace — manage deletion in the app';
+}
+
+// Path: account_deletion
+class TranslationsAccountDeletionEn {
+	TranslationsAccountDeletionEn.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+	String get nav_title => 'Delete account';
+	String get title => 'Delete my Wayo Ads account';
+	String get danger_zone_chip => 'Danger Zone';
+	String get danger_zone_intro => 'Permanently delete your account and all associated data. This action cannot be undone after the grace period.';
+	String get danger_what_title => 'What will be deleted:';
+	String get danger_item_profile => 'Your profile and personal information';
+	String get danger_item_campaigns => 'All your campaigns and their performance data';
+	String get danger_item_business => 'Your business profile and brand information';
+	String get danger_item_wallet => 'Your advertiser wallet and transaction history';
+	String get danger_item_notifications => 'Your notifications and email preferences';
+	String get danger_item_access => 'Your access to Wayo Ads (you will not be able to sign in again here)';
+	String get danger_wayo_note => 'Only your Wayo Ads data is affected. Your Wayo account (used to sign in) stays active for other Wayo services.';
+	String get subtitle_warning => 'Important: after 30 days, your Wayo Ads data will be permanently removed. You can cancel anytime before then.';
+	String get bullet_loss => 'Campaigns, applications, and app-side profile data will be deleted after the grace period.';
+	String get bullet_wallet => 'Wallet balance, invoices, and transaction history tied to this account will be removed.';
+	String get bullet_cancel => 'Free cancellation window: 30 days from your request.';
+	String get bullet_recreate => 'Your Wayo ID (login) is not deleted by this step — you may sign in again and get a fresh app profile later.';
+	String get role_advertiser => 'Advertiser: active campaigns will stop when data is purged.';
+	String get role_creator => 'Creator: applications, channels, and earnings records in the app will be deleted.';
+	String get continue_cta => 'Continue';
+	String get back => 'Back';
+	String get more_info_title => 'Before you go';
+	String get more_info_body => 'Emails: you will receive a confirmation now and a reminder about 3 days before deletion.\nSupport: contact us if you need help exporting information or closing campaigns first.';
+	String get step_auth_title => 'Confirm your identity';
+	String get status_active => 'No deletion scheduled for this account.';
+	String status_pending({required Object date}) => 'Deletion already scheduled. Final date: ${date}';
+	String get password_label => 'Password';
+	String get password_hint => 'At least 8 characters';
+	String get forgot_password => 'Forgot password?';
+	String get oauth_note => 'If you only sign in with Google or Apple, set a password first (Forgot password).';
+	String get oauth_deletion_intro => 'You use Google or Apple to sign in. After you continue, confirm in the next step — no password required.';
+	String get oauth_deletion_step_hint => 'Your identity was confirmed when you signed in with Google or Apple. Tap below to review the final confirmation sheet.';
+	String legal_recap({required Object date}) => 'You will start a 30-day grace period before permanent deletion. You can cancel until ${date}.';
+	String get next_review => 'Review and confirm';
+	String get dialog_title => 'Are you sure?';
+	String get dialog_body => 'Your Wayo Ads data will be scheduled for deletion. Final removal on:';
+	String get dialog_cancel_hint => 'You can cancel anytime in Settings until that date.';
+	String get timeline_request => 'Request';
+	String get timeline_reminder => 'Email reminder';
+	String get timeline_purge => 'Deletion';
+	String get dialog_confirm => 'Yes, schedule deletion';
+	String get dialog_dismiss => 'Keep my account';
+	String get success_title => 'Deletion scheduled';
+	String get success_intro => 'What happens next?';
+	String get success_use_until => 'You can keep using Wayo Ads until the final date.';
+	String get success_reminder => 'We will email you a reminder a few days before deletion.';
+	String get success_cancel_anytime => 'Cancel anytime from this screen or Settings.';
+	String days_left({required Object n}) => 'Days left: ${n}';
+	String purge_date({required Object date}) => 'Final deletion: ${date}';
+	String reminder_approx({required Object date}) => 'Reminder around: ${date}';
+	String get cancel_request => 'Cancel deletion';
+	String get go_home => 'Back to home';
+	String get toast_cancelled => 'Deletion cancelled. Your account is restored.';
+	String get error_load => 'Could not load account status.';
+	String get error_load_unauthorized => 'We could not verify your session with Wayo Ads. Sign out and sign in again, then retry.';
+	String get error_load_network => 'Check your connection and that Wayo Ads is reachable, then retry.';
+	String get error_delete => 'Something went wrong. Please try again.';
+	String get error_password => 'Incorrect password. Try again or reset your password.';
+	String banner_line({required Object date, required Object n}) => 'Your account will be deleted on ${date} (${n} days left).';
+	String get banner_cancel_dialog_title => 'Cancel scheduled deletion?';
+	String get banner_cancel_dialog_body => 'Your Wayo Ads profile will stay active.';
+	String get banner_cancel_dialog_confirm => 'Keep my account';
+	String pending_danger_card_body({required Object date}) => 'Your account is scheduled for permanent deletion on ${date}. You can cancel this request at any time before that date.';
+	String get pending_scheduled_status => 'Account deletion scheduled';
+	String get pending_days_remaining_one => '1 day remaining';
+	String pending_days_remaining_plural({required Object n}) => '${n} days remaining';
 }
 
 // Path: onboarding
@@ -646,6 +819,7 @@ class TranslationsAdvertiserCampaignsDetailEn {
 	String get platform_label => 'Platform';
 	String get campaign_type_label => 'Campaign type';
 	String get niche_label => 'Niche';
+	String get location_label => 'Location';
 	String get objective_label => 'Objective';
 	String get objective_awareness => 'Awareness';
 	String get objective_traffic => 'Traffic';
@@ -993,6 +1167,23 @@ extension on Translations {
 			case 'connectivity.restored': return 'Connection restored';
 			case 'connectivity.action_retry': return 'Retry';
 			case 'connectivity.action_settings': return 'Settings';
+			case 'campaigns_explorer.filter_all_types': return 'All types';
+			case 'campaigns_explorer.filter_all_platforms': return 'All platforms';
+			case 'campaigns_explorer.filter_all_niches': return 'All niches';
+			case 'campaigns_explorer.filter_all_locations': return 'All locations';
+			case 'campaigns_explorer.platform_youtube': return 'YouTube';
+			case 'campaigns_explorer.platform_tiktok': return 'TikTok';
+			case 'campaigns_explorer.platform_instagram': return 'Instagram';
+			case 'campaigns_explorer.results_one': return '1 campaign';
+			case 'campaigns_explorer.results_many': return ({required Object n}) => '${n} campaigns';
+			case 'campaigns_explorer.layout_grid': return 'Grid view';
+			case 'campaigns_explorer.layout_list': return 'List view';
+			case 'campaigns_explorer.empty_filters': return 'No campaigns match these filters.';
+			case 'campaigns_explorer.empty_filters_subtitle': return 'Clear a filter or change the type — niche options only include campaigns that fit your other choices.';
+			case 'campaigns_explorer.search_aria': return 'Search campaigns';
+			case 'campaigns_explorer.reset_filters': return 'Reset filters';
+			case 'campaigns_explorer.toolbar_show_search_filters': return 'Show search and filters';
+			case 'campaigns_explorer.toolbar_hide_search_filters': return 'Hide search and filters';
 			case 'login.brand': return 'Wayo Ads';
 			case 'login.headline_line1': return 'Welcome';
 			case 'login.headline_line2_prefix': return 'to ';
@@ -1027,6 +1218,7 @@ extension on Translations {
 			case 'login.google_failed': return 'Google sign-in failed. Try again.';
 			case 'login.google_channel_restart': return 'Google Sign-In lost connection to Android (often after hot restart). Stop the app completely, then Run again — do not use hot restart.';
 			case 'login.google_android_oauth_misconfigured': return 'Google could not verify this app (code 10). In Google Cloud Console, open the same project as your Web client, create an Android OAuth client with package ma.wayo.wayoadsgo and your debug (or release) keystore SHA-1, then wait a few minutes and try again.';
+			case 'login.session_expired_snack': return 'Your session has expired. Please sign in again.';
 			case 'verify_email.title': return 'Confirm your email';
 			case 'verify_email.subtitle': return 'Wayo ID needs a verified address (same step as on the website). Open the link we sent to:';
 			case 'verify_email.check_again': return 'I\'ve confirmed — continue';
@@ -1135,6 +1327,7 @@ extension on Translations {
 			case 'advertiser_campaigns.detail.platform_label': return 'Platform';
 			case 'advertiser_campaigns.detail.campaign_type_label': return 'Campaign type';
 			case 'advertiser_campaigns.detail.niche_label': return 'Niche';
+			case 'advertiser_campaigns.detail.location_label': return 'Location';
 			case 'advertiser_campaigns.detail.objective_label': return 'Objective';
 			case 'advertiser_campaigns.detail.objective_awareness': return 'Awareness';
 			case 'advertiser_campaigns.detail.objective_traffic': return 'Traffic';
@@ -1182,6 +1375,62 @@ extension on Translations {
 			case 'nav.analytics': return 'Analytics';
 			case 'nav.wallet': return 'Wallet';
 			case 'nav.chat': return 'Chat';
+			case 'nav.invoices': return 'Invoices';
+			case 'invoices.title': return 'Invoices';
+			case 'invoices.subtitle_advertiser': return 'Every deposit and campaign budget — all in one place.';
+			case 'invoices.subtitle_creator': return 'Every earning and payout — secured, downloadable, signed.';
+			case 'invoices.summary_total_paid': return 'Total paid';
+			case 'invoices.summary_pending': return 'Pending';
+			case 'invoices.summary_count': return 'Documents';
+			case 'invoices.filter_all': return 'All';
+			case 'invoices.filter_deposits': return 'Deposits';
+			case 'invoices.filter_billing': return 'Campaign budget';
+			case 'invoices.filter_payouts': return 'Payouts';
+			case 'invoices.filter_earnings': return 'Earnings';
+			case 'invoices.type_deposit': return 'Wallet deposit';
+			case 'invoices.type_billing': return 'Campaign budget';
+			case 'invoices.type_payout': return 'Creator payout';
+			case 'invoices.type_earnings': return 'Ad earnings';
+			case 'invoices.type_unknown': return 'Other';
+			case 'invoices.status_paid': return 'Paid';
+			case 'invoices.status_pending': return 'Pending';
+			case 'invoices.status_cancelled': return 'Cancelled';
+			case 'invoices.role_advertiser': return 'Advertiser';
+			case 'invoices.role_creator': return 'Creator';
+			case 'invoices.search_hint': return 'Search by number, reference…';
+			case 'invoices.empty_title': return 'No invoice yet';
+			case 'invoices.empty_subtitle': return 'Your wallet deposits, campaign budgets and creator payouts will appear here automatically — no manual step required.';
+			case 'invoices.empty_cta': return 'Refresh';
+			case 'invoices.error_title': return 'Could not load invoices';
+			case 'invoices.error_subtitle': return 'Pull to refresh — we\'ll try again right away.';
+			case 'invoices.load_more': return 'Load more';
+			case 'invoices.pagination_meta': return 'Page {current} of {total}';
+			case 'invoices.details_title': return 'Invoice {number}';
+			case 'invoices.details_section_summary': return 'Summary';
+			case 'invoices.details_section_actions': return 'Actions';
+			case 'invoices.details_section_legal': return 'Legal & references';
+			case 'invoices.details_invoice_number': return 'Invoice number';
+			case 'invoices.details_issued_at': return 'Issued on';
+			case 'invoices.details_paid_at': return 'Paid on';
+			case 'invoices.details_type': return 'Type';
+			case 'invoices.details_status': return 'Status';
+			case 'invoices.details_role': return 'Role';
+			case 'invoices.details_reference': return 'Reference';
+			case 'invoices.details_amount': return 'Total';
+			case 'invoices.details_tax': return 'VAT included';
+			case 'invoices.details_currency': return 'Currency';
+			case 'invoices.action_download_pdf': return 'Download PDF';
+			case 'invoices.action_share_pdf': return 'Share';
+			case 'invoices.action_open_pdf': return 'Open';
+			case 'invoices.action_copy_number': return 'Copy invoice #';
+			case 'invoices.action_view_details': return 'View details';
+			case 'invoices.download_progress': return 'Preparing your PDF…';
+			case 'invoices.download_success': return 'Saved to {filename}';
+			case 'invoices.download_error': return 'Download failed. Please try again.';
+			case 'invoices.copied_to_clipboard': return 'Invoice number copied.';
+			case 'invoices.share_subject': return 'Invoice {number}';
+			case 'invoices.polling_live': return 'Live';
+			case 'invoices.polling_paused': return 'Paused';
 			case 'creator.dashboard.title': return 'Creator Studio';
 			case 'creator.dashboard.subtitle': return 'Track your stats, applications and earnings in real time.';
 			case 'creator.dashboard.coming_soon_title': return 'Your creator dashboard';
@@ -1517,6 +1766,75 @@ extension on Translations {
 			case 'app_settings.lang_en': return 'English';
 			case 'app_settings.lang_fr': return 'Français';
 			case 'app_settings.lang_ar': return 'العربية';
+			case 'app_settings.section_account': return 'Account';
+			case 'app_settings.delete_account_entry': return 'Delete account';
+			case 'app_settings.delete_account_entry_sub': return '30-day grace — manage deletion in the app';
+			case 'account_deletion.nav_title': return 'Delete account';
+			case 'account_deletion.title': return 'Delete my Wayo Ads account';
+			case 'account_deletion.danger_zone_chip': return 'Danger Zone';
+			case 'account_deletion.danger_zone_intro': return 'Permanently delete your account and all associated data. This action cannot be undone after the grace period.';
+			case 'account_deletion.danger_what_title': return 'What will be deleted:';
+			case 'account_deletion.danger_item_profile': return 'Your profile and personal information';
+			case 'account_deletion.danger_item_campaigns': return 'All your campaigns and their performance data';
+			case 'account_deletion.danger_item_business': return 'Your business profile and brand information';
+			case 'account_deletion.danger_item_wallet': return 'Your advertiser wallet and transaction history';
+			case 'account_deletion.danger_item_notifications': return 'Your notifications and email preferences';
+			case 'account_deletion.danger_item_access': return 'Your access to Wayo Ads (you will not be able to sign in again here)';
+			case 'account_deletion.danger_wayo_note': return 'Only your Wayo Ads data is affected. Your Wayo account (used to sign in) stays active for other Wayo services.';
+			case 'account_deletion.subtitle_warning': return 'Important: after 30 days, your Wayo Ads data will be permanently removed. You can cancel anytime before then.';
+			case 'account_deletion.bullet_loss': return 'Campaigns, applications, and app-side profile data will be deleted after the grace period.';
+			case 'account_deletion.bullet_wallet': return 'Wallet balance, invoices, and transaction history tied to this account will be removed.';
+			case 'account_deletion.bullet_cancel': return 'Free cancellation window: 30 days from your request.';
+			case 'account_deletion.bullet_recreate': return 'Your Wayo ID (login) is not deleted by this step — you may sign in again and get a fresh app profile later.';
+			case 'account_deletion.role_advertiser': return 'Advertiser: active campaigns will stop when data is purged.';
+			case 'account_deletion.role_creator': return 'Creator: applications, channels, and earnings records in the app will be deleted.';
+			case 'account_deletion.continue_cta': return 'Continue';
+			case 'account_deletion.back': return 'Back';
+			case 'account_deletion.more_info_title': return 'Before you go';
+			case 'account_deletion.more_info_body': return 'Emails: you will receive a confirmation now and a reminder about 3 days before deletion.\nSupport: contact us if you need help exporting information or closing campaigns first.';
+			case 'account_deletion.step_auth_title': return 'Confirm your identity';
+			case 'account_deletion.status_active': return 'No deletion scheduled for this account.';
+			case 'account_deletion.status_pending': return ({required Object date}) => 'Deletion already scheduled. Final date: ${date}';
+			case 'account_deletion.password_label': return 'Password';
+			case 'account_deletion.password_hint': return 'At least 8 characters';
+			case 'account_deletion.forgot_password': return 'Forgot password?';
+			case 'account_deletion.oauth_note': return 'If you only sign in with Google or Apple, set a password first (Forgot password).';
+			case 'account_deletion.oauth_deletion_intro': return 'You use Google or Apple to sign in. After you continue, confirm in the next step — no password required.';
+			case 'account_deletion.oauth_deletion_step_hint': return 'Your identity was confirmed when you signed in with Google or Apple. Tap below to review the final confirmation sheet.';
+			case 'account_deletion.legal_recap': return ({required Object date}) => 'You will start a 30-day grace period before permanent deletion. You can cancel until ${date}.';
+			case 'account_deletion.next_review': return 'Review and confirm';
+			case 'account_deletion.dialog_title': return 'Are you sure?';
+			case 'account_deletion.dialog_body': return 'Your Wayo Ads data will be scheduled for deletion. Final removal on:';
+			case 'account_deletion.dialog_cancel_hint': return 'You can cancel anytime in Settings until that date.';
+			case 'account_deletion.timeline_request': return 'Request';
+			case 'account_deletion.timeline_reminder': return 'Email reminder';
+			case 'account_deletion.timeline_purge': return 'Deletion';
+			case 'account_deletion.dialog_confirm': return 'Yes, schedule deletion';
+			case 'account_deletion.dialog_dismiss': return 'Keep my account';
+			case 'account_deletion.success_title': return 'Deletion scheduled';
+			case 'account_deletion.success_intro': return 'What happens next?';
+			case 'account_deletion.success_use_until': return 'You can keep using Wayo Ads until the final date.';
+			case 'account_deletion.success_reminder': return 'We will email you a reminder a few days before deletion.';
+			case 'account_deletion.success_cancel_anytime': return 'Cancel anytime from this screen or Settings.';
+			case 'account_deletion.days_left': return ({required Object n}) => 'Days left: ${n}';
+			case 'account_deletion.purge_date': return ({required Object date}) => 'Final deletion: ${date}';
+			case 'account_deletion.reminder_approx': return ({required Object date}) => 'Reminder around: ${date}';
+			case 'account_deletion.cancel_request': return 'Cancel deletion';
+			case 'account_deletion.go_home': return 'Back to home';
+			case 'account_deletion.toast_cancelled': return 'Deletion cancelled. Your account is restored.';
+			case 'account_deletion.error_load': return 'Could not load account status.';
+			case 'account_deletion.error_load_unauthorized': return 'We could not verify your session with Wayo Ads. Sign out and sign in again, then retry.';
+			case 'account_deletion.error_load_network': return 'Check your connection and that Wayo Ads is reachable, then retry.';
+			case 'account_deletion.error_delete': return 'Something went wrong. Please try again.';
+			case 'account_deletion.error_password': return 'Incorrect password. Try again or reset your password.';
+			case 'account_deletion.banner_line': return ({required Object date, required Object n}) => 'Your account will be deleted on ${date} (${n} days left).';
+			case 'account_deletion.banner_cancel_dialog_title': return 'Cancel scheduled deletion?';
+			case 'account_deletion.banner_cancel_dialog_body': return 'Your Wayo Ads profile will stay active.';
+			case 'account_deletion.banner_cancel_dialog_confirm': return 'Keep my account';
+			case 'account_deletion.pending_danger_card_body': return ({required Object date}) => 'Your account is scheduled for permanent deletion on ${date}. You can cancel this request at any time before that date.';
+			case 'account_deletion.pending_scheduled_status': return 'Account deletion scheduled';
+			case 'account_deletion.pending_days_remaining_one': return '1 day remaining';
+			case 'account_deletion.pending_days_remaining_plural': return ({required Object n}) => '${n} days remaining';
 			case 'onboarding.role_gate_title': return 'Choose your profile';
 			case 'onboarding.role_gate_subtitle': return 'Same step as on the Wayo Ads website before you can use the app.';
 			case 'onboarding.role_creator_cta': return 'Creator';

@@ -11,6 +11,7 @@ import '../../dashboard/domain/entities/campaign_status.dart';
 import '../domain/advertiser_campaign.dart';
 import '../domain/advertiser_campaigns_page_result.dart';
 import '../domain/campaign_application.dart';
+import '../domain/campaign_niche_catalog.dart';
 
 /// Wayo-ads `GET /api/campaigns` (Bearer via [Dio] interceptors).
 abstract interface class AdvertiserCampaignsRemote {
@@ -438,12 +439,30 @@ final class AdvertiserCampaignsRemoteDatasource
       m['remainingBudget'] ?? m['remainingBudgetCents'],
     );
     final locked = _parseCents(m['lockedBudget'] ?? m['lockedBudgetCents']);
-    final cpc = _parseCents(m['cpcCents']);
-    final views = (m['validViews'] as num?)?.toInt() ?? 0;
+    final finance = m['finance'];
+    final financeMap = finance is Map
+        ? Map<String, dynamic>.from(finance)
+        : const <String, dynamic>{};
+    final cpc = _parseCents(m['cpcCents'] ?? financeMap['cpcCents']);
+    final cpm = _parseCents(m['cpmCents'] ?? financeMap['cpmCents']);
+    final views =
+        (m['validViews'] as num?)?.toInt() ??
+        (financeMap['validViews'] as num?)?.toInt() ??
+        0;
+    final clicks =
+        (m['validClicks'] as num?)?.toInt() ??
+        (financeMap['validClicks'] as num?)?.toInt() ??
+        0;
     final creators =
         (m['approvedCreators'] as num?)?.toInt() ??
         (m['approved_creators'] as num?)?.toInt() ??
         0;
+    String? trimOrNull(dynamic v) {
+      final s = v?.toString().trim();
+      if (s == null || s.isEmpty) return null;
+      return s;
+    }
+
     return AdvertiserCampaign(
       id: id,
       name: title,
@@ -455,14 +474,22 @@ final class AdvertiserCampaignsRemoteDatasource
       spentBudgetCents: spent,
       lockedBudgetCents: locked,
       cpcCents: cpc,
+      cpmCents: cpm,
       validViews: views,
+      validClicks: clicks,
       approvedCreators: creators,
-      coverUrl: parseCampaignCoverUrlFromJson(m) ??
+      coverUrl:
+          parseCampaignCoverUrlFromJson(m) ??
           m['cover_url'] as String? ??
           m['coverUrl'] as String? ??
           m['coverImageUrl'] as String?,
       brandLogoUrl: parseCampaignBrandLogoFromJson(m),
       currency: (m['currency'] as String?)?.toUpperCase() ?? 'EUR',
+      niche: normalizeCampaignNicheApiValue(trimOrNull(m['niche'])),
+      location: campaignLocationFromCampaignJson(
+        m,
+        debugSource: 'advertiserCampaignsList',
+      ),
     );
   }
 

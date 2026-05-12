@@ -36,6 +36,7 @@ class TranslationsAr extends Translations {
 
 	// Translations
 	@override late final _TranslationsConnectivityAr connectivity = _TranslationsConnectivityAr._(_root);
+	@override late final _TranslationsCampaignsExplorerAr campaigns_explorer = _TranslationsCampaignsExplorerAr._(_root);
 	@override late final _TranslationsLoginAr login = _TranslationsLoginAr._(_root);
 	@override late final _TranslationsVerifyEmailAr verify_email = _TranslationsVerifyEmailAr._(_root);
 	@override late final _TranslationsForgotPasswordAr forgot_password = _TranslationsForgotPasswordAr._(_root);
@@ -46,6 +47,7 @@ class TranslationsAr extends Translations {
 	@override late final _TranslationsDashboardAr dashboard = _TranslationsDashboardAr._(_root);
 	@override late final _TranslationsAdvertiserCampaignsAr advertiser_campaigns = _TranslationsAdvertiserCampaignsAr._(_root);
 	@override late final _TranslationsNavAr nav = _TranslationsNavAr._(_root);
+	@override late final _TranslationsInvoicesAr invoices = _TranslationsInvoicesAr._(_root);
 	@override late final _TranslationsCreatorAr creator = _TranslationsCreatorAr._(_root);
 	@override late final _TranslationsAdvertiserWalletAr advertiser_wallet = _TranslationsAdvertiserWalletAr._(_root);
 	@override late final _TranslationsChatAr chat = _TranslationsChatAr._(_root);
@@ -53,6 +55,7 @@ class TranslationsAr extends Translations {
 	@override late final _TranslationsErrorsAr errors = _TranslationsErrorsAr._(_root);
 	@override late final _TranslationsPrivacyPolicyAr privacy_policy = _TranslationsPrivacyPolicyAr._(_root);
 	@override late final _TranslationsAppSettingsAr app_settings = _TranslationsAppSettingsAr._(_root);
+	@override late final _TranslationsAccountDeletionAr account_deletion = _TranslationsAccountDeletionAr._(_root);
 	@override late final _TranslationsOnboardingAr onboarding = _TranslationsOnboardingAr._(_root);
 }
 
@@ -72,6 +75,32 @@ class _TranslationsConnectivityAr extends TranslationsConnectivityEn {
 	@override String get restored => 'تم استعادة الاتصال';
 	@override String get action_retry => 'إعادة المحاولة';
 	@override String get action_settings => 'الإعدادات';
+}
+
+// Path: campaigns_explorer
+class _TranslationsCampaignsExplorerAr extends TranslationsCampaignsExplorerEn {
+	_TranslationsCampaignsExplorerAr._(TranslationsAr root) : this._root = root, super.internal(root);
+
+	final TranslationsAr _root; // ignore: unused_field
+
+	// Translations
+	@override String get filter_all_types => 'كل الأنواع';
+	@override String get filter_all_platforms => 'كل المنصات';
+	@override String get filter_all_niches => 'كل المجالات';
+	@override String get filter_all_locations => 'كل المواقع';
+	@override String get platform_youtube => 'YouTube';
+	@override String get platform_tiktok => 'TikTok';
+	@override String get platform_instagram => 'Instagram';
+	@override String get results_one => 'حملة واحدة';
+	@override String results_many({required Object n}) => '${n} حملة';
+	@override String get layout_grid => 'شبكة';
+	@override String get layout_list => 'قائمة';
+	@override String get empty_filters => 'لا توجد حملات مطابقة لهذه المرشحات.';
+	@override String get empty_filters_subtitle => 'أزل أحد المرشحات أو غيّر نوع الحملة — خيارات المجال تعرض ما ينسجم مع بقية اختياراتك.';
+	@override String get search_aria => 'البحث في الحملات';
+	@override String get reset_filters => 'إعادة ضبط المرشحات';
+	@override String get toolbar_show_search_filters => 'إظهار البحث والمرشحات';
+	@override String get toolbar_hide_search_filters => 'إخفاء البحث والمرشحات';
 }
 
 // Path: login
@@ -115,6 +144,7 @@ class _TranslationsLoginAr extends TranslationsLoginEn {
 	@override String get google_failed => 'فشل تسجيل الدخول عبر Google. حاول مرة أخرى.';
 	@override String get google_channel_restart => 'انقطع اتصال Google مع أندرويد (غالبًا بعد hot restart). أوقف التطبيق بالكامل ثم شغّله من جديد — لا تستخدم hot restart.';
 	@override String get google_android_oauth_misconfigured => 'تعذّر على Google التحقق من التطبيق (رمز 10). في Google Cloud Console ونفس مشروع معرّف العميل للويب: أنشئ عميل OAuth من نوع Android باسم الحزمة ma.wayo.wayoadsgo وبصمة SHA-1 لبيانات الاعتماد (تطوير أو إصدار)، انتظر بضع دقائق ثم أعِد المحاولة.';
+	@override String get session_expired_snack => 'انتهت جلستك. يُرجى تسجيل الدخول مرة أخرى.';
 }
 
 // Path: verify_email
@@ -273,6 +303,71 @@ class _TranslationsNavAr extends TranslationsNavEn {
 	@override String get analytics => 'التحليلات';
 	@override String get wallet => 'المحفظة';
 	@override String get chat => 'المحادثات';
+	@override String get invoices => 'الفواتير';
+}
+
+// Path: invoices
+class _TranslationsInvoicesAr extends TranslationsInvoicesEn {
+	_TranslationsInvoicesAr._(TranslationsAr root) : this._root = root, super.internal(root);
+
+	final TranslationsAr _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'الفواتير';
+	@override String get subtitle_advertiser => 'كل إيداع وكل ميزانية حملة — في مكان واحد.';
+	@override String get subtitle_creator => 'كل أرباحك وتحويلاتك — موقعة، محمية، قابلة للتنزيل.';
+	@override String get summary_total_paid => 'إجمالي المدفوع';
+	@override String get summary_pending => 'قيد الانتظار';
+	@override String get summary_count => 'المستندات';
+	@override String get filter_all => 'الكل';
+	@override String get filter_deposits => 'الإيداعات';
+	@override String get filter_billing => 'ميزانية الحملة';
+	@override String get filter_payouts => 'التحويلات';
+	@override String get filter_earnings => 'الأرباح';
+	@override String get type_deposit => 'إيداع المحفظة';
+	@override String get type_billing => 'ميزانية الحملة';
+	@override String get type_payout => 'تحويل المنشئ';
+	@override String get type_earnings => 'أرباح الإعلانات';
+	@override String get type_unknown => 'أخرى';
+	@override String get status_paid => 'مدفوعة';
+	@override String get status_pending => 'قيد الانتظار';
+	@override String get status_cancelled => 'ملغاة';
+	@override String get role_advertiser => 'المعلن';
+	@override String get role_creator => 'المنشئ';
+	@override String get search_hint => 'ابحث برقم الفاتورة أو المرجع…';
+	@override String get empty_title => 'لا توجد فواتير بعد';
+	@override String get empty_subtitle => 'ستظهر هنا الإيداعات وميزانيات الحملات والتحويلات تلقائياً — دون أي خطوة يدوية.';
+	@override String get empty_cta => 'تحديث';
+	@override String get error_title => 'تعذّر تحميل الفواتير';
+	@override String get error_subtitle => 'اسحب للتحديث — سنحاول من جديد فوراً.';
+	@override String get load_more => 'تحميل المزيد';
+	@override String get pagination_meta => 'الصفحة {current} من {total}';
+	@override String get details_title => 'فاتورة {number}';
+	@override String get details_section_summary => 'الملخص';
+	@override String get details_section_actions => 'الإجراءات';
+	@override String get details_section_legal => 'القانوني والمراجع';
+	@override String get details_invoice_number => 'رقم الفاتورة';
+	@override String get details_issued_at => 'صادرة في';
+	@override String get details_paid_at => 'مدفوعة في';
+	@override String get details_type => 'النوع';
+	@override String get details_status => 'الحالة';
+	@override String get details_role => 'الدور';
+	@override String get details_reference => 'المرجع';
+	@override String get details_amount => 'الإجمالي';
+	@override String get details_tax => 'شامل ضريبة القيمة المضافة';
+	@override String get details_currency => 'العملة';
+	@override String get action_download_pdf => 'تنزيل PDF';
+	@override String get action_share_pdf => 'مشاركة';
+	@override String get action_open_pdf => 'فتح';
+	@override String get action_copy_number => 'نسخ الرقم';
+	@override String get action_view_details => 'عرض التفاصيل';
+	@override String get download_progress => 'تحضير PDF…';
+	@override String get download_success => 'تم الحفظ باسم {filename}';
+	@override String get download_error => 'فشل التنزيل. حاول مرة أخرى.';
+	@override String get copied_to_clipboard => 'تم نسخ رقم الفاتورة.';
+	@override String get share_subject => 'فاتورة {number}';
+	@override String get polling_live => 'مباشر';
+	@override String get polling_paused => 'إيقاف';
 }
 
 // Path: creator
@@ -494,6 +589,84 @@ class _TranslationsAppSettingsAr extends TranslationsAppSettingsEn {
 	@override String get lang_en => 'English';
 	@override String get lang_fr => 'Français';
 	@override String get lang_ar => 'العربية';
+	@override String get section_account => 'الحساب';
+	@override String get delete_account_entry => 'حذف الحساب';
+	@override String get delete_account_entry_sub => 'فترة سماح 30 يومًا — من داخل التطبيق';
+}
+
+// Path: account_deletion
+class _TranslationsAccountDeletionAr extends TranslationsAccountDeletionEn {
+	_TranslationsAccountDeletionAr._(TranslationsAr root) : this._root = root, super.internal(root);
+
+	final TranslationsAr _root; // ignore: unused_field
+
+	// Translations
+	@override String get nav_title => 'حذف الحساب';
+	@override String get title => 'حذف حساب Wayo Ads';
+	@override String get danger_zone_chip => 'منطقة الخطر';
+	@override String get danger_zone_intro => 'يحذف حسابك وجميع البيانات المرتبطة به نهائيًا. بعد انتهاء فترة السماح لا يمكن التراجع عن ذلك.';
+	@override String get danger_what_title => 'ما الذي سيُحذف:';
+	@override String get danger_item_profile => 'ملفك الشخصي ومعلوماتك';
+	@override String get danger_item_campaigns => 'جميع حملاتك وبيانات أدائها';
+	@override String get danger_item_business => 'ملف عملك ومعلومات علامتك';
+	@override String get danger_item_wallet => 'محفظتك كمعلن وسجل المعاملات';
+	@override String get danger_item_notifications => 'إشعاراتك وتفضيلات البريد';
+	@override String get danger_item_access => 'وصولك إلى Wayo Ads (لن تتمكن من تسجيل الدخول هنا مجددًا)';
+	@override String get danger_wayo_note => 'يُتأثر فقط بيانات Wayo Ads. حساب Wayo (لتسجيل الدخول) يبقى نشطًا لخدمات Wayo الأخرى.';
+	@override String get subtitle_warning => 'تنبيه: بعد 30 يومًا ستُحذف بيانات Wayo Ads نهائيًا. يمكنك الإلغاء في أي وقت قبل ذلك.';
+	@override String get bullet_loss => 'الحملات والطلبات وبيانات الملف في التطبيق تُحذف بعد فترة السماح.';
+	@override String get bullet_wallet => 'رصيد المحفظة والفواتير وسجل المعاملات المرتبطة بهذا الحساب تُزال.';
+	@override String get bullet_cancel => 'نافذة إلغاء مجانية لمدة 30 يومًا من الطلب.';
+	@override String get bullet_recreate => 'معرّف Wayo (تسجيل الدخول) لا يُحذف بهذه الخطوة — يمكنك تسجيل الدخول لاحقًا وبملف جديد.';
+	@override String get role_advertiser => 'معلن: تتوقف الحملات النشطة عند مسح البيانات.';
+	@override String get role_creator => 'مبدع: الطلبات والقنوات والأرباح في التطبيق تُحذف.';
+	@override String get continue_cta => 'متابعة';
+	@override String get back => 'رجوع';
+	@override String get more_info_title => 'قبل المتابعة';
+	@override String get more_info_body => 'رسائل البريد: تأكيد الآن، ثم تذكير قبل الحذف ببضعة أيام.\nالدعم: تواصل معنا لتصدير بياناتك أو إغلاق الحملات.';
+	@override String get step_auth_title => 'تأكيد الهوية';
+	@override String get status_active => 'لا يوجد حذف مجدول لهذا الحساب.';
+	@override String status_pending({required Object date}) => 'الحذف مجدول بالفعل. التاريخ النهائي: ${date}';
+	@override String get password_label => 'كلمة المرور';
+	@override String get password_hint => '8 أحرف على الأقل';
+	@override String get forgot_password => 'نسيت كلمة المرور؟';
+	@override String get oauth_note => 'إذا سجّلت الدخول فقط عبر Google أو Apple، عيّن كلمة مرور أولًا (نسيت كلمة المرور).';
+	@override String get oauth_deletion_intro => 'تسجيل الدخول عبر Google أو Apple. بعد «متابعة»، أكد في الخطوة التالية — دون كلمة مرور.';
+	@override String get oauth_deletion_step_hint => 'تم التحقق من هويتك عند تسجيل الدخول بـ Google أو Apple. اضغط الزر أدناه لعرض ورقة التأكيد النهائية.';
+	@override String legal_recap({required Object date}) => 'ستبدأ فترة سماح 30 يومًا قبل الحذف النهائي. يمكنك الإلغاء حتى ${date}.';
+	@override String get next_review => 'مراجعة وتأكيد';
+	@override String get dialog_title => 'هل أنت متأكد؟';
+	@override String get dialog_body => 'ستُجدول بيانات Wayo Ads للحذف. الحذف النهائي في:';
+	@override String get dialog_cancel_hint => 'يمكنك الإلغاء في أي وقت من الإعدادات حتى ذلك التاريخ.';
+	@override String get timeline_request => 'الطلب';
+	@override String get timeline_reminder => 'تذكير بالبريد';
+	@override String get timeline_purge => 'الحذف';
+	@override String get dialog_confirm => 'نعم، جدولة الحذف';
+	@override String get dialog_dismiss => 'الإبقاء على حسابي';
+	@override String get success_title => 'تم جدولة الحذف';
+	@override String get success_intro => 'ماذا يحدث الآن؟';
+	@override String get success_use_until => 'يمكنك مواصلة استخدام Wayo Ads حتى التاريخ النهائي.';
+	@override String get success_reminder => 'سنرسل تذكيرًا قبل الحذف بأيام قليلة.';
+	@override String get success_cancel_anytime => 'ألغِ في أي وقت من هذه الشاشة أو الإعدادات.';
+	@override String days_left({required Object n}) => 'الأيام المتبقية: ${n}';
+	@override String purge_date({required Object date}) => 'الحذف النهائي: ${date}';
+	@override String reminder_approx({required Object date}) => 'تذكير تقريبي: ${date}';
+	@override String get cancel_request => 'إلغاء الحذف';
+	@override String get go_home => 'العودة للرئيسية';
+	@override String get toast_cancelled => 'أُلغي الحذف. عُاد حسابك.';
+	@override String get error_load => 'تعذر تحميل حالة الحساب.';
+	@override String get error_load_unauthorized => 'تعذر التحقق من جلستك مع Wayo Ads. سجّل الخروج ثم الدخول مجددًا وأعد المحاولة.';
+	@override String get error_load_network => 'تحقق من الاتصال وإمكانية الوصول إلى Wayo Ads، ثم أعد المحاولة.';
+	@override String get error_delete => 'حدث خطأ. حاول مجددًا.';
+	@override String get error_password => 'كلمة مرور غير صحيحة. أعد المحاولة أو أعد التعيين.';
+	@override String banner_line({required Object date, required Object n}) => 'سيُحذف حسابك في ${date} (${n} يومًا متبقيًا).';
+	@override String get banner_cancel_dialog_title => 'إلغاء الحذف المجدول؟';
+	@override String get banner_cancel_dialog_body => 'يظل ملف Wayo Ads نشطًا.';
+	@override String get banner_cancel_dialog_confirm => 'الإبقاء على حسابي';
+	@override String pending_danger_card_body({required Object date}) => 'حُدد حسابك للحذف النهائي في ${date}. يمكنك إلغاء هذا الطلب في أي وقت قبل ذلك.';
+	@override String get pending_scheduled_status => 'حذف الحساب مجدول';
+	@override String get pending_days_remaining_one => 'يوم واحد متبقي';
+	@override String pending_days_remaining_plural({required Object n}) => '${n} يومًا متبقيًا';
 }
 
 // Path: onboarding
@@ -644,6 +817,7 @@ class _TranslationsAdvertiserCampaignsDetailAr extends TranslationsAdvertiserCam
 	@override String get platform_label => 'المنصة';
 	@override String get campaign_type_label => 'نوع الحملة';
 	@override String get niche_label => 'المجال';
+	@override String get location_label => 'الموقع';
 	@override String get objective_label => 'الهدف';
 	@override String get objective_awareness => 'الوعي بالعلامة';
 	@override String get objective_traffic => 'الزيارات';
@@ -991,6 +1165,23 @@ extension on TranslationsAr {
 			case 'connectivity.restored': return 'تم استعادة الاتصال';
 			case 'connectivity.action_retry': return 'إعادة المحاولة';
 			case 'connectivity.action_settings': return 'الإعدادات';
+			case 'campaigns_explorer.filter_all_types': return 'كل الأنواع';
+			case 'campaigns_explorer.filter_all_platforms': return 'كل المنصات';
+			case 'campaigns_explorer.filter_all_niches': return 'كل المجالات';
+			case 'campaigns_explorer.filter_all_locations': return 'كل المواقع';
+			case 'campaigns_explorer.platform_youtube': return 'YouTube';
+			case 'campaigns_explorer.platform_tiktok': return 'TikTok';
+			case 'campaigns_explorer.platform_instagram': return 'Instagram';
+			case 'campaigns_explorer.results_one': return 'حملة واحدة';
+			case 'campaigns_explorer.results_many': return ({required Object n}) => '${n} حملة';
+			case 'campaigns_explorer.layout_grid': return 'شبكة';
+			case 'campaigns_explorer.layout_list': return 'قائمة';
+			case 'campaigns_explorer.empty_filters': return 'لا توجد حملات مطابقة لهذه المرشحات.';
+			case 'campaigns_explorer.empty_filters_subtitle': return 'أزل أحد المرشحات أو غيّر نوع الحملة — خيارات المجال تعرض ما ينسجم مع بقية اختياراتك.';
+			case 'campaigns_explorer.search_aria': return 'البحث في الحملات';
+			case 'campaigns_explorer.reset_filters': return 'إعادة ضبط المرشحات';
+			case 'campaigns_explorer.toolbar_show_search_filters': return 'إظهار البحث والمرشحات';
+			case 'campaigns_explorer.toolbar_hide_search_filters': return 'إخفاء البحث والمرشحات';
 			case 'login.brand': return 'وايو أدز';
 			case 'login.headline_line1': return 'مرحبًا بك';
 			case 'login.headline_line2_prefix': return 'في ';
@@ -1025,6 +1216,7 @@ extension on TranslationsAr {
 			case 'login.google_failed': return 'فشل تسجيل الدخول عبر Google. حاول مرة أخرى.';
 			case 'login.google_channel_restart': return 'انقطع اتصال Google مع أندرويد (غالبًا بعد hot restart). أوقف التطبيق بالكامل ثم شغّله من جديد — لا تستخدم hot restart.';
 			case 'login.google_android_oauth_misconfigured': return 'تعذّر على Google التحقق من التطبيق (رمز 10). في Google Cloud Console ونفس مشروع معرّف العميل للويب: أنشئ عميل OAuth من نوع Android باسم الحزمة ma.wayo.wayoadsgo وبصمة SHA-1 لبيانات الاعتماد (تطوير أو إصدار)، انتظر بضع دقائق ثم أعِد المحاولة.';
+			case 'login.session_expired_snack': return 'انتهت جلستك. يُرجى تسجيل الدخول مرة أخرى.';
 			case 'verify_email.title': return 'أكّد بريدك الإلكتروني';
 			case 'verify_email.subtitle': return 'يتطلب Wayo ID عنوانًا مُؤكدًا (كما على الموقع). افتح الرابط الذي أرسلناه إلى:';
 			case 'verify_email.check_again': return 'تم التأكيد — متابعة';
@@ -1133,6 +1325,7 @@ extension on TranslationsAr {
 			case 'advertiser_campaigns.detail.platform_label': return 'المنصة';
 			case 'advertiser_campaigns.detail.campaign_type_label': return 'نوع الحملة';
 			case 'advertiser_campaigns.detail.niche_label': return 'المجال';
+			case 'advertiser_campaigns.detail.location_label': return 'الموقع';
 			case 'advertiser_campaigns.detail.objective_label': return 'الهدف';
 			case 'advertiser_campaigns.detail.objective_awareness': return 'الوعي بالعلامة';
 			case 'advertiser_campaigns.detail.objective_traffic': return 'الزيارات';
@@ -1180,6 +1373,62 @@ extension on TranslationsAr {
 			case 'nav.analytics': return 'التحليلات';
 			case 'nav.wallet': return 'المحفظة';
 			case 'nav.chat': return 'المحادثات';
+			case 'nav.invoices': return 'الفواتير';
+			case 'invoices.title': return 'الفواتير';
+			case 'invoices.subtitle_advertiser': return 'كل إيداع وكل ميزانية حملة — في مكان واحد.';
+			case 'invoices.subtitle_creator': return 'كل أرباحك وتحويلاتك — موقعة، محمية، قابلة للتنزيل.';
+			case 'invoices.summary_total_paid': return 'إجمالي المدفوع';
+			case 'invoices.summary_pending': return 'قيد الانتظار';
+			case 'invoices.summary_count': return 'المستندات';
+			case 'invoices.filter_all': return 'الكل';
+			case 'invoices.filter_deposits': return 'الإيداعات';
+			case 'invoices.filter_billing': return 'ميزانية الحملة';
+			case 'invoices.filter_payouts': return 'التحويلات';
+			case 'invoices.filter_earnings': return 'الأرباح';
+			case 'invoices.type_deposit': return 'إيداع المحفظة';
+			case 'invoices.type_billing': return 'ميزانية الحملة';
+			case 'invoices.type_payout': return 'تحويل المنشئ';
+			case 'invoices.type_earnings': return 'أرباح الإعلانات';
+			case 'invoices.type_unknown': return 'أخرى';
+			case 'invoices.status_paid': return 'مدفوعة';
+			case 'invoices.status_pending': return 'قيد الانتظار';
+			case 'invoices.status_cancelled': return 'ملغاة';
+			case 'invoices.role_advertiser': return 'المعلن';
+			case 'invoices.role_creator': return 'المنشئ';
+			case 'invoices.search_hint': return 'ابحث برقم الفاتورة أو المرجع…';
+			case 'invoices.empty_title': return 'لا توجد فواتير بعد';
+			case 'invoices.empty_subtitle': return 'ستظهر هنا الإيداعات وميزانيات الحملات والتحويلات تلقائياً — دون أي خطوة يدوية.';
+			case 'invoices.empty_cta': return 'تحديث';
+			case 'invoices.error_title': return 'تعذّر تحميل الفواتير';
+			case 'invoices.error_subtitle': return 'اسحب للتحديث — سنحاول من جديد فوراً.';
+			case 'invoices.load_more': return 'تحميل المزيد';
+			case 'invoices.pagination_meta': return 'الصفحة {current} من {total}';
+			case 'invoices.details_title': return 'فاتورة {number}';
+			case 'invoices.details_section_summary': return 'الملخص';
+			case 'invoices.details_section_actions': return 'الإجراءات';
+			case 'invoices.details_section_legal': return 'القانوني والمراجع';
+			case 'invoices.details_invoice_number': return 'رقم الفاتورة';
+			case 'invoices.details_issued_at': return 'صادرة في';
+			case 'invoices.details_paid_at': return 'مدفوعة في';
+			case 'invoices.details_type': return 'النوع';
+			case 'invoices.details_status': return 'الحالة';
+			case 'invoices.details_role': return 'الدور';
+			case 'invoices.details_reference': return 'المرجع';
+			case 'invoices.details_amount': return 'الإجمالي';
+			case 'invoices.details_tax': return 'شامل ضريبة القيمة المضافة';
+			case 'invoices.details_currency': return 'العملة';
+			case 'invoices.action_download_pdf': return 'تنزيل PDF';
+			case 'invoices.action_share_pdf': return 'مشاركة';
+			case 'invoices.action_open_pdf': return 'فتح';
+			case 'invoices.action_copy_number': return 'نسخ الرقم';
+			case 'invoices.action_view_details': return 'عرض التفاصيل';
+			case 'invoices.download_progress': return 'تحضير PDF…';
+			case 'invoices.download_success': return 'تم الحفظ باسم {filename}';
+			case 'invoices.download_error': return 'فشل التنزيل. حاول مرة أخرى.';
+			case 'invoices.copied_to_clipboard': return 'تم نسخ رقم الفاتورة.';
+			case 'invoices.share_subject': return 'فاتورة {number}';
+			case 'invoices.polling_live': return 'مباشر';
+			case 'invoices.polling_paused': return 'إيقاف';
 			case 'creator.dashboard.title': return 'استوديو المبدع';
 			case 'creator.dashboard.subtitle': return 'تابع إحصائياتك وطلباتك وأرباحك في الوقت الفعلي.';
 			case 'creator.dashboard.coming_soon_title': return 'لوحة تحكّم المبدع';
@@ -1515,6 +1764,75 @@ extension on TranslationsAr {
 			case 'app_settings.lang_en': return 'English';
 			case 'app_settings.lang_fr': return 'Français';
 			case 'app_settings.lang_ar': return 'العربية';
+			case 'app_settings.section_account': return 'الحساب';
+			case 'app_settings.delete_account_entry': return 'حذف الحساب';
+			case 'app_settings.delete_account_entry_sub': return 'فترة سماح 30 يومًا — من داخل التطبيق';
+			case 'account_deletion.nav_title': return 'حذف الحساب';
+			case 'account_deletion.title': return 'حذف حساب Wayo Ads';
+			case 'account_deletion.danger_zone_chip': return 'منطقة الخطر';
+			case 'account_deletion.danger_zone_intro': return 'يحذف حسابك وجميع البيانات المرتبطة به نهائيًا. بعد انتهاء فترة السماح لا يمكن التراجع عن ذلك.';
+			case 'account_deletion.danger_what_title': return 'ما الذي سيُحذف:';
+			case 'account_deletion.danger_item_profile': return 'ملفك الشخصي ومعلوماتك';
+			case 'account_deletion.danger_item_campaigns': return 'جميع حملاتك وبيانات أدائها';
+			case 'account_deletion.danger_item_business': return 'ملف عملك ومعلومات علامتك';
+			case 'account_deletion.danger_item_wallet': return 'محفظتك كمعلن وسجل المعاملات';
+			case 'account_deletion.danger_item_notifications': return 'إشعاراتك وتفضيلات البريد';
+			case 'account_deletion.danger_item_access': return 'وصولك إلى Wayo Ads (لن تتمكن من تسجيل الدخول هنا مجددًا)';
+			case 'account_deletion.danger_wayo_note': return 'يُتأثر فقط بيانات Wayo Ads. حساب Wayo (لتسجيل الدخول) يبقى نشطًا لخدمات Wayo الأخرى.';
+			case 'account_deletion.subtitle_warning': return 'تنبيه: بعد 30 يومًا ستُحذف بيانات Wayo Ads نهائيًا. يمكنك الإلغاء في أي وقت قبل ذلك.';
+			case 'account_deletion.bullet_loss': return 'الحملات والطلبات وبيانات الملف في التطبيق تُحذف بعد فترة السماح.';
+			case 'account_deletion.bullet_wallet': return 'رصيد المحفظة والفواتير وسجل المعاملات المرتبطة بهذا الحساب تُزال.';
+			case 'account_deletion.bullet_cancel': return 'نافذة إلغاء مجانية لمدة 30 يومًا من الطلب.';
+			case 'account_deletion.bullet_recreate': return 'معرّف Wayo (تسجيل الدخول) لا يُحذف بهذه الخطوة — يمكنك تسجيل الدخول لاحقًا وبملف جديد.';
+			case 'account_deletion.role_advertiser': return 'معلن: تتوقف الحملات النشطة عند مسح البيانات.';
+			case 'account_deletion.role_creator': return 'مبدع: الطلبات والقنوات والأرباح في التطبيق تُحذف.';
+			case 'account_deletion.continue_cta': return 'متابعة';
+			case 'account_deletion.back': return 'رجوع';
+			case 'account_deletion.more_info_title': return 'قبل المتابعة';
+			case 'account_deletion.more_info_body': return 'رسائل البريد: تأكيد الآن، ثم تذكير قبل الحذف ببضعة أيام.\nالدعم: تواصل معنا لتصدير بياناتك أو إغلاق الحملات.';
+			case 'account_deletion.step_auth_title': return 'تأكيد الهوية';
+			case 'account_deletion.status_active': return 'لا يوجد حذف مجدول لهذا الحساب.';
+			case 'account_deletion.status_pending': return ({required Object date}) => 'الحذف مجدول بالفعل. التاريخ النهائي: ${date}';
+			case 'account_deletion.password_label': return 'كلمة المرور';
+			case 'account_deletion.password_hint': return '8 أحرف على الأقل';
+			case 'account_deletion.forgot_password': return 'نسيت كلمة المرور؟';
+			case 'account_deletion.oauth_note': return 'إذا سجّلت الدخول فقط عبر Google أو Apple، عيّن كلمة مرور أولًا (نسيت كلمة المرور).';
+			case 'account_deletion.oauth_deletion_intro': return 'تسجيل الدخول عبر Google أو Apple. بعد «متابعة»، أكد في الخطوة التالية — دون كلمة مرور.';
+			case 'account_deletion.oauth_deletion_step_hint': return 'تم التحقق من هويتك عند تسجيل الدخول بـ Google أو Apple. اضغط الزر أدناه لعرض ورقة التأكيد النهائية.';
+			case 'account_deletion.legal_recap': return ({required Object date}) => 'ستبدأ فترة سماح 30 يومًا قبل الحذف النهائي. يمكنك الإلغاء حتى ${date}.';
+			case 'account_deletion.next_review': return 'مراجعة وتأكيد';
+			case 'account_deletion.dialog_title': return 'هل أنت متأكد؟';
+			case 'account_deletion.dialog_body': return 'ستُجدول بيانات Wayo Ads للحذف. الحذف النهائي في:';
+			case 'account_deletion.dialog_cancel_hint': return 'يمكنك الإلغاء في أي وقت من الإعدادات حتى ذلك التاريخ.';
+			case 'account_deletion.timeline_request': return 'الطلب';
+			case 'account_deletion.timeline_reminder': return 'تذكير بالبريد';
+			case 'account_deletion.timeline_purge': return 'الحذف';
+			case 'account_deletion.dialog_confirm': return 'نعم، جدولة الحذف';
+			case 'account_deletion.dialog_dismiss': return 'الإبقاء على حسابي';
+			case 'account_deletion.success_title': return 'تم جدولة الحذف';
+			case 'account_deletion.success_intro': return 'ماذا يحدث الآن؟';
+			case 'account_deletion.success_use_until': return 'يمكنك مواصلة استخدام Wayo Ads حتى التاريخ النهائي.';
+			case 'account_deletion.success_reminder': return 'سنرسل تذكيرًا قبل الحذف بأيام قليلة.';
+			case 'account_deletion.success_cancel_anytime': return 'ألغِ في أي وقت من هذه الشاشة أو الإعدادات.';
+			case 'account_deletion.days_left': return ({required Object n}) => 'الأيام المتبقية: ${n}';
+			case 'account_deletion.purge_date': return ({required Object date}) => 'الحذف النهائي: ${date}';
+			case 'account_deletion.reminder_approx': return ({required Object date}) => 'تذكير تقريبي: ${date}';
+			case 'account_deletion.cancel_request': return 'إلغاء الحذف';
+			case 'account_deletion.go_home': return 'العودة للرئيسية';
+			case 'account_deletion.toast_cancelled': return 'أُلغي الحذف. عُاد حسابك.';
+			case 'account_deletion.error_load': return 'تعذر تحميل حالة الحساب.';
+			case 'account_deletion.error_load_unauthorized': return 'تعذر التحقق من جلستك مع Wayo Ads. سجّل الخروج ثم الدخول مجددًا وأعد المحاولة.';
+			case 'account_deletion.error_load_network': return 'تحقق من الاتصال وإمكانية الوصول إلى Wayo Ads، ثم أعد المحاولة.';
+			case 'account_deletion.error_delete': return 'حدث خطأ. حاول مجددًا.';
+			case 'account_deletion.error_password': return 'كلمة مرور غير صحيحة. أعد المحاولة أو أعد التعيين.';
+			case 'account_deletion.banner_line': return ({required Object date, required Object n}) => 'سيُحذف حسابك في ${date} (${n} يومًا متبقيًا).';
+			case 'account_deletion.banner_cancel_dialog_title': return 'إلغاء الحذف المجدول؟';
+			case 'account_deletion.banner_cancel_dialog_body': return 'يظل ملف Wayo Ads نشطًا.';
+			case 'account_deletion.banner_cancel_dialog_confirm': return 'الإبقاء على حسابي';
+			case 'account_deletion.pending_danger_card_body': return ({required Object date}) => 'حُدد حسابك للحذف النهائي في ${date}. يمكنك إلغاء هذا الطلب في أي وقت قبل ذلك.';
+			case 'account_deletion.pending_scheduled_status': return 'حذف الحساب مجدول';
+			case 'account_deletion.pending_days_remaining_one': return 'يوم واحد متبقي';
+			case 'account_deletion.pending_days_remaining_plural': return ({required Object n}) => '${n} يومًا متبقيًا';
 			case 'onboarding.role_gate_title': return 'اختر ملفك';
 			case 'onboarding.role_gate_subtitle': return 'نفس الخطوة كما على موقع Wayo Ads قبل استخدام التطبيق.';
 			case 'onboarding.role_creator_cta': return 'مبدع';

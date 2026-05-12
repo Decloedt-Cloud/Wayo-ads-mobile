@@ -3,16 +3,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/providers/app_providers.dart';
+import '../account_deletion/presentation/providers/account_deletion_providers.dart';
 import '../auth/domain/auth_notifier.dart';
 import '../auth/domain/wayo_ads_account_role.dart';
 import '../chat/presentation/providers/chat_providers.dart';
 import '../dashboard/domain/entities/campaign_status.dart';
+import '../account_deletion/presentation/widgets/pending_account_deletion_banner.dart';
 import '../dashboard/presentation/providers/dashboard_state_providers.dart';
 import '../onboarding/presentation/shell_tutorial_controller.dart';
 import 'presentation/widgets/shell_tutorial_replay_scope.dart';
 import 'widgets/wayo_bottom_nav.dart';
 
-/// Main shell with bottom navigation (Dashboard, Campaigns, Wallet, Chat).
+/// Main shell with bottom navigation (Dashboard, Campaigns, Wallet, Invoices, Chat).
 ///
 /// Owns the [GlobalKey]s used by the first-login coach-mark tour so both the
 /// navigation bar and the tour anchor to the same widget tree. The tour runs
@@ -26,13 +28,15 @@ class AppShell extends ConsumerStatefulWidget {
   ConsumerState<AppShell> createState() => _AppShellState();
 }
 
-class _AppShellState extends ConsumerState<AppShell> {
+class _AppShellState extends ConsumerState<AppShell>
+    with WidgetsBindingObserver {
   // One GlobalKey per bottom-nav branch. They identify the tab pills for the
   // coach-mark tour; recreating them here (not inside the bottom nav) keeps
   // a stable identity across bottom-nav rebuilds.
   final GlobalKey _dashboardKey = GlobalKey(debugLabel: 'shell.tab.dashboard');
   final GlobalKey _campaignsKey = GlobalKey(debugLabel: 'shell.tab.campaigns');
   final GlobalKey _walletKey = GlobalKey(debugLabel: 'shell.tab.wallet');
+  final GlobalKey _invoicesKey = GlobalKey(debugLabel: 'shell.tab.invoices');
   final GlobalKey _chatKey = GlobalKey(debugLabel: 'shell.tab.chat');
 
   bool _tutorialTriggered = false;
@@ -40,9 +44,26 @@ class _AppShellState extends ConsumerState<AppShell> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _maybeShowTutorial();
     });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      final auth = ref.read(authNotifierProvider).valueOrNull;
+      if (auth is AuthAuthenticated) {
+        ref.read(accountDeletionScheduledAtProvider.notifier).syncFromRemote();
+      }
+    }
   }
 
   /// Runs the shell coach-mark tour once per (user, role).
@@ -160,9 +181,17 @@ class _AppShellState extends ConsumerState<AppShell> {
 
     return Scaffold(
       extendBody: true,
-      body: ShellTutorialReplayScope(
-        replay: _replayShellTutorial,
-        child: SizedBox.expand(child: widget.navigationShell),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const PendingAccountDeletionBanner(),
+          Expanded(
+            child: ShellTutorialReplayScope(
+              replay: _replayShellTutorial,
+              child: widget.navigationShell,
+            ),
+          ),
+        ],
       ),
       bottomNavigationBar: WayoBottomNav(
         navigationShell: widget.navigationShell,
@@ -172,6 +201,7 @@ class _AppShellState extends ConsumerState<AppShell> {
         dashboardTabKey: _dashboardKey,
         campaignsTabKey: _campaignsKey,
         walletTabKey: _walletKey,
+        invoicesTabKey: _invoicesKey,
         chatTabKey: _chatKey,
       ),
     );

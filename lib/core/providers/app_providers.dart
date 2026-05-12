@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -58,7 +60,9 @@ const _kLocaleKey = 'app.locale';
 
 class LocaleNotifier extends StateNotifier<AppLocale> {
   LocaleNotifier(this._prefs) : super(_readLocale(_prefs)) {
-    LocaleSettings.setLocaleSync(state);
+    // Avoid [setLocaleSync]: with slang `lazy` + deferred locales, sync load calls
+    // [buildSync] on ar/fr and crashes before deferred libraries are loaded.
+    unawaited(LocaleSettings.setLocale(state));
   }
 
   final AppPrefs _prefs;
@@ -66,7 +70,12 @@ class LocaleNotifier extends StateNotifier<AppLocale> {
   static AppLocale _readLocale(AppPrefs p) {
     final raw = p.getString(_kLocaleKey);
     if (raw == null) {
-      return AppLocaleUtils.findDeviceLocale();
+      try {
+        return AppLocaleUtils.findDeviceLocale();
+      } catch (e, st) {
+        debugPrint('LocaleNotifier findDeviceLocale failed: $e\n$st');
+        return AppLocale.en;
+      }
     }
     return AppLocale.values.firstWhere(
       (l) => l.languageCode == raw,

@@ -529,15 +529,20 @@ class _TabEntry extends StatelessWidget {
                 alignment: Alignment.bottomCenter,
                 duration: const Duration(milliseconds: 140),
                 curve: Curves.easeOutBack,
-                child: Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 10.5,
-                    fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
-                    color: labelColor,
-                    letterSpacing: -0.2,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    softWrap: false,
+                    overflow: TextOverflow.clip,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 10.5,
+                      fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+                      color: labelColor,
+                      letterSpacing: -0.2,
+                    ),
                   ),
                 ),
               ),

@@ -45,7 +45,6 @@ Future<void> main() async {
     );
   }
 
-  final initialPrefs = await prefsFuture;
   unawaited(
     SystemChrome.setPreferredOrientations(const [DeviceOrientation.portraitUp]),
   );
@@ -56,21 +55,76 @@ Future<void> main() async {
   // are still captured by [_installGlobalErrorHandlers] (just through the no-op until then).
   CrashReporterHolder.instance = NoopCrashReporter();
   _installGlobalErrorHandlers();
+
+  SharedPreferences? initialPrefs;
+  try {
+    initialPrefs = await prefsFuture;
+  } catch (e, st) {
+    developer.log(
+      'SharedPreferences.getInstance failed (using in-memory prefs): $e',
+      name: 'wayo.main',
+      error: e,
+      stackTrace: st,
+    );
+    initialPrefs = null;
+  }
   await _runAppImmediate(initialPrefs);
 }
 
 /// First [runApp] shows [/splash] as soon as possible. Hive opens after first frame.
-Future<void> _runAppImmediate(SharedPreferences initialPrefs) async {
+Future<void> _runAppImmediate(SharedPreferences? initialPrefs) async {
   try {
-    final prefs = _loadAppPrefsOrMemory(initialPrefs);
-    final locCode = prefs.getString('app.locale');
-    final initialLocale = locCode == null
-        ? AppLocaleUtils.findDeviceLocale()
-        : AppLocale.values.firstWhere(
-            (l) => l.languageCode == locCode,
-            orElse: () => AppLocale.en,
-          );
-    LocaleSettings.setLocaleSync(initialLocale);
+    final prefs = initialPrefs == null
+        ? AppPrefs.memory()
+        : _loadAppPrefsOrMemory(initialPrefs);
+
+    AppLocale initialLocale = AppLocale.en;
+    try {
+      final locCode = prefs.getString('app.locale');
+      initialLocale = locCode == null
+          ? AppLocaleUtils.findDeviceLocale()
+          : AppLocale.values.firstWhere(
+              (l) => l.languageCode == locCode,
+              orElse: () => AppLocale.en,
+            );
+    } catch (e, st) {
+      developer.log(
+        'Initial locale resolution failed, using en: $e',
+        name: 'wayo.main',
+        error: e,
+        stackTrace: st,
+      );
+      initialLocale = AppLocale.en;
+    }
+
+    // Deferred locales (ar/fr) must be loaded asynchronously — [setLocaleSync] calls
+    // [buildSync] which touches deferred imports and crashes on device (see slang lazy mode).
+    try {
+      await LocaleSettings.setLocale(initialLocale);
+    } catch (e, st) {
+      developer.log(
+        'LocaleSettings.setLocale failed, falling back to en: $e',
+        name: 'wayo.main',
+        error: e,
+        stackTrace: st,
+      );
+      try {
+        await LocaleSettings.setLocale(AppLocale.en);
+      } catch (e2, st2) {
+        developer.log(
+          'LocaleSettings.setLocale(en) also failed: $e2',
+          name: 'wayo.main',
+          error: e2,
+          stackTrace: st2,
+        );
+        rethrow;
+      }
+      try {
+        await prefs.setString('app.locale', AppLocale.en.languageCode);
+      } catch (_) {
+        // Best-effort; prefs channel can fail on some embedders.
+      }
+    }
 
     runApp(
       ProviderScope(
@@ -90,16 +144,56 @@ Future<void> _runAppImmediate(SharedPreferences initialPrefs) async {
   } catch (e, st) {
     debugPrint('Startup failed: $e');
     debugPrintStack(stackTrace: st);
-    runApp(
-      const MaterialApp(
-        debugShowCheckedModeBanner: false,
-        home: Scaffold(
-          body: Center(
-            child: Padding(
-              padding: EdgeInsets.all(24),
-              child: Text(
-                'Startup failed. Please reinstall or contact support.',
-                textAlign: TextAlign.center,
+    developer.log(
+      'Startup failed',
+      name: 'wayo.main',
+      error: e,
+      stackTrace: st,
+    );
+    runApp(_StartupFailedApp(error: e, stackTrace: st));
+  }
+}
+
+/// Minimal UI when bootstrap throws; [kDebugMode] shows the exception (logcat / IDE).
+final class _StartupFailedApp extends StatelessWidget {
+  const _StartupFailedApp({required this.error, required this.stackTrace});
+
+  final Object error;
+  final StackTrace stackTrace;
+
+  @override
+  Widget build(BuildContext context) {
+    final detail = kDebugMode ? '$error\n\n$stackTrace' : null;
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: Scaffold(
+        body: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Startup failed. Please reinstall or contact support.${kDebugMode ? '\n\n(Debug: see details below)' : ''}',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodyLarge,
+                  ),
+                  if (detail != null) ...[
+                    const SizedBox(height: 24),
+                    SelectionArea(
+                      child: Text(
+                        detail,
+                        textAlign: TextAlign.start,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          height: 1.25,
+                          fontFamily: 'monospace',
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ),
           ),
@@ -114,7 +208,9 @@ AppPrefs _loadAppPrefsOrMemory(SharedPreferences sp) {
     return AppPrefs.shared(sp);
   } catch (e, st) {
     if (kDebugMode) {
-      debugPrint('SharedPreferences-backed AppPrefs failed ($e); using memory.');
+      debugPrint(
+        'SharedPreferences-backed AppPrefs failed ($e); using memory.',
+      );
       debugPrintStack(stackTrace: st);
     }
     return AppPrefs.memory();

@@ -93,14 +93,14 @@ android {
     buildTypes {
 
         release {
-
+            // Use upload keystore when key.properties exists; otherwise fall back to the
+            // debug keystore so local `flutter build apk --release` / CI smoke tests work.
+            // Play Console uploads must always use a real release keystore + key.properties.
             signingConfig =
                 if (keystorePropertiesFile.exists()) {
                     signingConfigs.getByName("release")
                 } else {
-                    throw GradleException(
-                        "Release builds require a signing key."
-                    )
+                    signingConfigs.getByName("debug")
                 }
 
             // =====================================================

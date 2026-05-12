@@ -60,4 +60,27 @@ abstract final class ApiEndpoints {
   /// Wayo-ads chat bootstrap — proxies to chat-service with server-only secret.
   /// [GET /api/chat/token](Wayo-ads) — Bearer (mobile) or session (web).
   static const String chatToken = 'api/chat/token';
+
+  /// [GET /api/user/profile](Wayo-ads) — Bearer (mobile) or session (web).
+  static const String userProfile = 'api/user/profile';
+
+  /// [POST /api/user/delete-account](Wayo-ads), body `{ password }`.
+  static const String userDeleteAccount = 'api/user/delete-account';
+
+  /// All invoices visible to the signed-in user — [GET /api/invoices](Wayo-ads).
+  /// (No `success` field; used as a **fallback** when role-specific paginated routes
+  /// fail with 404/403 on older deployments.)
+  static const String invoicesAll = 'api/invoices';
+
+  /// Paginated invoices list for ADVERTISER (`?page=N`, page size 10) —
+  /// [GET /api/advertiser/invoices](Wayo-ads).
+  static const String advertiserInvoices = 'api/advertiser/invoices';
+
+  /// Paginated invoices list for CREATOR (`?page=N`, page size 10) —
+  /// [GET /api/creator/invoices](Wayo-ads).
+  static const String creatorInvoices = 'api/creator/invoices';
+
+  /// Streams a generated `application/pdf` (Bearer or session) —
+  /// [GET /api/invoices/:id/pdf](Wayo-ads).
+  static String invoicePdf(String id) => 'api/invoices/$id/pdf';
 }

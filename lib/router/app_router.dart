@@ -25,7 +25,11 @@ import '../features/shell/app_shell.dart';
 import '../features/shell/shell_tab_signed_in_gate.dart';
 import '../features/shell/shell_tabs.dart';
 import '../features/wallet/presentation/screens/wallet_tab_screen.dart';
+import '../features/invoices/presentation/screens/invoices_tab_screen.dart';
+import '../features/invoices/presentation/screens/invoice_detail_screen.dart';
+import '../features/account_deletion/presentation/screens/account_deletion_screen.dart';
 import '../screens/privacy_policy_screen.dart';
+import '../features/splash/splash_screen.dart';
 
 part 'app_router.g.dart';
 
@@ -83,28 +87,26 @@ GoRouter goRouter(GoRouterRef ref) {
 
   return GoRouter(
     navigatorKey: rootNavigatorKey,
-    initialLocation: '/',
+    initialLocation: '/splash',
     refreshListenable: refresh,
     redirect: (context, state) {
       final auth = ref.read(authNotifierProvider);
       final loc = state.matchedLocation;
 
+      if (loc == '/splash') {
+        return null;
+      }
+
       if (loc == '/privacy') {
         return null;
       }
 
+      /// Forgot-password must stay reachable while signed in (e.g. OAuth users
+      /// setting a password from delete-account). Redirecting authed users to
+      /// [/dashboard] broke that flow and could upset the root [Navigator]
+      /// page stack (duplicate page keys with [GoRouter] + shell).
       if (loc.startsWith('/forgot-password')) {
-        return auth.when(
-          data: (s) {
-            if (s is AuthAuthenticated) {
-              final n = onboardingRedirectPath(s.user);
-              return n ?? '/dashboard';
-            }
-            return null;
-          },
-          loading: () => null,
-          error: (Object? err, StackTrace? stack) => null,
-        );
+        return null;
       }
 
       if (loc == '/home') {
@@ -163,6 +165,10 @@ GoRouter goRouter(GoRouterRef ref) {
     },
     routes: [
       GoRoute(
+        path: '/splash',
+        builder: (context, state) => const SplashScreen(),
+      ),
+      GoRoute(
         path: '/',
         builder: (context, state) {
           final auth = ref.read(authNotifierProvider);
@@ -190,21 +196,31 @@ GoRouter goRouter(GoRouterRef ref) {
             const EmailVerificationOtpOnboardingScreen(),
       ),
       GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
         path: '/forgot-password',
-        builder: (context, state) => const ForgotPasswordScreen(),
+        pageBuilder: (context, state) => MaterialPage<void>(
+          key: const ValueKey<String>('forgot-password'),
+          child: const ForgotPasswordScreen(),
+        ),
         routes: [
           GoRoute(
             path: 'otp',
-            builder: (context, state) {
+            pageBuilder: (context, state) {
               final email = state.extra is String ? state.extra! as String : '';
-              return OtpVerificationScreen(email: email);
+              return MaterialPage<void>(
+                key: ValueKey<String>('forgot-password-otp-$email'),
+                child: OtpVerificationScreen(email: email),
+              );
             },
           ),
           GoRoute(
             path: 'new-password',
-            builder: (context, state) {
+            pageBuilder: (context, state) {
               final token = state.extra is String ? state.extra! as String : '';
-              return NewPasswordScreen(resetToken: token);
+              return MaterialPage<void>(
+                key: ValueKey<String>('forgot-password-new-$token'),
+                child: NewPasswordScreen(resetToken: token),
+              );
             },
           ),
         ],
@@ -235,6 +251,14 @@ GoRouter goRouter(GoRouterRef ref) {
               GoRoute(
                 path: '/wallet',
                 builder: (context, state) => const WalletTabScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/invoices',
+                builder: (context, state) => const InvoicesTabScreen(),
               ),
             ],
           ),
@@ -324,6 +348,22 @@ GoRouter goRouter(GoRouterRef ref) {
             child: CreatorApplicationDetailScreen(campaignId: id, title: title),
           );
         },
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: '/invoices/:id',
+        pageBuilder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return MaterialPage<void>(
+            key: ValueKey('invoice-$id'),
+            child: InvoiceDetailScreen(invoiceId: id),
+          );
+        },
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: '/settings/delete-account',
+        builder: (context, state) => const AccountDeletionScreen(),
       ),
       GoRoute(
         parentNavigatorKey: rootNavigatorKey,

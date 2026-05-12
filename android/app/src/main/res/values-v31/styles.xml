@@ -1,24 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Theme applied to the Android Window while the process is starting when the OS's Dark Mode setting is off -->
-    <style name="LaunchTheme" parent="Theme.AppCompat.DayNight.NoActionBar">
+    <!-- parent=Theme.SplashScreen is required for Android 12+ splash attrs + compat library.
+         If you run `dart run flutter_native_splash:create`, restore this parent (generator uses AppCompat). -->
+    <style name="LaunchTheme" parent="Theme.SplashScreen">
+        <item name="postSplashScreenTheme">@style/NormalTheme</item>
         <item name="android:forceDarkAllowed">false</item>
         <item name="android:windowFullscreen">true</item>
         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
         <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
-        <item name="android:windowSplashScreenBackground">#0A0A0A</item>
-        <item name="android:windowSplashScreenAnimatedIcon">@drawable/android12splash</item>
-        <item name="android:windowSplashScreenIconBackgroundColor">#0A0A0A</item>
+        <item name="android:windowSplashScreenBackground">#000000</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_empty_icon</item>
+        <item name="android:windowSplashScreenIconBackgroundColor">#000000</item>
     </style>
-    <!-- Theme applied to the Android Window as soon as the process has started.
-         This theme determines the color of the Android Window while your
-         Flutter UI initializes, as well as behind your Flutter UI while its
-         running.
-         
-         This Theme is only used starting with V2 of Flutter's Android embedding. -->
-    <!-- Must inherit from AppCompat/MaterialComponents for flutter_stripe (Stripe Android SDK). -->
     <style name="NormalTheme" parent="Theme.AppCompat.DayNight.NoActionBar">
-        <item name="android:windowBackground">?android:colorBackground</item>
+        <item name="android:windowBackground">@color/splashBackground</item>
         <item name="android:forceDarkAllowed">false</item>
     </style>
 </resources>

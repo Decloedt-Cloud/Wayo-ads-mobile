@@ -12,6 +12,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/creator_colors.dart';
 import '../../../../i18n/strings.g.dart';
+import '../../../advertiser_campaigns/domain/campaign_niche_catalog.dart';
 import '../../../creator_dashboard/domain/creator_application.dart';
 import '../../domain/creator_browse_campaign.dart';
 import '../../domain/creator_campaign_detail.dart';
@@ -169,10 +170,7 @@ class _Body extends ConsumerWidget {
                   ),
                 ),
               const SizedBox(height: 4),
-              Text(
-                c.title,
-                style: AppTextStyles.pageTitle(context),
-              ),
+              Text(c.title, style: AppTextStyles.pageTitle(context)),
               const SizedBox(height: 14),
               Wrap(
                 spacing: 8,
@@ -186,6 +184,8 @@ class _Body extends ConsumerWidget {
                   _ApplicationStatusPill(status: c.myApplicationStatus),
                 ],
               ),
+              const SizedBox(height: 18),
+              _CampaignNicheLocationSummary(campaign: c, t: t),
               const SizedBox(height: 18),
               _RewardsBlock(campaign: c, moneyLocale: moneyLocale),
               const SizedBox(height: 18),
@@ -357,6 +357,88 @@ class _Hero extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _CampaignNicheLocationSummary extends StatelessWidget {
+  const _CampaignNicheLocationSummary({
+    required this.campaign,
+    required this.t,
+  });
+
+  final CreatorCampaignDetail campaign;
+  final Translations t;
+
+  @override
+  Widget build(BuildContext context) {
+    final nicheLabel =
+        (campaign.niche != null && campaign.niche!.trim().isNotEmpty)
+            ? campaignNicheFallbackLabel(campaign.niche!)
+            : '—';
+    final locationLabel =
+        (campaign.location != null && campaign.location!.trim().isNotEmpty)
+            ? campaign.location!
+            : '—';
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            Icon(
+              Icons.category_outlined,
+              size: 18,
+              color: AppColors.textSecondaryOf(context),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              t.advertiser_campaigns.detail.niche_label,
+              style: AppTextStyles.caption(context).copyWith(
+                color: AppColors.textMutedOf(context),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                nicheLabel,
+                textAlign: TextAlign.end,
+                style: AppTextStyles.bodyLarge(
+                  context,
+                ).copyWith(fontWeight: FontWeight.w700),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Icon(
+              Icons.place_outlined,
+              size: 18,
+              color: AppColors.textSecondaryOf(context),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              t.advertiser_campaigns.detail.location_label,
+              style: AppTextStyles.caption(context).copyWith(
+                color: AppColors.textMutedOf(context),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                locationLabel,
+                textAlign: TextAlign.end,
+                style: AppTextStyles.bodyLarge(
+                  context,
+                ).copyWith(fontWeight: FontWeight.w700),
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

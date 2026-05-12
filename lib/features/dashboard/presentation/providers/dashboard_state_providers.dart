@@ -14,10 +14,12 @@ import '../../data/repositories/dashboard_repository.dart';
 import '../../data/repositories/notifications_repository.dart';
 import '../../domain/advertiser_campaigns_page_result.dart';
 import '../../domain/entities/notification_item.dart';
+import '../../../account_deletion/presentation/providers/account_deletion_providers.dart';
 import '../../../advertiser_campaigns/presentation/providers/advertiser_campaigns_providers.dart';
 import '../../../creator_campaigns/presentation/providers/creator_campaigns_providers.dart';
 import '../../../creator_dashboard/presentation/providers/creator_dashboard_providers.dart';
 import '../../../creator_wallet/presentation/providers/creator_wallet_providers.dart';
+import '../../../invoices/presentation/providers/invoices_providers.dart';
 import '../../../wallet/presentation/providers/advertiser_wallet_providers.dart';
 
 final requestDeduplicatorProvider = Provider<RequestDeduplicator>((ref) {
@@ -153,6 +155,13 @@ final realtimeInvalidationProvider = Provider<void>((ref) {
     if (balanceEvent) {
       ref.invalidate(advertiserWalletPageProvider);
     }
+    // Invoices are created automatically on the backend whenever a wallet
+    // deposit, campaign hold or creator withdrawal completes. Any of these
+    // events is a strong signal that a new invoice exists for this user — so
+    // we refresh the list eagerly without waiting for the 60s foreground poll.
+    if (balanceEvent || payoutEvent) {
+      ref.invalidate(invoicesControllerProvider);
+    }
     if (campaignEvent) {
       ref.invalidate(advertiserCampaignsPagedProvider);
       ref.invalidate(advertiserCampaignsCountsProvider);
@@ -208,6 +217,15 @@ final realtimeInvalidationProvider = Provider<void>((ref) {
         (lower.contains('business') && lower.contains('profile')) ||
         (lower.contains('business') && lower.contains('updat'))) {
       ref.invalidate(creatorBusinessProfileProvider);
+    }
+
+    final accountDeletionEvent = lower.contains('deletion') ||
+        (lower.contains('account') &&
+            (lower.contains('delete') || lower.contains('purge')));
+    if (accountDeletionEvent) {
+      unawaited(
+        ref.read(accountDeletionScheduledAtProvider.notifier).syncFromRemote(),
+      );
     }
   });
   ref.onDispose(sub.cancel);

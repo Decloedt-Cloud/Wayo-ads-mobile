@@ -34,33 +34,20 @@ final class AdvertiserCampaignsRepository {
     required int page,
     int limit = 10,
     String? search,
-  }) =>
-      _remote.fetchAdvertiserCampaignsPage(
-        page: page,
-        limit: limit,
-        status: status,
-        search: search,
-      );
+  }) => _remote.fetchAdvertiserCampaignsPage(
+    page: page,
+    limit: limit,
+    status: status,
+    search: search,
+  );
 
   /// Tab totals (4 light requests with `limit=1`).
   Future<({int active, int draft, int paused, int completed})>
   loadCampaignStatusCounts() async {
     final r = await Future.wait([
-      _remote.fetchAdvertiserCampaignsPage(
-        page: 1,
-        limit: 1,
-        status: 'ACTIVE',
-      ),
-      _remote.fetchAdvertiserCampaignsPage(
-        page: 1,
-        limit: 1,
-        status: 'DRAFT',
-      ),
-      _remote.fetchAdvertiserCampaignsPage(
-        page: 1,
-        limit: 1,
-        status: 'PAUSED',
-      ),
+      _remote.fetchAdvertiserCampaignsPage(page: 1, limit: 1, status: 'ACTIVE'),
+      _remote.fetchAdvertiserCampaignsPage(page: 1, limit: 1, status: 'DRAFT'),
+      _remote.fetchAdvertiserCampaignsPage(page: 1, limit: 1, status: 'PAUSED'),
       _remote.fetchAdvertiserCampaignsPage(
         page: 1,
         limit: 1,

@@ -6,7 +6,7 @@ part of 'wayo_ads_dio.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$wayoAdsDioHash() => r'01d013c4b08cffd9ca0766cfb181e6d11bc4e390';
+String _$wayoAdsDioHash() => r'26422a443865cba9aa868215363b7b6f9d01f886';
 
 /// Dio client for Wayo-ads (Next.js) API — same auth stack as main [dio].
 ///
@@ -15,9 +15,8 @@ String _$wayoAdsDioHash() => r'01d013c4b08cffd9ca0766cfb181e6d11bc4e390';
 final wayoAdsDioProvider = Provider<Dio>.internal(
   wayoAdsDio,
   name: r'wayoAdsDioProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$wayoAdsDioHash,
+  debugGetCreateSourceHash:
+      const bool.fromEnvironment('dart.vm.product') ? null : _$wayoAdsDioHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );

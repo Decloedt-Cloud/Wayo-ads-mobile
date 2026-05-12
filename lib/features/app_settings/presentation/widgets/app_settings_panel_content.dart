@@ -5,11 +5,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/providers/app_providers.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../auth/presentation/providers/current_account_providers.dart';
 import '../../../../i18n/strings.g.dart';
+import '../../../../router/app_router.dart';
 
 class AppSettingsPanelContent extends ConsumerWidget {
   const AppSettingsPanelContent({super.key, required this.onClose});
@@ -89,6 +91,39 @@ class AppSettingsPanelContent extends ConsumerWidget {
                 const SizedBox(height: 8),
                 Text(
                   t.app_settings.language_hint,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    height: 1.35,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 22),
+                _SectionTitle(
+                      icon: Icons.manage_accounts_outlined,
+                      text: t.app_settings.section_account,
+                    )
+                    .animate()
+                    .fadeIn(delay: 120.ms, duration: 220.ms)
+                    .slideX(begin: 0.04, curve: Curves.easeOutCubic),
+                const SizedBox(height: 10),
+                _DeleteAccountTile(
+                      label: t.app_settings.delete_account_entry,
+                      onTap: () {
+                        HapticFeedback.selectionClick();
+                        onClose();
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          final nav = rootNavigatorKey.currentContext;
+                          if (nav != null && nav.mounted) {
+                            GoRouter.of(nav).push('/settings/delete-account');
+                          }
+                        });
+                      },
+                    )
+                    .animate()
+                    .fadeIn(delay: 140.ms, duration: 260.ms)
+                    .slideY(begin: 0.03),
+                const SizedBox(height: 6),
+                Text(
+                  t.app_settings.delete_account_entry_sub,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     height: 1.35,
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -181,6 +216,45 @@ class _SectionTitle extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _DeleteAccountTile extends StatelessWidget {
+  const _DeleteAccountTile({required this.label, required this.onTap});
+
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Material(
+      color: scheme.errorContainer.withValues(alpha: 0.25),
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+          child: Row(
+            children: [
+              Icon(Icons.delete_forever_rounded, color: scheme.error, size: 22),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  label,
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    color: scheme.error,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              Icon(Icons.chevron_right_rounded, color: scheme.error),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

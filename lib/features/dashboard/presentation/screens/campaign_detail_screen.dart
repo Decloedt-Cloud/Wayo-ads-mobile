@@ -69,6 +69,15 @@ String _campaignObjectiveDetailLabel(Translations t, String? raw) {
   }
 }
 
+/// Same resolution as [campaignLocationFromCampaignJson] (detail payload).
+String _advertiserCampaignDetailLocationLabel(Map<String, dynamic> json) {
+  return campaignLocationFromCampaignJson(
+        json,
+        debugSource: 'advertiserCampaignDetail',
+      ) ??
+      '—';
+}
+
 /// Read-only campaign detail (Wayo-ads `GET /api/campaigns/:id`). No edit actions.
 class CampaignDetailScreen extends ConsumerWidget {
   const CampaignDetailScreen({
@@ -295,12 +304,12 @@ class _DetailContent extends StatelessWidget {
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    final hasThumb = thumb != null && thumb!.trim().isNotEmpty;
+    final hasThumb = thumb != null && thumb.trim().isNotEmpty;
 
     Widget coverChild;
     if (hasThumb) {
       coverChild = CachedNetworkImage(
-        imageUrl: thumb!,
+        imageUrl: thumb,
         fit: BoxFit.cover,
         memCacheWidth: 800,
         errorWidget: (context, url, error) {
@@ -356,6 +365,7 @@ class _DetailContent extends StatelessWidget {
             t,
             json['campaignObjective'] as String?,
           ),
+          locationLabel: _advertiserCampaignDetailLocationLabel(json),
           desc: desc,
           t: t,
         ),
@@ -548,6 +558,7 @@ class _SummaryCard extends StatelessWidget {
     required this.platformLabel,
     required this.campaignKindLabel,
     required this.nicheLabel,
+    required this.locationLabel,
     required this.objectiveLabel,
     required this.desc,
     required this.t,
@@ -563,6 +574,9 @@ class _SummaryCard extends StatelessWidget {
 
   /// Human-readable niche label (API enum).
   final String nicheLabel;
+
+  /// Target location / geo when present on the campaign JSON.
+  final String locationLabel;
 
   /// Localized campaign objective.
   final String objectiveLabel;
@@ -661,6 +675,34 @@ class _SummaryCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   nicheLabel,
+                  textAlign: TextAlign.end,
+                  style: AppTextStyles.bodyLarge(
+                    context,
+                  ).copyWith(fontWeight: FontWeight.w700),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Icon(
+                Icons.place_outlined,
+                size: 18,
+                color: AppColors.textSecondaryOf(context),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                t.advertiser_campaigns.detail.location_label,
+                style: AppTextStyles.caption(context).copyWith(
+                  color: AppColors.textMutedOf(context),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  locationLabel,
                   textAlign: TextAlign.end,
                   style: AppTextStyles.bodyLarge(
                     context,

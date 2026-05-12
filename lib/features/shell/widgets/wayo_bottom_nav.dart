@@ -7,8 +7,8 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../i18n/strings.g.dart';
 
-/// Number of shell branches (dashboard, campaigns, wallet, chat).
-const int kWayoShellTabCount = 4;
+/// Number of shell branches (dashboard, campaigns, wallet, invoices, chat).
+const int kWayoShellTabCount = 5;
 
 /// Brand ambre 2026 (header ciné / spec).
 const Color _kNavAmber = Color(0xFFF4A237);
@@ -26,6 +26,7 @@ class WayoBottomNav extends StatefulWidget {
     this.dashboardTabKey,
     this.campaignsTabKey,
     this.walletTabKey,
+    this.invoicesTabKey,
     this.chatTabKey,
   });
 
@@ -42,6 +43,7 @@ class WayoBottomNav extends StatefulWidget {
   final GlobalKey? dashboardTabKey;
   final GlobalKey? campaignsTabKey;
   final GlobalKey? walletTabKey;
+  final GlobalKey? invoicesTabKey;
   final GlobalKey? chatTabKey;
 
   @override
@@ -287,26 +289,42 @@ class _WayoBottomNavState extends State<WayoBottomNav>
                                           ),
                                         ),
                                         _TabEntry(
-                                          tabKey: widget.chatTabKey,
+                                          tabKey: widget.invoicesTabKey,
                                           selected: idx == 3,
-                                          label: t.nav.chat,
-                                          iconSelected:
-                                              Icons.chat_bubble_rounded,
-                                          iconIdle:
-                                              Icons.chat_bubble_outline_rounded,
+                                          label: t.nav.invoices,
+                                          iconSelected: Icons.receipt_long_rounded,
+                                          iconIdle: Icons.receipt_long_outlined,
                                           accent: inactiveIcon,
                                           onTap: () => _go(3),
-                                          badge:
-                                              widget.chatUnread > 0 && idx != 3
-                                              ? widget.chatUnread
-                                              : null,
-                                          badgeCap: 9,
                                           pulseScale: idx == 3
                                               ? _pulseScale.value
                                               : 1,
                                           pressed: _pressedTab == 3,
                                           onHighlight: (v) => setState(
                                             () => _pressedTab = v ? 3 : null,
+                                          ),
+                                        ),
+                                        _TabEntry(
+                                          tabKey: widget.chatTabKey,
+                                          selected: idx == 4,
+                                          label: t.nav.chat,
+                                          iconSelected:
+                                              Icons.chat_bubble_rounded,
+                                          iconIdle:
+                                              Icons.chat_bubble_outline_rounded,
+                                          accent: inactiveIcon,
+                                          onTap: () => _go(4),
+                                          badge:
+                                              widget.chatUnread > 0 && idx != 4
+                                              ? widget.chatUnread
+                                              : null,
+                                          badgeCap: 9,
+                                          pulseScale: idx == 4
+                                              ? _pulseScale.value
+                                              : 1,
+                                          pressed: _pressedTab == 4,
+                                          onHighlight: (v) => setState(
+                                            () => _pressedTab = v ? 4 : null,
                                           ),
                                         ),
                                       ],

@@ -225,7 +225,7 @@ class _CreatorDashboardScreenState extends ConsumerState<CreatorDashboardScreen>
                 );
               },
             ),
-            const SliverPadding(padding: EdgeInsets.only(bottom: 120)),
+            const SliverPadding(padding: EdgeInsets.only(bottom: 142)),
           ],
         ),
       ),

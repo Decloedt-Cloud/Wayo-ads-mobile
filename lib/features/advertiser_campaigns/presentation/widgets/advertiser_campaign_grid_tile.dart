@@ -21,11 +21,8 @@ String? _advertiserGridRateCaption(
   Translations t,
   String moneyLocale,
 ) {
-  String fmt(double major) => MoneyFormatter.format(
-        major,
-        currency: c.currency,
-        locale: moneyLocale,
-      );
+  String fmt(double major) =>
+      MoneyFormatter.format(major, currency: c.currency, locale: moneyLocale);
   final type = c.campaignType;
   if (type == CreatorCampaignType.link && c.cpcCents > 0) {
     return t.creator.campaigns.reward_per_click(
@@ -173,155 +170,203 @@ class AdvertiserCampaignGridTile extends StatelessWidget {
                   child: ColoredBox(
                     color: footerBg,
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            c.name,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: AppTextStyles.labelLarge(context).copyWith(
-                              fontSize: 13.5,
-                              height: 1.18,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: -0.2,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Wrap(
-                            spacing: 4,
-                            runSpacing: 4,
-                            children: [
-                              _MiniPill(text: typeLabel),
-                              _MiniPill(text: platLabel, muted: true),
-                            ],
-                          ),
-                          if (nicheLabel != null) ...[
-                            const SizedBox(height: 4),
-                            Text(
-                              '${t.advertiser_campaigns.create.field_niche}: $nicheLabel',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: AppTextStyles.caption(context).copyWith(
-                                fontSize: 10.5,
-                                color: AppColors.textSecondaryOf(context),
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                          const SizedBox(height: 3),
-                          Row(
-                            children: [
-                              Icon(
-                                _platformIconData(c.platform),
-                                size: 13,
-                                color: AppColors.textSecondaryOf(context),
-                              ),
-                              const SizedBox(width: 4),
-                              Expanded(
-                                child: Text(
-                                  platLabel,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: AppTextStyles.caption(context).copyWith(
-                                    fontSize: 10.5,
-                                    fontWeight: FontWeight.w700,
-                                  ),
+                      padding: const EdgeInsets.fromLTRB(10, 6, 10, 6),
+                      child: LayoutBuilder(
+                        builder: (context, bx) {
+                          return ClipRect(
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: Alignment.topCenter,
+                              child: ConstrainedBox(
+                                constraints: BoxConstraints(
+                                  maxWidth: bx.maxWidth,
+                                ),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      c.name,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: AppTextStyles.labelLarge(context)
+                                          .copyWith(
+                                            fontSize: 13.5,
+                                            height: 1.18,
+                                            fontWeight: FontWeight.w800,
+                                            letterSpacing: -0.2,
+                                          ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Wrap(
+                                      spacing: 4,
+                                      runSpacing: 4,
+                                      children: [
+                                        _MiniPill(text: typeLabel),
+                                        _MiniPill(text: platLabel, muted: true),
+                                      ],
+                                    ),
+                                    if (nicheLabel != null) ...[
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        '${t.advertiser_campaigns.create.field_niche}: $nicheLabel',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: AppTextStyles.caption(context)
+                                            .copyWith(
+                                              fontSize: 10.5,
+                                              color: AppColors.textSecondaryOf(
+                                                context,
+                                              ),
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                      ),
+                                    ],
+                                    const SizedBox(height: 3),
+                                    Row(
+                                      children: [
+                                        Icon(
+                                          _platformIconData(c.platform),
+                                          size: 13,
+                                          color: AppColors.textSecondaryOf(
+                                            context,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Expanded(
+                                          child: Text(
+                                            platLabel,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style:
+                                                AppTextStyles.caption(
+                                                  context,
+                                                ).copyWith(
+                                                  fontSize: 10.5,
+                                                  fontWeight: FontWeight.w700,
+                                                ),
+                                          ),
+                                        ),
+                                        Icon(
+                                          Icons.place_outlined,
+                                          size: 13,
+                                          color: AppColors.textSecondaryOf(
+                                            context,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 2),
+                                        Expanded(
+                                          child: Text(
+                                            locLabel,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            textAlign: TextAlign.end,
+                                            style:
+                                                AppTextStyles.caption(
+                                                  context,
+                                                ).copyWith(
+                                                  fontSize: 10.5,
+                                                  fontWeight: FontWeight.w700,
+                                                ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      t
+                                          .creator
+                                          .campaigns
+                                          .budget_remaining_label,
+                                      style: AppTextStyles.caption(context)
+                                          .copyWith(
+                                            fontSize: 9.5,
+                                            color: AppColors.textMutedOf(
+                                              context,
+                                            ),
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                    ),
+                                    Text(
+                                      MoneyFormatter.format(
+                                        c.remainingBudgetCents / 100.0,
+                                        currency: c.currency,
+                                        locale: moneyLocale,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: AppTextStyles.labelLarge(context)
+                                          .copyWith(
+                                            fontSize: 12.5,
+                                            fontWeight: FontWeight.w800,
+                                            color: AppColors.primary,
+                                          ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(3),
+                                      child: LinearProgressIndicator(
+                                        minHeight: 4,
+                                        value: spentFrac,
+                                        backgroundColor: AppColors.borderOf(
+                                          context,
+                                        ).withValues(alpha: 0.35),
+                                        color: AppColors.primary,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 5),
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: CampaignGridMicroStat(
+                                            icon: linkMetric
+                                                ? Icons.ads_click_rounded
+                                                : Icons.visibility_outlined,
+                                            value:
+                                                '${linkMetric ? c.validClicks : c.validViews}',
+                                            tooltip: linkMetric
+                                                ? t
+                                                      .advertiser_campaigns
+                                                      .detail
+                                                      .valid_clicks
+                                                : t
+                                                      .advertiser_campaigns
+                                                      .detail
+                                                      .valid_views,
+                                          ),
+                                        ),
+                                        Expanded(
+                                          child: CampaignGridMicroStat(
+                                            icon: Icons.groups_2_outlined,
+                                            value: '${c.approvedCreators}',
+                                            tooltip: t
+                                                .advertiser_campaigns
+                                                .detail
+                                                .approved_creators,
+                                          ),
+                                        ),
+                                        Expanded(
+                                          child: CampaignGridMicroStat(
+                                            icon: Icons.payments_outlined,
+                                            value: MoneyFormatter.format(
+                                              c.totalBudgetCents / 100.0,
+                                              currency: c.currency,
+                                              locale: moneyLocale,
+                                            ),
+                                            tooltip: t
+                                                .advertiser_campaigns
+                                                .card
+                                                .budget_total,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
                                 ),
                               ),
-                              Icon(
-                                Icons.place_outlined,
-                                size: 13,
-                                color: AppColors.textSecondaryOf(context),
-                              ),
-                              const SizedBox(width: 2),
-                              Expanded(
-                                child: Text(
-                                  locLabel,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  textAlign: TextAlign.end,
-                                  style: AppTextStyles.caption(context).copyWith(
-                                    fontSize: 10.5,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            t.creator.campaigns.budget_remaining_label,
-                            style: AppTextStyles.caption(context).copyWith(
-                              fontSize: 9.5,
-                              color: AppColors.textMutedOf(context),
-                              fontWeight: FontWeight.w700,
                             ),
-                          ),
-                          Text(
-                            MoneyFormatter.format(
-                              c.remainingBudgetCents / 100.0,
-                              currency: c.currency,
-                              locale: moneyLocale,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: AppTextStyles.labelLarge(context).copyWith(
-                              fontSize: 12.5,
-                              fontWeight: FontWeight.w800,
-                              color: AppColors.primary,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(3),
-                            child: LinearProgressIndicator(
-                              minHeight: 4,
-                              value: spentFrac,
-                              backgroundColor: AppColors.borderOf(
-                                context,
-                              ).withValues(alpha: 0.35),
-                              color: AppColors.primary,
-                            ),
-                          ),
-                          const SizedBox(height: 5),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: CampaignGridMicroStat(
-                                  icon: linkMetric
-                                      ? Icons.ads_click_rounded
-                                      : Icons.visibility_outlined,
-                                  value:
-                                      '${linkMetric ? c.validClicks : c.validViews}',
-                                  tooltip: linkMetric
-                                      ? t.advertiser_campaigns.detail.valid_clicks
-                                      : t.advertiser_campaigns.detail.valid_views,
-                                ),
-                              ),
-                              Expanded(
-                                child: CampaignGridMicroStat(
-                                  icon: Icons.groups_2_outlined,
-                                  value: '${c.approvedCreators}',
-                                  tooltip: t
-                                      .advertiser_campaigns.detail.approved_creators,
-                                ),
-                              ),
-                              Expanded(
-                                child: CampaignGridMicroStat(
-                                  icon: Icons.payments_outlined,
-                                  value: MoneyFormatter.format(
-                                    c.totalBudgetCents / 100.0,
-                                    currency: c.currency,
-                                    locale: moneyLocale,
-                                  ),
-                                  tooltip: t.advertiser_campaigns.card.budget_total,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
+                          );
+                        },
                       ),
                     ),
                   ),

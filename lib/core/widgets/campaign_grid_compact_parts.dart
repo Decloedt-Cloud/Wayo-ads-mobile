@@ -64,6 +64,7 @@ class CampaignGridMicroStat extends StatelessWidget {
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 9.5,
+              height: 1.05,
               fontWeight: FontWeight.w800,
               color: AppColors.textPrimaryOf(context),
             ),

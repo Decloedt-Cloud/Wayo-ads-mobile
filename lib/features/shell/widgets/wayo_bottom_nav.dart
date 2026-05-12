@@ -130,7 +130,7 @@ class _WayoBottomNavState extends State<WayoBottomNav>
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final idx = widget.navigationShell.currentIndex;
-    final bottomPad = MediaQuery.paddingOf(context).bottom + 14;
+    final bottomPad = MediaQuery.paddingOf(context).bottom + 22;
 
     final pillFill = isDark ? _kPillDark : _kPillLight;
     final outerBg = theme.scaffoldBackgroundColor;
@@ -151,7 +151,7 @@ class _WayoBottomNavState extends State<WayoBottomNav>
       child: Padding(
         padding: EdgeInsets.fromLTRB(20, 0, 20, bottomPad),
         child: SizedBox(
-          height: 76,
+          height: 88,
           width: double.infinity,
           child: Center(
             child: ConstrainedBox(
@@ -456,9 +456,10 @@ class _TabEntry extends StatelessWidget {
           highlightColor: Colors.white.withValues(alpha: 0.06),
           borderRadius: BorderRadius.circular(28),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const SizedBox(height: 2),
+              const SizedBox(height: 1),
               Stack(
                 clipBehavior: Clip.none,
                 alignment: Alignment.center,
@@ -522,7 +523,7 @@ class _TabEntry extends StatelessWidget {
                     ),
                 ],
               ),
-              const SizedBox(height: 2),
+              const SizedBox(height: 1),
               AnimatedScale(
                 scale: pressed ? 1.1 : 1.0,
                 alignment: Alignment.bottomCenter,
@@ -540,7 +541,7 @@ class _TabEntry extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 2),
             ],
           ),
         ),

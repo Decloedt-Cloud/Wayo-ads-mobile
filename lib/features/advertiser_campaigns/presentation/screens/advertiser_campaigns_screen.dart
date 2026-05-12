@@ -561,7 +561,7 @@ class _Body extends ConsumerWidget {
                   crossAxisCount: 2,
                   mainAxisSpacing: 12,
                   crossAxisSpacing: 12,
-                  childAspectRatio: 0.465,
+                  childAspectRatio: 0.43,
                 ),
                 delegate: SliverChildBuilderDelegate((context, i) {
                   final c = filtered[i];

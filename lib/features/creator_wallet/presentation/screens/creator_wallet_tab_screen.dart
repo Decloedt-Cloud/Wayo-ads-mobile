@@ -80,7 +80,8 @@ class CreatorWalletTabScreen extends ConsumerWidget {
                 child: pageAsync.when(
                   loading: () => const _HeroSkeleton(),
                   error: (e, _) => ErrorBanner(
-                    message: t.creator.wallet.load_error,
+                    message:
+                        '${t.creator.wallet.load_error}\n${t.creator.wallet.history_load_error}',
                     retryLabel: t.dashboard.errors.retry,
                     onRetry: () => ref.invalidate(creatorWalletPageProvider),
                   ),
@@ -174,14 +175,16 @@ class CreatorWalletTabScreen extends ConsumerWidget {
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-                child: Row(
-                  children: [
-                    Text(
-                      t.creator.wallet.history_title,
-                      style: AppTextStyles.headlineMedium(context),
-                    ),
-                  ],
-                ),
+                child: pageAsync.hasError
+                    ? const SizedBox.shrink()
+                    : Row(
+                        children: [
+                          Text(
+                            t.creator.wallet.history_title,
+                            style: AppTextStyles.headlineMedium(context),
+                          ),
+                        ],
+                      ),
               ),
             ),
             SliverToBoxAdapter(
@@ -189,11 +192,7 @@ class CreatorWalletTabScreen extends ConsumerWidget {
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
                 child: pageAsync.when(
                   loading: () => const _HistorySkeleton(),
-                  error: (e, _) => ErrorBanner(
-                    message: t.creator.wallet.history_load_error,
-                    retryLabel: t.dashboard.errors.retry,
-                    onRetry: () => ref.invalidate(creatorWalletPageProvider),
-                  ),
+                  error: (_, _) => const SizedBox.shrink(),
                   data: (page) => CreatorWithdrawalsList(
                     items: page.withdrawals,
                     moneyLocale: moneyLocale,
@@ -201,7 +200,7 @@ class CreatorWalletTabScreen extends ConsumerWidget {
                 ),
               ),
             ),
-            const SliverPadding(padding: EdgeInsets.only(bottom: 140)),
+            const SliverPadding(padding: EdgeInsets.only(bottom: 158)),
           ],
         ),
       ),

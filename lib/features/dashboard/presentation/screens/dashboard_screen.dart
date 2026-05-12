@@ -108,7 +108,7 @@ class DashboardScreen extends ConsumerWidget {
                 orElse: () => const SizedBox(height: 120),
               ),
             ),
-            const SliverPadding(padding: EdgeInsets.only(bottom: 120)),
+            const SliverPadding(padding: EdgeInsets.only(bottom: 130)),
           ],
         ),
       ),

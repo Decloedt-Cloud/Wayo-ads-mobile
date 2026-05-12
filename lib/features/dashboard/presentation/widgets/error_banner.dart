@@ -18,7 +18,7 @@ class ErrorBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: AppColors.error.withValues(alpha: 0.1),
@@ -26,23 +26,36 @@ class ErrorBanner extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(
-            Icons.warning_amber_rounded,
-            color: AppColors.error,
-            size: 22,
+          Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: const Icon(
+              Icons.warning_amber_rounded,
+              color: AppColors.error,
+              size: 22,
+            ),
           ),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
               message,
+              maxLines: 5,
+              overflow: TextOverflow.ellipsis,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: AppColors.textPrimaryOf(context),
+                height: 1.35,
               ),
             ),
           ),
           if (onRetry != null && retryLabel != null)
             TextButton(
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.only(left: 4),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                alignment: AlignmentDirectional.centerStart,
+              ),
               onPressed: onRetry,
               child: Text(
                 retryLabel!,

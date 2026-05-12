@@ -190,11 +190,6 @@ class _CreatorCampaignsTabScreenState
           ),
           padding: const EdgeInsets.fromLTRB(20, 12, 20, 120),
           children: [
-            _SectionHeader(
-              title: t.creator.campaigns.browse_title,
-              subtitle: t.creator.campaigns.browse_subtitle,
-            ),
-            const SizedBox(height: 12),
             CampaignsExplorerToolbar(
               searchField: Semantics(
                 label: t.campaigns_explorer.search_aria,
@@ -375,7 +370,7 @@ class _CreatorCampaignsTabScreenState
                             crossAxisCount: 2,
                             mainAxisSpacing: 10,
                             crossAxisSpacing: 10,
-                            childAspectRatio: 0.465,
+                            childAspectRatio: 0.43,
                           ),
                       itemCount: filtered.length,
                       itemBuilder: (ctx, i) {

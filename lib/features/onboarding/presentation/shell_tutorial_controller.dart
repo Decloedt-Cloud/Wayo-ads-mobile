@@ -12,7 +12,7 @@ import '../../../i18n/strings.g.dart';
 import '../../auth/domain/wayo_ads_account_role.dart';
 
 /// Identifier of each bottom-nav tab that can receive a coach-mark.
-enum ShellTutorialTarget { dashboard, campaigns, wallet, chat }
+enum ShellTutorialTarget { dashboard, campaigns, wallet, invoices, chat }
 
 /// Orchestrates the first-login, role-aware **coach-mark tour** around the
 /// bottom navigation bar.
@@ -60,8 +60,8 @@ class ShellTutorialController {
 
   /// Launches the tour if it hasn't run yet for this user + role.
   ///
-  /// [keys] must contain all 4 bottom-nav tabs; missing or unmounted keys
-  /// are skipped silently (tour still runs on the remaining ones).
+  /// [keys] should include every target for the tour (4 for creators — no
+  /// invoices tab — 5 for advertisers). Missing keys are skipped.
   Future<void> maybeShow({
     required BuildContext context,
     required AppPrefs prefs,
@@ -170,6 +170,11 @@ class ShellTutorialController {
           ta.campaigns_subtitle,
         ),
         (ShellTutorialTarget.wallet, ta.wallet_title, ta.wallet_subtitle),
+        (
+          ShellTutorialTarget.invoices,
+          ta.invoices_title,
+          ta.invoices_subtitle,
+        ),
         (ShellTutorialTarget.chat, ta.chat_title, ta.chat_subtitle),
       ];
     }

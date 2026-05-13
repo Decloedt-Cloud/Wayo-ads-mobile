@@ -770,7 +770,9 @@
       "campaigns_title": "Campagnes",
       "campaigns_subtitle": "Créez de nouvelles campagnes, examinez les candidatures et suivez les performances au même endroit.",
       "wallet_title": "Portefeuille",
-      "wallet_subtitle": "Rechargez votre budget, consultez vos factures et votre historique — sécurisé par Stripe.",
+      "wallet_subtitle": "Rechargez votre budget et suivez vos dépenses — sécurisé par Stripe.",
+      "invoices_title": "Factures",
+      "invoices_subtitle": "Téléchargez vos PDF signés : dépôts, facturation des campagnes et virements — tout au même endroit.",
       "chat_title": "Chat",
       "chat_subtitle": "Discutez avec vos créateurs une fois la campagne validée. Vos conversations restent synchronisées."
     },

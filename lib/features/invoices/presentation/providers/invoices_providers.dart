@@ -99,6 +99,9 @@ class InvoicesController extends AsyncNotifier<InvoicesState> {
     if (role == WayoAdsAccountRole.unknown) {
       return InvoicesState.empty;
     }
+    if (role == WayoAdsAccountRole.creator) {
+      return InvoicesState.empty;
+    }
     try {
       return await _fetchPage(1, accumulated: const []);
     } catch (e, st) {
@@ -109,6 +112,10 @@ class InvoicesController extends AsyncNotifier<InvoicesState> {
   /// Pull-to-refresh / realtime invalidation. Keeps the current loading state
   /// optimistic-soft (data stays visible while we re-fetch).
   Future<void> refresh() async {
+    final role = ref.read(currentWayoAdsAccountRoleProvider);
+    if (role == WayoAdsAccountRole.creator) {
+      return;
+    }
     final previous = state.valueOrNull ?? InvoicesState.empty;
     state = AsyncValue<InvoicesState>.data(
       previous.copyWith(isLoadingMore: false),
@@ -123,6 +130,10 @@ class InvoicesController extends AsyncNotifier<InvoicesState> {
 
   /// Fetch the next page and append.
   Future<void> loadNext() async {
+    final role = ref.read(currentWayoAdsAccountRoleProvider);
+    if (role == WayoAdsAccountRole.creator) {
+      return;
+    }
     final current = state.valueOrNull;
     if (current == null || !current.hasNextPage || current.isLoadingMore) {
       return;
@@ -163,8 +174,13 @@ class InvoicesController extends AsyncNotifier<InvoicesState> {
         result = await _repo.loadAdvertiserPage(page: page);
         break;
       case WayoAdsAccountRole.creator:
-        result = await _repo.loadCreatorPage(page: page);
-        break;
+        return InvoicesState(
+          invoices: accumulated,
+          page: 1,
+          totalPages: 1,
+          totalCount: accumulated.length,
+          isLoadingMore: false,
+        );
       case WayoAdsAccountRole.user:
       case WayoAdsAccountRole.unknown:
         return InvoicesState.empty;

@@ -2,7 +2,7 @@ name: wayoadsgo
 description: "A new Flutter project."
 publish_to: 'none'
 
-version: 1.0.1+13
+version: 1.0.1+26
 
 environment:
   sdk: ^3.11.4
@@ -76,27 +76,27 @@ flutter:
     # NOTE: dart_defines.json is NOT bundled — secrets must come from
     # --dart-define or --dart-define-from-file at compile time only.
     # This prevents extracting API keys from the APK/IPA.
-    - assets/splash/wayo_dot_icon.png
+    - 'assets/wayo ads mobile.png'
+    - 'assets/wayo ads mobile new.png'
     - assets/images/wayo_ads_logo.png
     - assets/branding/google_g_logo.svg
+    - assets/branding/wayo_native_splash_logo.png
     - assets/branding/wayo_splash_p1.svg
     - assets/branding/wayo_splash_p2.svg
     - assets/branding/wayo_splash_p3.svg
 
-# Branding is 100% the animated [SplashScreen] (see lib/features/splash/splash_screen.dart).
-# Do NOT call FlutterNativeSplash.preserve in main.dart — it defers the first Flutter frame
-# and prolongs the OS launch screen ("black splash").
-# After `dart run flutter_native_splash:create`, restore these manual tweaks:
-#  - iOS: LaunchScreen.storyboard root view backgroundColor → black (generator resets to white).
-#  - Android 12+ (values-v31 + values-night-v31 styles.xml):
-#      * LaunchTheme parent stays Theme.SplashScreen.
-#      * Add android:windowSplashScreenAnimatedIcon=@drawable/splash_empty_icon (else OS shows
-#        the launcher adaptive icon — the "W" — as a static splash logo).
+# Native splash (instant screen **before** first Flutter frame). Uses small centered mark —
+# regenerate bitmap with: `dart run tool/gen_native_splash_small_logo.dart`
+# Flutter’s animated splash is [SplashScreen] (premium SVG logo).
+# MUST run AFTER changing branding: dart run flutter_native_splash:create
 flutter_native_splash:
   color: "#000000"
   color_dark: "#000000"
+  image: 'assets/branding/wayo_native_splash_logo.png'
   fullscreen: true
+  ios_content_mode: center
   android_12:
+    image: 'assets/branding/wayo_native_splash_logo.png'
     color: "#000000"
     icon_background_color: "#000000"
     color_dark: "#000000"
@@ -112,7 +112,9 @@ flutter_launcher_icons:
   ios: true
   remove_alpha_ios: true
   background_color_ios: '#000000'
-  image_path_android: assets/android-chrome-192x192.png
-  image_path_ios: assets/apple-touch-icon.png
+  image_path_android: 'assets/wayo ads mobile new.png'
+  image_path_ios: 'assets/wayo ads mobile new.png'
   adaptive_icon_background: "#000000"
-  adaptive_icon_foreground: assets/android-chrome-192x192.png
+  adaptive_icon_foreground: 'assets/wayo ads mobile new.png'
+  # %-inset pour l’avant-plan adaptive — un peu plus bas = logo un peu plus grand (défaut tool 16).
+  adaptive_icon_foreground_inset: 20

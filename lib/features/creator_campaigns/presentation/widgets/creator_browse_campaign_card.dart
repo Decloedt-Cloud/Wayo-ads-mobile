@@ -60,7 +60,7 @@ class CreatorBrowseCampaignCard extends StatelessWidget {
           onTap();
         },
         borderRadius: BorderRadius.circular(20),
-        child: Ink(
+        child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
             color: (isDark ? Colors.white : Colors.black).withValues(
@@ -68,31 +68,31 @@ class CreatorBrowseCampaignCard extends StatelessWidget {
             ),
             border: Border.all(color: AppColors.borderOf(context)),
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(14),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    _Thumb(
-                      url: normalizeWayoAdsMediaUrl(c.coverUrl),
-                      brandLogoUrl: resolveWayoAdsPublicUrl(c.brandLogoUrl),
-                      type: c.type,
-                    ),
-                    if (applicationStatus != null) ...[
-                      const SizedBox(height: 6),
-                      _ApplicationStatusPill(status: applicationStatus!),
-                    ],
+          padding: const EdgeInsets.all(14),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  _Thumb(
+                    url: normalizeWayoAdsMediaUrl(c.coverUrl),
+                    brandLogoUrl: resolveWayoAdsPublicUrl(c.brandLogoUrl),
+                    type: c.type,
+                  ),
+                  if (applicationStatus != null) ...[
+                    const SizedBox(height: 6),
+                    _ApplicationStatusPill(status: applicationStatus!),
                   ],
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+                ],
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                       Text(
                         c.title,
                         maxLines: 1,
@@ -127,12 +127,11 @@ class CreatorBrowseCampaignCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 6),
-                Icon(
-                  Icons.chevron_right_rounded,
-                  color: AppColors.textSecondaryOf(context),
-                ),
-              ],
-            ),
+              Icon(
+                Icons.chevron_right_rounded,
+                color: AppColors.textSecondaryOf(context),
+              ),
+            ],
           ),
         ),
       ),

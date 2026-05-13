@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -187,36 +188,57 @@ class _AppShellState extends ConsumerState<AppShell>
     final showInvoicesTab = authState is! AuthAuthenticated ||
         authState.user.wayoAdsRole != WayoAdsAccountRole.creator;
 
-    return Scaffold(
-      extendBody: true,
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const PendingAccountDeletionBanner(),
-          Expanded(
-            child: Padding(
-              padding: EdgeInsets.only(
-                bottom: wayoFloatingBottomNavReserve(context),
-              ),
-              child: ShellTutorialReplayScope(
-                replay: _replayShellTutorial,
-                child: widget.navigationShell,
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final systemNav = SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+      systemNavigationBarColor: Colors.transparent,
+      systemNavigationBarDividerColor: Colors.transparent,
+      systemNavigationBarContrastEnforced: false,
+      systemNavigationBarIconBrightness:
+          isDark ? Brightness.light : Brightness.dark,
+    );
+
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: systemNav,
+      child: Scaffold(
+        extendBody: true,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        body: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const PendingAccountDeletionBanner(),
+            Expanded(
+              child: Padding(
+                padding: EdgeInsets.only(
+                  bottom: wayoFloatingBottomNavReserve(context),
+                ),
+                child: ShellTutorialReplayScope(
+                  replay: _replayShellTutorial,
+                  child: widget.navigationShell,
+                ),
               ),
             ),
+          ],
+        ),
+        bottomNavigationBar: Material(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          elevation: 0,
+          shadowColor: Colors.transparent,
+          surfaceTintColor: Colors.transparent,
+          child: WayoBottomNav(
+            navigationShell: widget.navigationShell,
+            notificationUnread: notificationUnread,
+            chatUnread: chatUnread,
+            campaignsAttentionCount: campaignsAttentionCount,
+            showInvoicesTab: showInvoicesTab,
+            dashboardTabKey: _dashboardKey,
+            campaignsTabKey: _campaignsKey,
+            walletTabKey: _walletKey,
+            invoicesTabKey: showInvoicesTab ? _invoicesKey : null,
+            chatTabKey: _chatKey,
           ),
-        ],
-      ),
-      bottomNavigationBar: WayoBottomNav(
-        navigationShell: widget.navigationShell,
-        notificationUnread: notificationUnread,
-        chatUnread: chatUnread,
-        campaignsAttentionCount: campaignsAttentionCount,
-        showInvoicesTab: showInvoicesTab,
-        dashboardTabKey: _dashboardKey,
-        campaignsTabKey: _campaignsKey,
-        walletTabKey: _walletKey,
-        invoicesTabKey: showInvoicesTab ? _invoicesKey : null,
-        chatTabKey: _chatKey,
+        ),
       ),
     );
   }

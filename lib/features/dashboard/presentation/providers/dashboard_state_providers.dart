@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/network/api_client.dart';
+import '../../../auth/data/repositories/auth_repository.dart';
 import '../../../../core/network/rate_limiter.dart';
 import '../../../../core/network/request_deduplicator.dart';
 import '../../../../core/network/wayo_ads_dio.dart';
@@ -39,7 +39,7 @@ final notificationsRateLimiterProvider = Provider<RateLimiter>((ref) {
 
 final dashboardRemoteDatasourceProvider = Provider<DashboardRemote>((ref) {
   return DashboardRemoteDatasource(
-    authDio: ref.watch(dioProvider),
+    authRepository: ref.watch(authRepositoryProvider),
     adsDio: ref.watch(wayoAdsDioProvider),
   );
 });

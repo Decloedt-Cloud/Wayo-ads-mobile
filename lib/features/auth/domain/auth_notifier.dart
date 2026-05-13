@@ -229,10 +229,11 @@ class AuthNotifier extends _$AuthNotifier {
       return;
     }
 
+    final now = DateTime.now().toUtc();
     if (!force &&
         _lastProfileRefreshUtc != null &&
-        DateTime.now().toUtc().difference(_lastProfileRefreshUtc!) <
-            const Duration(seconds: 75)) {
+        now.difference(_lastProfileRefreshUtc!) <
+            const Duration(seconds: 150)) {
       return;
     }
 

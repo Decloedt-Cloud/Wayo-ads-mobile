@@ -7,6 +7,9 @@ import '../../../creator_campaigns/domain/creator_browse_campaign.dart';
 import '../../../../core/config/auth_runtime_config.dart';
 import '../../../../core/errors/auth_exceptions.dart';
 import '../../../../core/network/api_endpoints.dart';
+import '../../../../core/result.dart';
+import '../../../auth/data/models/app_user.dart';
+import '../../../auth/data/repositories/auth_repository.dart';
 import '../../domain/entities/advertiser_balance.dart';
 import '../../domain/entities/campaign_platform.dart';
 import '../../domain/entities/campaign_status.dart';
@@ -15,7 +18,7 @@ import '../../domain/entities/notification_item.dart';
 import '../../domain/entities/user_profile.dart';
 import '../../domain/advertiser_campaigns_page_result.dart';
 
-/// Remote calls for dashboard (Auth_Wayo + Wayo-ads).
+/// Remote calls for dashboard (Wayo-ads + shared auth user via [IAuthRepository]).
 ///
 /// Paths align with `Wayo-ads/src/app/api/**` (Next.js App Router).
 abstract interface class DashboardRemote {
@@ -40,53 +43,24 @@ abstract interface class DashboardRemote {
 }
 
 final class DashboardRemoteDatasource implements DashboardRemote {
-  DashboardRemoteDatasource({required Dio authDio, required Dio adsDio})
-    : _authDio = authDio,
-      _adsDio = adsDio;
+  DashboardRemoteDatasource({
+    required IAuthRepository authRepository,
+    required Dio adsDio,
+  }) : _auth = authRepository,
+       _adsDio = adsDio;
 
-  final Dio _authDio;
+  final IAuthRepository _auth;
   final Dio _adsDio;
 
   @override
   Future<UserProfile> fetchUser() async {
-    final cfg = AuthRuntimeConfig.instance;
-    final qp = <String, dynamic>{};
-    if (cfg.authAppName.trim().isNotEmpty) {
-      qp['app'] = cfg.authAppName.trim();
+    final r = await _auth.fetchCurrentUser();
+    switch (r) {
+      case Success(:final data):
+        return _userProfileFromAppUser(data);
+      case Failure(:final error):
+        throw error;
     }
-    final res = await _authDio.get<Map<String, dynamic>>(
-      AuthRuntimeConfig.instance.authHttpPath('user'),
-      queryParameters: qp.isEmpty ? null : qp,
-    );
-    final data = res.data;
-    if (data == null) {
-      throw const ServerException('Empty user response');
-    }
-    if (data['success'] == false) {
-      final msg = data['message'] as String? ?? 'Unauthorized';
-      throw ServerException(msg);
-    }
-    // Auth_Wayo: { success, data: { user: { id, email, name, ... }, scopes } }
-    final envelope = data['data'] is Map<String, dynamic>
-        ? data['data'] as Map<String, dynamic>
-        : data;
-    final userRaw = envelope['user'];
-    final root = userRaw is Map<String, dynamic> ? userRaw : envelope;
-    final idVal = root['id'];
-    final id = idVal is int ? idVal : int.tryParse('$idVal') ?? 0;
-    final name = root['name'] as String?;
-    final first = root['first_name'] as String? ?? root['firstName'] as String?;
-    return UserProfile(
-      id: id,
-      email: root['email'] as String? ?? '',
-      firstName:
-          first ??
-          (name != null && name.trim().isNotEmpty
-              ? name.trim().split(RegExp(r'\s+')).first
-              : null),
-      name: name,
-      avatarUrl: root['avatar'] as String? ?? root['avatar_url'] as String?,
-    );
   }
 
   @override
@@ -463,4 +437,18 @@ final class DashboardRemoteDatasource implements DashboardRemote {
       }
     } catch (_) {}
   }
+}
+
+UserProfile _userProfileFromAppUser(AppUser u) {
+  final name = u.name?.trim();
+  final firstFromName = name != null && name.isNotEmpty
+      ? name.split(RegExp(r'\s+')).first
+      : null;
+  return UserProfile(
+    id: u.id,
+    email: u.email,
+    firstName: firstFromName,
+    name: u.name,
+    avatarUrl: u.avatar,
+  );
 }

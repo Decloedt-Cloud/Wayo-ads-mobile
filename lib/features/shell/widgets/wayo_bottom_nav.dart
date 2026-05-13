@@ -19,8 +19,10 @@ const double kWayoBottomNavOuterBottomGap = 22;
 /// Bottom inset so tab bodies clear the floating pill while [Scaffold.extendBody] is true.
 ///
 /// Keep this formula aligned with [WayoBottomNav] layout (`OuterBottomGap` + pill height).
+/// Uses [MediaQuery.viewPadding] so gesture-nav / edge-to-edge insets aren’t skipped when
+/// [MediaQuery.padding] is zeroed under the nav bar — avoids a mismatch vs the native bar colour.
 double wayoFloatingBottomNavReserve(BuildContext context, {double extraGap = 12}) {
-  return MediaQuery.paddingOf(context).bottom +
+  return MediaQuery.viewPaddingOf(context).bottom +
       kWayoBottomNavOuterBottomGap +
       kWayoBottomNavBarHeight +
       extraGap;
@@ -176,7 +178,7 @@ class _WayoBottomNavState extends State<WayoBottomNav>
     final idx = widget.navigationShell.currentIndex;
     final tabCount = _visibleTabCount;
     final bottomPad =
-        MediaQuery.paddingOf(context).bottom + kWayoBottomNavOuterBottomGap;
+        MediaQuery.viewPaddingOf(context).bottom + kWayoBottomNavOuterBottomGap;
 
     final pillFill = isDark ? _kPillDark : _kPillLight;
     final outerBg = theme.scaffoldBackgroundColor;

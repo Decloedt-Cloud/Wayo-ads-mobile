@@ -27,10 +27,25 @@ class AuthInterceptor extends QueuedInterceptor {
     if (options.extra[kSkipAuthInjection] == true) {
       return handler.next(options);
     }
+
+    // [QueuedInterceptor] runs onRequest and onError on separate queues: a burst of
+    // calls can otherwise attach a stale bearer while onError is mid-refresh.
+    // Retries marked [kAuthRetry] must not await here (same isolate held the refresh).
+    if (options.extra[kAuthRetry] != true) {
+      final waitOn = _refreshCompleter;
+      if (waitOn != null) {
+        try {
+          await waitOn.future;
+        } catch (_) {
+          // Refresh failed; attempt with current storage state below.
+        }
+      }
+    }
+
     var token = await storage.getAccessToken();
     if (token != null &&
         token.isNotEmpty &&
-        await storage.isTokenExpired()) {
+        await storage.shouldRefreshAccessToken()) {
       try {
         await _runSerializedRefresh();
         token = await storage.getAccessToken();
@@ -136,35 +151,13 @@ class AuthInterceptor extends QueuedInterceptor {
     }
   }
 
-  Future<RequestOptions> _cloneForRetry(RequestOptions req) {
+  Future<RequestOptions> _cloneForRetry(RequestOptions req) async {
     final headers = Map<String, dynamic>.from(req.headers);
-    return storage.getAccessToken().then((token) {
-      if (token != null && token.isNotEmpty) {
-        headers['Authorization'] = 'Bearer $token';
-      }
-      final next = RequestOptions(
-        path: req.path,
-        method: req.method,
-        headers: headers,
-        queryParameters: req.queryParameters,
-        data: req.data,
-        baseUrl: req.baseUrl,
-        connectTimeout: req.connectTimeout,
-        receiveTimeout: req.receiveTimeout,
-        sendTimeout: req.sendTimeout,
-        responseType: req.responseType,
-        followRedirects: req.followRedirects,
-        maxRedirects: req.maxRedirects,
-        persistentConnection: req.persistentConnection,
-        requestEncoder: req.requestEncoder,
-        responseDecoder: req.responseDecoder,
-        listFormat: req.listFormat,
-        contentType: req.contentType,
-        validateStatus: req.validateStatus,
-        receiveDataWhenStatusError: req.receiveDataWhenStatusError,
-        extra: Map<String, dynamic>.from(req.extra)..[kAuthRetry] = true,
-      );
-      return next;
-    });
+    final token = await storage.getAccessToken();
+    if (token != null && token.isNotEmpty) {
+      headers['Authorization'] = 'Bearer $token';
+    }
+    final extra = Map<String, dynamic>.from(req.extra)..[kAuthRetry] = true;
+    return req.copyWith(headers: headers, extra: extra);
   }
 }

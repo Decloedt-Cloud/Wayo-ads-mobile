@@ -26,6 +26,10 @@ import 'i18n/strings.g.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Lets content draw behind system gesture/nav bars; avoids an OS-added black scrim seam
+  // vs our scaffold color when floating bottom nav overlaps the gesture area (Android).
+  await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+
   PaintingBinding.instance.imageCache.maximumSize = 100;
   PaintingBinding.instance.imageCache.maximumSizeBytes = 50 * 1024 * 1024;
 

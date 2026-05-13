@@ -29,25 +29,26 @@ class AdvertiserCampaignCard extends StatelessWidget {
     final t = context.t;
     final c = campaign;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgTint = (isDark ? Colors.white : Colors.black).withValues(alpha: 0.05);
+
     return Material(
-      color: Colors.transparent,
+      color: bgTint,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(color: AppColors.borderOf(context)),
+      ),
+      clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: () {
           HapticFeedback.lightImpact();
           onTap();
         },
         borderRadius: BorderRadius.circular(20),
-        child: Ink(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            color: (isDark ? Colors.white : Colors.black).withValues(
-              alpha: 0.05,
-            ),
-            border: Border.all(color: AppColors.borderOf(context)),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: IntrinsicHeight(
             child: Column(
+              mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
@@ -60,6 +61,7 @@ class AdvertiserCampaignCard extends StatelessWidget {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
+                        mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
@@ -365,6 +367,7 @@ class _MetricBlock extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
+      mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(

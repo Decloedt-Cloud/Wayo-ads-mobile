@@ -767,84 +767,83 @@ class _ApplicationTile extends StatelessWidget {
           HapticFeedback.lightImpact();
           onTap();
         },
-        child: Ink(
+        child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(18),
             color: AppColors.surfaceElevatedOf(context),
             border: Border.all(color: AppColors.borderOf(context)),
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(14),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.12),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    a.status == CreatorApplicationStatus.approved
-                        ? Icons.verified_rounded
-                        : Icons.timelapse_rounded,
-                    color: color,
-                    size: 22,
-                  ),
+          padding: const EdgeInsets.all(14),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.12),
+                  shape: BoxShape.circle,
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+                child: Icon(
+                  a.status == CreatorApplicationStatus.approved
+                      ? Icons.verified_rounded
+                      : Icons.timelapse_rounded,
+                  color: color,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      a.campaignTitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTextStyles.labelLarge(
+                        context,
+                      ).copyWith(fontSize: 15),
+                    ),
+                    const SizedBox(height: 3),
+                    if (a.advertiserName != null &&
+                        a.advertiserName!.isNotEmpty)
                       Text(
-                        a.campaignTitle,
+                        a.advertiserName!,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: AppTextStyles.labelLarge(
+                        style: AppTextStyles.caption(
                           context,
-                        ).copyWith(fontSize: 15),
+                        ).copyWith(color: AppColors.textSecondaryOf(context)),
                       ),
-                      const SizedBox(height: 3),
-                      if (a.advertiserName != null &&
-                          a.advertiserName!.isNotEmpty)
-                        Text(
-                          a.advertiserName!,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTextStyles.caption(
-                            context,
-                          ).copyWith(color: AppColors.textSecondaryOf(context)),
-                        ),
-                    ],
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(999),
+                  border: Border.all(color: color.withValues(alpha: 0.4)),
+                ),
+                child: Text(
+                  statusLabel,
+                  style: TextStyle(
+                    color: color,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 11,
+                    letterSpacing: 0.2,
                   ),
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(999),
-                    border: Border.all(color: color.withValues(alpha: 0.4)),
-                  ),
-                  child: Text(
-                    statusLabel,
-                    style: TextStyle(
-                      color: color,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 11,
-                      letterSpacing: 0.2,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 4),
-                Icon(
-                  Icons.chevron_right_rounded,
-                  color: AppColors.textSecondaryOf(context),
-                ),
-              ],
-            ),
+              ),
+              const SizedBox(width: 4),
+              Icon(
+                Icons.chevron_right_rounded,
+                color: AppColors.textSecondaryOf(context),
+              ),
+            ],
           ),
         ),
       ),

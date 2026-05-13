@@ -101,17 +101,13 @@ void _sanitizeAdvertiserExplorerFilters(
   }
 }
 
-/// Page background: premium dark gradient or light surfaces (not hard-coded black).
+/// Page background — dark mode matches [ThemeData.scaffoldBackgroundColor] / shell (see creator tab).
 BoxDecoration _campaignsPageBackground(BuildContext context) {
   final theme = Theme.of(context);
   final scheme = theme.colorScheme;
   if (theme.brightness == Brightness.dark) {
     return const BoxDecoration(
-      gradient: LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: [AppColors.black, AppColors.surface],
-      ),
+      color: AppColors.black,
     );
   }
   return BoxDecoration(
@@ -166,7 +162,6 @@ class _AdvertiserCampaignsScreenState
     final key = (tab: tab, page: pageIdx, search: searchQ);
     final pageAsync = ref.watch(advertiserCampaignsPagedProvider(key));
     final countsAsync = ref.watch(advertiserCampaignsCountsProvider);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     Future<void> refresh() async {
       ref.invalidate(advertiserCampaignsPagedProvider);
       ref.invalidate(advertiserCampaignsCountsProvider);
@@ -174,20 +169,12 @@ class _AdvertiserCampaignsScreenState
     }
 
     return Scaffold(
-      backgroundColor: isDark
-          ? Colors.transparent
-          : Theme.of(context).scaffoldBackgroundColor,
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          HapticFeedback.mediumImpact();
-          context.push('/campaigns/new');
-        },
-        icon: const Icon(Icons.add_rounded),
-        label: Text(context.t.advertiser_campaigns.create.title),
-      ),
+      // Same as creator tab: default scaffold background (#0A0A0A) + no bottom SafeArea doubling
+      // the shell’s nav reserve (avoids a tone seam above the floating pill / system gesture area).
       body: DecoratedBox(
         decoration: _campaignsPageBackground(context),
         child: SafeArea(
+          bottom: false,
           child: pageAsync.when(
             data: (pageResult) {
               final counts =

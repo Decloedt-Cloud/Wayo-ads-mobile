@@ -19,6 +19,9 @@
     <!-- Must inherit from AppCompat/MaterialComponents for flutter_stripe (Stripe Android SDK). -->
     <style name="NormalTheme" parent="Theme.AppCompat.DayNight.NoActionBar">
         <item name="android:windowBackground">@color/splashBackground</item>
+        <!-- Let Flutter/system UI mode paint behind the gesture bar ([SystemUiMode.edgeToEdge]). -->
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
         <item name="android:forceDarkAllowed">false</item>
     </style>
 </resources>

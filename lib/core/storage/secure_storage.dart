@@ -81,6 +81,21 @@ class SecureStorageService {
     return !at.isAfter(DateTime.now());
   }
 
+  /// True when the access token should be rotated **before** the next API call.
+  ///
+  /// Uses a [skew] before wall-clock expiry so we refresh while the JWT is still
+  /// valid locally but may already be rejected by the issuer (clock skew, latency,
+  /// or slightly shorter token lifetime than [expiresIn] implied).
+  Future<bool> shouldRefreshAccessToken({
+    Duration skew = const Duration(seconds: 180),
+  }) async {
+    final at = await _tokens.readExpiry();
+    if (at == null) {
+      return true;
+    }
+    return !at.isAfter(DateTime.now().add(skew));
+  }
+
   Future<void> clearAll() async {
     _cachedAccessToken = null;
     _cachedRefreshToken = null;

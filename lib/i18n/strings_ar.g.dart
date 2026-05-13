@@ -1129,7 +1129,9 @@ class _TranslationsOnboardingAdvertiserAr extends TranslationsOnboardingAdvertis
 	@override String get campaigns_title => 'الحملات';
 	@override String get campaigns_subtitle => 'أنشئ حملات جديدة، راجع الطلبات وراقب الأداء من مكان واحد.';
 	@override String get wallet_title => 'المحفظة';
-	@override String get wallet_subtitle => 'اشحن ميزانيتك واطلع على الفواتير وسجل الإنفاق — محمي عبر Stripe.';
+	@override String get wallet_subtitle => 'اشحن ميزانية رصيدك وتابع الإنفاق — محمي عبر Stripe.';
+	@override String get invoices_title => 'الفواتير';
+	@override String get invoices_subtitle => 'حمّل ملفات PDF المعتمدة للإيداعات وفوترة الحملات والتحويلات — كل ذلك في مكان واحد.';
 	@override String get chat_title => 'الدردشة';
 	@override String get chat_subtitle => 'تحدث مع المبدعين بعد اعتماد الحملة. محادثاتك متزامنة على جميع أجهزتك.';
 }
@@ -1849,7 +1851,9 @@ extension on TranslationsAr {
 			case 'onboarding.advertiser.campaigns_title': return 'الحملات';
 			case 'onboarding.advertiser.campaigns_subtitle': return 'أنشئ حملات جديدة، راجع الطلبات وراقب الأداء من مكان واحد.';
 			case 'onboarding.advertiser.wallet_title': return 'المحفظة';
-			case 'onboarding.advertiser.wallet_subtitle': return 'اشحن ميزانيتك واطلع على الفواتير وسجل الإنفاق — محمي عبر Stripe.';
+			case 'onboarding.advertiser.wallet_subtitle': return 'اشحن ميزانية رصيدك وتابع الإنفاق — محمي عبر Stripe.';
+			case 'onboarding.advertiser.invoices_title': return 'الفواتير';
+			case 'onboarding.advertiser.invoices_subtitle': return 'حمّل ملفات PDF المعتمدة للإيداعات وفوترة الحملات والتحويلات — كل ذلك في مكان واحد.';
 			case 'onboarding.advertiser.chat_title': return 'الدردشة';
 			case 'onboarding.advertiser.chat_subtitle': return 'تحدث مع المبدعين بعد اعتماد الحملة. محادثاتك متزامنة على جميع أجهزتك.';
 			case 'onboarding.creator.dashboard_title': return 'لوحة المبدع';

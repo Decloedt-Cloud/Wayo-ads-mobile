@@ -66,6 +66,16 @@ class _AppShellState extends ConsumerState<AppShell>
     }
   }
 
+  Map<ShellTutorialTarget, GlobalKey> _tutorialKeys(bool includeInvoicesTab) {
+    return {
+      ShellTutorialTarget.dashboard: _dashboardKey,
+      ShellTutorialTarget.campaigns: _campaignsKey,
+      ShellTutorialTarget.wallet: _walletKey,
+      if (includeInvoicesTab) ShellTutorialTarget.invoices: _invoicesKey,
+      ShellTutorialTarget.chat: _chatKey,
+    };
+  }
+
   /// Runs the shell coach-mark tour once per (user, role).
   ///
   /// We trigger from `postFrameCallback` (first paint) **and** re-check on
@@ -100,12 +110,9 @@ class _AppShellState extends ConsumerState<AppShell>
         prefs: prefs,
         userId: auth.user.id,
         role: role,
-        keys: {
-          ShellTutorialTarget.dashboard: _dashboardKey,
-          ShellTutorialTarget.campaigns: _campaignsKey,
-          ShellTutorialTarget.wallet: _walletKey,
-          ShellTutorialTarget.chat: _chatKey,
-        },
+        keys: _tutorialKeys(
+          auth.user.wayoAdsRole != WayoAdsAccountRole.creator,
+        ),
       );
     });
   }
@@ -133,12 +140,9 @@ class _AppShellState extends ConsumerState<AppShell>
         prefs: prefs,
         userId: auth.user.id,
         role: role,
-        keys: {
-          ShellTutorialTarget.dashboard: _dashboardKey,
-          ShellTutorialTarget.campaigns: _campaignsKey,
-          ShellTutorialTarget.wallet: _walletKey,
-          ShellTutorialTarget.chat: _chatKey,
-        },
+        keys: _tutorialKeys(
+          auth.user.wayoAdsRole != WayoAdsAccountRole.creator,
+        ),
       );
     });
   }
@@ -179,6 +183,10 @@ class _AppShellState extends ConsumerState<AppShell>
       ),
     );
 
+    final authState = ref.watch(authNotifierProvider).valueOrNull;
+    final showInvoicesTab = authState is! AuthAuthenticated ||
+        authState.user.wayoAdsRole != WayoAdsAccountRole.creator;
+
     return Scaffold(
       extendBody: true,
       body: Column(
@@ -186,9 +194,14 @@ class _AppShellState extends ConsumerState<AppShell>
         children: [
           const PendingAccountDeletionBanner(),
           Expanded(
-            child: ShellTutorialReplayScope(
-              replay: _replayShellTutorial,
-              child: widget.navigationShell,
+            child: Padding(
+              padding: EdgeInsets.only(
+                bottom: wayoFloatingBottomNavReserve(context),
+              ),
+              child: ShellTutorialReplayScope(
+                replay: _replayShellTutorial,
+                child: widget.navigationShell,
+              ),
             ),
           ),
         ],
@@ -198,10 +211,11 @@ class _AppShellState extends ConsumerState<AppShell>
         notificationUnread: notificationUnread,
         chatUnread: chatUnread,
         campaignsAttentionCount: campaignsAttentionCount,
+        showInvoicesTab: showInvoicesTab,
         dashboardTabKey: _dashboardKey,
         campaignsTabKey: _campaignsKey,
         walletTabKey: _walletKey,
-        invoicesTabKey: _invoicesKey,
+        invoicesTabKey: showInvoicesTab ? _invoicesKey : null,
         chatTabKey: _chatKey,
       ),
     );

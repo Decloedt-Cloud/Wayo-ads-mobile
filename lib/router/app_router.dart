@@ -147,6 +147,10 @@ GoRouter goRouter(GoRouterRef ref) {
             if (loc == '/login') {
               return '/dashboard';
             }
+            if (s.user.wayoAdsRole == WayoAdsAccountRole.creator &&
+                (loc == '/invoices' || loc.startsWith('/invoices/'))) {
+              return '/dashboard';
+            }
             return null;
           }
           if (loc == '/login') {

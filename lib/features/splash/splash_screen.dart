@@ -7,13 +7,13 @@ import 'package:go_router/go_router.dart';
 
 import '../auth/domain/auth_notifier.dart';
 import '../auth/domain/onboarding_gate.dart';
-import 'widgets/premium_splash_brand.dart';
+import 'premium_splash_animated_logo.dart';
 
 /// Animated splash (~2.5s) + auth gate.
 ///
 /// No `FlutterNativeSplash.preserve` in `main.dart` on purpose: `preserve` defers the first
 /// Flutter frame, prolonging the static OS launch screen. Without it, the very first frame
-/// painted by Flutter is this [PremiumSplashBrand] animation — no extra "black splash" step.
+/// painted by Flutter matches the native splash ([assets/branding/wayo_native_splash_logo.png]).
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
@@ -31,12 +31,11 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
   double get _t => _controller.value;
 
-  double _taglineOpacity() {
-    const start = 800 / _timelineMs;
-    const end = 1400 / _timelineMs;
-    if (_t <= start) return 0.0;
-    if (_t >= end) return 0.7;
-    return 0.7 * Curves.easeIn.transform((_t - start) / (end - start));
+  double _introScale() {
+    if (_t <= 0) return 0.94;
+    const end = 550 / _timelineMs;
+    if (_t >= end) return 1.0;
+    return 0.94 + 0.06 * Curves.easeOutCubic.transform(_t / end);
   }
 
   double _screenFadeOpacity() {
@@ -139,6 +138,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   Widget build(BuildContext context) {
     final reduceMotion = MediaQuery.disableAnimationsOf(context);
 
+    final w = MediaQuery.sizeOf(context).width;
+    /// Logo glyph box (wordmark sits beside); row is scaled down via [FittedBox] if needed.
+    final maxLogo = (w * 0.34).clamp(120.0, 200.0);
+
     return Theme(
       data: ThemeData(brightness: Brightness.dark),
       child: Scaffold(
@@ -148,34 +151,24 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
           builder: (context, _) {
             final screenOpacity =
                 reduceMotion ? 1.0 : _screenFadeOpacity().clamp(0.0, 1.0);
+            final scale = reduceMotion ? 1.0 : _introScale();
 
             return Opacity(
               opacity: screenOpacity,
               child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Transform.translate(
-                      offset: const Offset(0, -12),
-                      child: PremiumSplashBrand(
-                        progress: reduceMotion ? 1.0 : _controller.value,
+                child: Transform.translate(
+                  offset: const Offset(0, -12),
+                  child: Transform.scale(
+                    scale: scale,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: PremiumSplashAnimatedLogo(
+                        animation: _controller,
                         reduceMotion: reduceMotion,
+                        maxLogoSize: maxLogo,
                       ),
                     ),
-                    const SizedBox(height: 36),
-                    Opacity(
-                      opacity: reduceMotion ? 0.7 : _taglineOpacity(),
-                      child: Text(
-                        'Publicité intelligente',
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(
-                              color: Colors.white70,
-                              fontWeight: FontWeight.w400,
-                              letterSpacing: 0.4,
-                            ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
             );

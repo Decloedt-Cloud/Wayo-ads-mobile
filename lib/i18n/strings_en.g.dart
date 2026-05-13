@@ -1131,7 +1131,9 @@ class TranslationsOnboardingAdvertiserEn {
 	String get campaigns_title => 'Campaigns';
 	String get campaigns_subtitle => 'Create new campaigns, review applications and monitor performance in one place.';
 	String get wallet_title => 'Wallet';
-	String get wallet_subtitle => 'Top up your budget, view invoices and spending history — secured by Stripe.';
+	String get wallet_subtitle => 'Top up your budget and track spending — secured by Stripe.';
+	String get invoices_title => 'Invoices';
+	String get invoices_subtitle => 'Download signed PDFs for deposits, campaign billing and transfers — all in one place.';
 	String get chat_title => 'Chat';
 	String get chat_subtitle => 'Talk to your creators once a campaign is approved. Conversations stay in sync across devices.';
 }
@@ -1851,7 +1853,9 @@ extension on Translations {
 			case 'onboarding.advertiser.campaigns_title': return 'Campaigns';
 			case 'onboarding.advertiser.campaigns_subtitle': return 'Create new campaigns, review applications and monitor performance in one place.';
 			case 'onboarding.advertiser.wallet_title': return 'Wallet';
-			case 'onboarding.advertiser.wallet_subtitle': return 'Top up your budget, view invoices and spending history — secured by Stripe.';
+			case 'onboarding.advertiser.wallet_subtitle': return 'Top up your budget and track spending — secured by Stripe.';
+			case 'onboarding.advertiser.invoices_title': return 'Invoices';
+			case 'onboarding.advertiser.invoices_subtitle': return 'Download signed PDFs for deposits, campaign billing and transfers — all in one place.';
 			case 'onboarding.advertiser.chat_title': return 'Chat';
 			case 'onboarding.advertiser.chat_subtitle': return 'Talk to your creators once a campaign is approved. Conversations stay in sync across devices.';
 			case 'onboarding.creator.dashboard_title': return 'Creator dashboard';

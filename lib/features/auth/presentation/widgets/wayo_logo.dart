@@ -2,22 +2,32 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_text_styles.dart';
 
+/// Header / login mark — même fichier que les icônes launcher
+/// [`assets/wayo ads mobile new.png`].
+///
+/// [BoxFit.contain] + marge évite tout rognage gauche/droite sous les coins arrondis.
 class WayoLogo extends StatelessWidget {
   const WayoLogo({super.key, this.size = 72, this.enableMotion = true});
+
+  static const String _assetPath = 'assets/wayo ads mobile new.png';
+
+  /// Marge dans le cadre (plus petite = logo plus grand).
+  static double _innerPad(double size) => size * 0.055;
 
   final double size;
   final bool enableMotion;
 
   @override
   Widget build(BuildContext context) {
+    final radius = BorderRadius.circular(size * 0.28);
+    final inset = _innerPad(size);
+    final inner = size - 2 * inset;
     final logo = Container(
       width: size,
       height: size,
       decoration: BoxDecoration(
-        gradient: AppColors.primaryGradient,
-        borderRadius: BorderRadius.circular(size * 0.28),
+        borderRadius: radius,
         boxShadow: [
           BoxShadow(
             color: AppColors.primary.withValues(alpha: 0.45),
@@ -27,14 +37,23 @@ class WayoLogo extends StatelessWidget {
           ),
         ],
       ),
-      alignment: Alignment.center,
-      child: Text(
-        'W',
-        style: AppTextStyles.displayLarge(context).copyWith(
-          fontSize: size * 0.5,
-          fontWeight: FontWeight.w900,
-          color: Colors.white,
-          height: 1,
+      child: ClipRRect(
+        borderRadius: radius,
+        child: ColoredBox(
+          color: Colors.black,
+          child: Padding(
+            padding: EdgeInsets.all(inset),
+            child: Center(
+              child: Image.asset(
+                _assetPath,
+                width: inner,
+                height: inner,
+                fit: BoxFit.contain,
+                alignment: Alignment.center,
+                filterQuality: FilterQuality.high,
+              ),
+            ),
+          ),
         ),
       ),
     );

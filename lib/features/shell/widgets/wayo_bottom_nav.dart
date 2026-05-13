@@ -10,6 +10,22 @@ import '../../../i18n/strings.g.dart';
 /// Number of shell branches (dashboard, campaigns, wallet, invoices, chat).
 const int kWayoShellTabCount = 5;
 
+/// Height of the floating pill row inside [WayoBottomNav] (excluding outer bottom padding).
+const double kWayoBottomNavBarHeight = 88;
+
+/// Gap between pill bottom and safe-area inset inside [WayoBottomNav].
+const double kWayoBottomNavOuterBottomGap = 22;
+
+/// Bottom inset so tab bodies clear the floating pill while [Scaffold.extendBody] is true.
+///
+/// Keep this formula aligned with [WayoBottomNav] layout (`OuterBottomGap` + pill height).
+double wayoFloatingBottomNavReserve(BuildContext context, {double extraGap = 12}) {
+  return MediaQuery.paddingOf(context).bottom +
+      kWayoBottomNavOuterBottomGap +
+      kWayoBottomNavBarHeight +
+      extraGap;
+}
+
 /// Brand ambre 2026 (header ciné / spec).
 const Color _kNavAmber = Color(0xFFF4A237);
 const Color _kPillDark = Color(0xFF1C1C1E);
@@ -23,6 +39,7 @@ class WayoBottomNav extends StatefulWidget {
     required this.notificationUnread,
     required this.chatUnread,
     required this.campaignsAttentionCount,
+    this.showInvoicesTab = true,
     this.dashboardTabKey,
     this.campaignsTabKey,
     this.walletTabKey,
@@ -33,6 +50,10 @@ class WayoBottomNav extends StatefulWidget {
   final StatefulNavigationShell navigationShell;
   final int notificationUnread;
   final int chatUnread;
+
+  /// When `false` (e.g. creator), hides the invoices tab and maps taps to shell
+  /// branches `0,1,2,4` (skips branch `3`).
+  final bool showInvoicesTab;
 
   /// Brouillons / campagnes à traiter (badge rouge sur l’onglet Campagnes).
   final int campaignsAttentionCount;
@@ -77,8 +98,9 @@ class _WayoBottomNavState extends State<WayoBottomNav>
   @override
   void initState() {
     super.initState();
-    _idx = widget.navigationShell.currentIndex;
-    _slideFrom = _idx;
+    final visual = _shellToVisual(widget.navigationShell.currentIndex);
+    _idx = visual;
+    _slideFrom = visual;
     _slide.value = 1;
     _slide.addStatusListener((s) {
       if (s == AnimationStatus.completed) {
@@ -91,10 +113,11 @@ class _WayoBottomNavState extends State<WayoBottomNav>
   @override
   void didUpdateWidget(covariant WayoBottomNav oldWidget) {
     super.didUpdateWidget(oldWidget);
-    final n = widget.navigationShell.currentIndex;
-    if (n != _idx) {
+    final visual = _shellToVisual(widget.navigationShell.currentIndex);
+    final layoutChanged = oldWidget.showInvoicesTab != widget.showInvoicesTab;
+    if (visual != _idx || layoutChanged) {
       _slideFrom = _idx;
-      _idx = n;
+      _idx = visual;
       _slide.forward(from: 0);
       _pulse.forward(from: 0);
     }
@@ -107,20 +130,41 @@ class _WayoBottomNavState extends State<WayoBottomNav>
     super.dispose();
   }
 
-  void _go(int index) {
+  void _go(int visualIndex) {
     HapticFeedback.lightImpact();
+    final shell = _visualToShell(visualIndex);
     widget.navigationShell.goBranch(
-      index,
-      initialLocation: index == widget.navigationShell.currentIndex,
+      shell,
+      initialLocation: shell == widget.navigationShell.currentIndex,
     );
   }
 
   double _tSlide() => _slideCurve.value;
 
-  double _lerpTabX(double t, int from, int to) {
-    if (kWayoShellTabCount <= 1) return 0.5;
-    final a = (from + 0.5) / kWayoShellTabCount;
-    final b = (to + 0.5) / kWayoShellTabCount;
+  int get _visibleTabCount =>
+      widget.showInvoicesTab ? kWayoShellTabCount : kWayoShellTabCount - 1;
+
+  /// Maps shell branch index → visible tab index (for pill / home indicator).
+  int _shellToVisual(int shell) {
+    if (widget.showInvoicesTab) return shell;
+    if (shell < 3) return shell;
+    if (shell == 3) {
+      // Should not happen for creators: router redirects `/invoices` away.
+      return 2;
+    }
+    return shell - 1;
+  }
+
+  int _visualToShell(int visual) {
+    if (widget.showInvoicesTab) return visual;
+    if (visual < 3) return visual;
+    return visual + 1;
+  }
+
+  double _lerpTabX(double t, int from, int to, int tabCount) {
+    if (tabCount <= 1) return 0.5;
+    final a = (from + 0.5) / tabCount;
+    final b = (to + 0.5) / tabCount;
     return a + (b - a) * t;
   }
 
@@ -130,7 +174,9 @@ class _WayoBottomNavState extends State<WayoBottomNav>
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final idx = widget.navigationShell.currentIndex;
-    final bottomPad = MediaQuery.paddingOf(context).bottom + 22;
+    final tabCount = _visibleTabCount;
+    final bottomPad =
+        MediaQuery.paddingOf(context).bottom + kWayoBottomNavOuterBottomGap;
 
     final pillFill = isDark ? _kPillDark : _kPillLight;
     final outerBg = theme.scaffoldBackgroundColor;
@@ -144,14 +190,14 @@ class _WayoBottomNavState extends State<WayoBottomNav>
         ? _kNavAmber.withValues(alpha: 0.12)
         : Colors.black.withValues(alpha: 0.08);
 
-    final cx = _lerpTabX(_tSlide(), _slideFrom, _idx);
+    final cx = _lerpTabX(_tSlide(), _slideFrom, _idx, tabCount);
 
     return ColoredBox(
       color: outerBg,
       child: Padding(
         padding: EdgeInsets.fromLTRB(20, 0, 20, bottomPad),
         child: SizedBox(
-          height: 88,
+          height: kWayoBottomNavBarHeight,
           width: double.infinity,
           child: Center(
             child: ConstrainedBox(
@@ -162,7 +208,7 @@ class _WayoBottomNavState extends State<WayoBottomNav>
                   return LayoutBuilder(
                     builder: (context, c) {
                       final w = c.maxWidth;
-                      final seg = w / kWayoShellTabCount;
+                      final seg = w / tabCount;
                       const pillHMargin = 5.0;
                       final pillW = seg - pillHMargin * 2;
                       final pillLeft = cx * w - pillW / 2;
@@ -288,22 +334,25 @@ class _WayoBottomNavState extends State<WayoBottomNav>
                                             () => _pressedTab = v ? 2 : null,
                                           ),
                                         ),
-                                        _TabEntry(
-                                          tabKey: widget.invoicesTabKey,
-                                          selected: idx == 3,
-                                          label: t.nav.invoices,
-                                          iconSelected: Icons.receipt_long_rounded,
-                                          iconIdle: Icons.receipt_long_outlined,
-                                          accent: inactiveIcon,
-                                          onTap: () => _go(3),
-                                          pulseScale: idx == 3
-                                              ? _pulseScale.value
-                                              : 1,
-                                          pressed: _pressedTab == 3,
-                                          onHighlight: (v) => setState(
-                                            () => _pressedTab = v ? 3 : null,
+                                        if (widget.showInvoicesTab)
+                                          _TabEntry(
+                                            tabKey: widget.invoicesTabKey,
+                                            selected: idx == 3,
+                                            label: t.nav.invoices,
+                                            iconSelected:
+                                                Icons.receipt_long_rounded,
+                                            iconIdle:
+                                                Icons.receipt_long_outlined,
+                                            accent: inactiveIcon,
+                                            onTap: () => _go(3),
+                                            pulseScale: idx == 3
+                                                ? _pulseScale.value
+                                                : 1,
+                                            pressed: _pressedTab == 3,
+                                            onHighlight: (v) => setState(
+                                              () => _pressedTab = v ? 3 : null,
+                                            ),
                                           ),
-                                        ),
                                         _TabEntry(
                                           tabKey: widget.chatTabKey,
                                           selected: idx == 4,
@@ -313,7 +362,8 @@ class _WayoBottomNavState extends State<WayoBottomNav>
                                           iconIdle:
                                               Icons.chat_bubble_outline_rounded,
                                           accent: inactiveIcon,
-                                          onTap: () => _go(4),
+                                          onTap: () =>
+                                              _go(widget.showInvoicesTab ? 4 : 3),
                                           badge:
                                               widget.chatUnread > 0 && idx != 4
                                               ? widget.chatUnread
@@ -322,9 +372,14 @@ class _WayoBottomNavState extends State<WayoBottomNav>
                                           pulseScale: idx == 4
                                               ? _pulseScale.value
                                               : 1,
-                                          pressed: _pressedTab == 4,
+                                          pressed: _pressedTab ==
+                                              (widget.showInvoicesTab ? 4 : 3),
                                           onHighlight: (v) => setState(
-                                            () => _pressedTab = v ? 4 : null,
+                                            () => _pressedTab = v
+                                                ? (widget.showInvoicesTab
+                                                      ? 4
+                                                      : 3)
+                                                : null,
                                           ),
                                         ),
                                       ],
@@ -334,8 +389,8 @@ class _WayoBottomNavState extends State<WayoBottomNav>
                                       right: 0,
                                       bottom: 5,
                                       child: _HomeIndicator(
-                                        activeIndex: idx,
-                                        tabCount: kWayoShellTabCount,
+                                        activeIndex: _shellToVisual(idx),
+                                        tabCount: tabCount,
                                         isDark: isDark,
                                       ),
                                     ),

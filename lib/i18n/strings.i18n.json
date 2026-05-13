@@ -770,7 +770,9 @@
       "campaigns_title": "Campaigns",
       "campaigns_subtitle": "Create new campaigns, review applications and monitor performance in one place.",
       "wallet_title": "Wallet",
-      "wallet_subtitle": "Top up your budget, view invoices and spending history — secured by Stripe.",
+      "wallet_subtitle": "Top up your budget and track spending — secured by Stripe.",
+      "invoices_title": "Invoices",
+      "invoices_subtitle": "Download signed PDFs for deposits, campaign billing and transfers — all in one place.",
       "chat_title": "Chat",
       "chat_subtitle": "Talk to your creators once a campaign is approved. Conversations stay in sync across devices."
     },

@@ -1129,7 +1129,9 @@ class _TranslationsOnboardingAdvertiserFr extends TranslationsOnboardingAdvertis
 	@override String get campaigns_title => 'Campagnes';
 	@override String get campaigns_subtitle => 'Créez de nouvelles campagnes, examinez les candidatures et suivez les performances au même endroit.';
 	@override String get wallet_title => 'Portefeuille';
-	@override String get wallet_subtitle => 'Rechargez votre budget, consultez vos factures et votre historique — sécurisé par Stripe.';
+	@override String get wallet_subtitle => 'Rechargez votre budget et suivez vos dépenses — sécurisé par Stripe.';
+	@override String get invoices_title => 'Factures';
+	@override String get invoices_subtitle => 'Téléchargez vos PDF signés : dépôts, facturation des campagnes et virements — tout au même endroit.';
 	@override String get chat_title => 'Chat';
 	@override String get chat_subtitle => 'Discutez avec vos créateurs une fois la campagne validée. Vos conversations restent synchronisées.';
 }
@@ -1849,7 +1851,9 @@ extension on TranslationsFr {
 			case 'onboarding.advertiser.campaigns_title': return 'Campagnes';
 			case 'onboarding.advertiser.campaigns_subtitle': return 'Créez de nouvelles campagnes, examinez les candidatures et suivez les performances au même endroit.';
 			case 'onboarding.advertiser.wallet_title': return 'Portefeuille';
-			case 'onboarding.advertiser.wallet_subtitle': return 'Rechargez votre budget, consultez vos factures et votre historique — sécurisé par Stripe.';
+			case 'onboarding.advertiser.wallet_subtitle': return 'Rechargez votre budget et suivez vos dépenses — sécurisé par Stripe.';
+			case 'onboarding.advertiser.invoices_title': return 'Factures';
+			case 'onboarding.advertiser.invoices_subtitle': return 'Téléchargez vos PDF signés : dépôts, facturation des campagnes et virements — tout au même endroit.';
 			case 'onboarding.advertiser.chat_title': return 'Chat';
 			case 'onboarding.advertiser.chat_subtitle': return 'Discutez avec vos créateurs une fois la campagne validée. Vos conversations restent synchronisées.';
 			case 'onboarding.creator.dashboard_title': return 'Dashboard créateur';

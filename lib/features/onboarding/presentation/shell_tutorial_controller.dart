@@ -123,7 +123,7 @@ class ShellTutorialController {
       },
       onClickTarget: (_) => HapticFeedback.selectionClick(),
       onClickOverlay: (_) => HapticFeedback.selectionClick(),
-    ).show(context: context);
+    ).show(context: context, rootOverlay: true);
   }
 
   /// Builds coach-mark targets in a fixed order, skipping any whose

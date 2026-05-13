@@ -176,6 +176,8 @@ class _WayoBottomNavState extends State<WayoBottomNav>
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final idx = widget.navigationShell.currentIndex;
+    /// Shell branch index for the chat tab (_go uses the same logic).
+    final chatShellIndex = widget.showInvoicesTab ? 4 : 3;
     final tabCount = _visibleTabCount;
     final bottomPad =
         MediaQuery.viewPaddingOf(context).bottom + kWayoBottomNavOuterBottomGap;
@@ -357,31 +359,28 @@ class _WayoBottomNavState extends State<WayoBottomNav>
                                           ),
                                         _TabEntry(
                                           tabKey: widget.chatTabKey,
-                                          selected: idx == 4,
+                                          selected: idx == chatShellIndex,
                                           label: t.nav.chat,
                                           iconSelected:
                                               Icons.chat_bubble_rounded,
                                           iconIdle:
                                               Icons.chat_bubble_outline_rounded,
                                           accent: inactiveIcon,
-                                          onTap: () =>
-                                              _go(widget.showInvoicesTab ? 4 : 3),
+                                          onTap: () => _go(chatShellIndex),
                                           badge:
-                                              widget.chatUnread > 0 && idx != 4
+                                              widget.chatUnread > 0 &&
+                                                      idx != chatShellIndex
                                               ? widget.chatUnread
                                               : null,
                                           badgeCap: 9,
-                                          pulseScale: idx == 4
+                                          pulseScale: idx == chatShellIndex
                                               ? _pulseScale.value
                                               : 1,
-                                          pressed: _pressedTab ==
-                                              (widget.showInvoicesTab ? 4 : 3),
+                                          pressed:
+                                              _pressedTab == chatShellIndex,
                                           onHighlight: (v) => setState(
-                                            () => _pressedTab = v
-                                                ? (widget.showInvoicesTab
-                                                      ? 4
-                                                      : 3)
-                                                : null,
+                                            () => _pressedTab =
+                                                v ? chatShellIndex : null,
                                           ),
                                         ),
                                       ],
@@ -512,99 +511,107 @@ class _TabEntry extends StatelessWidget {
           splashColor: _kNavAmber.withValues(alpha: 0.22),
           highlightColor: Colors.white.withValues(alpha: 0.06),
           borderRadius: BorderRadius.circular(28),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const SizedBox(height: 1),
-              Stack(
-                clipBehavior: Clip.none,
-                alignment: Alignment.center,
+          child: SizedBox.expand(
+            child: Align(
+              alignment: Alignment.center,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Transform.scale(
-                    scale: selected ? pulseScale : 1,
-                    child: Icon(
-                      icon,
-                      size: selected ? 26 : 24,
-                      color: iconColor,
+                  const SizedBox(height: 1),
+                  Stack(
+                    clipBehavior: Clip.none,
+                    alignment: Alignment.center,
+                    children: [
+                      Transform.scale(
+                        scale: selected ? pulseScale : 1,
+                        child: Icon(
+                          icon,
+                          size: selected ? 26 : 24,
+                          color: iconColor,
+                        ),
+                      ),
+                      if (badge != null && badge! > 0)
+                        Positioned(
+                          right: -2,
+                          top: -6,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 5,
+                              vertical: 1,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.error,
+                              borderRadius: BorderRadius.circular(10),
+                              boxShadow: [
+                                BoxShadow(
+                                  color:
+                                      AppColors.error.withValues(alpha: 0.35),
+                                  blurRadius: 6,
+                                ),
+                              ],
+                            ),
+                            child: Text(
+                              badge! > badgeCap ? '$badgeCap+' : '$badge',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 9,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ),
+                        ),
+                      if (showRedDot && !selected)
+                        Positioned(
+                          right: -1,
+                          top: -4,
+                          child: Container(
+                            width: 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              color: AppColors.error,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? _kPillDark
+                                    : _kPillLight,
+                                width: 1.5,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 1),
+                  AnimatedScale(
+                    scale: pressed ? 1.1 : 1.0,
+                    alignment: Alignment.bottomCenter,
+                    duration: const Duration(milliseconds: 140),
+                    curve: Curves.easeOutBack,
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        label,
+                        maxLines: 1,
+                        softWrap: false,
+                        overflow: TextOverflow.clip,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 10.5,
+                          fontWeight: selected
+                              ? FontWeight.w800
+                              : FontWeight.w600,
+                          color: labelColor,
+                          letterSpacing: -0.2,
+                        ),
+                      ),
                     ),
                   ),
-                  if (badge != null && badge! > 0)
-                    Positioned(
-                      right: -2,
-                      top: -6,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 5,
-                          vertical: 1,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.error,
-                          borderRadius: BorderRadius.circular(10),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.error.withValues(alpha: 0.35),
-                              blurRadius: 6,
-                            ),
-                          ],
-                        ),
-                        child: Text(
-                          badge! > badgeCap ? '$badgeCap+' : '$badge',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 9,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ),
-                    ),
-                  if (showRedDot && !selected)
-                    Positioned(
-                      right: -1,
-                      top: -4,
-                      child: Container(
-                        width: 8,
-                        height: 8,
-                        decoration: BoxDecoration(
-                          color: AppColors.error,
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color:
-                                Theme.of(context).brightness == Brightness.dark
-                                ? _kPillDark
-                                : _kPillLight,
-                            width: 1.5,
-                          ),
-                        ),
-                      ),
-                    ),
+                  const SizedBox(height: 2),
                 ],
               ),
-              const SizedBox(height: 1),
-              AnimatedScale(
-                scale: pressed ? 1.1 : 1.0,
-                alignment: Alignment.bottomCenter,
-                duration: const Duration(milliseconds: 140),
-                curve: Curves.easeOutBack,
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(
-                    label,
-                    maxLines: 1,
-                    softWrap: false,
-                    overflow: TextOverflow.clip,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 10.5,
-                      fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
-                      color: labelColor,
-                      letterSpacing: -0.2,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 2),
-            ],
+            ),
           ),
         ),
       ),

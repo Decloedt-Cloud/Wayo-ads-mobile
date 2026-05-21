@@ -21,11 +21,47 @@ final class InvoicesRepository {
 
   final InvoicesRemote _remote;
 
-  Future<InvoicesPage> loadAdvertiserPage({required int page}) =>
-      _remote.fetchAdvertiserPage(page: page);
+  Future<InvoicesPage> loadAdvertiserPage({
+    required int page,
+    int limit = 15,
+    String? invoiceType,
+    String search = '',
+    DateTime? dateFrom,
+    DateTime? dateTo,
+    String sortBy = 'createdAt',
+    String sortDir = 'desc',
+  }) =>
+      _remote.fetchAdvertiserPage(
+        page: page,
+        limit: limit,
+        invoiceType: invoiceType,
+        search: search,
+        dateFrom: dateFrom,
+        dateTo: dateTo,
+        sortBy: sortBy,
+        sortDir: sortDir,
+      );
 
-  Future<InvoicesPage> loadCreatorPage({required int page}) =>
-      _remote.fetchCreatorPage(page: page);
+  Future<InvoicesPage> loadCreatorPage({
+    required int page,
+    int limit = 10,
+    String? invoiceType,
+    String search = '',
+    DateTime? dateFrom,
+    DateTime? dateTo,
+    String sortBy = 'createdAt',
+    String sortDir = 'desc',
+  }) =>
+      _remote.fetchCreatorPage(
+        page: page,
+        limit: limit,
+        invoiceType: invoiceType,
+        search: search,
+        dateFrom: dateFrom,
+        dateTo: dateTo,
+        sortBy: sortBy,
+        sortDir: sortDir,
+      );
 
   Future<Uint8List> downloadPdf(
     String invoiceId, {

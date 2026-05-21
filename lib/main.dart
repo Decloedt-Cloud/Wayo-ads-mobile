@@ -11,6 +11,7 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 import 'app.dart';
 import 'core/config/app_config.dart';
 import 'core/config/auth_runtime_config.dart';
+import 'core/push/wayo_push_service.dart';
 import 'core/observability/app_log.dart';
 import 'core/observability/crash_reporter.dart';
 import 'core/observability/sentry_bootstrap.dart';
@@ -43,6 +44,23 @@ Future<void> main() async {
   } catch (e, st) {
     developer.log(
       'AuthRuntimeConfig.ensureLoaded failed (continuing): $e',
+      name: 'wayo.main',
+      error: e,
+      stackTrace: st,
+    );
+  }
+
+  try {
+    final pushOk = await initializeFirebaseForPush();
+    if (!pushOk) {
+      developer.log(
+        'Firebase push not initialized (run flutterfire configure)',
+        name: 'wayo.main',
+      );
+    }
+  } catch (e, st) {
+    developer.log(
+      'initializeFirebaseForPush failed (continuing): $e',
       name: 'wayo.main',
       error: e,
       stackTrace: st,
@@ -241,6 +259,7 @@ final class _DeferredObservabilityBootstrapState
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _logConfigDiagnostics();
+      unawaited(attachForegroundFcmHandlers());
       unawaited(_initSentryWhenIdle());
     });
   }

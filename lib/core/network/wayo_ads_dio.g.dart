@@ -6,7 +6,7 @@ part of 'wayo_ads_dio.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$wayoAdsDioHash() => r'26422a443865cba9aa868215363b7b6f9d01f886';
+String _$wayoAdsDioHash() => r'cde11f731ffba7146e9010d3ab551f6b11ae2e7b';
 
 /// Dio client for Wayo-ads (Next.js) API — same auth stack as main [dio].
 ///

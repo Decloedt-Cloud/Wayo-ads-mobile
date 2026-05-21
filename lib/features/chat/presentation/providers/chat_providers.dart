@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -86,6 +88,27 @@ final chatConversationsProvider = FutureProvider<List<ChatConversation>>((
 
 /// Subscribes Pusher to user + conversation private channels (matches web).
 /// Realtime is best-effort: a WebSocket failure must not surface as a failed conversation list.
+Timer? _chatRealtimeBindingInvalidateCoalesceTimer;
+
+/// Coalesce bursts of [chatRealtimeBindingProvider] invalidation (retry/reconnect storms).
+void scheduleInvalidateChatRealtimeBinding(
+  void Function() invalidateBinding, {
+  Duration delay = const Duration(milliseconds: 440),
+}) {
+  _chatRealtimeBindingInvalidateCoalesceTimer?.cancel();
+  _chatRealtimeBindingInvalidateCoalesceTimer = Timer(delay, () {
+    _chatRealtimeBindingInvalidateCoalesceTimer = null;
+    invalidateBinding();
+  });
+}
+
+/// Cancels any pending coalesced invalidation and invalidates immediately (logout, new conversation).
+void invalidateChatRealtimeBindingImmediate(void Function() invalidateBinding) {
+  _chatRealtimeBindingInvalidateCoalesceTimer?.cancel();
+  _chatRealtimeBindingInvalidateCoalesceTimer = null;
+  invalidateBinding();
+}
+
 final chatRealtimeBindingProvider = FutureProvider<void>((ref) async {
   ref.keepAlive();
   final creds = await ref.watch(chatBootstrapProvider.future);
@@ -143,6 +166,8 @@ final chatMessagesFamilyProvider = FutureProvider.autoDispose
 void invalidateChatProviders(Ref ref) {
   ref.invalidate(chatBootstrapProvider);
   ref.invalidate(chatConversationsProvider);
-  ref.invalidate(chatRealtimeBindingProvider);
+  invalidateChatRealtimeBindingImmediate(
+    () => ref.invalidate(chatRealtimeBindingProvider),
+  );
   ref.invalidate(chatRealtimeServiceProvider);
 }

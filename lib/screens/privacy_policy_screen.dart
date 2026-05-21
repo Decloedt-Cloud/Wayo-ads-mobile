@@ -42,7 +42,13 @@ class PrivacyPolicyScreen extends ConsumerWidget {
             Icons.arrow_back_ios_new_rounded,
             color: AppColors.textPrimaryOf(context),
           ),
-          onPressed: () => context.pop(),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/dashboard');
+            }
+          },
         ),
         title: Text(
           pp.title,

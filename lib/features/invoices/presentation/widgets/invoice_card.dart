@@ -17,12 +17,14 @@ class InvoiceCard extends StatelessWidget {
     required this.invoice,
     required this.locale,
     required this.onTap,
+    required this.onViewDetails,
     required this.onDownloadPdf,
   });
 
   final Invoice invoice;
   final String locale;
   final VoidCallback onTap;
+  final VoidCallback onViewDetails;
   final VoidCallback onDownloadPdf;
 
   String _fmtDate(BuildContext context, DateTime date) {
@@ -178,10 +180,21 @@ class InvoiceCard extends StatelessWidget {
                             ],
                           ),
                         ),
-                        _PdfIconButton(
-                          accent: typeVisual.accent,
-                          tooltip: t.invoices.action_download_pdf,
-                          onTap: onDownloadPdf,
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            _ViewIconButton(
+                              accent: typeVisual.accent,
+                              tooltip: t.invoices.action_view_details,
+                              onTap: onViewDetails,
+                            ),
+                            const SizedBox(width: 8),
+                            _PdfIconButton(
+                              accent: typeVisual.accent,
+                              tooltip: t.invoices.action_download_pdf,
+                              onTap: onDownloadPdf,
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -189,6 +202,40 @@ class InvoiceCard extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ViewIconButton extends StatelessWidget {
+  const _ViewIconButton({
+    required this.accent,
+    required this.tooltip,
+    required this.onTap,
+  });
+
+  final Color accent;
+  final String tooltip;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: tooltip,
+      child: Material(
+        color: accent.withValues(alpha: 0.14),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+          side: BorderSide(color: accent.withValues(alpha: 0.32)),
+        ),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(14),
+          child: Padding(
+            padding: const EdgeInsets.all(10),
+            child: Icon(Icons.visibility_outlined, color: accent, size: 20),
           ),
         ),
       ),

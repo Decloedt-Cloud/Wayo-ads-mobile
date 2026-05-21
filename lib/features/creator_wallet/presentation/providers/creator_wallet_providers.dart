@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/network/rate_limiter.dart';
 import '../../../../core/network/wayo_ads_dio.dart';
+import '../../../auth/presentation/providers/current_account_providers.dart';
 import '../../../dashboard/presentation/providers/dashboard_state_providers.dart';
 import '../../data/creator_wallet_remote_datasource.dart';
 import '../../data/creator_wallet_repository.dart';
@@ -31,20 +32,44 @@ final creatorWalletRepositoryProvider = Provider<CreatorWalletRepository>((
   );
 });
 
+/// Drops cached wallet / Stripe / business reads (login, logout, account switch).
+void invalidateCreatorWalletProviders(Ref ref) {
+  ref.read(creatorWalletRateLimiterProvider).reset();
+  ref.invalidate(creatorWalletPageProvider);
+  ref.invalidate(creatorStripeStatusProvider);
+  ref.invalidate(creatorBusinessProfileProvider);
+}
+
+int? _creatorWalletSessionUserId(Ref ref) {
+  return ref.watch(currentAppUserProvider)?.id;
+}
+
 /// Balance + platform limits + withdrawal history (`GET /api/creator/withdrawal`).
 final creatorWalletPageProvider = FutureProvider<CreatorWalletPage>((
   ref,
 ) async {
+  final userId = _creatorWalletSessionUserId(ref);
+  if (userId == null) {
+    throw StateError('Creator wallet requires an authenticated user');
+  }
   ref.keepAlive();
-  return ref.watch(creatorWalletRepositoryProvider).fetchWalletPage();
+  return ref
+      .watch(creatorWalletRepositoryProvider)
+      .fetchWalletPage(sessionUserId: userId);
 });
 
 /// Stripe Connect onboarding flags.
 final creatorStripeStatusProvider = FutureProvider<CreatorStripeStatus>((
   ref,
 ) async {
+  final userId = _creatorWalletSessionUserId(ref);
+  if (userId == null) {
+    throw StateError('Creator Stripe status requires an authenticated user');
+  }
   ref.keepAlive();
-  return ref.watch(creatorWalletRepositoryProvider).fetchStripeStatus();
+  return ref
+      .watch(creatorWalletRepositoryProvider)
+      .fetchStripeStatus(sessionUserId: userId);
 });
 
 /// Creator business profile — gates Stripe onboarding (see
@@ -52,6 +77,12 @@ final creatorStripeStatusProvider = FutureProvider<CreatorStripeStatus>((
 final creatorBusinessProfileProvider = FutureProvider<CreatorBusinessProfile>((
   ref,
 ) async {
+  final userId = _creatorWalletSessionUserId(ref);
+  if (userId == null) {
+    throw StateError('Creator business profile requires an authenticated user');
+  }
   ref.keepAlive();
-  return ref.watch(creatorWalletRepositoryProvider).fetchBusinessProfile();
+  return ref
+      .watch(creatorWalletRepositoryProvider)
+      .fetchBusinessProfile(sessionUserId: userId);
 });

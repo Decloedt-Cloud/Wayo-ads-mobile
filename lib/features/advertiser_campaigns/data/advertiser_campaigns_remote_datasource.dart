@@ -34,9 +34,6 @@ abstract interface class AdvertiserCampaignsRemote {
   Future<void> approveApplication(String campaignId, String applicationId);
 
   Future<void> rejectApplication(String campaignId, String applicationId);
-
-  /// Wayo-ads [POST /api/campaigns] — `201` with `{ campaign: { id, ... } }`.
-  Future<String> createCampaignDraft(Map<String, dynamic> body);
 }
 
 final class AdvertiserCampaignsRemoteDatasource
@@ -44,6 +41,10 @@ final class AdvertiserCampaignsRemoteDatasource
   AdvertiserCampaignsRemoteDatasource(this._dio);
 
   final Dio _dio;
+
+  /// Same as [AdvertiserWalletRepository]: required when [baseUrl] already ends with `/api`.
+  String _path(String endpoint) =>
+      AuthRuntimeConfig.instance.wayoAdsRequestPath(endpoint);
 
   @override
   Future<List<AdvertiserCampaign>> fetchAdvertiserCampaigns({
@@ -76,7 +77,7 @@ final class AdvertiserCampaignsRemoteDatasource
       qp['search'] = trimmed;
     }
     final res = await _dio.get<Map<String, dynamic>>(
-      AuthRuntimeConfig.instance.wayoAdsRequestPath(ApiEndpoints.campaigns),
+      _path(ApiEndpoints.campaigns),
       queryParameters: qp,
     );
     final data = res.data;
@@ -119,9 +120,7 @@ final class AdvertiserCampaignsRemoteDatasource
   @override
   Future<Map<String, dynamic>> fetchCampaignDetailJson(String id) async {
     final res = await _dio.get<Map<String, dynamic>>(
-      AuthRuntimeConfig.instance.wayoAdsRequestPath(
-        ApiEndpoints.campaignDetail(id),
-      ),
+      _path(ApiEndpoints.campaignDetail(id)),
     );
     final data = res.data;
     if (data == null) {
@@ -144,9 +143,7 @@ final class AdvertiserCampaignsRemoteDatasource
   ) async {
     try {
       final res = await _dio.get<Map<String, dynamic>>(
-        AuthRuntimeConfig.instance.wayoAdsRequestPath(
-          ApiEndpoints.campaignApplications(campaignId),
-        ),
+        _path(ApiEndpoints.campaignApplications(campaignId)),
       );
       final data = res.data;
       if (data == null) {
@@ -183,9 +180,7 @@ final class AdvertiserCampaignsRemoteDatasource
     String applicationId,
   ) async {
     await _postApplicationAction(
-      AuthRuntimeConfig.instance.wayoAdsRequestPath(
-        ApiEndpoints.campaignApplicationApprove(campaignId, applicationId),
-      ),
+      _path(ApiEndpoints.campaignApplicationApprove(campaignId, applicationId)),
     );
   }
 
@@ -195,56 +190,8 @@ final class AdvertiserCampaignsRemoteDatasource
     String applicationId,
   ) async {
     await _postApplicationAction(
-      AuthRuntimeConfig.instance.wayoAdsRequestPath(
-        ApiEndpoints.campaignApplicationReject(campaignId, applicationId),
-      ),
+      _path(ApiEndpoints.campaignApplicationReject(campaignId, applicationId)),
     );
-  }
-
-  @override
-  Future<String> createCampaignDraft(Map<String, dynamic> body) async {
-    try {
-      final res = await _dio.post<Map<String, dynamic>>(
-        AuthRuntimeConfig.instance.wayoAdsRequestPath(ApiEndpoints.campaigns),
-        data: body,
-      );
-      final data = res.data;
-      if (data == null) {
-        throw const ServerException('Empty response');
-      }
-      final err = _scalarOrMessageString(data['error']);
-      if (err != null) {
-        throw ServerException(err);
-      }
-      dynamic c = data['campaign'];
-      if (c is! Map) {
-        c = data['data'];
-      }
-      if (c is Map) {
-        final id = '${c['id'] ?? ''}'.trim();
-        if (id.isNotEmpty) {
-          return id;
-        }
-      }
-      throw const ServerException('Invalid campaign response');
-    } on DioException catch (e) {
-      if (kDebugMode) {
-        debugPrint(
-          '[AdvertiserCampaigns] POST create ${e.response?.statusCode}: '
-          '${e.response?.data}',
-        );
-      }
-      final msg = _messageFromErrorPayload(e.response?.data);
-      if (msg != null && msg.isNotEmpty) {
-        throw ServerException(msg);
-      }
-      if (e.type == DioExceptionType.connectionTimeout ||
-          e.type == DioExceptionType.receiveTimeout ||
-          e.type == DioExceptionType.connectionError) {
-        throw const NetworkException('Connection failed');
-      }
-      rethrow;
-    }
   }
 
   /// Next.js returns 200 + JSON, or 4xx with `{ "error": "…" }`. Dio throws on 4xx

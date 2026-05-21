@@ -17,9 +17,10 @@ import '../../../../i18n/strings.g.dart';
 import '../../../auth/presentation/providers/current_account_providers.dart';
 import '../../../creator_wallet/domain/creator_business_profile.dart';
 import '../../../creator_wallet/presentation/providers/creator_wallet_providers.dart';
-import '../../../creator_wallet/presentation/widgets/business_info_dialog.dart';
+import '../../../creator_wallet/presentation/screens/business_info_screen.dart';
 import '../../../dashboard/presentation/providers/dashboard_state_providers.dart';
 import '../../data/advertiser_wallet_repository.dart';
+import '../../domain/advertiser_deposit_charge.dart';
 import '../../domain/wallet_models.dart';
 import '../../presentation/providers/advertiser_wallet_providers.dart';
 import '../../stripe/advertiser_stripe_deposit.dart';
@@ -46,7 +47,20 @@ class _AdvertiserWalletTabContentState
   int _txPage = 0;
 
   @override
+  void initState() {
+    super.initState();
+    _amountCtrl.addListener(_onAmountChanged);
+  }
+
+  void _onAmountChanged() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  @override
   void dispose() {
+    _amountCtrl.removeListener(_onAmountChanged);
     _amountCtrl.dispose();
     super.dispose();
   }
@@ -208,7 +222,7 @@ class _AdvertiserWalletTabContentState
       initial = CreatorBusinessProfile.empty();
     }
     final useGlobal = user.shouldUseAdvertiserGlobalBusinessSchema;
-    final ok = await showBusinessInfoDialog(
+    final ok = await openBusinessInfoScreen(
       context,
       initial: initial,
       useGlobalBilling: useGlobal,
@@ -363,21 +377,6 @@ class _AdvertiserWalletTabContentState
                           ),
                           const SizedBox(height: 20),
                         ],
-                        if (businessReady)
-                          _WalletPayStrip(
-                            data: data,
-                            t: t,
-                            busyMethod: _busyMethod,
-                            onCard: () =>
-                                _submit(method: _PayMethod.card, currency: c),
-                            onApplePay: () =>
-                                _submit(method: _PayMethod.applePay, currency: c),
-                            onGooglePay: () =>
-                                _submit(method: _PayMethod.googlePay, currency: c),
-                          )
-                        else
-                          _WalletPayStripPlaceholder(t: t),
-                        const SizedBox(height: 24),
                         Text(
                           t.advertiser_wallet.amount_label,
                           style: AppTextStyles.caption(
@@ -443,6 +442,47 @@ class _AdvertiserWalletTabContentState
                               context,
                             ).copyWith(color: AppColors.textMutedOf(context)),
                           ),
+                        ],
+                        if (businessReady) ...[
+                          Builder(
+                            builder: (context) {
+                              final walletCents = _amountToCents(_amountCtrl.text);
+                              if (walletCents == null ||
+                                  walletCents < _kMinDepositCents) {
+                                return const SizedBox.shrink();
+                              }
+                              final charge = estimateAdvertiserDepositCharge(
+                                walletAmountCents: walletCents,
+                              );
+                              return Padding(
+                                padding: const EdgeInsets.only(top: 20),
+                                child: _DepositPaymentSummary(
+                                  charge: charge,
+                                  currency: c,
+                                  moneyLocale: moneyLocale,
+                                  t: t,
+                                  isDark: isDark,
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                        if (businessReady) ...[
+                          const SizedBox(height: 24),
+                          _WalletPayStrip(
+                            data: data,
+                            t: t,
+                            busyMethod: _busyMethod,
+                            onCard: () =>
+                                _submit(method: _PayMethod.card, currency: c),
+                            onApplePay: () =>
+                                _submit(method: _PayMethod.applePay, currency: c),
+                            onGooglePay: () =>
+                                _submit(method: _PayMethod.googlePay, currency: c),
+                          ),
+                        ] else ...[
+                          const SizedBox(height: 24),
+                          _WalletPayStripPlaceholder(t: t),
                         ],
                         const SizedBox(height: 28),
                         Text(
@@ -1046,6 +1086,178 @@ class _PagerIcon extends StatelessWidget {
         ).withValues(alpha: enabled ? 1 : 0.35),
       ),
       icon: Icon(icon, size: 28),
+    );
+  }
+}
+
+class _DepositPaymentSummary extends StatelessWidget {
+  const _DepositPaymentSummary({
+    required this.charge,
+    required this.currency,
+    required this.moneyLocale,
+    required this.t,
+    required this.isDark,
+  });
+
+  final AdvertiserDepositCharge charge;
+  final String currency;
+  final String moneyLocale;
+  final Translations t;
+  final bool isDark;
+
+  String _money(int cents) {
+    return MoneyFormatter.format(
+      cents / 100.0,
+      currency: currency,
+      locale: moneyLocale,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final panelBg = isDark
+        ? const Color(0xFF242424)
+        : AppColors.surfaceElevatedOf(context);
+    final cardBg = isDark
+        ? const Color(0xFF141414)
+        : AppColors.surfaceOf(context);
+    final muted = AppColors.textSecondaryOf(context);
+    final primary = AppColors.primary;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(18, 16, 18, 20),
+      decoration: BoxDecoration(
+        color: cardBg,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: AppColors.borderOf(context).withValues(alpha: 0.6),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: primary,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  Icons.credit_card_rounded,
+                  color: Colors.white,
+                  size: 18,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                t.advertiser_wallet.payment_title,
+                style: AppTextStyles.headlineMedium(context).copyWith(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Text(
+            t.advertiser_wallet.payment_total,
+            textAlign: TextAlign.center,
+            style: AppTextStyles.caption(context).copyWith(
+              letterSpacing: 1.2,
+              fontWeight: FontWeight.w600,
+              color: muted,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            _money(charge.totalChargedCents),
+            textAlign: TextAlign.center,
+            style: AppTextStyles.headlineMedium(context).copyWith(
+              fontSize: 32,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.5,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(
+              color: panelBg,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: AppColors.borderOf(context).withValues(alpha: 0.35),
+              ),
+            ),
+            child: Column(
+              children: [
+                _DepositBreakdownRow(
+                  label: t.advertiser_wallet.payment_deposit_amount,
+                  value: _money(charge.walletAmountCents),
+                  muted: muted,
+                ),
+                if (charge.bankFeeCents > 0) ...[
+                  const SizedBox(height: 10),
+                  _DepositBreakdownRow(
+                    label: t.advertiser_wallet.payment_bank_fee,
+                    value: _money(charge.bankFeeCents),
+                    muted: muted,
+                    accentColor: primary,
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+}
+
+class _DepositBreakdownRow extends StatelessWidget {
+  const _DepositBreakdownRow({
+    required this.label,
+    required this.value,
+    required this.muted,
+    this.accentColor,
+  });
+
+  final String label;
+  final String value;
+  final Color muted;
+  final Color? accentColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final labelStyle = AppTextStyles.caption(context).copyWith(
+      color: muted,
+      fontSize: accentColor != null ? 12 : 14,
+    );
+    final valueStyle = AppTextStyles.bodyLarge(context).copyWith(
+      fontWeight: FontWeight.w600,
+      fontSize: accentColor != null ? 12 : 14,
+    );
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (accentColor != null)
+          Container(
+            width: 2,
+            height: 18,
+            margin: const EdgeInsets.only(right: 10, top: 2),
+            decoration: BoxDecoration(
+              color: accentColor!.withValues(alpha: 0.55),
+              borderRadius: BorderRadius.circular(1),
+            ),
+          ),
+        Expanded(child: Text(label, style: labelStyle)),
+        const SizedBox(width: 8),
+        Text(value, style: valueStyle),
+      ],
     );
   }
 }

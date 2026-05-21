@@ -50,6 +50,7 @@ class Translations implements BaseTranslations<AppLocale, Translations> {
 	late final TranslationsAdvertiserCampaignsEn advertiser_campaigns = TranslationsAdvertiserCampaignsEn.internal(_root);
 	late final TranslationsNavEn nav = TranslationsNavEn.internal(_root);
 	late final TranslationsInvoicesEn invoices = TranslationsInvoicesEn.internal(_root);
+	late final TranslationsPushEn push = TranslationsPushEn.internal(_root);
 	late final TranslationsCreatorEn creator = TranslationsCreatorEn.internal(_root);
 	late final TranslationsAdvertiserWalletEn advertiser_wallet = TranslationsAdvertiserWalletEn.internal(_root);
 	late final TranslationsChatEn chat = TranslationsChatEn.internal(_root);
@@ -103,6 +104,10 @@ class TranslationsCampaignsExplorerEn {
 	String get reset_filters => 'Reset filters';
 	String get toolbar_show_search_filters => 'Show search and filters';
 	String get toolbar_hide_search_filters => 'Hide search and filters';
+	String get filter_label_type => 'Type';
+	String get filter_label_status => 'Status';
+	String get filter_label_niche => 'Niche';
+	String get filter_label_location => 'Location';
 }
 
 // Path: login
@@ -306,6 +311,7 @@ class TranslationsNavEn {
 	String get wallet => 'Wallet';
 	String get chat => 'Chat';
 	String get invoices => 'Invoices';
+	String get invoices_creator => 'Statements';
 }
 
 // Path: invoices
@@ -316,9 +322,11 @@ class TranslationsInvoicesEn {
 
 	// Translations
 	String get title => 'Invoices';
+	String get title_creator => 'Payment statements';
 	String get subtitle_advertiser => 'Every deposit and campaign budget — all in one place.';
 	String get subtitle_creator => 'Every earning and payout — secured, downloadable, signed.';
 	String get summary_total_paid => 'Total paid';
+	String get summary_total_validated => 'Total validated';
 	String get summary_pending => 'Pending';
 	String get summary_count => 'Documents';
 	String get filter_all => 'All';
@@ -332,6 +340,7 @@ class TranslationsInvoicesEn {
 	String get type_earnings => 'Ad earnings';
 	String get type_unknown => 'Other';
 	String get status_paid => 'Paid';
+	String get status_validated => 'Validated';
 	String get status_pending => 'Pending';
 	String get status_cancelled => 'Cancelled';
 	String get role_advertiser => 'Advertiser';
@@ -339,6 +348,7 @@ class TranslationsInvoicesEn {
 	String get search_hint => 'Search by number, reference…';
 	String get empty_title => 'No invoice yet';
 	String get empty_subtitle => 'Your wallet deposits, campaign budgets and creator payouts will appear here automatically — no manual step required.';
+	String get empty_subtitle_creator => 'Your earnings and payout documents will show up here as soon as they are issued — same signed PDFs as on the web.';
 	String get empty_cta => 'Refresh';
 	String get error_title => 'Could not load invoices';
 	String get error_subtitle => 'Pull to refresh — we\'ll try again right away.';
@@ -370,6 +380,45 @@ class TranslationsInvoicesEn {
 	String get share_subject => 'Invoice {number}';
 	String get polling_live => 'Live';
 	String get polling_paused => 'Paused';
+	String get summary_this_month => 'This month';
+	String get pagination_detail => 'Page {current} of {total} · {count} invoices';
+	String get sort_sheet_title => 'Sort';
+	String get sort_date_newest => 'Newest first';
+	String get sort_date_oldest => 'Oldest first';
+	String get sort_amount_high => 'Amount · high to low';
+	String get sort_amount_low => 'Amount · low to high';
+	String get sort_status_az => 'Status · A to Z';
+	String get sort_status_za => 'Status · Z to A';
+	String get date_range_title => 'Dates';
+	String get date_from => 'From';
+	String get date_to => 'To';
+	String get clear_dates => 'Clear';
+	String get date_apply => 'Apply';
+	String get download_all_zip => 'ZIP';
+	String get zip_progress => 'Building ZIP…';
+	String get zip_success => 'Saved {filename}';
+	String get zip_error => 'ZIP download failed.';
+}
+
+// Path: push
+class TranslationsPushEn {
+	TranslationsPushEn.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+	String get onboarding_title => 'Stay in the loop';
+	String get onboarding_subtitle => 'Get instant alerts when something important happens — even when Wayo Ads is in the background.';
+	String get onboarding_bullet_campaigns => 'Campaign updates, applications and budgets';
+	String get onboarding_bullet_messages => 'New chat messages';
+	String get onboarding_bullet_system => 'Invoices, payouts and platform alerts';
+	String get onboarding_enable => 'Turn on notifications';
+	String get onboarding_later => 'Not now';
+	String get onboarding_success => 'Notifications enabled';
+	String get onboarding_denied_hint => 'You can enable them anytime in system settings.';
+	String get onboarding_context_chat => 'You just received a new chat message — turn on alerts so you never miss a reply.';
+	String get onboarding_context_campaign => 'A campaign status changed — enable notifications to stay on top of applications and budgets.';
+	String get onboarding_context_invoice => 'A new invoice or payout update is ready — get notified as soon as money moves.';
 }
 
 // Path: creator
@@ -429,6 +478,10 @@ class TranslationsAdvertiserWalletEn {
 	String get business_profile_gate_cta => 'Complete business information';
 	String get business_profile_error => 'Could not load business profile.';
 	String get pay_locked_until_business => 'Payment unlocks once your business profile is complete.';
+	String get payment_title => 'Payment';
+	String get payment_total => 'TOTAL';
+	String get payment_deposit_amount => 'Deposit amount';
+	String get payment_bank_fee => 'Bank transaction fee (3.69%)';
 }
 
 // Path: chat
@@ -446,6 +499,9 @@ class TranslationsChatEn {
 	String get typing => 'Typing…';
 	String get error_load_threads => 'Could not load your conversations. Try again.';
 	String get error_phone => 'Sharing phone numbers in chat is not allowed.';
+	String get spam_cooldown_title => 'You\'re sending messages too fast';
+	String spam_cooldown_body({required Object seconds}) => 'Please wait ${seconds} s before sending again.';
+	String spam_cooldown_seconds({required Object seconds}) => '${seconds} s';
 	String get empty_threads_title => 'No conversations yet';
 	String get empty_threads_hint => 'When someone messages you about a campaign, it will appear here.';
 	String get online => 'Online';
@@ -480,6 +536,15 @@ class TranslationsChatEn {
 	String get bubble_update => 'Edit';
 	String get bubble_delete_unavailable => 'Deleting messages from the app is not available yet.';
 	String get bubble_copied => 'Copied to clipboard';
+	String get bubble_forward => 'Forward';
+	String get share_media_tooltip => 'Share';
+	String get share_failed => 'Could not share this file. Try again.';
+	String get forward_sheet_title => 'Forward to…';
+	String get forward_no_other_chats => 'You need another conversation open first.';
+	String get forward_sending => 'Forwarding…';
+	String get forward_ok => 'Message forwarded.';
+	String get forward_failed => 'Forward failed.';
+	String get forward_view => 'Open';
 	String get edited => 'edited';
 	String get seen => 'Seen';
 	String get delivered => 'Delivered';
@@ -495,6 +560,14 @@ class TranslationsChatEn {
 	String get delete_confirm_cta => 'Delete';
 	String get delete_confirm_cancel => 'Cancel';
 	String get scroll_to_latest => 'Latest';
+	String get loading_older_messages => 'Loading earlier messages…';
+	String get load_older_failed => 'Could not load earlier messages.';
+	String get image_download_tooltip => 'Download photo';
+	String get image_close_tooltip => 'Close';
+	String get image_saved_to_gallery => 'Photo saved to your gallery.';
+	String get image_download_failed => 'Couldn\'t download this photo.';
+	String get image_permission_denied => 'Photos access denied. Allow it in your device settings.';
+	String get image_saved_downloads_browser => 'Photo downloaded — check your Downloads folder.';
 }
 
 // Path: common
@@ -594,6 +667,9 @@ class TranslationsAppSettingsEn {
 	String get section_account => 'Account';
 	String get delete_account_entry => 'Delete account';
 	String get delete_account_entry_sub => '30-day grace — manage deletion in the app';
+	String get section_about => 'About';
+	String get rate_app => 'Rate Wayo Ads';
+	String get rate_app_sub => 'Opens the App Store or Google Play';
 }
 
 // Path: account_deletion
@@ -775,6 +851,9 @@ class TranslationsAdvertiserCampaignsCardEn {
 	String get spent => 'Spent';
 	String get cpc => 'CPC';
 	String get valid_engagements => '{count} validated views';
+	String get list_row_views => '{count} views';
+	String get list_row_clicks => '{count} clicks';
+	String get list_row_creators => '{count} creators';
 }
 
 // Path: advertiser_campaigns.status
@@ -826,6 +905,9 @@ class TranslationsAdvertiserCampaignsDetailEn {
 	String get objective_conversion => 'Conversion';
 	String get cpm_metric => 'CPM (per 1k views)';
 	String get cpc_metric => 'CPC (per click)';
+	String get description_title => 'Description';
+	String get show_more => 'Show more';
+	String get show_less => 'Show less';
 }
 
 // Path: advertiser_campaigns.create
@@ -915,10 +997,17 @@ class TranslationsCreatorWalletEn {
 	String get withdraw_button => 'Withdraw';
 	String get withdraw_sheet_title => 'Request a payout';
 	String get withdraw_sheet_subtitle => 'Available balance: {available}. Funds will be sent to your connected Stripe account.';
-	String get withdraw_amount_label => 'Amount';
+	String get withdraw_amount_label => 'Amount (USD)';
+	String get withdraw_sheet_body => 'Enter the amount you wish to withdraw. Funds will be sent to your connected bank account.';
+	String get withdraw_quick_amounts => 'Quick amounts';
+	String get withdraw_gross_amount => 'Gross amount';
+	String get withdraw_platform_fee => 'Platform fee ({percent}%)';
+	String get withdraw_tax_vat => 'VAT ({percent}%)';
+	String get withdraw_net_received => 'Net received';
 	String get withdraw_submit => 'Confirm withdrawal';
 	String get withdraw_submitting => 'Processing…';
 	String get withdraw_max => 'Max';
+	String get withdraw_preset_all => 'All';
 	String get withdraw_success => 'Withdrawal request submitted.';
 	String get withdraw_secure_footer => 'Secure payout — processed by Stripe. We never see your bank details.';
 	String get withdraw_error_invalid => 'Enter a valid amount.';
@@ -1093,14 +1182,12 @@ class TranslationsCreatorBusinessEn {
 	String get cta_button => 'Finalize your Business Information';
 	String get dialog_title => 'Business information';
 	String get dialog_subtitle => 'Provide a few legal details so Stripe can onboard your account and settle payouts.';
-	String get section_type => 'Account type';
+	String get section_type => 'Business type';
 	String get section_company => 'Company';
 	String get section_address => 'Address';
 	String get section_stripe => 'Payout country & currency';
-	String get type_personal_title => 'Individual';
+	String get type_personal_title => 'Individual / Private person';
 	String get type_personal_subtitle => 'I receive payouts as a private person.';
-	String get type_sole_title => 'Sole proprietor';
-	String get type_sole_subtitle => 'I run my own freelance business.';
 	String get type_company_title => 'Registered company';
 	String get type_company_subtitle => 'I operate under a registered legal entity.';
 	String get company_name => 'Company name';
@@ -1151,6 +1238,8 @@ class TranslationsOnboardingCreatorEn {
 	String get campaigns_subtitle => 'Discover eligible campaigns, apply in one tap and follow your application status live.';
 	String get wallet_title => 'Earnings & payouts';
 	String get wallet_subtitle => 'See your balance, request payouts via Stripe Connect and review past withdrawals.';
+	String get invoices_title => 'Payment statements';
+	String get invoices_subtitle => 'Filter earnings and payouts, download signed PDFs or a ZIP — refreshed automatically while you use the app.';
 	String get chat_title => 'Talk to advertisers';
 	String get chat_subtitle => 'Once approved, the chat opens with your advertiser to align on deliverables.';
 }
@@ -1186,6 +1275,10 @@ extension on Translations {
 			case 'campaigns_explorer.reset_filters': return 'Reset filters';
 			case 'campaigns_explorer.toolbar_show_search_filters': return 'Show search and filters';
 			case 'campaigns_explorer.toolbar_hide_search_filters': return 'Hide search and filters';
+			case 'campaigns_explorer.filter_label_type': return 'Type';
+			case 'campaigns_explorer.filter_label_status': return 'Status';
+			case 'campaigns_explorer.filter_label_niche': return 'Niche';
+			case 'campaigns_explorer.filter_label_location': return 'Location';
 			case 'login.brand': return 'Wayo Ads';
 			case 'login.headline_line1': return 'Welcome';
 			case 'login.headline_line2_prefix': return 'to ';
@@ -1312,6 +1405,9 @@ extension on Translations {
 			case 'advertiser_campaigns.card.spent': return 'Spent';
 			case 'advertiser_campaigns.card.cpc': return 'CPC';
 			case 'advertiser_campaigns.card.valid_engagements': return '{count} validated views';
+			case 'advertiser_campaigns.card.list_row_views': return '{count} views';
+			case 'advertiser_campaigns.card.list_row_clicks': return '{count} clicks';
+			case 'advertiser_campaigns.card.list_row_creators': return '{count} creators';
 			case 'advertiser_campaigns.status.active': return 'Active';
 			case 'advertiser_campaigns.status.paused': return 'Paused';
 			case 'advertiser_campaigns.status.completed': return 'Completed';
@@ -1336,6 +1432,9 @@ extension on Translations {
 			case 'advertiser_campaigns.detail.objective_conversion': return 'Conversion';
 			case 'advertiser_campaigns.detail.cpm_metric': return 'CPM (per 1k views)';
 			case 'advertiser_campaigns.detail.cpc_metric': return 'CPC (per click)';
+			case 'advertiser_campaigns.detail.description_title': return 'Description';
+			case 'advertiser_campaigns.detail.show_more': return 'Show more';
+			case 'advertiser_campaigns.detail.show_less': return 'Show less';
 			case 'advertiser_campaigns.create.title': return 'New campaign';
 			case 'advertiser_campaigns.create.section_basics': return 'Basics';
 			case 'advertiser_campaigns.create.section_budget': return 'Budget & rates';
@@ -1378,10 +1477,13 @@ extension on Translations {
 			case 'nav.wallet': return 'Wallet';
 			case 'nav.chat': return 'Chat';
 			case 'nav.invoices': return 'Invoices';
+			case 'nav.invoices_creator': return 'Statements';
 			case 'invoices.title': return 'Invoices';
+			case 'invoices.title_creator': return 'Payment statements';
 			case 'invoices.subtitle_advertiser': return 'Every deposit and campaign budget — all in one place.';
 			case 'invoices.subtitle_creator': return 'Every earning and payout — secured, downloadable, signed.';
 			case 'invoices.summary_total_paid': return 'Total paid';
+			case 'invoices.summary_total_validated': return 'Total validated';
 			case 'invoices.summary_pending': return 'Pending';
 			case 'invoices.summary_count': return 'Documents';
 			case 'invoices.filter_all': return 'All';
@@ -1395,6 +1497,7 @@ extension on Translations {
 			case 'invoices.type_earnings': return 'Ad earnings';
 			case 'invoices.type_unknown': return 'Other';
 			case 'invoices.status_paid': return 'Paid';
+			case 'invoices.status_validated': return 'Validated';
 			case 'invoices.status_pending': return 'Pending';
 			case 'invoices.status_cancelled': return 'Cancelled';
 			case 'invoices.role_advertiser': return 'Advertiser';
@@ -1402,6 +1505,7 @@ extension on Translations {
 			case 'invoices.search_hint': return 'Search by number, reference…';
 			case 'invoices.empty_title': return 'No invoice yet';
 			case 'invoices.empty_subtitle': return 'Your wallet deposits, campaign budgets and creator payouts will appear here automatically — no manual step required.';
+			case 'invoices.empty_subtitle_creator': return 'Your earnings and payout documents will show up here as soon as they are issued — same signed PDFs as on the web.';
 			case 'invoices.empty_cta': return 'Refresh';
 			case 'invoices.error_title': return 'Could not load invoices';
 			case 'invoices.error_subtitle': return 'Pull to refresh — we\'ll try again right away.';
@@ -1433,6 +1537,36 @@ extension on Translations {
 			case 'invoices.share_subject': return 'Invoice {number}';
 			case 'invoices.polling_live': return 'Live';
 			case 'invoices.polling_paused': return 'Paused';
+			case 'invoices.summary_this_month': return 'This month';
+			case 'invoices.pagination_detail': return 'Page {current} of {total} · {count} invoices';
+			case 'invoices.sort_sheet_title': return 'Sort';
+			case 'invoices.sort_date_newest': return 'Newest first';
+			case 'invoices.sort_date_oldest': return 'Oldest first';
+			case 'invoices.sort_amount_high': return 'Amount · high to low';
+			case 'invoices.sort_amount_low': return 'Amount · low to high';
+			case 'invoices.sort_status_az': return 'Status · A to Z';
+			case 'invoices.sort_status_za': return 'Status · Z to A';
+			case 'invoices.date_range_title': return 'Dates';
+			case 'invoices.date_from': return 'From';
+			case 'invoices.date_to': return 'To';
+			case 'invoices.clear_dates': return 'Clear';
+			case 'invoices.date_apply': return 'Apply';
+			case 'invoices.download_all_zip': return 'ZIP';
+			case 'invoices.zip_progress': return 'Building ZIP…';
+			case 'invoices.zip_success': return 'Saved {filename}';
+			case 'invoices.zip_error': return 'ZIP download failed.';
+			case 'push.onboarding_title': return 'Stay in the loop';
+			case 'push.onboarding_subtitle': return 'Get instant alerts when something important happens — even when Wayo Ads is in the background.';
+			case 'push.onboarding_bullet_campaigns': return 'Campaign updates, applications and budgets';
+			case 'push.onboarding_bullet_messages': return 'New chat messages';
+			case 'push.onboarding_bullet_system': return 'Invoices, payouts and platform alerts';
+			case 'push.onboarding_enable': return 'Turn on notifications';
+			case 'push.onboarding_later': return 'Not now';
+			case 'push.onboarding_success': return 'Notifications enabled';
+			case 'push.onboarding_denied_hint': return 'You can enable them anytime in system settings.';
+			case 'push.onboarding_context_chat': return 'You just received a new chat message — turn on alerts so you never miss a reply.';
+			case 'push.onboarding_context_campaign': return 'A campaign status changed — enable notifications to stay on top of applications and budgets.';
+			case 'push.onboarding_context_invoice': return 'A new invoice or payout update is ready — get notified as soon as money moves.';
 			case 'creator.dashboard.title': return 'Creator Studio';
 			case 'creator.dashboard.subtitle': return 'Track your stats, applications and earnings in real time.';
 			case 'creator.dashboard.coming_soon_title': return 'Your creator dashboard';
@@ -1450,10 +1584,17 @@ extension on Translations {
 			case 'creator.wallet.withdraw_button': return 'Withdraw';
 			case 'creator.wallet.withdraw_sheet_title': return 'Request a payout';
 			case 'creator.wallet.withdraw_sheet_subtitle': return 'Available balance: {available}. Funds will be sent to your connected Stripe account.';
-			case 'creator.wallet.withdraw_amount_label': return 'Amount';
+			case 'creator.wallet.withdraw_amount_label': return 'Amount (USD)';
+			case 'creator.wallet.withdraw_sheet_body': return 'Enter the amount you wish to withdraw. Funds will be sent to your connected bank account.';
+			case 'creator.wallet.withdraw_quick_amounts': return 'Quick amounts';
+			case 'creator.wallet.withdraw_gross_amount': return 'Gross amount';
+			case 'creator.wallet.withdraw_platform_fee': return 'Platform fee ({percent}%)';
+			case 'creator.wallet.withdraw_tax_vat': return 'VAT ({percent}%)';
+			case 'creator.wallet.withdraw_net_received': return 'Net received';
 			case 'creator.wallet.withdraw_submit': return 'Confirm withdrawal';
 			case 'creator.wallet.withdraw_submitting': return 'Processing…';
 			case 'creator.wallet.withdraw_max': return 'Max';
+			case 'creator.wallet.withdraw_preset_all': return 'All';
 			case 'creator.wallet.withdraw_success': return 'Withdrawal request submitted.';
 			case 'creator.wallet.withdraw_secure_footer': return 'Secure payout — processed by Stripe. We never see your bank details.';
 			case 'creator.wallet.withdraw_error_invalid': return 'Enter a valid amount.';
@@ -1592,14 +1733,12 @@ extension on Translations {
 			case 'creator.business.cta_button': return 'Finalize your Business Information';
 			case 'creator.business.dialog_title': return 'Business information';
 			case 'creator.business.dialog_subtitle': return 'Provide a few legal details so Stripe can onboard your account and settle payouts.';
-			case 'creator.business.section_type': return 'Account type';
+			case 'creator.business.section_type': return 'Business type';
 			case 'creator.business.section_company': return 'Company';
 			case 'creator.business.section_address': return 'Address';
 			case 'creator.business.section_stripe': return 'Payout country & currency';
-			case 'creator.business.type_personal_title': return 'Individual';
+			case 'creator.business.type_personal_title': return 'Individual / Private person';
 			case 'creator.business.type_personal_subtitle': return 'I receive payouts as a private person.';
-			case 'creator.business.type_sole_title': return 'Sole proprietor';
-			case 'creator.business.type_sole_subtitle': return 'I run my own freelance business.';
 			case 'creator.business.type_company_title': return 'Registered company';
 			case 'creator.business.type_company_subtitle': return 'I operate under a registered legal entity.';
 			case 'creator.business.company_name': return 'Company name';
@@ -1651,6 +1790,10 @@ extension on Translations {
 			case 'advertiser_wallet.business_profile_gate_cta': return 'Complete business information';
 			case 'advertiser_wallet.business_profile_error': return 'Could not load business profile.';
 			case 'advertiser_wallet.pay_locked_until_business': return 'Payment unlocks once your business profile is complete.';
+			case 'advertiser_wallet.payment_title': return 'Payment';
+			case 'advertiser_wallet.payment_total': return 'TOTAL';
+			case 'advertiser_wallet.payment_deposit_amount': return 'Deposit amount';
+			case 'advertiser_wallet.payment_bank_fee': return 'Bank transaction fee (3.69%)';
 			case 'chat.inbox_title': return 'Messages';
 			case 'chat.inbox_subtitle': return 'Secure conversations for your campaigns';
 			case 'chat.conversation_unknown': return 'Conversation';
@@ -1659,6 +1802,9 @@ extension on Translations {
 			case 'chat.typing': return 'Typing…';
 			case 'chat.error_load_threads': return 'Could not load your conversations. Try again.';
 			case 'chat.error_phone': return 'Sharing phone numbers in chat is not allowed.';
+			case 'chat.spam_cooldown_title': return 'You\'re sending messages too fast';
+			case 'chat.spam_cooldown_body': return ({required Object seconds}) => 'Please wait ${seconds} s before sending again.';
+			case 'chat.spam_cooldown_seconds': return ({required Object seconds}) => '${seconds} s';
 			case 'chat.empty_threads_title': return 'No conversations yet';
 			case 'chat.empty_threads_hint': return 'When someone messages you about a campaign, it will appear here.';
 			case 'chat.online': return 'Online';
@@ -1693,6 +1839,15 @@ extension on Translations {
 			case 'chat.bubble_update': return 'Edit';
 			case 'chat.bubble_delete_unavailable': return 'Deleting messages from the app is not available yet.';
 			case 'chat.bubble_copied': return 'Copied to clipboard';
+			case 'chat.bubble_forward': return 'Forward';
+			case 'chat.share_media_tooltip': return 'Share';
+			case 'chat.share_failed': return 'Could not share this file. Try again.';
+			case 'chat.forward_sheet_title': return 'Forward to…';
+			case 'chat.forward_no_other_chats': return 'You need another conversation open first.';
+			case 'chat.forward_sending': return 'Forwarding…';
+			case 'chat.forward_ok': return 'Message forwarded.';
+			case 'chat.forward_failed': return 'Forward failed.';
+			case 'chat.forward_view': return 'Open';
 			case 'chat.edited': return 'edited';
 			case 'chat.seen': return 'Seen';
 			case 'chat.delivered': return 'Delivered';
@@ -1708,6 +1863,14 @@ extension on Translations {
 			case 'chat.delete_confirm_cta': return 'Delete';
 			case 'chat.delete_confirm_cancel': return 'Cancel';
 			case 'chat.scroll_to_latest': return 'Latest';
+			case 'chat.loading_older_messages': return 'Loading earlier messages…';
+			case 'chat.load_older_failed': return 'Could not load earlier messages.';
+			case 'chat.image_download_tooltip': return 'Download photo';
+			case 'chat.image_close_tooltip': return 'Close';
+			case 'chat.image_saved_to_gallery': return 'Photo saved to your gallery.';
+			case 'chat.image_download_failed': return 'Couldn\'t download this photo.';
+			case 'chat.image_permission_denied': return 'Photos access denied. Allow it in your device settings.';
+			case 'chat.image_saved_downloads_browser': return 'Photo downloaded — check your Downloads folder.';
 			case 'common.language': return 'Language';
 			case 'common.theme': return 'Theme';
 			case 'common.light': return 'Light';
@@ -1771,6 +1934,9 @@ extension on Translations {
 			case 'app_settings.section_account': return 'Account';
 			case 'app_settings.delete_account_entry': return 'Delete account';
 			case 'app_settings.delete_account_entry_sub': return '30-day grace — manage deletion in the app';
+			case 'app_settings.section_about': return 'About';
+			case 'app_settings.rate_app': return 'Rate Wayo Ads';
+			case 'app_settings.rate_app_sub': return 'Opens the App Store or Google Play';
 			case 'account_deletion.nav_title': return 'Delete account';
 			case 'account_deletion.title': return 'Delete my Wayo Ads account';
 			case 'account_deletion.danger_zone_chip': return 'Danger Zone';
@@ -1864,6 +2030,8 @@ extension on Translations {
 			case 'onboarding.creator.campaigns_subtitle': return 'Discover eligible campaigns, apply in one tap and follow your application status live.';
 			case 'onboarding.creator.wallet_title': return 'Earnings & payouts';
 			case 'onboarding.creator.wallet_subtitle': return 'See your balance, request payouts via Stripe Connect and review past withdrawals.';
+			case 'onboarding.creator.invoices_title': return 'Payment statements';
+			case 'onboarding.creator.invoices_subtitle': return 'Filter earnings and payouts, download signed PDFs or a ZIP — refreshed automatically while you use the app.';
 			case 'onboarding.creator.chat_title': return 'Talk to advertisers';
 			case 'onboarding.creator.chat_subtitle': return 'Once approved, the chat opens with your advertiser to align on deliverables.';
 			default: return null;

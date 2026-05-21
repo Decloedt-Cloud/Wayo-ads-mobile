@@ -2,6 +2,7 @@ import 'dart:io' show Platform;
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:http_parser/http_parser.dart';
 
 import '../../../core/config/auth_runtime_config.dart';
 import '../../../core/errors/auth_exceptions.dart';
@@ -12,6 +13,10 @@ import '../domain/chat_conversation.dart';
 import '../domain/chat_credentials.dart';
 import '../domain/chat_directory_user.dart';
 import '../domain/chat_message.dart';
+import 'chat_media_utils.dart';
+import 'chat_message_media.dart';
+import 'chat_message_text.dart';
+import 'chat_messages_page.dart';
 import '../domain/chat_user_preview.dart';
 
 /// Reverb/Pusher clients expect a bare hostname, not `https://host`.
@@ -381,10 +386,31 @@ final class ChatRepository {
     String? Function()? socketId,
     int perPage = 100,
   }) async {
+    final page = await fetchMessagesPage(
+      c,
+      conversationId,
+      socketId: socketId,
+      page: 1,
+      perPage: perPage,
+    );
+    return page.messages;
+  }
+
+  /// Paginated messages (`page`, `per_page`). Laravel-style `data.data` + meta when present.
+  Future<ChatMessagesPage> fetchMessagesPage(
+    ChatCredentials c,
+    int conversationId, {
+    String? Function()? socketId,
+    int page = 1,
+    int perPage = 50,
+  }) async {
     final dio = _chatDio(c, socketId: socketId);
     final res = await dio.get<Map<String, dynamic>>(
       'api/v1/conversations/$conversationId/messages',
-      queryParameters: <String, dynamic>{'per_page': perPage},
+      queryParameters: <String, dynamic>{
+        'per_page': perPage,
+        'page': page,
+      },
     );
     final data = res.data;
     if (data == null || data['success'] != true) {
@@ -392,15 +418,45 @@ final class ChatRepository {
         data?['message'] as String? ?? 'Failed to load messages',
       );
     }
-    final inner = data['data'];
-    Map<String, dynamic>? payload;
+    final parsed = _parseMessagesEnvelope(data['data'], requestedPage: page);
+    return ChatMessagesPage(
+      messages: parsed.messages,
+      hasMore: parsed.meta.hasMore,
+      currentPage: parsed.meta.currentPage,
+      lastPage: parsed.meta.lastPage,
+    );
+  }
+
+  /// Parses `response.data` — either a Laravel paginator map (`data` list + meta)
+  /// or a bare message list.
+  ({
+    List<ChatMessage> messages,
+    ChatMessagesPageMeta meta,
+  }) _parseMessagesEnvelope(
+    dynamic inner, {
+    required int requestedPage,
+  }) {
     if (inner is Map<String, dynamic>) {
-      payload = inner;
+      final rowsRaw = inner['data'];
+      final rows = rowsRaw is List<dynamic> ? rowsRaw : null;
+      final meta = readChatMessagesPaginationMeta(inner, requestedPage);
+      final messages = _sortedMessagesFromRows(rows);
+      return (messages: messages, meta: meta);
     }
-    final rows = payload?['data'];
-    if (rows is! List<dynamic>) {
-      return const [];
+    if (inner is List<dynamic>) {
+      return (
+        messages: _sortedMessagesFromRows(inner),
+        meta: ChatMessagesPageMeta.singlePage(requestedPage),
+      );
     }
+    return (
+      messages: const [],
+      meta: ChatMessagesPageMeta.singlePage(requestedPage),
+    );
+  }
+
+  List<ChatMessage> _sortedMessagesFromRows(List<dynamic>? rows) {
+    if (rows == null || rows.isEmpty) return const [];
     final messages = rows
         .map((e) => _parseMessage(e as Map<String, dynamic>))
         .toList();
@@ -447,8 +503,8 @@ final class ChatRepository {
     if (data == null || data['success'] != true) {
       throw ServerException(data?['message'] as String? ?? 'Send failed');
     }
-    final msg = data['data'];
-    if (msg is! Map<String, dynamic>) {
+    final msg = coerceChatMessagePayload(data['data']);
+    if (msg == null) {
       throw const ServerException('Invalid send response');
     }
     return _parseMessage(msg);
@@ -483,11 +539,49 @@ final class ChatRepository {
     if (data == null || data['success'] != true) {
       throw ServerException(data?['message'] as String? ?? 'Update failed');
     }
-    final msg = data['data'];
-    if (msg is! Map<String, dynamic>) {
+    final msg = coerceChatMessagePayload(data['data']);
+    if (msg == null) {
       throw const ServerException('Invalid update response');
     }
     return _parseMessage(msg);
+  }
+
+  /// Download bytes for message attachment (authenticated). Used when forwarding media.
+  Future<Uint8List> fetchMessageAttachmentBytes(
+    ChatCredentials c,
+    ChatMessage m, {
+    String? Function()? socketId,
+  }) async {
+    var path = (m.fileUrl ?? '').trim();
+    if (path.isEmpty) {
+      final body = plainBodyFromChatContent(m.content).trim();
+      if (looksLikeRemoteMediaUrl(body)) {
+        path = body;
+      }
+    }
+    if (path.isEmpty) {
+      throw const ServerException('Message has no attachment');
+    }
+    final dio = _chatDio(c, socketId: socketId);
+    final url = resolveChatMediaUrl(path, c.apiBaseUrl).trim();
+    if (url.isEmpty) {
+      throw const ServerException('Invalid attachment URL');
+    }
+
+    final hdr = <String, dynamic>{
+      ...dio.options.headers.map((k, v) => MapEntry(k, v)),
+      'Accept': '*/*',
+    };
+
+    final res = await dio.get<List<int>>(
+      url,
+      options: Options(responseType: ResponseType.bytes, headers: hdr),
+    );
+
+    if (res.statusCode != 200 || res.data == null) {
+      throw ServerException('Download failed (${res.statusCode})');
+    }
+    return Uint8List.fromList(res.data!);
   }
 
   /// `DELETE /api/v1/conversations/{id}/messages/{messageId}` — owner removes their message.
@@ -516,54 +610,111 @@ final class ChatRepository {
     );
   }
 
-  /// Multipart upload — same contract as `AdvertiserChatDialog.tsx` (`file`, `type`, optional `content`).
+  /// Downloads a remote URL then uploads as attachment (never as plain text link).
+  Future<ChatMessage> uploadMessageFromRemoteReference(
+    ChatCredentials c,
+    int conversationId, {
+    required String reference,
+    String caption = '',
+    String? Function()? socketId,
+  }) async {
+    final url = reference.trim();
+    final resolved = resolveChatMediaUrl(
+      url.startsWith('http') ? url : null,
+      c.apiBaseUrl,
+    );
+    final target = resolved.isNotEmpty ? resolved : url;
+    final targetUri = Uri.tryParse(target);
+    final baseUri = Uri.tryParse(c.apiBaseUrl.trim());
+    final sameChatHost = targetUri != null &&
+        baseUri != null &&
+        targetUri.host.isNotEmpty &&
+        targetUri.host.toLowerCase() == baseUri.host.toLowerCase();
+    final client = sameChatHost
+        ? _chatDio(c, socketId: socketId)
+        : Dio(
+            BaseOptions(
+              connectTimeout: const Duration(seconds: 60),
+              receiveTimeout: const Duration(seconds: 60),
+              headers: <String, dynamic>{'Accept': '*/*'},
+            ),
+          );
+    final res = await client.get<List<int>>(
+      target,
+      options: Options(responseType: ResponseType.bytes),
+    );
+    final bytes = res.data;
+    if (bytes == null || bytes.isEmpty) {
+      throw const ServerException('Could not download attachment');
+    }
+    return uploadMessageAttachment(
+      c,
+      conversationId,
+      filename: filenameFromMediaReference(target),
+      bytes: bytes,
+      caption: caption,
+      socketId: socketId,
+    );
+  }
+
+  /// Multipart upload — same contract as `AdvertiserChatDialog.tsx` (`file`, optional `content`).
   /// Uses bytes so it works on mobile and web (`withData: true` from file_picker).
   Future<ChatMessage> uploadMessageAttachment(
     ChatCredentials c,
     int conversationId, {
     required String filename,
-    required List<int> bytes,
+    List<int>? bytes,
+    String? filePath,
     String caption = '',
     String? Function()? socketId,
     void Function(int sent, int total)? onSendProgress,
   }) async {
-    final lower = filename.toLowerCase();
-    final isPdf = lower.endsWith('.pdf');
+    final safeCaption = sanitizeOutgoingAttachmentCaption(caption);
+    final isPdf = isChatPdfExtension(extensionFromFilename(filename) ?? '');
+    final contentType = _multipartContentTypeForFilename(filename);
+
+    MultipartFile filePart;
+    final path = filePath?.trim();
+    if (!kIsWeb && path != null && path.isNotEmpty) {
+      filePart = await MultipartFile.fromFile(
+        path,
+        filename: filename,
+        contentType: contentType,
+      );
+    } else {
+      final data = bytes;
+      if (data == null || data.isEmpty) {
+        throw const ServerException('Attachment bytes missing');
+      }
+      filePart = MultipartFile.fromBytes(
+        data,
+        filename: filename,
+        contentType: contentType,
+      );
+    }
+
     final form = FormData.fromMap(<String, dynamic>{
-      if (caption.trim().isNotEmpty) 'content': caption.trim(),
+      if (safeCaption.isNotEmpty) 'content': safeCaption,
       'type': isPdf ? 'file' : 'image',
-      'file': MultipartFile.fromBytes(bytes, filename: filename),
+      'file': filePart,
     });
 
-    final base = c.apiBaseUrl.endsWith('/') ? c.apiBaseUrl : '${c.apiBaseUrl}/';
-    final dio = Dio(
-      BaseOptions(
-        baseUrl: base,
-        connectTimeout: const Duration(seconds: 120),
-        receiveTimeout: const Duration(seconds: 120),
-        sendTimeout: const Duration(seconds: 120),
+    final dio = _chatDio(c, socketId: socketId);
+    dio.options.connectTimeout = const Duration(seconds: 120);
+    dio.options.receiveTimeout = const Duration(seconds: 120);
+    dio.options.sendTimeout = const Duration(seconds: 120);
+
+    final res = await dio.post<Map<String, dynamic>>(
+      'api/v1/conversations/$conversationId/messages',
+      data: form,
+      options: Options(
+        contentType: 'multipart/form-data',
         headers: <String, dynamic>{
           'Accept': 'application/json',
           'Authorization': 'Bearer ${c.token.trim()}',
           'X-Application-ID': c.appId.trim(),
         },
       ),
-    );
-
-    // SECURITY: Attach certificate pinning in release builds.
-    CertificatePinning.attach(
-      dio,
-      pinnedSha256Base64: AuthRuntimeConfig.instance.mergedPinnedSha256Base64,
-    );
-
-    _addChatDioAuthRetry(dio, socketId: socketId);
-    if (kDebugMode) {
-      dio.interceptors.add(WayoLoggingInterceptor());
-    }
-
-    final res = await dio.post<Map<String, dynamic>>(
-      'api/v1/conversations/$conversationId/messages',
-      data: form,
       onSendProgress: onSendProgress,
     );
 
@@ -571,8 +722,8 @@ final class ChatRepository {
     if (data == null || data['success'] != true) {
       throw ServerException(data?['message'] as String? ?? 'Upload failed');
     }
-    final msg = data['data'];
-    if (msg is! Map<String, dynamic>) {
+    final msg = coerceChatMessagePayload(data['data']);
+    if (msg == null) {
       throw const ServerException('Invalid upload response');
     }
     return _parseMessage(msg);
@@ -619,7 +770,52 @@ final class ChatRepository {
   }
 
   /// Used by realtime payloads (`message.sent`, `message.edited`).
-  ChatMessage parseRemoteMessage(Map<String, dynamic> m) => _parseMessage(m);
+  ChatMessage parseRemoteMessage(Map<String, dynamic> m) =>
+      _parseMessage(coerceChatMessagePayload(m) ?? m);
+
+  /// Normalizes Laravel / Pusher shapes (`message`, nested `data`, etc.).
+  static Map<String, dynamic>? coerceChatMessagePayload(dynamic raw) {
+    Map<String, dynamic>? asMap(dynamic v) {
+      if (v is Map<String, dynamic>) return v;
+      if (v is Map) return Map<String, dynamic>.from(v);
+      return null;
+    }
+
+    final map = asMap(raw);
+    if (map == null) return null;
+
+    for (final key in ['message', 'data', 'attributes', 'resource']) {
+      final inner = asMap(map[key]);
+      if (inner == null) continue;
+      final coerced = coerceChatMessagePayload(inner);
+      if (coerced != null &&
+          (coerced.containsKey('id') || coerced.containsKey('content'))) {
+        return coerced;
+      }
+    }
+
+    if (map.containsKey('id') &&
+        (map.containsKey('type') ||
+            map.containsKey('content') ||
+            map.containsKey('file_url') ||
+            map.containsKey('fileUrl'))) {
+      return map;
+    }
+    return map;
+  }
+
+  MediaType? _multipartContentTypeForFilename(String filename) {
+    final ext = extensionFromFilename(filename);
+    return switch (ext) {
+      'jpg' || 'jpeg' => MediaType('image', 'jpeg'),
+      'png' => MediaType('image', 'png'),
+      'gif' => MediaType('image', 'gif'),
+      'webp' => MediaType('image', 'webp'),
+      'bmp' => MediaType('image', 'bmp'),
+      'pdf' => MediaType('application', 'pdf'),
+      _ => null,
+    };
+  }
 
   ChatReplyRef? _parseReplyRef(Map<String, dynamic> m) {
     final raw =
@@ -661,7 +857,8 @@ final class ChatRepository {
     );
   }
 
-  ChatMessage _parseMessage(Map<String, dynamic> m) {
+  ChatMessage _parseMessage(Map<String, dynamic> raw) {
+    final m = coerceChatMessagePayload(raw) ?? raw;
     final replyTo = _parseReplyRef(m);
     final u = m['user'];
     final s = m['sender'];
@@ -671,34 +868,37 @@ final class ChatRepository {
     } else if (s is Map<String, dynamic>) {
       userEnvelope = s;
     }
-    return ChatMessage(
-      id: (m['id'] as num).toInt(),
-      conversationId:
-          (m['conversation_id'] as num?)?.toInt() ??
-          (m['conversationId'] as num?)?.toInt() ??
-          0,
-      userId:
-          (m['user_id'] as num?)?.toInt() ??
-          (m['userId'] as num?)?.toInt() ??
-          0,
-      content: '${m['content'] ?? ''}',
-      type: '${m['type'] ?? 'text'}',
-      createdAt: '${m['created_at'] ?? m['createdAt'] ?? ''}',
-      updatedAt: m['updated_at'] as String? ?? m['updatedAt'] as String?,
-      editedAt: m['edited_at'] as String? ?? m['editedAt'] as String?,
-      isEdited: m['is_edited'] == true || m['isEdited'] == true,
-      fileUrl: m['file_url'] as String? ?? m['fileUrl'] as String?,
-      fileName: m['file_name'] as String? ?? m['fileName'] as String?,
-      fileSize:
-          (m['file_size'] as num?)?.toInt() ?? (m['fileSize'] as num?)?.toInt(),
-      user: userEnvelope != null
-          ? ChatUserPreview(
-              id: (userEnvelope['id'] as num).toInt(),
-              name: userEnvelope['name'] as String?,
-              avatar: userEnvelope['avatar'] as String?,
-            )
-          : null,
-      replyTo: replyTo,
+    return normalizeChatMessage(
+      ChatMessage(
+        id: (m['id'] as num).toInt(),
+        conversationId:
+            (m['conversation_id'] as num?)?.toInt() ??
+            (m['conversationId'] as num?)?.toInt() ??
+            0,
+        userId:
+            (m['user_id'] as num?)?.toInt() ??
+            (m['userId'] as num?)?.toInt() ??
+            0,
+        content: '${m['content'] ?? ''}',
+        type: '${m['type'] ?? 'text'}',
+        createdAt: '${m['created_at'] ?? m['createdAt'] ?? ''}',
+        updatedAt: m['updated_at'] as String? ?? m['updatedAt'] as String?,
+        editedAt: m['edited_at'] as String? ?? m['editedAt'] as String?,
+        isEdited: m['is_edited'] == true || m['isEdited'] == true,
+        fileUrl: m['file_url'] as String? ?? m['fileUrl'] as String?,
+        fileName: m['file_name'] as String? ?? m['fileName'] as String?,
+        fileSize:
+            (m['file_size'] as num?)?.toInt() ??
+            (m['fileSize'] as num?)?.toInt(),
+        user: userEnvelope != null
+            ? ChatUserPreview(
+                id: (userEnvelope['id'] as num).toInt(),
+                name: userEnvelope['name'] as String?,
+                avatar: userEnvelope['avatar'] as String?,
+              )
+            : null,
+        replyTo: replyTo,
+      ),
     );
   }
 }

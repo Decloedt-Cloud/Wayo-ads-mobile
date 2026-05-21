@@ -813,7 +813,6 @@ class _ApplicationTile extends StatelessWidget {
           context.push(
             '/creator/campaigns/$id',
             extra: <String, Object?>{
-              'coverUrl': app.coverUrl,
               'title': app.campaignTitle,
             },
           );

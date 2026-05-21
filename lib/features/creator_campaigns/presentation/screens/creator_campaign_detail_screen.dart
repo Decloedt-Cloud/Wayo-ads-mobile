@@ -1,16 +1,14 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/format/money_formatter.dart';
-import '../../../../core/network/wayo_ads_public_url.dart';
 import '../../../../core/providers/app_providers.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../../../../core/theme/creator_colors.dart';
 import '../../../../i18n/strings.g.dart';
 import '../../../advertiser_campaigns/domain/campaign_niche_catalog.dart';
 import '../../../creator_dashboard/domain/creator_application.dart';
@@ -18,11 +16,12 @@ import '../../domain/creator_browse_campaign.dart';
 import '../../domain/creator_campaign_detail.dart';
 import '../providers/creator_campaigns_providers.dart';
 import '../widgets/creator_apply_sheet.dart';
+import '../../../dashboard/presentation/theme/campaign_detail_premium_palette.dart';
+import '../theme/creator_campaigns_chrome.dart';
 
 /// Full campaign detail for the creator.
 ///
 /// Shows:
-/// - Cover banner (image, brand logo when no cover, or type placeholder)
 /// - Rewards (CPM / payout per view) and budget state
 /// - Campaign requirements (platform, min duration, assets link)
 /// - Primary action bar that morphs based on the application status:
@@ -33,16 +32,11 @@ class CreatorCampaignDetailScreen extends ConsumerWidget {
   const CreatorCampaignDetailScreen({
     super.key,
     required this.id,
-    this.coverUrl,
-    this.brandLogoUrl,
     this.title,
   });
 
   final String id;
-  final String? coverUrl;
 
-  /// From list navigation extras; merged with fetched [CreatorCampaignDetail.brandLogoUrl].
-  final String? brandLogoUrl;
   final String? title;
 
   String _moneyLocale(AppLocale l) => switch (l) {
@@ -59,12 +53,27 @@ class CreatorCampaignDetailScreen extends ConsumerWidget {
     final async = ref.watch(creatorCampaignDetailProvider(id));
 
     return Scaffold(
+      backgroundColor: CreatorCampaignsChrome.bg(context),
       appBar: AppBar(
-        title: Text(title ?? t.creator.campaigns.details_title),
         elevation: 0,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
+        backgroundColor: CreatorCampaignsChrome.bg(context),
+        foregroundColor: CampaignDetailPremiumPalette.value(context),
+        iconTheme: IconThemeData(
+          color: CampaignDetailPremiumPalette.value(context),
+        ),
+        title: Text(
+          title ?? t.creator.campaigns.details_title,
+          style: GoogleFonts.sora(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: CampaignDetailPremiumPalette.value(context),
+          ),
+        ),
       ),
       body: RefreshIndicator(
-        color: CreatorColors.primaryOf(context),
+        color: CreatorCampaignsChrome.amber(context),
         onRefresh: () async {
           HapticFeedback.lightImpact();
           ref.invalidate(creatorCampaignDetailProvider(id));
@@ -76,9 +85,9 @@ class CreatorCampaignDetailScreen extends ConsumerWidget {
             children: [
               const SizedBox(height: 120),
               Center(
-                child: CircularProgressIndicator(
-                  color: CreatorColors.primaryOf(context),
-                ),
+              child: CircularProgressIndicator(
+                color: CreatorCampaignsChrome.amber(context),
+              ),
               ),
             ],
           ),
@@ -116,8 +125,6 @@ class CreatorCampaignDetailScreen extends ConsumerWidget {
           data: (c) => _Body(
             campaign: c,
             moneyLocale: moneyLocale,
-            heroCoverUrl: coverUrl,
-            heroBrandLogoUrl: brandLogoUrl,
           ),
         ),
       ),
@@ -129,48 +136,42 @@ class _Body extends ConsumerWidget {
   const _Body({
     required this.campaign,
     required this.moneyLocale,
-    required this.heroCoverUrl,
-    required this.heroBrandLogoUrl,
   });
 
   final CreatorCampaignDetail campaign;
   final String moneyLocale;
-  final String? heroCoverUrl;
-
-  /// Carried from browse list [extra] until detail fetch completes (optional).
-  final String? heroBrandLogoUrl;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final t = context.t;
     final c = campaign;
-    final coverRaw = heroCoverUrl ?? c.coverUrl;
-    final cover = normalizeWayoAdsMediaUrl(coverRaw) ?? coverRaw?.trim();
 
-    final logoRaw = heroBrandLogoUrl ?? c.brandLogoUrl;
-    final resolvedLogo = resolveWayoAdsPublicUrl(logoRaw);
     return ListView(
       physics: const BouncingScrollPhysics(
         parent: AlwaysScrollableScrollPhysics(),
       ),
-      padding: const EdgeInsets.fromLTRB(0, 0, 0, 140),
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 140),
       children: [
-        _Hero(coverUrl: cover, brandLogoUrl: resolvedLogo, type: c.type),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+        _PremiumCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (c.advertiserName != null && c.advertiserName!.isNotEmpty)
                 Text(
                   c.advertiserName!,
-                  style: AppTextStyles.caption(context).copyWith(
-                    color: AppColors.textSecondaryOf(context),
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: CreatorCampaignsChrome.bodyDm(context, size: 13),
                 ),
-              const SizedBox(height: 4),
-              Text(c.title, style: AppTextStyles.pageTitle(context)),
+              if (c.advertiserName != null && c.advertiserName!.isNotEmpty)
+                const SizedBox(height: 6),
+              Text(
+                c.title,
+                style: GoogleFonts.sora(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w800,
+                  color: CampaignDetailPremiumPalette.value(context),
+                  height: 1.15,
+                ),
+              ),
               const SizedBox(height: 14),
               Wrap(
                 spacing: 8,
@@ -178,38 +179,67 @@ class _Body extends ConsumerWidget {
                 children: [
                   _Pill(
                     label: _typeLabel(t, c.type),
-                    color: CreatorColors.primaryOf(context),
+                    color: CreatorCampaignsChrome.amber(context),
                     icon: _typeIcon(c.type),
                   ),
                   _ApplicationStatusPill(status: c.myApplicationStatus),
                 ],
               ),
-              const SizedBox(height: 18),
-              _CampaignNicheLocationSummary(campaign: c, t: t),
-              const SizedBox(height: 18),
-              _RewardsBlock(campaign: c, moneyLocale: moneyLocale),
-              const SizedBox(height: 18),
-              if (c.description != null && c.description!.isNotEmpty) ...[
-                _SectionTitle(title: t.creator.campaigns.description_title),
-                const SizedBox(height: 6),
-                Text(c.description!, style: AppTextStyles.bodyLarge(context)),
-                const SizedBox(height: 18),
-              ],
-              if (c.type.requiresVideoSubmission) ...[
-                _SectionTitle(title: t.creator.campaigns.requirements_title),
-                const SizedBox(height: 8),
-                _RequirementsBlock(campaign: c),
-                const SizedBox(height: 18),
-              ],
-              if (c.assetsUrl != null && c.assetsUrl!.isNotEmpty) ...[
-                _AssetsLink(url: c.assetsUrl!),
-                const SizedBox(height: 18),
-              ],
-              _ActionBar(campaign: c),
-              const SizedBox(height: 24),
             ],
           ),
         ),
+        const SizedBox(height: 14),
+        _PremiumCard(child: _CampaignNicheLocationSummary(campaign: c, t: t)),
+        const SizedBox(height: 14),
+        _PremiumCard(
+          child: _RewardsBlock(campaign: c, moneyLocale: moneyLocale),
+        ),
+        if (c.description != null && c.description!.isNotEmpty) ...[
+          const SizedBox(height: 14),
+          _PremiumCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  t.creator.campaigns.description_title,
+                  style: CampaignDetailPremiumPalette.sectionTitle(context),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  c.description!,
+                  style: GoogleFonts.dmSans(
+                    fontSize: 15,
+                    height: 1.45,
+                    color: CampaignDetailPremiumPalette.value(context)
+                        .withValues(alpha: 0.92),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+        if (c.type.requiresVideoSubmission) ...[
+          const SizedBox(height: 14),
+          _PremiumCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  t.creator.campaigns.requirements_title,
+                  style: CampaignDetailPremiumPalette.sectionTitle(context),
+                ),
+                const SizedBox(height: 10),
+                _RequirementsBlock(campaign: c),
+              ],
+            ),
+          ),
+        ],
+        if (c.assetsUrl != null && c.assetsUrl!.isNotEmpty) ...[
+          const SizedBox(height: 14),
+          _AssetsLink(url: c.assetsUrl!),
+        ],
+        const SizedBox(height: 18),
+        _ActionBar(campaign: c),
       ],
     );
   }
@@ -229,134 +259,23 @@ class _Body extends ConsumerWidget {
   };
 }
 
-class _Hero extends StatelessWidget {
-  const _Hero({required this.coverUrl, required this.type, this.brandLogoUrl});
+class _PremiumCard extends StatelessWidget {
+  const _PremiumCard({required this.child});
 
-  final String? coverUrl;
-  final CreatorCampaignType type;
-
-  /// Already resolved absolute URL ([resolveWayoAdsPublicUrl]).
-  final String? brandLogoUrl;
+  final Widget child;
 
   @override
   Widget build(BuildContext context) {
-    final hasCover = coverUrl != null && coverUrl!.trim().isNotEmpty;
-    final hasBrand = brandLogoUrl != null && brandLogoUrl!.trim().isNotEmpty;
-
-    final placeholder = Container(
-      height: 200,
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            CreatorColors.primaryOf(context).withValues(alpha: 0.4),
-            CreatorColors.primaryOf(context).withValues(alpha: 0.08),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+        color: CampaignDetailPremiumPalette.surface1(context),
+        borderRadius: BorderRadius.circular(
+          CampaignDetailPremiumPalette.kCardRadius,
         ),
       ),
-      child: Center(
-        child: Icon(
-          switch (type) {
-            CreatorCampaignType.link => Icons.link_rounded,
-            CreatorCampaignType.video => Icons.play_circle_fill_rounded,
-            CreatorCampaignType.shorts => Icons.movie_filter_rounded,
-            CreatorCampaignType.unknown => Icons.campaign_outlined,
-          },
-          size: 64,
-          color: Colors.white.withValues(alpha: 0.9),
-        ),
-      ),
-    );
-
-    if (!hasBrand) {
-      if (!hasCover) {
-        return SizedBox(height: 200, child: placeholder);
-      }
-      return SizedBox(
-        height: 200,
-        child: CachedNetworkImage(
-          imageUrl: coverUrl!,
-          fit: BoxFit.cover,
-          width: double.infinity,
-          memCacheWidth: 800,
-          memCacheHeight: 400,
-          placeholder: (_, _) => placeholder,
-          errorWidget: (_, _, _) => placeholder,
-        ),
-      );
-    }
-
-    if (!hasCover) {
-      return SizedBox(
-        height: 200,
-        child: ColoredBox(
-          color: AppColors.surfaceElevatedOf(context),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 24),
-            child: CachedNetworkImage(
-              imageUrl: brandLogoUrl!,
-              fit: BoxFit.contain,
-              memCacheWidth: 320,
-              memCacheHeight: 320,
-              errorWidget: (_, _, _) => placeholder,
-            ),
-          ),
-        ),
-      );
-    }
-
-    return SizedBox(
-      height: 200,
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          Positioned.fill(
-            child: CachedNetworkImage(
-              imageUrl: coverUrl!,
-              fit: BoxFit.cover,
-              memCacheWidth: 800,
-              memCacheHeight: 400,
-              placeholder: (_, _) => placeholder,
-              errorWidget: (_, _, _) => placeholder,
-            ),
-          ),
-          Positioned(
-            left: 18,
-            bottom: 14,
-            child: Material(
-              color: Colors.transparent,
-              child: Container(
-                width: 76,
-                height: 76,
-                padding: const EdgeInsets.all(7),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).cardColor,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.borderOf(context)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.12),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
-                  child: CachedNetworkImage(
-                    imageUrl: brandLogoUrl!,
-                    fit: BoxFit.contain,
-                    memCacheWidth: 160,
-                    memCacheHeight: 160,
-                    errorWidget: (_, _, _) => const SizedBox.shrink(),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
+      child: child,
     );
   }
 }
@@ -388,13 +307,14 @@ class _CampaignNicheLocationSummary extends StatelessWidget {
             Icon(
               Icons.category_outlined,
               size: 18,
-              color: AppColors.textSecondaryOf(context),
+              color: CreatorCampaignsChrome.amber(context).withValues(alpha: 0.9),
             ),
             const SizedBox(width: 8),
             Text(
               t.advertiser_campaigns.detail.niche_label,
-              style: AppTextStyles.caption(context).copyWith(
-                color: AppColors.textMutedOf(context),
+              style: GoogleFonts.dmSans(
+                fontSize: 12,
+                color: CreatorCampaignsChrome.label(context),
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -403,9 +323,11 @@ class _CampaignNicheLocationSummary extends StatelessWidget {
               child: Text(
                 nicheLabel,
                 textAlign: TextAlign.end,
-                style: AppTextStyles.bodyLarge(
-                  context,
-                ).copyWith(fontWeight: FontWeight.w700),
+                style: GoogleFonts.dmSans(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: CampaignDetailPremiumPalette.value(context),
+                ),
               ),
             ),
           ],
@@ -416,13 +338,14 @@ class _CampaignNicheLocationSummary extends StatelessWidget {
             Icon(
               Icons.place_outlined,
               size: 18,
-              color: AppColors.textSecondaryOf(context),
+              color: CreatorCampaignsChrome.amber(context).withValues(alpha: 0.9),
             ),
             const SizedBox(width: 8),
             Text(
               t.advertiser_campaigns.detail.location_label,
-              style: AppTextStyles.caption(context).copyWith(
-                color: AppColors.textMutedOf(context),
+              style: GoogleFonts.dmSans(
+                fontSize: 12,
+                color: CreatorCampaignsChrome.label(context),
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -431,27 +354,16 @@ class _CampaignNicheLocationSummary extends StatelessWidget {
               child: Text(
                 locationLabel,
                 textAlign: TextAlign.end,
-                style: AppTextStyles.bodyLarge(
-                  context,
-                ).copyWith(fontWeight: FontWeight.w700),
+                style: GoogleFonts.dmSans(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: CampaignDetailPremiumPalette.value(context),
+                ),
               ),
             ),
           ],
         ),
       ],
-    );
-  }
-}
-
-class _SectionTitle extends StatelessWidget {
-  const _SectionTitle({required this.title});
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      title,
-      style: AppTextStyles.headlineMedium(context).copyWith(fontSize: 16),
     );
   }
 }
@@ -477,7 +389,7 @@ class _RewardsBlock extends StatelessWidget {
             locale: moneyLocale,
           ),
           icon: Icons.visibility_rounded,
-          accent: CreatorColors.primaryOf(context),
+          accent: CreatorCampaignsChrome.amber(context),
         ),
       );
       items.add(
@@ -522,7 +434,12 @@ class _RewardsBlock extends StatelessWidget {
       children: [
         for (var i = 0; i < items.length; i++) ...[
           items[i],
-          if (i < items.length - 1) const SizedBox(height: 8),
+          if (i < items.length - 1)
+            Divider(
+              height: 1,
+              thickness: 1,
+              color: CampaignDetailPremiumPalette.rowSeparator(context),
+            ),
         ],
       ],
     );
@@ -544,13 +461,8 @@ class _RewardTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceElevatedOf(context),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.borderOf(context)),
-      ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
       child: Row(
         children: [
           Icon(icon, color: accent, size: 22),
@@ -558,14 +470,19 @@ class _RewardTile extends StatelessWidget {
           Expanded(
             child: Text(
               label,
-              style: AppTextStyles.caption(
-                context,
-              ).copyWith(color: AppColors.textSecondaryOf(context)),
+              style: GoogleFonts.dmSans(
+                fontSize: 13,
+                color: CreatorCampaignsChrome.label(context),
+              ),
             ),
           ),
           Text(
             value,
-            style: AppTextStyles.headlineMedium(context).copyWith(fontSize: 16),
+            style: GoogleFonts.dmSans(
+              fontSize: 16,
+              fontWeight: FontWeight.w800,
+              color: CampaignDetailPremiumPalette.value(context),
+            ),
           ),
         ],
       ),
@@ -649,12 +566,17 @@ class _RequirementRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, size: 18, color: CreatorColors.primaryOf(context)),
+        Icon(icon, size: 18, color: CreatorCampaignsChrome.amber(context)),
         const SizedBox(width: 8),
         Expanded(
           child: Text(
             label,
-            style: AppTextStyles.bodyLarge(context).copyWith(fontSize: 14),
+            style: GoogleFonts.dmSans(
+              fontSize: 14,
+              height: 1.35,
+              color: CampaignDetailPremiumPalette.value(context)
+                  .withValues(alpha: 0.88),
+            ),
           ),
         ),
       ],
@@ -687,9 +609,9 @@ class _AssetsLink extends StatelessWidget {
         child: Ink(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
-            color: CreatorColors.primaryOf(context).withValues(alpha: 0.08),
+            color: CreatorCampaignsChrome.amber(context).withValues(alpha: 0.08),
             border: Border.all(
-              color: CreatorColors.primaryOf(context).withValues(alpha: 0.3),
+              color: CreatorCampaignsChrome.amber(context).withValues(alpha: 0.3),
             ),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -697,7 +619,7 @@ class _AssetsLink extends StatelessWidget {
             children: [
               Icon(
                 Icons.folder_open_rounded,
-                color: CreatorColors.primaryOf(context),
+                color: CreatorCampaignsChrome.amber(context),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -721,7 +643,7 @@ class _AssetsLink extends StatelessWidget {
               ),
               Icon(
                 Icons.open_in_new_rounded,
-                color: CreatorColors.primaryOf(context),
+                color: CreatorCampaignsChrome.amber(context),
                 size: 18,
               ),
             ],
@@ -839,8 +761,8 @@ class _ActionBar extends ConsumerWidget {
             }
           },
           style: ElevatedButton.styleFrom(
-            backgroundColor: CreatorColors.primaryOf(context),
-            foregroundColor: Colors.white,
+            backgroundColor: CreatorCampaignsChrome.amber(context),
+            foregroundColor: const Color(0xFF0A0A0F),
             elevation: 0,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(14),
@@ -910,8 +832,8 @@ class _ActionBar extends ConsumerWidget {
                 );
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: CreatorColors.primaryOf(context),
-                foregroundColor: Colors.white,
+                backgroundColor: CreatorCampaignsChrome.amber(context),
+                foregroundColor: const Color(0xFF0A0A0F),
                 elevation: 0,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14),
@@ -938,11 +860,10 @@ class _ActionBar extends ConsumerWidget {
                 context.go('/chat');
               },
               style: OutlinedButton.styleFrom(
-                foregroundColor: CreatorColors.primaryOf(context),
+                foregroundColor: CreatorCampaignsChrome.amber(context),
                 side: BorderSide(
-                  color: CreatorColors.primaryOf(
-                    context,
-                  ).withValues(alpha: 0.5),
+                  color: CreatorCampaignsChrome.amber(context)
+                      .withValues(alpha: 0.5),
                 ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14),

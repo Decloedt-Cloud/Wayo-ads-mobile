@@ -6,6 +6,8 @@ import 'package:dio_smart_retry/dio_smart_retry.dart';
 /// POST path suffixes excluded from automatic retry (auth side-effects).
 const List<String> kAuthSideEffectPostSuffixes = [
   'auth/login',
+  'auth/google',
+  'auth/apple',
   'auth/refresh',
   'auth/reset-password',
 ];

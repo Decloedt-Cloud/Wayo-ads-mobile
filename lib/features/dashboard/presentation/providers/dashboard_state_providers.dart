@@ -21,6 +21,10 @@ import '../../../creator_dashboard/presentation/providers/creator_dashboard_prov
 import '../../../creator_wallet/presentation/providers/creator_wallet_providers.dart';
 import '../../../invoices/presentation/providers/invoices_providers.dart';
 import '../../../wallet/presentation/providers/advertiser_wallet_providers.dart';
+import '../../../auth/domain/auth_notifier.dart';
+import '../../../auth/domain/wayo_ads_account_role.dart';
+import '../../../superadmin/presentation/providers/superadmin_providers.dart';
+import '../../../../core/push/wayo_push_intent.dart';
 
 final requestDeduplicatorProvider = Provider<RequestDeduplicator>((ref) {
   ref.keepAlive();
@@ -169,6 +173,25 @@ final realtimeInvalidationProvider = Provider<void>((ref) {
     }
     if (notif) {
       ref.invalidate(notificationsListProvider);
+      final auth = ref.read(authNotifierProvider).valueOrNull;
+      final isSuperadmin = auth is AuthAuthenticated &&
+          auth.user.wayoAdsRole == WayoAdsAccountRole.superAdmin;
+      if (isSuperadmin || isWithdrawalNotificationPayload(sig.raw)) {
+        invalidateSuperadminWithdrawalData(ref);
+      }
+    }
+
+    final withdrawalEvent = lower.contains('withdrawal') &&
+        (lower.contains('creat') ||
+            lower.contains('updat') ||
+            lower.contains('approv') ||
+            lower.contains('cancel') ||
+            lower.contains('paid') ||
+            lower.contains('valid') ||
+            lower.contains('complet') ||
+            lower.contains('request'));
+    if (withdrawalEvent) {
+      invalidateSuperadminWithdrawalData(ref);
     }
 
     // Creator providers — invalidate on specific events OR when the event

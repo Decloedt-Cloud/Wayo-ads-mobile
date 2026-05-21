@@ -130,6 +130,23 @@ final class DashboardRepositoryImpl implements DashboardRepository {
     DashboardSnapshot? seed,
     required String cacheKey,
   }) async {
+    final accessToken = await _storage.getAccessToken();
+    if (accessToken == null || accessToken.isEmpty) {
+      // Avoid hammering ads endpoints without a bearer right after logout / during
+      // token races — prevents bogus balance/campaign errors that vanish on retry.
+      return DashboardSnapshot(
+        user: seed?.user,
+        balance: seed?.balance,
+        campaigns: seed?.campaigns ?? const <CampaignSummary>[],
+        campaignsTotalCount:
+            seed?.campaignsTotalCount ?? seed?.campaigns.length ?? 0,
+        campaignsPage: seed?.campaignsPage ?? 1,
+        campaignsTotalPages: seed?.campaignsTotalPages ?? 1,
+        advertiserBudgetRollup: seed?.advertiserBudgetRollup,
+        unreadCount: seed?.unreadCount ?? 0,
+      );
+    }
+
     UserProfile? user = seed?.user;
     AuthException? userErr;
 

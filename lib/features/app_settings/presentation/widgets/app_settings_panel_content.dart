@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:cached_network_image/cached_network_image.dart';
@@ -8,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/providers/app_providers.dart';
+import '../../../../core/review/app_review_service.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../auth/presentation/providers/current_account_providers.dart';
 import '../../../../i18n/strings.g.dart';
@@ -96,6 +98,26 @@ class AppSettingsPanelContent extends ConsumerWidget {
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
+                const SizedBox(height: 22),
+                _SectionTitle(
+                      icon: Icons.star_outline_rounded,
+                      text: t.app_settings.section_about,
+                    )
+                    .animate()
+                    .fadeIn(delay: 100.ms, duration: 220.ms)
+                    .slideX(begin: 0.04, curve: Curves.easeOutCubic),
+                const SizedBox(height: 10),
+                _RateAppTile(
+                      title: t.app_settings.rate_app,
+                      subtitle: t.app_settings.rate_app_sub,
+                      onTap: () {
+                        HapticFeedback.selectionClick();
+                        unawaited(AppReviewService.instance.openStoreListing());
+                      },
+                    )
+                    .animate()
+                    .fadeIn(delay: 110.ms, duration: 260.ms)
+                    .slideY(begin: 0.03),
                 const SizedBox(height: 22),
                 _SectionTitle(
                       icon: Icons.manage_accounts_outlined,
@@ -216,6 +238,62 @@ class _SectionTitle extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _RateAppTile extends StatelessWidget {
+  const _RateAppTile({
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Material(
+      color: scheme.surface.withValues(alpha: 0.35),
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+          child: Row(
+            children: [
+              Icon(Icons.star_rounded, color: scheme.primary, size: 22),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                        height: 1.3,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(Icons.open_in_new_rounded, color: scheme.onSurfaceVariant),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

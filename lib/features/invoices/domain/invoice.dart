@@ -57,6 +57,8 @@ enum InvoiceRoleType {
 /// Lifecycle status of the invoice (currently always [paid] in the live backend).
 enum InvoiceStatus {
   paid('PAID'),
+  /// Creator-side finance documents (net settle) — distinct from advertiser PAID.
+  validated('VALIDATED'),
   pending('PENDING'),
   cancelled('CANCELLED'),
   unknown('UNKNOWN');

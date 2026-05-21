@@ -33,10 +33,10 @@ final class NotificationsRepository {
     );
   }
 
-  Future<void> markRead(String id) async {
+  Future<void> markRead(String id, {String? conversationId}) async {
     await _deduplicator.run(
       'notification_read_$id',
-      () => _remote.markNotificationRead(id),
+      () => _remote.markNotificationRead(id, conversationId: conversationId),
     );
   }
 

@@ -35,7 +35,7 @@ abstract interface class DashboardRemote {
 
   Future<int> fetchUnreadCount();
 
-  Future<void> markNotificationRead(String id);
+  Future<void> markNotificationRead(String id, {String? conversationId});
 
   Future<void> markAllNotificationsRead();
 
@@ -241,12 +241,16 @@ final class DashboardRemoteDatasource implements DashboardRemote {
   }
 
   @override
-  Future<void> markNotificationRead(String id) async {
+  Future<void> markNotificationRead(String id, {String? conversationId}) async {
     await _adsDio.post<Map<String, dynamic>>(
       AuthRuntimeConfig.instance.wayoAdsRequestPath(
         ApiEndpoints.notificationsMarkRead,
       ),
-      data: <String, dynamic>{'notificationId': id},
+      data: <String, dynamic>{
+        'notificationId': id,
+        if (conversationId != null && conversationId.isNotEmpty)
+          'conversationId': conversationId,
+      },
     );
   }
 

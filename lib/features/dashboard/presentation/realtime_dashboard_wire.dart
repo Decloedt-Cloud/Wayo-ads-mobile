@@ -11,6 +11,7 @@ import '../../creator_campaigns/presentation/providers/creator_campaigns_provide
 import '../../creator_dashboard/presentation/providers/creator_dashboard_providers.dart';
 import '../../creator_wallet/presentation/providers/creator_wallet_providers.dart';
 import '../../wallet/presentation/providers/advertiser_wallet_providers.dart';
+import '../../superadmin/presentation/providers/superadmin_providers.dart';
 import 'providers/dashboard_state_providers.dart';
 
 /// How often we refresh advertiser data while the app is foregrounded.
@@ -131,6 +132,8 @@ class _RealtimeDashboardWireState extends ConsumerState<RealtimeDashboardWire>
       // screen the creator is looking at right now).
       ref.invalidate(creatorCampaignDetailProvider);
       ref.invalidate(creatorMySubmissionsProvider);
+    } else if (role == WayoAdsAccountRole.superAdmin) {
+      invalidateSuperadminWithdrawalData(ref);
     } else {
       ref.invalidate(advertiserWalletPageProvider);
       ref.invalidate(creatorBusinessProfileProvider);

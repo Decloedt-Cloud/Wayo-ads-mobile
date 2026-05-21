@@ -13,6 +13,10 @@ abstract class AppPrefs {
   String? getString(String key);
 
   Future<void> setString(String key, String value);
+
+  int getInt(String key, {int defaultValue = 0});
+
+  Future<void> setInt(String key, int value);
 }
 
 final class _SharedPreferencesAppPrefs extends AppPrefs {
@@ -27,6 +31,15 @@ final class _SharedPreferencesAppPrefs extends AppPrefs {
   Future<void> setString(String key, String value) async {
     await _inner.setString(key, value);
   }
+
+  @override
+  int getInt(String key, {int defaultValue = 0}) =>
+      _inner.getInt(key) ?? defaultValue;
+
+  @override
+  Future<void> setInt(String key, int value) async {
+    await _inner.setInt(key, value);
+  }
 }
 
 final class _MemoryAppPrefs extends AppPrefs {
@@ -40,5 +53,17 @@ final class _MemoryAppPrefs extends AppPrefs {
   @override
   Future<void> setString(String key, String value) async {
     _m[key] = value;
+  }
+
+  @override
+  int getInt(String key, {int defaultValue = 0}) {
+    final raw = _m[key];
+    if (raw == null) return defaultValue;
+    return int.tryParse(raw) ?? defaultValue;
+  }
+
+  @override
+  Future<void> setInt(String key, int value) async {
+    _m[key] = '$value';
   }
 }

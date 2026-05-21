@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -17,7 +18,10 @@ import '../providers/creator_wallet_providers.dart';
 /// History of past payout requests — each row shows amount, status and date.
 /// Pending rows expose a cancel action that hits
 /// `DELETE /api/creator/withdrawal?id=...`.
-class CreatorWithdrawalsList extends StatelessWidget {
+///
+/// The parent passes the **full** history; this widget shows 10 rows at a time
+/// and grows locally (no extra network) when the user loads more.
+class CreatorWithdrawalsList extends StatefulWidget {
   const CreatorWithdrawalsList({
     super.key,
     required this.items,
@@ -28,17 +32,50 @@ class CreatorWithdrawalsList extends StatelessWidget {
   final String moneyLocale;
 
   @override
+  State<CreatorWithdrawalsList> createState() => _CreatorWithdrawalsListState();
+}
+
+class _CreatorWithdrawalsListState extends State<CreatorWithdrawalsList> {
+  static const int _pageSize = 10;
+  int _visible = _pageSize;
+
+  @override
+  void didUpdateWidget(covariant CreatorWithdrawalsList oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.items.isEmpty) return;
+    _visible = math.min(_visible, widget.items.length);
+    if (_visible == 0) {
+      _visible = math.min(_pageSize, widget.items.length);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final t = context.t;
+    final items = widget.items;
     if (items.isEmpty) {
       return _EmptyState(t: t);
     }
+    final n = math.min(_visible, items.length);
+    final slice = items.take(n).toList(growable: false);
+    final hasMore = n < items.length;
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        for (final w in items)
+        for (final w in slice)
           Padding(
             padding: const EdgeInsets.only(bottom: 10),
-            child: _WithdrawalTile(w: w, moneyLocale: moneyLocale),
+            child: _WithdrawalTile(w: w, moneyLocale: widget.moneyLocale),
+          ),
+        if (hasMore)
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: TextButton(
+              onPressed: () => setState(() {
+                _visible = math.min(_visible + _pageSize, items.length);
+              }),
+              child: Text(t.invoices.load_more),
+            ),
           ),
       ],
     );
@@ -167,7 +204,7 @@ class _WithdrawalTileState extends ConsumerState<_WithdrawalTile> {
     final (label, color, icon) = _statusStyle(context, w.status, t);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final amount = MoneyFormatter.format(
-      w.amount,
+      w.payoutHistoryGross,
       currency: w.currency,
       locale: widget.moneyLocale,
     );

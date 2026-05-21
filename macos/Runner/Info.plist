@@ -28,5 +28,9 @@
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Wayoadsgo may access Photos when saving images from chat.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Wayoadsgo saves downloaded chat photos to your library when requested.</string>
 </dict>
 </plist>

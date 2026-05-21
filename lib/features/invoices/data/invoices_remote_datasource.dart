@@ -9,9 +9,27 @@ import '../domain/invoices_page.dart';
 
 /// Wayo-ads invoice HTTP surface — Bearer via [Dio] interceptors.
 abstract interface class InvoicesRemote {
-  Future<InvoicesPage> fetchAdvertiserPage({required int page});
+  Future<InvoicesPage> fetchAdvertiserPage({
+    required int page,
+    int limit = 15,
+    String? invoiceType,
+    String search = '',
+    DateTime? dateFrom,
+    DateTime? dateTo,
+    String sortBy = 'createdAt',
+    String sortDir = 'desc',
+  });
 
-  Future<InvoicesPage> fetchCreatorPage({required int page});
+  Future<InvoicesPage> fetchCreatorPage({
+    required int page,
+    int limit = 10,
+    String? invoiceType,
+    String search = '',
+    DateTime? dateFrom,
+    DateTime? dateTo,
+    String sortBy = 'createdAt',
+    String sortDir = 'desc',
+  });
 
   Future<Uint8List> fetchInvoicePdf(
     String invoiceId, {
@@ -24,42 +42,103 @@ final class InvoicesRemoteDatasource implements InvoicesRemote {
 
   final Dio _dio;
 
-  static const int _defaultPageSize = 10;
+  static const int _legacyPageSize = 15;
+
+  static String? _yyyyMmDd(DateTime? d) {
+    if (d == null) return null;
+    final local = DateTime(d.year, d.month, d.day);
+    final y = local.year;
+    final m = local.month.toString().padLeft(2, '0');
+    final day = local.day.toString().padLeft(2, '0');
+    return '$y-$m-$day';
+  }
 
   @override
-  Future<InvoicesPage> fetchAdvertiserPage({required int page}) =>
-      _fetchRolePaginated(
-        path: ApiEndpoints.advertiserInvoices,
-        page: page,
-        filterRole: InvoiceRoleType.advertiser,
-      );
-
-  @override
-  Future<InvoicesPage> fetchCreatorPage({required int page}) =>
-      _fetchRolePaginated(
-        path: ApiEndpoints.creatorInvoices,
-        page: page,
-        filterRole: InvoiceRoleType.creator,
-      );
-
-  Future<InvoicesPage> _fetchRolePaginated({
-    required String path,
+  Future<InvoicesPage> fetchAdvertiserPage({
     required int page,
-    required InvoiceRoleType filterRole,
+    int limit = 15,
+    String? invoiceType,
+    String search = '',
+    DateTime? dateFrom,
+    DateTime? dateTo,
+    String sortBy = 'createdAt',
+    String sortDir = 'desc',
   }) async {
     try {
+      final query = <String, dynamic>{
+        'page': page,
+        'limit': limit.clamp(1, 100),
+        'sortBy': sortBy,
+        'sortDir': sortDir,
+        if (search.trim().isNotEmpty) 'search': search.trim(),
+        if (_yyyyMmDd(dateFrom) != null) 'dateFrom': _yyyyMmDd(dateFrom),
+        if (_yyyyMmDd(dateTo) != null) 'dateTo': _yyyyMmDd(dateTo),
+        if (invoiceType != null && invoiceType.isNotEmpty) 'invoiceType': invoiceType,
+      };
+
       final res = await _dio.get<Object?>(
-        AuthRuntimeConfig.instance.wayoAdsRequestPath(path),
-        queryParameters: <String, dynamic>{
-          'page': page,
-        },
+        AuthRuntimeConfig.instance.wayoAdsRequestPath(ApiEndpoints.advertiserInvoices),
+        queryParameters: query,
       );
       return _parsePaginatedResponse(res.data, fallbackPage: page);
     } on DioException catch (e) {
       if (_shouldFallbackToLegacyList(e)) {
         return _legacyListPage(
           page: page,
-          filterRole: filterRole,
+          limit: limit.clamp(1, 100),
+          filterRole: InvoiceRoleType.advertiser,
+          invoiceType: invoiceType,
+          search: search,
+          dateFrom: dateFrom,
+          dateTo: dateTo,
+          sortBy: sortBy,
+          sortDir: sortDir,
+        );
+      }
+      rethrow;
+    }
+  }
+
+  @override
+  Future<InvoicesPage> fetchCreatorPage({
+    required int page,
+    int limit = 10,
+    String? invoiceType,
+    String search = '',
+    DateTime? dateFrom,
+    DateTime? dateTo,
+    String sortBy = 'createdAt',
+    String sortDir = 'desc',
+  }) async {
+    try {
+      final query = <String, dynamic>{
+        'page': page,
+        'limit': limit.clamp(1, 100),
+        'sortBy': sortBy,
+        'sortDir': sortDir,
+        if (search.trim().isNotEmpty) 'search': search.trim(),
+        if (_yyyyMmDd(dateFrom) != null) 'dateFrom': _yyyyMmDd(dateFrom),
+        if (_yyyyMmDd(dateTo) != null) 'dateTo': _yyyyMmDd(dateTo),
+        if (invoiceType != null && invoiceType.isNotEmpty) 'invoiceType': invoiceType,
+      };
+
+      final res = await _dio.get<Object?>(
+        AuthRuntimeConfig.instance.wayoAdsRequestPath(ApiEndpoints.creatorInvoices),
+        queryParameters: query,
+      );
+      return _parsePaginatedResponse(res.data, fallbackPage: page);
+    } on DioException catch (e) {
+      if (_shouldFallbackToLegacyList(e)) {
+        return _legacyListPage(
+          page: page,
+          limit: limit.clamp(1, 100),
+          filterRole: InvoiceRoleType.creator,
+          invoiceType: invoiceType,
+          search: search,
+          dateFrom: dateFrom,
+          dateTo: dateTo,
+          sortBy: sortBy,
+          sortDir: sortDir,
         );
       }
       rethrow;
@@ -70,31 +149,76 @@ final class InvoicesRemoteDatasource implements InvoicesRemote {
   /// unified list and paginate in memory (same behaviour as pre-paginated API).
   Future<InvoicesPage> _legacyListPage({
     required int page,
+    required int limit,
     required InvoiceRoleType filterRole,
+    String? invoiceType,
+    String search = '',
+    DateTime? dateFrom,
+    DateTime? dateTo,
+    String sortBy = 'createdAt',
+    String sortDir = 'desc',
   }) async {
     final res = await _dio.get<Object?>(
       AuthRuntimeConfig.instance.wayoAdsRequestPath(ApiEndpoints.invoicesAll),
     );
     final all = _parseInvoiceList(res.data);
-    // Prefer server `roleType` when present; legacy payloads may omit it (`unknown`).
-    var rows = all.where((i) => i.roleType == filterRole).toList(growable: false);
-    if (rows.isEmpty && all.isNotEmpty &&
+    var rows = all.where((i) => i.roleType == filterRole).toList(growable: true);
+    if (rows.isEmpty &&
+        all.isNotEmpty &&
         all.every((i) => i.roleType == InvoiceRoleType.unknown)) {
       rows = List<Invoice>.from(all);
     }
 
-    rows.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    if (invoiceType != null && invoiceType.isNotEmpty) {
+      final t = InvoiceType.fromApi(invoiceType);
+      rows = rows.where((i) => i.type == t).toList();
+    }
 
-    const lim = _defaultPageSize;
+    final q = search.trim().toLowerCase();
+    if (q.isNotEmpty) {
+      rows = rows
+          .where(
+            (i) =>
+                i.invoiceNumber.toLowerCase().contains(q) ||
+                (i.referenceId?.toLowerCase().contains(q) ?? false),
+          )
+          .toList();
+    }
+
+    if (dateFrom != null) {
+      final from = DateTime(dateFrom.year, dateFrom.month, dateFrom.day);
+      rows = rows.where((i) => !i.createdAt.toLocal().isBefore(from)).toList();
+    }
+    if (dateTo != null) {
+      final to = DateTime(dateTo.year, dateTo.month, dateTo.day, 23, 59, 59, 999);
+      rows = rows.where((i) => !i.createdAt.toLocal().isAfter(to)).toList();
+    }
+
+    int cmp(Invoice a, Invoice b) {
+      final asc = sortDir == 'asc';
+      if (sortBy == 'amount') {
+        final c = a.totalAmountCents.compareTo(b.totalAmountCents);
+        return asc ? c : -c;
+      }
+      if (sortBy == 'status') {
+        final c = a.status.api.compareTo(b.status.api);
+        return asc ? c : -c;
+      }
+      final c = a.createdAt.compareTo(b.createdAt);
+      return asc ? c : -c;
+    }
+
+    rows.sort(cmp);
+
     final totalCount = rows.length;
-    final totalPages = totalCount > 0 ? (totalCount + lim - 1) ~/ lim : 1;
-    final start = (page.clamp(1, totalPages) - 1) * lim;
-    final slice = rows.skip(start).take(lim).toList(growable: false);
+    final totalPages = totalCount > 0 ? (totalCount + limit - 1) ~/ limit : 1;
+    final start = (page.clamp(1, totalPages) - 1) * limit;
+    final slice = rows.skip(start).take(limit).toList(growable: false);
 
     return InvoicesPage(
       invoices: slice,
       page: page.clamp(1, totalPages),
-      pageSize: lim,
+      pageSize: limit,
       totalCount: totalCount,
       totalPages: totalPages,
     );
@@ -122,7 +246,7 @@ final class InvoicesRemoteDatasource implements InvoicesRemote {
         : <Invoice>[];
 
     final page = _int(row['page'], fallbackPage);
-    final pageSize = _int(row['pageSize'] ?? row['limit'], _defaultPageSize).clamp(1, 100);
+    final pageSize = _int(row['pageSize'] ?? row['limit'], _legacyPageSize).clamp(1, 100);
     final totalCount = _int(
       row['totalCount'] ?? row['total'] ?? row['count'],
       list.length,
@@ -132,12 +256,20 @@ final class InvoicesRemoteDatasource implements InvoicesRemote {
       totalPages = totalCount > 0 ? (totalCount + pageSize - 1) ~/ pageSize : 1;
     }
 
+    final statsRaw = row['stats'];
+    final advertiserStats = statsRaw is Map
+        ? AdvertiserInvoicesStats.fromJson(Map<String, dynamic>.from(statsRaw))
+        : null;
+    final currency = row['currency'] is String ? (row['currency'] as String).trim() : null;
+
     return InvoicesPage(
       invoices: list,
       page: page,
       pageSize: pageSize,
       totalCount: totalCount,
       totalPages: totalPages,
+      currency: currency,
+      advertiserStats: advertiserStats,
     );
   }
 

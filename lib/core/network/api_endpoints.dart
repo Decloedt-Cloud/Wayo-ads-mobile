@@ -67,18 +67,55 @@ abstract final class ApiEndpoints {
   /// [POST /api/user/delete-account](Wayo-ads), body `{ password }`.
   static const String userDeleteAccount = 'api/user/delete-account';
 
+  /// [POST /api/user/push-device](Wayo-ads) — body `{ fcmToken, platform? }`.
+  /// [DELETE /api/user/push-device?fcmToken=…](Wayo-ads) — unregister on logout.
+  static const String userPushDevice = 'api/user/push-device';
+
   /// All invoices visible to the signed-in user — [GET /api/invoices](Wayo-ads).
   /// (No `success` field; used as a **fallback** when role-specific paginated routes
   /// fail with 404/403 on older deployments.)
   static const String invoicesAll = 'api/invoices';
 
-  /// Paginated invoices list for ADVERTISER (`?page=N`, page size 10) —
+  /// Paginated invoices list for ADVERTISER (`?page=N`, default page size 15) —
   /// [GET /api/advertiser/invoices](Wayo-ads).
   static const String advertiserInvoices = 'api/advertiser/invoices';
 
   /// Paginated invoices list for CREATOR (`?page=N`, page size 10) —
   /// [GET /api/creator/invoices](Wayo-ads).
   static const String creatorInvoices = 'api/creator/invoices';
+
+  /// Creator dashboard KPIs + balance — [GET /api/creator/stats](Wayo-ads).
+  static const String creatorStats = 'api/creator/stats';
+
+  /// Creator campaign applications — [GET /api/creator/applications](Wayo-ads).
+  static const String creatorApplications = 'api/creator/applications';
+
+  /// Creator wallet / withdrawals —
+  /// [GET|POST|DELETE /api/creator/withdrawal](Wayo-ads).
+  static const String creatorWithdrawal = 'api/creator/withdrawal';
+
+  /// [GET /api/creator/stripe-connect/status](Wayo-ads).
+  static const String creatorStripeConnectStatus =
+      'api/creator/stripe-connect/status';
+
+  /// [POST /api/creator/stripe-connect/onboard](Wayo-ads).
+  static const String creatorStripeConnectOnboard =
+      'api/creator/stripe-connect/onboard';
+
+  /// [POST /api/creator/stripe-connect/login](Wayo-ads).
+  static const String creatorStripeConnectLogin =
+      'api/creator/stripe-connect/login';
+
+  /// [GET|PUT /api/creator/business-profile](Wayo-ads).
+  static const String creatorBusinessProfile = 'api/creator/business-profile';
+
+  /// [GET|POST /api/creator/campaigns/:id/submit-post](Wayo-ads).
+  static String creatorCampaignSubmitPost(String campaignId) =>
+      'api/creator/campaigns/$campaignId/submit-post';
+
+  /// Creator applies to a campaign — [POST /api/campaigns/:id/apply](Wayo-ads).
+  static String campaignApply(String campaignId) =>
+      'api/campaigns/$campaignId/apply';
 
   /// Streams a generated `application/pdf` (Bearer or session) —
   /// [GET /api/invoices/:id/pdf](Wayo-ads).

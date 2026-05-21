@@ -21,45 +21,56 @@ class CreatorWalletRepository {
   final RequestDeduplicator _dedup;
   final RateLimiter _rate;
 
-  static const String _walletKey = 'creator_wallet';
-  static const String _stripeKey = 'creator_wallet_stripe_status';
-  static const String _businessKey = 'creator_wallet_business_profile';
+  static String _walletKeyFor(int sessionUserId) =>
+      'creator_wallet_$sessionUserId';
+
+  static String _stripeKeyFor(int sessionUserId) =>
+      'creator_wallet_stripe_$sessionUserId';
+
+  static String _businessKeyFor(int sessionUserId) =>
+      'creator_wallet_business_$sessionUserId';
 
   Future<CreatorWalletPage> fetchWalletPage({
+    required int sessionUserId,
     CreatorWalletPage? fallback,
   }) async {
-    if (!_rate.canCall(_walletKey) && fallback != null) {
+    final key = _walletKeyFor(sessionUserId);
+    if (!_rate.canCall(key) && fallback != null) {
       return fallback;
     }
-    _rate.mark(_walletKey);
+    _rate.mark(key);
     return _dedup.run<CreatorWalletPage>(
-      _walletKey,
+      key,
       () => _remote.fetchWalletPage(),
     );
   }
 
   Future<CreatorStripeStatus> fetchStripeStatus({
+    required int sessionUserId,
     CreatorStripeStatus? fallback,
   }) async {
-    if (!_rate.canCall(_stripeKey) && fallback != null) {
+    final key = _stripeKeyFor(sessionUserId);
+    if (!_rate.canCall(key) && fallback != null) {
       return fallback;
     }
-    _rate.mark(_stripeKey);
+    _rate.mark(key);
     return _dedup.run<CreatorStripeStatus>(
-      _stripeKey,
+      key,
       _remote.fetchStripeStatus,
     );
   }
 
   Future<CreatorBusinessProfile> fetchBusinessProfile({
+    required int sessionUserId,
     CreatorBusinessProfile? fallback,
   }) async {
-    if (!_rate.canCall(_businessKey) && fallback != null) {
+    final key = _businessKeyFor(sessionUserId);
+    if (!_rate.canCall(key) && fallback != null) {
       return fallback;
     }
-    _rate.mark(_businessKey);
+    _rate.mark(key);
     return _dedup.run<CreatorBusinessProfile>(
-      _businessKey,
+      key,
       _remote.fetchBusinessProfile,
     );
   }

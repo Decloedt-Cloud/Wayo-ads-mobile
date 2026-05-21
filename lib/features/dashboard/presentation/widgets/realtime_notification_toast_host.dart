@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/push/wayo_push_intent.dart';
 import '../../../../core/realtime/realtime_signal.dart';
 import '../../../../core/ui/root_scaffold_messenger_key.dart';
 import '../../../../i18n/strings.g.dart';
@@ -40,8 +41,15 @@ class _RealtimeNotificationToastHostState
   }
 
   void _onSignal(RealtimeSignal sig) {
-    if (sig.name != 'notification.created') return;
     if (!mounted) return;
+    final role = ref.read(currentWayoAdsAccountRoleProvider);
+    final isWithdrawalEvent = _isWithdrawalRealtimeEventName(sig.name);
+    final isSuperadminWithdrawal =
+        role == WayoAdsAccountRole.superAdmin &&
+        (isWithdrawalEvent || isWithdrawalNotificationPayload(sig.raw));
+    if (!_isIncomingNotificationEvent(sig.name) && !isSuperadminWithdrawal) {
+      return;
+    }
     final t = context.t;
     final parsed = _parsePayload(sig.raw);
     final title = parsed.$1;
@@ -50,6 +58,8 @@ class _RealtimeNotificationToastHostState
     if (messenger == null) return;
     final headline = (title != null && title.trim().isNotEmpty)
         ? title.trim()
+        : isSuperadminWithdrawal
+        ? 'New withdrawal request'
         : t.dashboard.notification_incoming;
     messenger.hideCurrentSnackBar();
     messenger.showSnackBar(
@@ -83,9 +93,14 @@ class _RealtimeNotificationToastHostState
           ],
         ),
         action: SnackBarAction(
-          label: t.dashboard.notification_view,
+          label: isSuperadminWithdrawal
+              ? 'View payouts'
+              : t.dashboard.notification_view,
           onPressed: () {
-            final role = ref.read(currentWayoAdsAccountRoleProvider);
+            if (isSuperadminWithdrawal) {
+              ref.read(goRouterProvider).push(kSuperadminWithdrawalsRoute);
+              return;
+            }
             final r = switch (role) {
               WayoAdsAccountRole.creator => 'creator',
               WayoAdsAccountRole.advertiser => 'advertiser',
@@ -100,6 +115,30 @@ class _RealtimeNotificationToastHostState
 
   @override
   Widget build(BuildContext context) => widget.child;
+}
+
+bool _isWithdrawalRealtimeEventName(String name) {
+  final lower = name.toLowerCase();
+  if (!lower.contains('withdrawal')) return false;
+  return lower.contains('creat') ||
+      lower.contains('updat') ||
+      lower.contains('approv') ||
+      lower.contains('cancel') ||
+      lower.contains('paid') ||
+      lower.contains('valid') ||
+      lower.contains('complet') ||
+      lower.contains('request');
+}
+
+bool _isIncomingNotificationEvent(String name) {
+  final n = name.toLowerCase();
+  if (n == 'notification.created') return true;
+  if (n == 'usernotificationcreated' || n.endsWith('.usernotificationcreated')) {
+    return true;
+  }
+  if (n.contains('notification') && n.contains('created')) return true;
+  if (n.contains('notification') && n.contains('new')) return true;
+  return false;
 }
 
 /// Returns (title, message) if present in broadcast payload.

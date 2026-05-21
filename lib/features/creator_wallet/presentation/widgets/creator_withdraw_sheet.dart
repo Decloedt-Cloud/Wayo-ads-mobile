@@ -7,8 +7,11 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/creator_colors.dart';
 import '../../../../i18n/strings.g.dart';
 import '../../data/creator_wallet_remote_datasource.dart';
+import '../../domain/creator_business_profile.dart';
+import '../../domain/creator_withdrawal_fee_estimate.dart';
 import '../../domain/creator_wallet_models.dart';
 import '../providers/creator_wallet_providers.dart';
+import 'creator_withdraw_fee_breakdown.dart';
 
 /// Modal bottom sheet to request a new payout.
 ///
@@ -19,22 +22,31 @@ Future<bool> showCreatorWithdrawSheet(
   BuildContext context, {
   required CreatorWalletPage page,
   required String moneyLocale,
+  CreatorBusinessProfile? businessProfile,
 }) async {
   final ok = await showModalBottomSheet<bool>(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
-    builder: (ctx) =>
-        _CreatorWithdrawSheet(page: page, moneyLocale: moneyLocale),
+    builder: (ctx) => _CreatorWithdrawSheet(
+      page: page,
+      moneyLocale: moneyLocale,
+      businessProfile: businessProfile,
+    ),
   );
   return ok == true;
 }
 
 class _CreatorWithdrawSheet extends ConsumerStatefulWidget {
-  const _CreatorWithdrawSheet({required this.page, required this.moneyLocale});
+  const _CreatorWithdrawSheet({
+    required this.page,
+    required this.moneyLocale,
+    this.businessProfile,
+  });
 
   final CreatorWalletPage page;
   final String moneyLocale;
+  final CreatorBusinessProfile? businessProfile;
 
   @override
   ConsumerState<_CreatorWithdrawSheet> createState() =>
@@ -50,10 +62,16 @@ class _CreatorWithdrawSheetState extends ConsumerState<_CreatorWithdrawSheet> {
   void initState() {
     super.initState();
     _controller = TextEditingController();
+    _controller.addListener(_onAmountChanged);
+  }
+
+  void _onAmountChanged() {
+    if (mounted) setState(() {});
   }
 
   @override
   void dispose() {
+    _controller.removeListener(_onAmountChanged);
     _controller.dispose();
     super.dispose();
   }
@@ -136,6 +154,17 @@ class _CreatorWithdrawSheetState extends ConsumerState<_CreatorWithdrawSheet> {
     final balance = widget.page.balance;
     final limits = widget.page.limits;
     final insets = MediaQuery.viewInsetsOf(context);
+    final sym = MoneyFormatter.currencySymbol(balance.currency);
+    final preset10 = MoneyFormatter.format(
+      10,
+      currency: balance.currency,
+      locale: widget.moneyLocale,
+    );
+    final preset50 = MoneyFormatter.format(
+      50,
+      currency: balance.currency,
+      locale: widget.moneyLocale,
+    );
     return Padding(
       padding: EdgeInsets.only(bottom: insets.bottom),
       child: Container(
@@ -168,6 +197,13 @@ class _CreatorWithdrawSheetState extends ConsumerState<_CreatorWithdrawSheet> {
             ),
             const SizedBox(height: 6),
             Text(
+              t.creator.wallet.withdraw_sheet_body,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: AppColors.textSecondaryOf(context),
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
               t.creator.wallet.withdraw_sheet_subtitle.replaceAll(
                 '{available}',
                 MoneyFormatter.format(
@@ -176,8 +212,8 @@ class _CreatorWithdrawSheetState extends ConsumerState<_CreatorWithdrawSheet> {
                   locale: widget.moneyLocale,
                 ),
               ),
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppColors.textSecondaryOf(context),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: AppColors.textMutedOf(context),
               ),
             ),
             const SizedBox(height: 16),
@@ -192,7 +228,11 @@ class _CreatorWithdrawSheetState extends ConsumerState<_CreatorWithdrawSheet> {
               textInputAction: TextInputAction.done,
               onSubmitted: (_) => _submit(),
               decoration: InputDecoration(
-                prefixIcon: const Icon(Icons.euro_rounded),
+                prefixText: '$sym ',
+                prefixStyle: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: AppColors.textSecondaryOf(context),
+                      fontWeight: FontWeight.w600,
+                    ),
                 labelText: t.creator.wallet.withdraw_amount_label,
                 hintText: MoneyFormatter.format(
                   limits.minimumWithdrawal,
@@ -203,20 +243,53 @@ class _CreatorWithdrawSheetState extends ConsumerState<_CreatorWithdrawSheet> {
                 errorText: _error,
               ),
             ),
+            const SizedBox(height: 12),
+            Text(
+              t.creator.wallet.withdraw_quick_amounts.toUpperCase(),
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                letterSpacing: 0.8,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textMutedOf(context),
+              ),
+            ),
             const SizedBox(height: 8),
             Row(
               children: [
-                _QuickChip(
-                  label: '50%',
-                  onTap: () => _fill(balance.availableCents ~/ 2),
+                Expanded(
+                  child: _WithdrawPresetChip(
+                    label: preset10,
+                    onTap: () => _fillPresetMajorUnits(10),
+                  ),
                 ),
                 const SizedBox(width: 8),
-                _QuickChip(
-                  label: t.creator.wallet.withdraw_max,
-                  onTap: () => _fill(balance.availableCents),
+                Expanded(
+                  child: _WithdrawPresetChip(
+                    label: preset50,
+                    onTap: () => _fillPresetMajorUnits(50),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _WithdrawPresetChip(
+                    label: t.creator.wallet.withdraw_preset_all,
+                    onTap: () => _fill(balance.availableCents),
+                  ),
                 ),
               ],
             ),
+            if (estimateCreatorWithdrawalFees(
+                  grossCents: _amountCents(),
+                  limits: limits,
+                  profile: widget.businessProfile,
+                )
+                case final estimate?) ...[
+              const SizedBox(height: 14),
+              CreatorWithdrawFeeBreakdown(
+                estimate: estimate,
+                currency: balance.currency,
+                moneyLocale: widget.moneyLocale,
+              ),
+            ],
             const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
@@ -262,6 +335,12 @@ class _CreatorWithdrawSheetState extends ConsumerState<_CreatorWithdrawSheet> {
     );
   }
 
+  /// Fills [majorUnits] (e.g. 10.00 USD) as cents, capped by available balance.
+  void _fillPresetMajorUnits(double majorUnits) {
+    final cents = (majorUnits * 100).round();
+    _fill(cents.clamp(0, widget.page.balance.availableCents));
+  }
+
   void _fill(int cents) {
     if (cents <= 0) return;
     _controller.text = (cents / 100.0).toStringAsFixed(2);
@@ -269,34 +348,48 @@ class _CreatorWithdrawSheetState extends ConsumerState<_CreatorWithdrawSheet> {
   }
 }
 
-class _QuickChip extends StatelessWidget {
-  const _QuickChip({required this.label, required this.onTap});
+/// Dark-style preset pill (quick amount / all).
+class _WithdrawPresetChip extends StatelessWidget {
+  const _WithdrawPresetChip({required this.label, required this.onTap});
 
   final String label;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final accent = CreatorColors.primaryOf(context);
-    return InkWell(
-      onTap: () {
-        HapticFeedback.selectionClick();
-        onTap();
-      },
-      borderRadius: BorderRadius.circular(999),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: accent.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(999),
-          border: Border.all(color: accent.withValues(alpha: 0.3)),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: accent,
-            fontSize: 12,
-            fontWeight: FontWeight.w700,
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark
+        ? AppColors.surfaceElevated.withValues(alpha: 0.85)
+        : AppColors.surfaceElevatedOf(context);
+    final fg = AppColors.textPrimaryOf(context);
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {
+          HapticFeedback.selectionClick();
+          onTap();
+        },
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+          decoration: BoxDecoration(
+            color: bg,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: AppColors.borderOf(context).withValues(alpha: 0.45),
+            ),
+          ),
+          alignment: Alignment.center,
+          child: Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: fg,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
       ),

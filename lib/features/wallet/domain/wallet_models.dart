@@ -28,15 +28,21 @@ final class DepositIntentResult extends Equatable {
     required this.amountCents,
     required this.currency,
     required this.canSimulate,
+    this.walletAmountCents,
+    this.bankFeeCents,
   });
 
   final String intentId;
   final String clientSecret;
+  /// Total charged (wallet + bank fee).
   final int amountCents;
   final String currency;
 
   /// Dev mock PSP: use [simulate] instead of Stripe PaymentSheet.
   final bool canSimulate;
+
+  final int? walletAmountCents;
+  final int? bankFeeCents;
 
   @override
   List<Object?> get props => [
@@ -45,6 +51,8 @@ final class DepositIntentResult extends Equatable {
     amountCents,
     currency,
     canSimulate,
+    walletAmountCents,
+    bankFeeCents,
   ];
 }
 

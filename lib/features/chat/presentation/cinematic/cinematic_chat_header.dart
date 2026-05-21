@@ -8,58 +8,29 @@ import '../../../../i18n/strings.g.dart';
 import 'cinematic_chat_colors.dart';
 import 'cinematic_gradient_ring_painter.dart';
 
-/// Scroll collapse factor 0 = expanded, 1 = collapsed.
-class CinematicHeaderController extends ChangeNotifier {
-  CinematicHeaderController({
-    required this.title,
-    this.statusLine = '',
-    this.typing = false,
-    this.partnerOnline = false,
-  });
-
-  String title;
-  String statusLine;
-  bool typing;
-  bool partnerOnline;
-  void setPresence({
-    String? statusLine,
-    bool? typing,
-    bool? partnerOnline,
-    String? title,
-  }) {
-    var dirty = false;
-    if (title != null && title != this.title) {
-      this.title = title;
-      dirty = true;
-    }
-    if (statusLine != null && statusLine != this.statusLine) {
-      this.statusLine = statusLine;
-      dirty = true;
-    }
-    if (typing != null && typing != this.typing) {
-      this.typing = typing;
-      dirty = true;
-    }
-    if (partnerOnline != null && partnerOnline != this.partnerOnline) {
-      this.partnerOnline = partnerOnline;
-      dirty = true;
-    }
-    if (dirty) notifyListeners();
-  }
-}
-
 /// ━━━ [2] HEADER SIGNATURE ━━━
 /// SliverPersistentHeader : avatar + titre Clash-like (Outfit) + pilule statut.
+///
+/// Presence / titre / frappe passent dans le délégué (immutable) pour que
+/// [shouldRebuild] compare les valeurs : un [ChangeNotifier] seul était ignoré sur
+/// mobile lorsque Flutter réutilisait le [SliverPersistentHeader] sans rejouer
+/// ce delegate alors que les ids online changeaient dans [onlineChatUserIds].
 class CinematicChatHeaderDelegate extends SliverPersistentHeaderDelegate {
   CinematicChatHeaderDelegate({
-    required this.controller,
+    required this.headerTitle,
+    required this.statusLine,
+    required this.typing,
+    required this.partnerOnline,
     required this.onBack,
     required this.titleLetter,
     required this.topSafeInset,
     this.partnerAvatarUrl = '',
   });
 
-  final CinematicHeaderController controller;
+  final String headerTitle;
+  final String statusLine;
+  final bool typing;
+  final bool partnerOnline;
   final VoidCallback onBack;
   final String titleLetter;
 
@@ -87,79 +58,77 @@ class CinematicChatHeaderDelegate extends SliverPersistentHeaderDelegate {
     /// Hauteur exacte imposée par le sliver (obligatoire pour [pinned: true] : sinon
     /// `layoutExtent` > `paintExtent` et le [CustomScrollView] ne layout plus).
     final extent = (maxExtent - shrinkOffset).clamp(minExtent, maxExtent);
-    return AnimatedBuilder(
-      animation: controller,
-      builder: (context, _) {
-        final ct = CinematicChatTheme.of(context);
-        final u = Curves.easeOutExpo.transform(t.clamp(0.0, 1.0));
-        final avatar = 64.0 - (64.0 - 36.0) * u;
-        final titleSize = 22.0 - (22.0 - 14.0) * u;
-        return SizedBox(
-          height: extent,
-          child: Material(
-            color: ct.headerBarTint,
-            child: ClipRect(
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
-                child: Padding(
-                  padding: EdgeInsets.fromLTRB(4, topSafeInset, 12, 6),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      IconButton(
-                        onPressed: onBack,
-                        icon: Icon(
-                          Icons.arrow_back_ios_new_rounded,
-                          color: ct.textPrimary,
-                        ),
-                      ),
-                      _AvatarRing(
-                        letter: titleLetter,
-                        diameter: avatar,
-                        typing: controller.typing,
-                        imageUrl: partnerAvatarUrl,
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              controller.title,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: GoogleFonts.outfit(
-                                fontSize: titleSize,
-                                fontWeight: FontWeight.w700,
-                                color: ct.textPrimary,
-                                height: 1.1,
-                              ),
-                            ),
-                            SizedBox(height: u > 0.92 ? 2 : 4),
-                            _StatusPill(
-                              typing: controller.typing,
-                              online: controller.partnerOnline,
-                              line: controller.statusLine,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+    final ct = CinematicChatTheme.of(context);
+    final u = Curves.easeOutExpo.transform(t.clamp(0.0, 1.0));
+    final avatar = 64.0 - (64.0 - 36.0) * u;
+    final titleSize = 22.0 - (22.0 - 14.0) * u;
+    return SizedBox(
+      height: extent,
+      child: Material(
+        color: ct.headerBarTint,
+        child: ClipRect(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(4, topSafeInset, 12, 6),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  IconButton(
+                    onPressed: onBack,
+                    icon: Icon(
+                      Icons.arrow_back_ios_new_rounded,
+                      color: ct.textPrimary,
+                    ),
                   ),
-                ),
+                  _AvatarRing(
+                    letter: titleLetter,
+                    diameter: avatar,
+                    typing: typing,
+                    imageUrl: partnerAvatarUrl,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          headerTitle,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.outfit(
+                            fontSize: titleSize,
+                            fontWeight: FontWeight.w700,
+                            color: ct.textPrimary,
+                            height: 1.1,
+                          ),
+                        ),
+                        SizedBox(height: u > 0.92 ? 2 : 4),
+                        _StatusPill(
+                          typing: typing,
+                          online: partnerOnline,
+                          line: statusLine,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 
   @override
   bool shouldRebuild(covariant CinematicChatHeaderDelegate oldDelegate) =>
-      oldDelegate.controller != controller ||
+      oldDelegate.headerTitle != headerTitle ||
+      oldDelegate.statusLine != statusLine ||
+      oldDelegate.typing != typing ||
+      oldDelegate.partnerOnline != partnerOnline ||
       oldDelegate.topSafeInset != topSafeInset ||
       oldDelegate.titleLetter != titleLetter ||
       oldDelegate.onBack != onBack ||

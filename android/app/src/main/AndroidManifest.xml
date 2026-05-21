@@ -1,6 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Saving chat images via gal (scoped storage handles API 30+); legacy write for older devices. -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29" />
 
     <application
         android:label="Wayo Ads"
@@ -40,11 +43,38 @@
                     android:host="oauthredirect" />
             </intent-filter>
 
+            <!-- Share image/file into Wayo chat (multipart upload, not URL text). -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="image/*" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="application/pdf" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND_MULTIPLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="image/*" />
+            </intent-filter>
+
         </activity>
 
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+
+        <!-- FCM: use same high-importance channel as [wayo_push_service] / flutter_local_notifications. -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="wayo_push_high" />
 
         <!-- Required by Stripe PaymentSheet / PlatformPay for Google Pay. -->
         <meta-data
@@ -53,6 +83,13 @@
 
         <activity
             android:name="com.linusu.flutter_secure_storage.FlutterSecureStorageActivity"
+            android:exported="false" />
+
+        <!-- Required by flutter_local_notifications for tray actions where [showsUserInterface] is false
+             (MessagingStyle « Répondre » without launching MainActivity). Without this receiver,
+             the broadcast is never delivered: inline reply hangs on the spinner. -->
+        <receiver
+            android:name="com.dexterous.flutterlocalnotifications.ActionBroadcastReceiver"
             android:exported="false" />
 
     </application>

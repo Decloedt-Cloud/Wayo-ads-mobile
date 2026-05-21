@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -5,6 +7,8 @@ import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../../../core/format/money_formatter.dart';
 import '../../../../core/providers/app_providers.dart';
+import '../../../../core/review/app_review_service.dart';
+import '../../../auth/domain/auth_notifier.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/creator_colors.dart';
@@ -14,7 +18,7 @@ import '../../domain/creator_business_profile.dart';
 import '../../domain/creator_wallet_models.dart';
 import '../providers/creator_wallet_providers.dart';
 import '../widgets/business_info_cta.dart';
-import '../widgets/business_info_dialog.dart';
+import 'business_info_screen.dart';
 import '../widgets/creator_stripe_connect_card.dart';
 import '../widgets/creator_wallet_hero.dart';
 import '../widgets/creator_withdraw_sheet.dart';
@@ -110,7 +114,7 @@ class CreatorWalletTabScreen extends ConsumerWidget {
                               .valueOrNull ??
                           profile;
                       if (!context.mounted) return;
-                      await showBusinessInfoDialog(context, initial: p);
+                      await openBusinessInfoScreen(context, initial: p);
                     }
 
                     // Business info acts as a gate before Stripe onboarding.
@@ -212,7 +216,7 @@ class CreatorWalletTabScreen extends ConsumerWidget {
     CreatorBusinessProfile profile,
   ) async {
     HapticFeedback.lightImpact();
-    await showBusinessInfoDialog(context, initial: profile);
+    await openBusinessInfoScreen(context, initial: profile);
     // The dialog itself invalidates the providers on success; nothing else to
     // do here. The Stripe card will appear automatically once
     // `businessInfoComplete == true`.
@@ -325,6 +329,7 @@ class _BalanceBlock extends ConsumerWidget {
                     context,
                     page: page,
                     moneyLocale: moneyLocale,
+                    businessProfile: profile,
                   );
                   if (ok && context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -336,6 +341,16 @@ class _BalanceBlock extends ConsumerWidget {
                         ),
                       ),
                     );
+                    final auth = ref.read(authNotifierProvider).valueOrNull;
+                    if (auth is AuthAuthenticated) {
+                      unawaited(
+                        AppReviewService.instance.onPositiveMoment(
+                          prefs: ref.read(appPrefsProvider),
+                          userId: auth.user.id,
+                          moment: AppReviewPositiveMoment.withdrawalSubmitted,
+                        ),
+                      );
+                    }
                   }
                 }
               : null,

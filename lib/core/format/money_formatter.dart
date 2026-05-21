@@ -2,6 +2,8 @@ import 'package:intl/intl.dart';
 
 /// Currency formatting for dashboard balances.
 abstract final class MoneyFormatter {
+  static String currencySymbol(String currency) => _symbol(currency);
+
   static String format(
     double amount, {
     String currency = 'EUR',

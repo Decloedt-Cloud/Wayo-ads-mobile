@@ -131,12 +131,18 @@ final class AdvertiserWalletRepository {
       if (intent == null) {
         throw const ServerException('Invalid deposit intent');
       }
+      final totalCents =
+          (data['totalAmountCents'] as num?)?.toInt() ??
+          (intent['amountCents'] as num?)?.toInt() ??
+          amountCents;
       return DepositIntentResult(
         intentId: '${intent['intentId'] ?? ''}',
         clientSecret: intent['clientSecret'] as String? ?? '',
-        amountCents: (intent['amountCents'] as num?)?.toInt() ?? amountCents,
+        amountCents: totalCents,
         currency: (intent['currency'] as String?)?.toUpperCase() ?? 'EUR',
         canSimulate: data['canSimulate'] == true,
+        walletAmountCents: (data['walletAmountCents'] as num?)?.toInt(),
+        bankFeeCents: (data['bankFeeCents'] as num?)?.toInt(),
       );
     } on DioException catch (e) {
       throw ServerException(_depositErrorMessage(e), e.response?.statusCode);

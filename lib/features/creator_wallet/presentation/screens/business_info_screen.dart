@@ -24,31 +24,28 @@ const _businessProfileApiFieldKeys = <String>{
   'currency',
 };
 
-/// Opens the Business Info modal as a bottom sheet so the wallet page stays
-/// visible behind it.
+/// Opens business info on a dedicated full-screen page (keyboard-safe layout).
 ///
-/// Returns `true` when the user successfully saved a complete profile (and the
-/// wallet screen should flip its CTA to "Connect your bank account").
-Future<bool> showBusinessInfoDialog(
+/// Returns `true` when the user successfully saved a complete profile.
+Future<bool> openBusinessInfoScreen(
   BuildContext context, {
   required CreatorBusinessProfile initial,
   bool useGlobalBilling = false,
 }) async {
-  final result = await showModalBottomSheet<bool>(
-    context: context,
-    isScrollControlled: true,
-    backgroundColor: Colors.transparent,
-    useSafeArea: true,
-    builder: (ctx) => _BusinessInfoDialog(
-      initial: initial,
-      useGlobalBilling: useGlobalBilling,
+  final result = await Navigator.of(context, rootNavigator: true).push<bool>(
+    MaterialPageRoute<bool>(
+      builder: (_) => BusinessInfoScreen(
+        initial: initial,
+        useGlobalBilling: useGlobalBilling,
+      ),
     ),
   );
   return result == true;
 }
 
-class _BusinessInfoDialog extends ConsumerStatefulWidget {
-  const _BusinessInfoDialog({
+class BusinessInfoScreen extends ConsumerStatefulWidget {
+  const BusinessInfoScreen({
+    super.key,
     required this.initial,
     this.useGlobalBilling = false,
   });
@@ -57,11 +54,10 @@ class _BusinessInfoDialog extends ConsumerStatefulWidget {
   final bool useGlobalBilling;
 
   @override
-  ConsumerState<_BusinessInfoDialog> createState() =>
-      _BusinessInfoDialogState();
+  ConsumerState<BusinessInfoScreen> createState() => _BusinessInfoScreenState();
 }
 
-class _BusinessInfoDialogState extends ConsumerState<_BusinessInfoDialog> {
+class _BusinessInfoScreenState extends ConsumerState<BusinessInfoScreen> {
   final _formKey = GlobalKey<FormState>();
 
   late CreatorBusinessType _businessType;
@@ -221,197 +217,238 @@ class _BusinessInfoDialogState extends ConsumerState<_BusinessInfoDialog> {
   @override
   Widget build(BuildContext context) {
     final t = context.t;
-    final insets = MediaQuery.viewInsetsOf(context);
-    return DraggableScrollableSheet(
-      initialChildSize: 0.9,
-      minChildSize: 0.55,
-      maxChildSize: 0.95,
-      expand: false,
-      builder: (ctx, scrollController) {
-        return Container(
-          padding: EdgeInsets.only(bottom: insets.bottom),
-          decoration: BoxDecoration(
-            color: Theme.of(context).scaffoldBackgroundColor,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-            border: Border.all(color: AppColors.borderOf(context)),
+    final mq = MediaQuery.of(context);
+
+    final formBody = Form(
+      key: _formKey,
+      autovalidateMode: AutovalidateMode.onUserInteraction,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            t.creator.business.dialog_subtitle,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: AppColors.textSecondaryOf(context),
+            ),
           ),
-          child: Column(
-            children: [
-              _DragHandle(),
-              _DialogHeader(
-                title: t.creator.business.dialog_title,
-                subtitle: t.creator.business.dialog_subtitle,
-                onClose: () => Navigator.of(context).pop(false),
-              ),
-              Expanded(
-                child: SingleChildScrollView(
-                  controller: scrollController,
-                  padding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
-                  child: Form(
-                    key: _formKey,
-                    autovalidateMode: AutovalidateMode.onUserInteraction,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        _SectionLabel(label: t.creator.business.section_type),
-                        const SizedBox(height: 8),
-                        _BusinessTypeSelector(
-                          value: _businessType,
-                          serverError: _serverFieldErrors['businessType'],
-                          onChanged: (v) {
-                            setState(() {
-                              _businessType = v;
-                              _serverFieldErrors.remove('businessType');
-                            });
-                            WidgetsBinding.instance.addPostFrameCallback((_) {
-                              if (mounted) _formKey.currentState?.validate();
-                            });
-                          },
-                        ),
-                        const SizedBox(height: 20),
-                        if (_businessType ==
-                            CreatorBusinessType.registeredCompany) ...[
+          const SizedBox(height: 20),
+          _SectionLabel(
+            label: t.creator.business.section_type,
+          ),
+                          const SizedBox(height: 8),
+                          _BusinessTypeSelector(
+                            value: _businessType,
+                            serverError:
+                                _serverFieldErrors['businessType'],
+                            onChanged: (v) {
+                              setState(() {
+                                _businessType = v;
+                                _serverFieldErrors
+                                    .remove('businessType');
+                              });
+                              WidgetsBinding.instance
+                                  .addPostFrameCallback((_) {
+                                if (mounted) {
+                                  _formKey.currentState?.validate();
+                                }
+                              });
+                            },
+                          ),
+                          const SizedBox(height: 20),
+                          if (_businessType ==
+                              CreatorBusinessType
+                                  .registeredCompany) ...[
+                            _SectionLabel(
+                              label: t.creator.business.section_company,
+                            ),
+                            const SizedBox(height: 8),
+                            _RequiredField(
+                              controller: _companyName,
+                              label: t.creator.business.company_name,
+                              validatorKey:
+                                  t.creator.business.error_required,
+                              serverError:
+                                  _serverFieldErrors['companyName'],
+                              onClearServerError: () =>
+                                  _onFieldEdited('companyName'),
+                            ),
+                            const SizedBox(height: 12),
+                            _RequiredField(
+                              controller: _vatNumber,
+                              label: t.creator.business.vat_number,
+                              validatorKey:
+                                  t.creator.business.error_required,
+                              capitalize: true,
+                              serverError:
+                                  _serverFieldErrors['vatNumber'],
+                              onClearServerError: () =>
+                                  _onFieldEdited('vatNumber'),
+                            ),
+                            const SizedBox(height: 20),
+                          ],
                           _SectionLabel(
-                            label: t.creator.business.section_company,
+                            label: t.creator.business.section_address,
                           ),
                           const SizedBox(height: 8),
                           _RequiredField(
-                            controller: _companyName,
-                            label: t.creator.business.company_name,
-                            validatorKey: t.creator.business.error_required,
-                            serverError: _serverFieldErrors['companyName'],
+                            controller: _addressLine1,
+                            label: t.creator.business.address_line1,
+                            validatorKey:
+                                t.creator.business.error_required,
+                            serverError:
+                                _serverFieldErrors['addressLine1'],
                             onClearServerError: () =>
-                                _onFieldEdited('companyName'),
+                                _onFieldEdited('addressLine1'),
                           ),
                           const SizedBox(height: 12),
-                          _RequiredField(
-                            controller: _vatNumber,
-                            label: t.creator.business.vat_number,
-                            validatorKey: t.creator.business.error_required,
-                            capitalize: true,
-                            serverError: _serverFieldErrors['vatNumber'],
+                          _OptionalField(
+                            controller: _addressLine2,
+                            label:
+                                t.creator.business.address_line2,
+                            serverError:
+                                _serverFieldErrors['addressLine2'],
                             onClearServerError: () =>
-                                _onFieldEdited('vatNumber'),
+                                _onFieldEdited('addressLine2'),
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _RequiredField(
+                                  controller: _city,
+                                  label: t.creator.business.city,
+                                  validatorKey:
+                                      t.creator.business.error_required,
+                                  serverError:
+                                      _serverFieldErrors['city'],
+                                  onClearServerError: () =>
+                                      _onFieldEdited('city'),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: _RequiredField(
+                                  controller: _postalCode,
+                                  label:
+                                      t.creator.business.postal_code,
+                                  validatorKey:
+                                      t.creator.business.error_required,
+                                  serverError:
+                                      _serverFieldErrors[
+                                          'postalCode'],
+                                  onClearServerError: () =>
+                                      _onFieldEdited('postalCode'),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          _OptionalField(
+                            controller: _state,
+                            label:
+                                t.creator.business.state_region,
+                            serverError: _serverFieldErrors['state'],
+                            onClearServerError: () =>
+                                _onFieldEdited('state'),
                           ),
                           const SizedBox(height: 20),
-                        ],
-                        _SectionLabel(
-                          label: t.creator.business.section_address,
-                        ),
-                        const SizedBox(height: 8),
-                        _RequiredField(
-                          controller: _addressLine1,
-                          label: t.creator.business.address_line1,
-                          validatorKey: t.creator.business.error_required,
-                          serverError: _serverFieldErrors['addressLine1'],
-                          onClearServerError: () =>
-                              _onFieldEdited('addressLine1'),
-                        ),
-                        const SizedBox(height: 12),
-                        _OptionalField(
-                          controller: _addressLine2,
-                          label: t.creator.business.address_line2,
-                          serverError: _serverFieldErrors['addressLine2'],
-                          onClearServerError: () =>
-                              _onFieldEdited('addressLine2'),
-                        ),
-                        const SizedBox(height: 12),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _RequiredField(
-                                controller: _city,
-                                label: t.creator.business.city,
-                                validatorKey: t.creator.business.error_required,
-                                serverError: _serverFieldErrors['city'],
-                                onClearServerError: () =>
-                                    _onFieldEdited('city'),
-                              ),
+                          _SectionLabel(
+                            label:
+                                t.creator.business.section_stripe,
+                          ),
+                          const SizedBox(height: 8),
+                          _ModernConnectSelect(
+                            key: ValueKey(
+                              'country_${_countryCode ?? '∅'}',
                             ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: _RequiredField(
-                                controller: _postalCode,
-                                label: t.creator.business.postal_code,
-                                validatorKey: t.creator.business.error_required,
-                                serverError: _serverFieldErrors['postalCode'],
-                                onClearServerError: () =>
-                                    _onFieldEdited('postalCode'),
-                              ),
+                            label: t.creator.business.country,
+                            errorRequired:
+                                t.creator.business.error_required,
+                            items:
+                                StripeConnectCatalog.countries,
+                            value: _countryCode,
+                            showCountryFlag: true,
+                            serverError:
+                                _serverFieldErrors['countryCode'],
+                            onChanged: (v) {
+                              setState(() {
+                                _countryCode = v;
+                                _serverFieldErrors
+                                    .remove('countryCode');
+                              });
+                              WidgetsBinding.instance
+                                  .addPostFrameCallback((_) {
+                                if (mounted) {
+                                  _formKey.currentState
+                                      ?.validate();
+                                }
+                              });
+                            },
+                          ),
+                          const SizedBox(height: 12),
+                          _ModernConnectSelect(
+                            key: ValueKey(
+                              'currency_${_currency ?? '∅'}',
                             ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        _OptionalField(
-                          controller: _state,
-                          label: t.creator.business.state_region,
-                          serverError: _serverFieldErrors['state'],
-                          onClearServerError: () => _onFieldEdited('state'),
-                        ),
-                        const SizedBox(height: 20),
-                        _SectionLabel(label: t.creator.business.section_stripe),
-                        const SizedBox(height: 8),
-                        _ModernConnectSelect(
-                          key: ValueKey('country_${_countryCode ?? '∅'}'),
-                          label: t.creator.business.country,
-                          errorRequired: t.creator.business.error_required,
-                          items: StripeConnectCatalog.countries,
-                          value: _countryCode,
-                          showCountryFlag: true,
-                          serverError: _serverFieldErrors['countryCode'],
-                          onChanged: (v) {
-                            setState(() {
-                              _countryCode = v;
-                              _serverFieldErrors.remove('countryCode');
-                            });
-                            WidgetsBinding.instance.addPostFrameCallback((_) {
-                              if (mounted) {
-                                _formKey.currentState?.validate();
-                              }
-                            });
-                          },
-                        ),
-                        const SizedBox(height: 12),
-                        _ModernConnectSelect(
-                          key: ValueKey('currency_${_currency ?? '∅'}'),
-                          label: t.creator.business.currency,
-                          errorRequired: t.creator.business.error_required,
-                          items: StripeConnectCatalog.currencies,
-                          value: _currency,
-                          showCountryFlag: false,
-                          serverError: _serverFieldErrors['currency'],
-                          onChanged: (v) {
-                            setState(() {
-                              _currency = v;
-                              _serverFieldErrors.remove('currency');
-                            });
-                            WidgetsBinding.instance.addPostFrameCallback((_) {
-                              if (mounted) {
-                                _formKey.currentState?.validate();
-                              }
-                            });
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              _StickyFooter(
-                apiError: _apiError,
-                submitting: _submitting,
-                onSubmit: _submit,
-              ),
-            ],
-          ),
-        );
-      },
+                            label: t.creator.business.currency,
+                            errorRequired:
+                                t.creator.business.error_required,
+                            items:
+                                StripeConnectCatalog.currencies,
+                            value: _currency,
+                            showCountryFlag: false,
+                            serverError:
+                                _serverFieldErrors['currency'],
+                            onChanged: (v) {
+                              setState(() {
+                                _currency = v;
+                                _serverFieldErrors
+                                    .remove('currency');
+                              });
+                              WidgetsBinding.instance
+                                  .addPostFrameCallback((_) {
+                                if (mounted) {
+                                  _formKey.currentState
+                                      ?.validate();
+                                }
+                              });
+                            },
+                          ),
+                          const SizedBox(height: 24),
+                          _FormFooter(
+                            apiError: _apiError,
+                            submitting: _submitting,
+                            onSubmit: _submit,
+                          ),
+        ],
+      ),
+    );
+
+    final bottomSafe = mq.padding.bottom;
+
+    return Scaffold(
+      resizeToAvoidBottomInset: true,
+      appBar: AppBar(
+        title: Text(t.creator.business.dialog_title),
+        leading: IconButton(
+          icon: const Icon(Icons.close_rounded),
+          onPressed: () => Navigator.of(context).pop(false),
+        ),
+      ),
+      body: SingleChildScrollView(
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+        physics: const BouncingScrollPhysics(
+          parent: AlwaysScrollableScrollPhysics(),
+        ),
+        padding: EdgeInsets.fromLTRB(20, 8, 20, 16 + bottomSafe),
+        child: formBody,
+      ),
     );
   }
 }
 
-class _StickyFooter extends StatelessWidget {
-  const _StickyFooter({
+class _FormFooter extends StatelessWidget {
+  const _FormFooter({
     required this.apiError,
     required this.submitting,
     required this.onSubmit,
@@ -424,162 +461,87 @@ class _StickyFooter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = context.t;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: Theme.of(context).scaffoldBackgroundColor,
-        border: Border(top: BorderSide(color: AppColors.borderOf(context))),
-      ),
-      child: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (apiError != null) ...[
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: AppColors.error.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: AppColors.error.withValues(alpha: 0.35),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.error_outline_rounded,
-                        color: AppColors.error,
-                        size: 18,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          apiError!,
-                          style: const TextStyle(
-                            color: AppColors.error,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 10),
-              ],
-              SizedBox(
-                width: double.infinity,
-                height: 52,
-                child: ElevatedButton.icon(
-                  onPressed: submitting ? null : onSubmit,
-                  icon: submitting
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2.2,
-                            valueColor: AlwaysStoppedAnimation(Colors.white),
-                          ),
-                        )
-                      : const Icon(Icons.check_rounded, size: 18),
-                  label: Text(
-                    submitting
-                        ? t.creator.business.submitting
-                        : t.creator.business.save_and_continue,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0.2,
-                    ),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: CreatorColors.primaryOf(context),
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    elevation: 0,
-                  ),
-                ),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (apiError != null) ...[
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.error.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: AppColors.error.withValues(alpha: 0.35),
               ),
-              const SizedBox(height: 6),
-              Text(
-                t.creator.business.footer_info,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppColors.textMutedOf(context),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _DragHandle extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 40,
-      height: 4,
-      margin: const EdgeInsets.symmetric(vertical: 10),
-      decoration: BoxDecoration(
-        color: AppColors.textMutedOf(context).withValues(alpha: 0.4),
-        borderRadius: BorderRadius.circular(2),
-      ),
-    );
-  }
-}
-
-class _DialogHeader extends StatelessWidget {
-  const _DialogHeader({
-    required this.title,
-    required this.subtitle,
-    required this.onClose,
-  });
-
-  final String title;
-  final String subtitle;
-  final VoidCallback onClose;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 2, 12, 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            ),
+            child: Row(
               children: [
-                Text(
-                  title,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+                const Icon(
+                  Icons.error_outline_rounded,
+                  color: AppColors.error,
+                  size: 18,
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  subtitle,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.textSecondaryOf(context),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    apiError!,
+                    style: const TextStyle(
+                      color: AppColors.error,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ],
             ),
           ),
-          IconButton(
-            onPressed: onClose,
-            icon: const Icon(Icons.close_rounded),
+          const SizedBox(height: 10),
+        ],
+        SizedBox(
+          width: double.infinity,
+          height: 52,
+          child: ElevatedButton.icon(
+            onPressed: submitting ? null : onSubmit,
+            icon: submitting
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.2,
+                      valueColor: AlwaysStoppedAnimation(Colors.white),
+                    ),
+                  )
+                : const Icon(Icons.check_rounded, size: 18),
+            label: Text(
+              submitting
+                  ? t.creator.business.submitting
+                  : t.creator.business.save_and_continue,
+              style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.2,
+              ),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: CreatorColors.primaryOf(context),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+              elevation: 0,
+            ),
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          t.creator.business.footer_info,
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
             color: AppColors.textMutedOf(context),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -616,129 +578,44 @@ class _BusinessTypeSelector extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = context.t;
     final err = serverError?.trim();
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _typeTile(
-          context,
-          type: CreatorBusinessType.personal,
-          icon: Icons.person_outline_rounded,
-          title: t.creator.business.type_personal_title,
-          subtitle: t.creator.business.type_personal_subtitle,
+    return DropdownButtonFormField<CreatorBusinessType>(
+      initialValue: value,
+      isExpanded: true,
+      decoration: InputDecoration(
+        filled: true,
+        fillColor: AppColors.surfaceElevatedOf(context),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: AppColors.borderOf(context)),
         ),
-        const SizedBox(height: 8),
-        _typeTile(
-          context,
-          type: CreatorBusinessType.soleProprietor,
-          icon: Icons.business_center_outlined,
-          title: t.creator.business.type_sole_title,
-          subtitle: t.creator.business.type_sole_subtitle,
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: AppColors.borderOf(context)),
         ),
-        const SizedBox(height: 8),
-        _typeTile(
-          context,
-          type: CreatorBusinessType.registeredCompany,
-          icon: Icons.apartment_rounded,
-          title: t.creator.business.type_company_title,
-          subtitle: t.creator.business.type_company_subtitle,
-        ),
-        if (err != null && err.isNotEmpty) ...[
-          const SizedBox(height: 8),
-          Text(
-            err,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.error,
-                  fontWeight: FontWeight.w600,
-                ),
-          ),
-        ],
-      ],
-    );
-  }
-
-  Widget _typeTile(
-    BuildContext context, {
-    required CreatorBusinessType type,
-    required IconData icon,
-    required String title,
-    required String subtitle,
-  }) {
-    final selected = value == type;
-    final accent = CreatorColors.primaryOf(context);
-    return Material(
-      color: selected
-          ? accent.withValues(alpha: 0.1)
-          : AppColors.surfaceElevatedOf(context),
-      borderRadius: BorderRadius.circular(14),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(14),
-        onTap: () {
-          HapticFeedback.selectionClick();
-          onChanged(type);
-        },
-        child: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: selected
-                  ? accent.withValues(alpha: 0.5)
-                  : AppColors.borderOf(context),
-              width: selected ? 1.5 : 1,
-            ),
-          ),
-          child: Row(
-            children: [
-              Icon(
-                icon,
-                size: 22,
-                color: selected ? accent : AppColors.textMutedOf(context),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimaryOf(context),
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      subtitle,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.textSecondaryOf(context),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                width: 22,
-                height: 22,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: selected ? accent : AppColors.borderOf(context),
-                    width: 2,
-                  ),
-                  color: selected ? accent : Colors.transparent,
-                ),
-                child: selected
-                    ? const Icon(
-                        Icons.check_rounded,
-                        size: 14,
-                        color: Colors.white,
-                      )
-                    : null,
-              ),
-            ],
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(
+            color: CreatorColors.primaryOf(context),
+            width: 1.5,
           ),
         ),
+        errorText: err != null && err.isNotEmpty ? err : null,
       ),
+      items: [
+        DropdownMenuItem(
+          value: CreatorBusinessType.personal,
+          child: Text(t.creator.business.type_personal_title),
+        ),
+        DropdownMenuItem(
+          value: CreatorBusinessType.registeredCompany,
+          child: Text(t.creator.business.type_company_title),
+        ),
+      ],
+      onChanged: (v) {
+        if (v == null) return;
+        HapticFeedback.selectionClick();
+        onChanged(v);
+      },
     );
   }
 }
@@ -762,11 +639,13 @@ class _RequiredField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
     return TextFormField(
       controller: controller,
       textCapitalization: capitalize
           ? TextCapitalization.characters
           : TextCapitalization.words,
+      scrollPadding: EdgeInsets.only(bottom: bottomInset + 24),
       decoration: InputDecoration(
         labelText: label,
         border: const OutlineInputBorder(),
@@ -796,9 +675,11 @@ class _OptionalField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
     return TextFormField(
       controller: controller,
       textCapitalization: TextCapitalization.words,
+      scrollPadding: EdgeInsets.only(bottom: bottomInset + 24),
       decoration: InputDecoration(
         labelText: label,
         border: const OutlineInputBorder(),

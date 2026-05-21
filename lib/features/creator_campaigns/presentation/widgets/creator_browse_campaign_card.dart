@@ -1,171 +1,180 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/format/money_formatter.dart';
 import '../../../../core/network/wayo_ads_public_url.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_text_styles.dart';
-import '../../../../core/theme/creator_colors.dart';
 import '../../../../i18n/strings.g.dart';
 import '../../../creator_dashboard/domain/creator_application.dart';
+import '../../../dashboard/presentation/theme/campaign_detail_premium_palette.dart';
 import '../../domain/creator_browse_campaign.dart';
+import '../theme/creator_campaigns_chrome.dart';
 
-/// Tappable card rendering a single browseable campaign.
-///
-/// If [applicationStatus] is set (because the creator already applied), a
-/// small status pill is rendered **under the thumbnail** — never overlapping
-/// the title.
-class CreatorBrowseCampaignCard extends StatelessWidget {
+/// Premium list card — browse campaigns (creator).
+class CreatorBrowseCampaignCard extends StatefulWidget {
   const CreatorBrowseCampaignCard({
     super.key,
     required this.campaign,
     required this.moneyLocale,
     required this.onTap,
+    required this.listIndex,
     this.applicationStatus,
   });
 
   final CreatorBrowseCampaign campaign;
   final String moneyLocale;
   final VoidCallback onTap;
+  final int listIndex;
   final CreatorApplicationStatus? applicationStatus;
+
+  @override
+  State<CreatorBrowseCampaignCard> createState() =>
+      _CreatorBrowseCampaignCardState();
+}
+
+class _CreatorBrowseCampaignCardState extends State<CreatorBrowseCampaignCard> {
+  bool _pressed = false;
 
   @override
   Widget build(BuildContext context) {
     final t = context.t;
-    final c = campaign;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final c = widget.campaign;
     final payoutPerView = c.cpmCents / 1000.0;
     final payoutLabel = c.type == CreatorCampaignType.link
         ? t.creator.campaigns.reward_per_click(
             amount: MoneyFormatter.format(
               c.cpcCents / 100.0,
               currency: c.currency,
-              locale: moneyLocale,
+              locale: widget.moneyLocale,
             ),
           )
         : t.creator.campaigns.reward_per_view(
             amount: MoneyFormatter.format(
               payoutPerView / 100.0,
               currency: c.currency,
-              locale: moneyLocale,
+              locale: widget.moneyLocale,
             ),
           );
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () {
-          HapticFeedback.lightImpact();
-          onTap();
-        },
-        borderRadius: BorderRadius.circular(20),
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            color: (isDark ? Colors.white : Colors.black).withValues(
-              alpha: 0.05,
-            ),
-            border: Border.all(color: AppColors.borderOf(context)),
-          ),
-          padding: const EdgeInsets.all(14),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.center,
+    Widget card = Listener(
+      onPointerDown: (_) => setState(() => _pressed = true),
+      onPointerUp: (_) => setState(() => _pressed = false),
+      onPointerCancel: (_) => setState(() => _pressed = false),
+      child: AnimatedScale(
+        scale: _pressed ? 0.98 : 1,
+        duration: const Duration(milliseconds: 110),
+        curve: Curves.easeOutCubic,
+        child: Material(
+          color: CreatorCampaignsChrome.card(context),
+          borderRadius: BorderRadius.circular(16),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: () {
+              HapticFeedback.lightImpact();
+              widget.onTap();
+            },
+            splashColor:
+                CreatorCampaignsChrome.amber(context).withValues(alpha: 0.12),
+            highlightColor:
+                CreatorCampaignsChrome.amber(context).withValues(alpha: 0.06),
+            borderRadius: BorderRadius.circular(16),
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _Thumb(
-                    url: normalizeWayoAdsMediaUrl(c.coverUrl),
-                    brandLogoUrl: resolveWayoAdsPublicUrl(c.brandLogoUrl),
-                    type: c.type,
-                  ),
-                  if (applicationStatus != null) ...[
-                    const SizedBox(height: 6),
-                    _ApplicationStatusPill(status: applicationStatus!),
-                  ],
-                ],
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                      Text(
-                        c.title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        softWrap: false,
-                        style: AppTextStyles.labelLarge(
-                          context,
-                        ).copyWith(fontSize: 16, height: 1.25),
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      _ListThumbGradient(
+                        url: normalizeWayoAdsMediaUrl(c.coverUrl),
+                        brandLogoUrl: resolveWayoAdsPublicUrl(c.brandLogoUrl),
+                        type: c.type,
                       ),
-                      if (c.advertiserName != null &&
-                          c.advertiserName!.isNotEmpty) ...[
-                        const SizedBox(height: 2),
-                        Text(
-                          c.advertiserName!,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTextStyles.caption(
-                            context,
-                          ).copyWith(color: AppColors.textSecondaryOf(context)),
-                        ),
+                      if (widget.applicationStatus != null) ...[
+                        const SizedBox(height: 6),
+                        _AppStatusMini(status: widget.applicationStatus!),
                       ],
-                      const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 6,
-                        runSpacing: 4,
-                        children: [
-                          _TypePill(type: c.type),
-                          _RewardPill(label: payoutLabel),
-                        ],
-                      ),
                     ],
                   ),
-                ),
-                const SizedBox(width: 6),
-              Icon(
-                Icons.chevron_right_rounded,
-                color: AppColors.textSecondaryOf(context),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          c.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: CreatorCampaignsChrome.cardTitle(context),
+                        ),
+                        if (c.advertiserName != null &&
+                            c.advertiserName!.isNotEmpty) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            c.advertiserName!,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: CreatorCampaignsChrome.bodyDm(context),
+                          ),
+                        ],
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 6,
+                          runSpacing: 6,
+                          children: [
+                            _TypeChip(type: c.type, t: t),
+                            _RewardChip(label: payoutLabel),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),
     );
+
+    return card
+        .animate(key: ValueKey(c.id))
+        .fadeIn(
+          duration: 300.ms,
+          delay: Duration(milliseconds: 70 * widget.listIndex),
+          curve: Curves.easeOutCubic,
+        )
+        .slideX(
+          duration: 300.ms,
+          delay: Duration(milliseconds: 70 * widget.listIndex),
+          begin: 0.05,
+          curve: Curves.easeOutCubic,
+        );
   }
 }
 
-class _Thumb extends StatelessWidget {
-  const _Thumb({required this.url, required this.type, this.brandLogoUrl});
+class _ListThumbGradient extends StatelessWidget {
+  const _ListThumbGradient({
+    required this.url,
+    required this.type,
+    this.brandLogoUrl,
+  });
 
-  /// Cover image URL ([normalizeWayoAdsMediaUrl]); may be null.
   final String? url;
-
+  final String? brandLogoUrl;
   final CreatorCampaignType type;
 
-  /// Resolved absolute logo URL ([resolveWayoAdsPublicUrl]); may be null.
-  final String? brandLogoUrl;
+  static const double _sz = 72;
 
-  Widget _typeIconPlaceholder(BuildContext context) {
-    return Container(
-      width: 72,
-      height: 72,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(14),
-        gradient: LinearGradient(
-          colors: [
-            CreatorColors.primaryOf(context).withValues(alpha: 0.18),
-            CreatorColors.primaryOf(context).withValues(alpha: 0.06),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-      ),
-      alignment: Alignment.center,
+  Widget _fallback(BuildContext context) {
+    return ColoredBox(
+      color: AppColors.surfaceElevatedOf(context),
       child: Icon(
         switch (type) {
           CreatorCampaignType.link => Icons.link_rounded,
@@ -173,178 +182,210 @@ class _Thumb extends StatelessWidget {
           CreatorCampaignType.shorts => Icons.movie_filter_rounded,
           CreatorCampaignType.unknown => Icons.campaign_outlined,
         },
-        color: CreatorColors.primaryOf(context),
-        size: 30,
-      ),
-    );
-  }
-
-  Widget _coverThumbnail(BuildContext context, Widget fallback) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(14),
-      child: CachedNetworkImage(
-        imageUrl: url!,
-        width: 72,
-        height: 72,
-        fit: BoxFit.cover,
-        memCacheWidth: 144,
-        memCacheHeight: 144,
-        placeholder: (_, _) => fallback,
-        errorWidget: (_, _, _) => fallback,
+        color: CreatorCampaignsChrome.amber(context).withValues(alpha: 0.9),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final placeholder = _typeIconPlaceholder(context);
-    final logo = brandLogoUrl;
+    final placeholder = _fallback(context);
 
-    /// Advertiser-uploaded logo replaces the generic link/video/shorts icon thumbnail.
-    if (logo != null && logo.isNotEmpty) {
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(14),
-        child: Container(
-          width: 72,
-          height: 72,
-          color: Theme.of(context).cardColor,
-          alignment: Alignment.center,
-          padding: const EdgeInsets.all(8),
-          child: CachedNetworkImage(
-            imageUrl: logo,
-            fit: BoxFit.contain,
-            memCacheWidth: 144,
-            memCacheHeight: 144,
-            placeholder: (_, _) => placeholder,
-            errorWidget: (_, _, _) => url != null && url!.trim().isNotEmpty
-                ? _coverThumbnail(context, placeholder)
-                : placeholder,
+    Widget withGradient(Widget child) => ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: SizedBox(
+            width: _sz,
+            height: _sz,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                child,
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  height: _sz * 0.48,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.transparent,
+                          Colors.black.withValues(alpha: 0.58),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
+        );
+
+    final logo = brandLogoUrl;
+    if (logo != null && logo.isNotEmpty) {
+      return withGradient(
+        CachedNetworkImage(
+          imageUrl: logo,
+          fit: BoxFit.contain,
+          memCacheWidth: 160,
+          memCacheHeight: 160,
+          placeholder: (context, _) => placeholder,
+          errorWidget: (context, errorUrl, _) {
+            final fallbackCover = url;
+            return fallbackCover != null && fallbackCover.trim().isNotEmpty
+                ? CachedNetworkImage(
+                    imageUrl: fallbackCover,
+                    fit: BoxFit.cover,
+                    memCacheWidth: 160,
+                    memCacheHeight: 160,
+                    placeholder: (context, _) => placeholder,
+                    errorWidget: (context, w, stack) => placeholder,
+                  )
+                : placeholder;
+          },
         ),
       );
     }
 
     if (url != null && url!.trim().isNotEmpty) {
-      return _coverThumbnail(context, placeholder);
+      return withGradient(
+        CachedNetworkImage(
+          imageUrl: url!,
+          fit: BoxFit.cover,
+          memCacheWidth: 160,
+          memCacheHeight: 160,
+          placeholder: (context, _) => placeholder,
+          errorWidget: (context, w, _) => placeholder,
+        ),
+      );
     }
-    return placeholder;
+
+    return withGradient(placeholder);
   }
 }
 
-class _TypePill extends StatelessWidget {
-  const _TypePill({required this.type});
+class _TypeChip extends StatelessWidget {
+  const _TypeChip({required this.type, required this.t});
 
   final CreatorCampaignType type;
+  final Translations t;
 
   @override
   Widget build(BuildContext context) {
-    final t = context.t;
     final label = switch (type) {
       CreatorCampaignType.link => t.creator.campaigns.type_link,
       CreatorCampaignType.video => t.creator.campaigns.type_video,
       CreatorCampaignType.shorts => t.creator.campaigns.type_shorts,
       CreatorCampaignType.unknown => '—',
     };
-    return _Pill(label: label, color: CreatorColors.primaryOf(context));
-  }
-}
-
-class _RewardPill extends StatelessWidget {
-  const _RewardPill({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return _Pill(label: label, color: const Color(0xFF10B981));
-  }
-}
-
-class _Pill extends StatelessWidget {
-  const _Pill({required this.label, required this.color});
-
-  final String label;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
+        color: CreatorCampaignsChrome.typeBg(context),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: color.withValues(alpha: 0.4)),
+        border: Border.all(color: CreatorCampaignsChrome.amber(context)),
       ),
       child: Text(
         label,
-        style: TextStyle(
-          color: color,
-          fontWeight: FontWeight.w700,
+        style: GoogleFonts.dmSans(
+          color: CreatorCampaignsChrome.amber(context),
           fontSize: 11,
-          letterSpacing: 0.2,
+          fontWeight: FontWeight.w800,
         ),
       ),
     );
   }
 }
 
-/// Compact status pill rendered under the thumbnail when the creator has
-/// already applied to this campaign.
-class _ApplicationStatusPill extends StatelessWidget {
-  const _ApplicationStatusPill({required this.status});
+class _RewardChip extends StatelessWidget {
+  const _RewardChip({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: CreatorCampaignsChrome.greenBg(context),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        style: GoogleFonts.dmSans(
+          color: CreatorCampaignsChrome.green,
+          fontSize: 11,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+    );
+  }
+}
+
+class _AppStatusMini extends StatelessWidget {
+  const _AppStatusMini({required this.status});
 
   final CreatorApplicationStatus status;
 
   @override
   Widget build(BuildContext context) {
     final t = context.t;
-    final (label, color) = switch (status) {
-      CreatorApplicationStatus.approved => (
+    final label = switch (status) {
+      CreatorApplicationStatus.approved =>
         t.creator.applications.status_approved,
-        const Color(0xFF10B981),
-      ),
-      CreatorApplicationStatus.pending => (
-        t.creator.applications.status_pending,
-        const Color(0xFFF59E0B),
-      ),
-      CreatorApplicationStatus.rejected => (
+      CreatorApplicationStatus.pending => t.creator.applications.status_pending,
+      CreatorApplicationStatus.rejected =>
         t.creator.applications.status_rejected,
-        const Color(0xFFEF4444),
-      ),
-      CreatorApplicationStatus.withdrawn => (
+      CreatorApplicationStatus.withdrawn =>
         t.creator.applications.status_withdrawn,
-        AppColors.textMutedOf(context),
-      ),
-      CreatorApplicationStatus.unknown => (
+      CreatorApplicationStatus.unknown =>
         t.creator.applications.status_unknown,
-        AppColors.textMutedOf(context),
-      ),
+    };
+    final bg = switch (status) {
+      CreatorApplicationStatus.approved =>
+        CreatorCampaignsChrome.greenBg(context),
+      CreatorApplicationStatus.pending =>
+        CreatorCampaignsChrome.typeBg(context),
+      CreatorApplicationStatus.rejected =>
+        Theme.of(context).brightness == Brightness.dark
+            ? const Color(0xFF3F1F1F)
+            : const Color(0xFFFEF2F2),
+      _ => Theme.of(context).brightness == Brightness.dark
+          ? const Color(0xFF2A2A35)
+          : CampaignDetailPremiumPalette.surfaceGlass(context),
+    };
+    final fg = switch (status) {
+      CreatorApplicationStatus.approved => CreatorCampaignsChrome.green,
+      CreatorApplicationStatus.pending =>
+          CreatorCampaignsChrome.amber(context),
+      CreatorApplicationStatus.rejected => const Color(0xFFF87171),
+      _ => CreatorCampaignsChrome.muted(context),
     };
     return ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: 80),
+      constraints: const BoxConstraints(maxWidth: 92),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
         decoration: BoxDecoration(
-          color: color,
+          color: bg,
           borderRadius: BorderRadius.circular(999),
-          boxShadow: [
-            BoxShadow(
-              color: color.withValues(alpha: 0.35),
-              blurRadius: 6,
-              offset: const Offset(0, 2),
-            ),
-          ],
+          border: status == CreatorApplicationStatus.pending
+              ? Border.all(
+                  color: CreatorCampaignsChrome.amber(context),
+                  width: 1,
+                )
+              : null,
         ),
         child: Text(
-          label.toUpperCase(),
+          label,
           textAlign: TextAlign.center,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 9,
+          style: GoogleFonts.dmSans(
+            fontSize: 9.5,
             fontWeight: FontWeight.w800,
-            letterSpacing: 0.4,
+            color: fg,
           ),
         ),
       ),

@@ -27,7 +27,11 @@
     "search_aria": "البحث في الحملات",
     "reset_filters": "إعادة ضبط المرشحات",
     "toolbar_show_search_filters": "إظهار البحث والمرشحات",
-    "toolbar_hide_search_filters": "إخفاء البحث والمرشحات"
+    "toolbar_hide_search_filters": "إخفاء البحث والمرشحات",
+    "filter_label_type": "النوع",
+    "filter_label_status": "الحالة",
+    "filter_label_niche": "المجال",
+    "filter_label_location": "الموقع"
   },
   "login": {
     "brand": "وايو أدز",
@@ -182,7 +186,10 @@
       "locked": "محجوز",
       "spent": "المنفق",
       "cpc": "CPC",
-      "valid_engagements": "{count} مشاهدة مُصدّقة"
+      "valid_engagements": "{count} مشاهدة مُصدّقة",
+      "list_row_views": "{count} مشاهدة",
+      "list_row_clicks": "{count} نقرات",
+      "list_row_creators": "{count} منشئين"
     },
     "status": {
       "active": "نشطة",
@@ -212,7 +219,10 @@
       "objective_traffic": "الزيارات",
       "objective_conversion": "التحويل",
       "cpm_metric": "CPM (لكل 1000 مشاهدة)",
-      "cpc_metric": "CPC (لكل نقرة)"
+      "cpc_metric": "CPC (لكل نقرة)",
+      "description_title": "الوصف",
+      "show_more": "عرض المزيد",
+      "show_less": "عرض أقل"
     },
     "create": {
       "title": "حملة جديدة",
@@ -261,10 +271,12 @@
     "analytics": "التحليلات",
     "wallet": "المحفظة",
     "chat": "المحادثات",
-    "invoices": "الفواتير"
+    "invoices": "الفواتير",
+    "invoices_creator": "الإيصالات"
   },
   "invoices": {
     "title": "الفواتير",
+    "title_creator": "إيصالات الدفع",
     "subtitle_advertiser": "كل إيداع وكل ميزانية حملة — في مكان واحد.",
     "subtitle_creator": "كل أرباحك وتحويلاتك — موقعة، محمية، قابلة للتنزيل.",
     "summary_total_paid": "إجمالي المدفوع",
@@ -281,6 +293,7 @@
     "type_earnings": "أرباح الإعلانات",
     "type_unknown": "أخرى",
     "status_paid": "مدفوعة",
+    "status_validated": "معتمدة",
     "status_pending": "قيد الانتظار",
     "status_cancelled": "ملغاة",
     "role_advertiser": "المعلن",
@@ -288,6 +301,7 @@
     "search_hint": "ابحث برقم الفاتورة أو المرجع…",
     "empty_title": "لا توجد فواتير بعد",
     "empty_subtitle": "ستظهر هنا الإيداعات وميزانيات الحملات والتحويلات تلقائياً — دون أي خطوة يدوية.",
+    "empty_subtitle_creator": "ستظهر أرباحك ومستندات التحويل هنا فور إصدارها — نفس ملفات PDF المعتمدة كما في الويب.",
     "empty_cta": "تحديث",
     "error_title": "تعذّر تحميل الفواتير",
     "error_subtitle": "اسحب للتحديث — سنحاول من جديد فوراً.",
@@ -318,7 +332,39 @@
     "copied_to_clipboard": "تم نسخ رقم الفاتورة.",
     "share_subject": "فاتورة {number}",
     "polling_live": "مباشر",
-    "polling_paused": "إيقاف"
+    "polling_paused": "إيقاف",
+    "summary_this_month": "هذا الشهر",
+    "pagination_detail": "صفحة {current} من {total} · {count} فواتير",
+    "sort_sheet_title": "الترتيب",
+    "sort_date_newest": "الأحدث أولاً",
+    "sort_date_oldest": "الأقدم أولاً",
+    "sort_amount_high": "المبلغ · من الأعلى",
+    "sort_amount_low": "المبلغ · من الأدنى",
+    "sort_status_az": "الحالة · أ-ي",
+    "sort_status_za": "الحالة · ي-أ",
+    "date_range_title": "التواريخ",
+    "date_from": "من",
+    "date_to": "إلى",
+    "clear_dates": "مسح",
+    "date_apply": "تطبيق",
+    "download_all_zip": "ZIP",
+    "zip_progress": "جاري إنشاء ZIP…",
+    "zip_success": "تم الحفظ: {filename}",
+    "zip_error": "فشل تنزيل ZIP."
+  },
+  "push": {
+    "onboarding_title": "ابقَ على اطلاع",
+    "onboarding_subtitle": "استقبل تنبيهات فورية لما يهمك — حتى عندما يكون التطبيق في الخلفية.",
+    "onboarding_bullet_campaigns": "تحديثات الحملات والطلبات والميزانيات",
+    "onboarding_bullet_messages": "رسائل الدردشة الجديدة",
+    "onboarding_bullet_system": "الفواتير والمدفوعات وتنبيهات المنصة",
+    "onboarding_enable": "تفعيل الإشعارات",
+    "onboarding_later": "ليس الآن",
+    "onboarding_success": "تم تفعيل الإشعارات",
+    "onboarding_denied_hint": "يمكنك تفعيلها لاحقاً من إعدادات الجهاز.",
+    "onboarding_context_chat": "وصلتك رسالة جديدة — فعّل التنبيهات حتى لا تفوتك أي رد.",
+    "onboarding_context_campaign": "تغيّرت حالة حملة — فعّل الإشعارات لمتابعة الطلبات والميزانيات.",
+    "onboarding_context_invoice": "فاتورة أو تحويل جديد — احصل على تنبيه فور تحرك الأموال."
   },
   "creator": {
     "dashboard": {
@@ -341,10 +387,17 @@
       "withdraw_button": "سحب",
       "withdraw_sheet_title": "طلب سحب",
       "withdraw_sheet_subtitle": "الرصيد المتاح: {available}. ستُحوَّل الأموال إلى حساب Stripe المربوط.",
-      "withdraw_amount_label": "المبلغ",
+      "withdraw_amount_label": "المبلغ (USD)",
+      "withdraw_sheet_body": "أدخل المبلغ الذي تريد سحبه. سيتم تحويل الأموال إلى حسابك البنكي المرتبط.",
+      "withdraw_quick_amounts": "مبالغ سريعة",
+      "withdraw_gross_amount": "المبلغ الإجمالي",
+      "withdraw_platform_fee": "رسوم المنصة ({percent}%)",
+      "withdraw_tax_vat": "ضريبة القيمة المضافة ({percent}%)",
+      "withdraw_net_received": "صافي المستلم",
       "withdraw_submit": "تأكيد السحب",
       "withdraw_submitting": "جارٍ المعالجة…",
       "withdraw_max": "الحد الأقصى",
+      "withdraw_preset_all": "الكل",
       "withdraw_success": "تم إرسال طلب السحب.",
       "withdraw_secure_footer": "سحب آمن — تعالجه Stripe. بياناتك المصرفية لا تصل إلينا أبدًا.",
       "withdraw_error_invalid": "أدخل مبلغًا صالحًا.",
@@ -491,14 +544,12 @@
       "cta_button": "Finalize your Business Information",
       "dialog_title": "معلومات النشاط التجاري",
       "dialog_subtitle": "قدّم بعض المعلومات القانونية حتى يتمكن Stripe من فتح حسابك ومعالجة المدفوعات.",
-      "section_type": "نوع الحساب",
+      "section_type": "نوع النشاط",
       "section_company": "الشركة",
       "section_address": "العنوان",
       "section_stripe": "بلد وعملة الدفع",
-      "type_personal_title": "فرد",
+      "type_personal_title": "فرد / شخص خاص",
       "type_personal_subtitle": "أتلقى المدفوعات بصفتي فردًا.",
-      "type_sole_title": "عامل حر",
-      "type_sole_subtitle": "أدير نشاطًا مستقلًا باسمي.",
       "type_company_title": "شركة مسجّلة",
       "type_company_subtitle": "أعمل تحت كيان قانوني مسجّل.",
       "company_name": "اسم الشركة",
@@ -552,7 +603,11 @@
     "business_profile_gate_secure": "اتصال مشفّر والتحقق على الخادم قبل أي دفع.",
     "business_profile_gate_cta": "إكمال بيانات النشاط",
     "business_profile_error": "تعذّر تحميل الملف التجاري.",
-    "pay_locked_until_business": "تُفعّل طرق الدفع بعد إكمال الملف التجاري."
+    "pay_locked_until_business": "تُفعّل طرق الدفع بعد إكمال الملف التجاري.",
+    "payment_title": "الدفع",
+    "payment_total": "الإجمالي",
+    "payment_deposit_amount": "مبلغ الإيداع",
+    "payment_bank_fee": "رسوم المعاملة البنكية (3.69%)"
   },
   "chat": {
     "inbox_title": "الرسائل",
@@ -563,6 +618,9 @@
     "typing": "يكتب…",
     "error_load_threads": "تعذّر تحميل محادثاتك. أعد المحاولة.",
     "error_phone": "مشاركة أرقام الهاتف في الدردشة غير مسموحة.",
+    "spam_cooldown_title": "ترسل رسائلًا بسرعة كبيرة",
+    "spam_cooldown_body": "انتظر $seconds ث قبل الإرسال مرة أخرى.",
+    "spam_cooldown_seconds": "$seconds ث",
     "empty_threads_title": "لا توجد محادثات بعد",
     "empty_threads_hint": "عندما يراسلك أحدهم بخصوص حملة، ستظهر هنا.",
     "online": "متصل",
@@ -597,6 +655,15 @@
     "bubble_update": "تعديل",
     "bubble_delete_unavailable": "حذف الرسائل من التطبيق غير متاح بعد.",
     "bubble_copied": "تم النسخ إلى الحافظة",
+    "bubble_forward": "تحويل",
+    "share_media_tooltip": "مشاركة",
+    "share_failed": "تعذر مشاركة هذا الملف. حاول مرة أخرى.",
+    "forward_sheet_title": "إعادة الإرسال إلى…",
+    "forward_no_other_chats": "يلزم محادثة أخرى مفتوحة أولاً.",
+    "forward_sending": "جاري التحويل…",
+    "forward_ok": "تم تحويل الرسالة.",
+    "forward_failed": "فشل التحويل.",
+    "forward_view": "فتح",
     "edited": "معدَّل",
     "seen": "تمت القراءة",
     "delivered": "تم التسليم",
@@ -611,7 +678,15 @@
     "delete_confirm_text": "لا يمكن التراجع عن هذا الإجراء.",
     "delete_confirm_cta": "حذف",
     "delete_confirm_cancel": "إلغاء",
-    "scroll_to_latest": "الأحدث"
+    "scroll_to_latest": "الأحدث",
+    "loading_older_messages": "جاري تحميل الرسائل الأقدم…",
+    "load_older_failed": "تعذّر تحميل الرسائل الأقدم.",
+    "image_download_tooltip": "تنزيل الصورة",
+    "image_close_tooltip": "إغلاق",
+    "image_saved_to_gallery": "تم حفظ الصورة في معرض الصور.",
+    "image_download_failed": "تعذّر تنزيل هذه الصورة.",
+    "image_permission_denied": "تم رفض الوصول إلى الصور. فعّل الإذن من الإعدادات.",
+    "image_saved_downloads_browser": "تم تنزيل الصورة — تحقق من مجلد التحميلات."
   },
   "common": {
     "language": "اللغة",
@@ -682,7 +757,10 @@
     "lang_ar": "العربية",
     "section_account": "الحساب",
     "delete_account_entry": "حذف الحساب",
-    "delete_account_entry_sub": "فترة سماح 30 يومًا — من داخل التطبيق"
+    "delete_account_entry_sub": "فترة سماح 30 يومًا — من داخل التطبيق",
+    "section_about": "حول التطبيق",
+    "rate_app": "قيّم Wayo Ads",
+    "rate_app_sub": "يفتح App Store أو Google Play"
   },
   "account_deletion": {
     "nav_title": "حذف الحساب",
@@ -783,6 +861,8 @@
       "campaigns_subtitle": "اكتشف الحملات المتاحة، قدّم بنقرة واحدة وتابع حالة طلبك مباشرة.",
       "wallet_title": "الأرباح والسحوبات",
       "wallet_subtitle": "اطّلع على رصيدك واطلب تحويلاً عبر Stripe Connect واستعرض سحوباتك السابقة.",
+      "invoices_title": "إيصالات الدفع",
+      "invoices_subtitle": "صفِّ الأرباح والتحويلات، وحمّل ملفات PDF المعتمدة أو أرشيف ZIP — يُحدَّث تلقائياً أثناء استخدام التطبيق.",
       "chat_title": "تحدث مع المعلن",
       "chat_subtitle": "فور الاعتماد، تُفتح الدردشة للتنسيق مع المعلن حول المخرجات."
     }

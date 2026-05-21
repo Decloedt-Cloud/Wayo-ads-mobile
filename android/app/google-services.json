@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "540462242334",
+    "project_id": "wayo-ads-82232",
+    "storage_bucket": "wayo-ads-82232.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:540462242334:android:cf2c87b87a1433bed36c0f",
+        "android_client_info": {
+          "package_name": "ma.wayo.wayoadsgo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD-QZdQ9nI86mb0LKk2-l4ny4gn80H-b_0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

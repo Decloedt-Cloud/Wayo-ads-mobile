@@ -11,7 +11,7 @@ import '../../../../i18n/strings.g.dart';
 /// Glass card prompting the creator to finalize their business information
 /// before connecting a Stripe account.
 ///
-/// The primary button opens [showBusinessInfoDialog]; the parent decides
+/// The primary button opens [openBusinessInfoScreen]; the parent decides
 /// whether to show this card or the Stripe connect card based on
 /// `businessInfoComplete`.
 class BusinessInfoCta extends StatelessWidget {

@@ -1,26 +1,22 @@
 import 'package:equatable/equatable.dart';
 
-/// Business type used for creator payout onboarding.
-///
-/// Mirrors `src/lib/validation/business-profile.ts` on Wayo-ads.
+/// Business type used for creator / advertiser billing (Wayo-ads `business-profile.ts`).
 enum CreatorBusinessType {
   personal,
-  soleProprietor,
   registeredCompany;
 
   /// API / DB string value (uppercased snake case).
   String get apiValue => switch (this) {
     CreatorBusinessType.personal => 'PERSONAL',
-    CreatorBusinessType.soleProprietor => 'SOLE_PROPRIETOR',
     CreatorBusinessType.registeredCompany => 'REGISTERED_COMPANY',
   };
 
+  /// Maps API values; legacy `SOLE_PROPRIETOR` → [personal] (same as web `coerceBusinessType`).
   static CreatorBusinessType fromApi(dynamic raw) {
     final s = (raw as String?)?.trim().toUpperCase() ?? '';
     return switch (s) {
-      'PERSONAL' => CreatorBusinessType.personal,
-      'SOLE_PROPRIETOR' => CreatorBusinessType.soleProprietor,
       'REGISTERED_COMPANY' => CreatorBusinessType.registeredCompany,
+      'PERSONAL' || 'SOLE_PROPRIETOR' => CreatorBusinessType.personal,
       _ => CreatorBusinessType.personal,
     };
   }

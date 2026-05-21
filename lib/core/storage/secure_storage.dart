@@ -87,7 +87,9 @@ class SecureStorageService {
   /// valid locally but may already be rejected by the issuer (clock skew, latency,
   /// or slightly shorter token lifetime than [expiresIn] implied).
   Future<bool> shouldRefreshAccessToken({
-    Duration skew = const Duration(seconds: 180),
+    /// Refresh this long *before* wall-clock expiry so the access JWT is still
+    /// valid for Auth + Wayo-ads during rotation (clock skew, Issuer timing).
+    Duration skew = const Duration(seconds: 300),
   }) async {
     final at = await _tokens.readExpiry();
     if (at == null) {

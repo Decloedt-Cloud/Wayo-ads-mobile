@@ -160,6 +160,7 @@ final class CreatorWithdrawal extends Equatable {
     required this.status,
     required this.createdAt,
     this.platformFeeCents,
+    this.grossAmountCentsFromApi,
     this.psReference,
     this.failureReason,
     this.processedAt,
@@ -171,6 +172,8 @@ final class CreatorWithdrawal extends Equatable {
   final CreatorWithdrawalStatus status;
   final DateTime createdAt;
   final int? platformFeeCents;
+  /// When the API sends gross explicitly (`grossAmountCents`, `amountGrossCents`).
+  final int? grossAmountCentsFromApi;
   final String? psReference;
   final String? failureReason;
   final DateTime? processedAt;
@@ -183,8 +186,17 @@ final class CreatorWithdrawal extends Equatable {
       return 0;
     }
 
+    int? asOptionalPositiveInt(dynamic v) {
+      if (v == null) return null;
+      final n = asInt(v);
+      return n > 0 ? n : null;
+    }
+
     DateTime? parseDate(dynamic v) =>
         v is String && v.isNotEmpty ? DateTime.tryParse(v)?.toLocal() : null;
+
+    final grossRaw =
+        json['grossAmountCents'] ?? json['amountGrossCents'];
 
     return CreatorWithdrawal(
       id: (json['id'] as String?) ?? '',
@@ -198,6 +210,7 @@ final class CreatorWithdrawal extends Equatable {
       platformFeeCents: json['platformFeeCents'] == null
           ? null
           : asInt(json['platformFeeCents']),
+      grossAmountCentsFromApi: asOptionalPositiveInt(grossRaw),
       psReference: json['psReference'] as String?,
       failureReason: json['failureReason'] as String?,
       processedAt: parseDate(json['processedAt']),
@@ -205,6 +218,18 @@ final class CreatorWithdrawal extends Equatable {
   }
 
   double get amount => amountCents / 100.0;
+
+  /// **Gross** withdrawal (before platform fee) for payout history UI.
+  ///
+  /// Prefer an explicit API field when present; otherwise assume [amountCents]
+  /// is **net** and add [platformFeeCents] (when fee is known).
+  int get payoutHistoryGrossCents {
+    if (grossAmountCentsFromApi != null) return grossAmountCentsFromApi!;
+    final fee = platformFeeCents ?? 0;
+    return amountCents + fee;
+  }
+
+  double get payoutHistoryGross => payoutHistoryGrossCents / 100.0;
 
   @override
   List<Object?> get props => [
@@ -214,6 +239,7 @@ final class CreatorWithdrawal extends Equatable {
     status,
     createdAt,
     platformFeeCents,
+    grossAmountCentsFromApi,
     psReference,
     failureReason,
     processedAt,

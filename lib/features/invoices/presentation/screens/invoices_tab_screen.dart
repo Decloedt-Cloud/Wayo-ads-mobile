@@ -19,6 +19,7 @@ import '../../../shell/shell_tab_signed_in_gate.dart';
 import '../../data/invoice_pdf_service.dart';
 import '../../domain/invoice.dart';
 import '../providers/invoices_providers.dart';
+import '../widgets/invoice_advertiser_toolbar.dart';
 import '../widgets/invoice_card.dart';
 import '../widgets/invoice_filter_bar.dart';
 import '../widgets/invoices_empty_state.dart';
@@ -55,6 +56,7 @@ class _InvoicesTabBody extends ConsumerStatefulWidget {
 class _InvoicesTabBodyState extends ConsumerState<_InvoicesTabBody>
     with WidgetsBindingObserver {
   final ScrollController _scrollCtrl = ScrollController();
+  InvoicesPollingController? _pollingCtrl;
 
   @override
   void initState() {
@@ -62,8 +64,9 @@ class _InvoicesTabBodyState extends ConsumerState<_InvoicesTabBody>
     WidgetsBinding.instance.addObserver(this);
     _scrollCtrl.addListener(_onScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Start 60s foreground polling. Stopped automatically on dispose via Riverpod.
-      ref.read(invoicesPollingProvider.notifier).start();
+      if (!mounted) return;
+      _pollingCtrl = ref.read(invoicesPollingProvider.notifier);
+      _pollingCtrl?.start();
     });
   }
 
@@ -73,13 +76,14 @@ class _InvoicesTabBodyState extends ConsumerState<_InvoicesTabBody>
     _scrollCtrl
       ..removeListener(_onScroll)
       ..dispose();
-    ref.read(invoicesPollingProvider.notifier).stop();
+    _pollingCtrl?.stop();
     super.dispose();
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    final ctrl = ref.read(invoicesPollingProvider.notifier);
+    final ctrl = _pollingCtrl;
+    if (ctrl == null) return;
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.inactive ||
         state == AppLifecycleState.hidden) {
@@ -194,6 +198,9 @@ class _InvoicesTabBodyState extends ConsumerState<_InvoicesTabBody>
     final subtitle = role == WayoAdsAccountRole.creator
         ? t.invoices.subtitle_creator
         : t.invoices.subtitle_advertiser;
+    final pageTitle = role == WayoAdsAccountRole.creator
+        ? t.invoices.title_creator
+        : t.invoices.title;
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -217,7 +224,7 @@ class _InvoicesTabBodyState extends ConsumerState<_InvoicesTabBody>
                       Padding(
                         padding: const EdgeInsets.only(top: 4, bottom: 4),
                         child: Text(
-                          t.invoices.title,
+                          pageTitle,
                           style: AppTextStyles.pageTitle(context),
                         ),
                       ),
@@ -231,6 +238,7 @@ class _InvoicesTabBodyState extends ConsumerState<_InvoicesTabBody>
                     InvoicesHeroKpi(role: role, isLive: isPolling),
                     const SizedBox(height: 16),
                     InvoiceFilterBar(role: role),
+                    const InvoiceAdvertiserToolbar(),
                     const SizedBox(height: 4),
                   ],
                 ),
@@ -243,9 +251,32 @@ class _InvoicesTabBodyState extends ConsumerState<_InvoicesTabBody>
                 final list = filtered.valueOrNull ?? const <Invoice>[];
                 if (list.isEmpty && !s.isLoadingMore) {
                   return [
+                    // [hasScrollBody: true] avoids bottom overflow when the header
+                    // (hero KPI + filters + toolbar) leaves less vertical space than
+                    // [InvoicesEmptyState]'s intrinsic height on small viewports.
                     SliverFillRemaining(
-                      hasScrollBody: false,
-                      child: InvoicesEmptyState(onRefresh: _onRefresh),
+                      hasScrollBody: true,
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          return SingleChildScrollView(
+                            child: ConstrainedBox(
+                              constraints: BoxConstraints(
+                                minHeight: constraints.maxHeight,
+                              ),
+                              child: Align(
+                                alignment: Alignment.center,
+                                child: InvoicesEmptyState(
+                                  onRefresh: _onRefresh,
+                                  subtitleOverride:
+                                      role == WayoAdsAccountRole.creator
+                                      ? context.t.invoices.empty_subtitle_creator
+                                      : null,
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
                     ),
                   ];
                 }
@@ -253,6 +284,7 @@ class _InvoicesTabBodyState extends ConsumerState<_InvoicesTabBody>
                   context,
                   list,
                   locale,
+                  s,
                   hasMore: s.hasNextPage,
                   isLoadingMore: s.isLoadingMore,
                 );
@@ -269,7 +301,8 @@ class _InvoicesTabBodyState extends ConsumerState<_InvoicesTabBody>
   List<Widget> _buildDataList(
     BuildContext context,
     List<Invoice> invoices,
-    String locale, {
+    String locale,
+    InvoicesState paging, {
     required bool hasMore,
     required bool isLoadingMore,
   }) {
@@ -286,6 +319,10 @@ class _InvoicesTabBodyState extends ConsumerState<_InvoicesTabBody>
               locale: locale,
               onTap: () =>
                   context.push<void>('/invoices/${Uri.encodeComponent(inv.id)}'),
+              onViewDetails: () {
+                HapticFeedback.selectionClick();
+                context.push<void>('/invoices/${Uri.encodeComponent(inv.id)}');
+              },
               onDownloadPdf: () {
                 HapticFeedback.selectionClick();
                 _onDownloadPdf(inv);
@@ -310,7 +347,12 @@ class _InvoicesTabBodyState extends ConsumerState<_InvoicesTabBody>
             padding: const EdgeInsets.symmetric(vertical: 22),
             child: Center(
               child: Text(
-                '— ${context.t.invoices.summary_count} · ${invoices.length} —',
+                paging.displayTotalPages > 1
+                    ? context.t.invoices.pagination_detail
+                        .replaceAll('{current}', '${paging.displayCurrentPage}')
+                        .replaceAll('{total}', '${paging.displayTotalPages}')
+                        .replaceAll('{count}', '${paging.totalCount}')
+                    : '— ${context.t.invoices.summary_count} · ${paging.totalCount} —',
                 style: TextStyle(
                   color: AppColors.textMutedOf(context),
                   fontSize: 12,
@@ -348,6 +390,7 @@ class _InvoicesTabBodyState extends ConsumerState<_InvoicesTabBody>
             ),
             locale: 'en',
             onTap: () {},
+            onViewDetails: () {},
             onDownloadPdf: () {},
           ),
         ),
@@ -358,12 +401,13 @@ class _InvoicesTabBodyState extends ConsumerState<_InvoicesTabBody>
   Widget _buildError(BuildContext context, Object error) {
     final t = context.t;
     return SliverFillRemaining(
-      hasScrollBody: false,
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
+      hasScrollBody: true,
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
             Icon(
               Icons.error_outline_rounded,
               size: 48,
@@ -436,6 +480,7 @@ class _InvoicesTabBodyState extends ConsumerState<_InvoicesTabBody>
               label: Text(t.invoices.empty_cta),
             ),
           ],
+        ),
         ),
       ),
     );

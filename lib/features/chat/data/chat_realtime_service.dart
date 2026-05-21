@@ -4,6 +4,8 @@ import 'dart:convert';
 import 'package:dart_pusher_channels/dart_pusher_channels.dart';
 import 'package:flutter/foundation.dart';
 
+import '../../../core/observability/app_log.dart';
+import 'chat_pusher_dio_authorization_delegate.dart';
 import '../domain/chat_credentials.dart';
 
 sealed class ChatRealtimeEvent {
@@ -76,7 +78,9 @@ final class ChatRealtimeService {
   /// popup appears within ~1 s instead of waiting for the periodic probe.
   final void Function(Object error)? onConnectionError;
 
-  /// Chat-service user ids currently seen on `presence-global.{appId}` (same as Wayo-ads `ChatPresenceContext`).
+  /// Chat-service user ids on **`presence-chat.{appId}`** — same presence channel as
+  /// Wayo-ads web (`ChatPresenceContext`). Legacy `presence-global` must not be used
+  /// for product UI; it splits online state between clients.
   final ValueNotifier<Set<int>> onlineChatUserIds = ValueNotifier<Set<int>>(
     <int>{},
   );
@@ -149,11 +153,39 @@ final class ChatRealtimeService {
           if (sid != null && sid.isNotEmpty) {
             _socketId = sid;
           }
+        } else if (e.name == 'pusher:error') {
+          final d = e.tryGetDataAsMap();
+          if (kDebugMode) {
+            debugPrint('[ChatRealtime] pusher:error data=$d');
+          }
+          wayoDiagPrint('[ChatRealtime] pusher:error data=$d', name: 'wayo.chat');
         }
       }),
     );
 
+    // Private/presence auth needs a non-null `socket_id` (dart_pusher_channels
+    // returns early otherwise). Wait for `pusher:connection_established`; we
+    // subscribe to [eventStream] *before* [connect] so the broadcast stream
+    // does not drop the first frame.
+    final connectionEstablishedFuture = _client!.eventStream.firstWhere(
+      (e) => e.name == 'pusher:connection_established',
+    );
+
     await _client!.connect();
+
+    try {
+      await connectionEstablishedFuture.timeout(const Duration(seconds: 35));
+    } on TimeoutException catch (e, st) {
+      if (kDebugMode) {
+        debugPrint(
+          '[ChatRealtime] $e — continuing subscribe attempts.\n$st',
+        );
+      }
+    }
+
+    // Let downstream microtasks settle (socket id is set synchronously inside
+    // the client before [connect] resolves, but authorize calls are async).
+    await Future<void>.delayed(Duration.zero);
 
     final delegate = _delegateFor(creds);
 
@@ -190,11 +222,38 @@ final class ChatRealtimeService {
     }
 
     final presence = client.presenceChannel(
-      'presence-global.${creds.appId}',
+      'presence-chat.${creds.appId}',
       authorizationDelegate: _presenceDelegateFor(creds),
     );
     presence.subscribe();
 
+    unawaited(
+      Future<void>.delayed(const Duration(milliseconds: 350), () {
+        if (!identical(_client, client)) return;
+        presence.subscribe();
+      }),
+    );
+    unawaited(
+      Future<void>.delayed(const Duration(milliseconds: 2000), () {
+        if (!identical(_client, client)) return;
+        presence.subscribe();
+      }),
+    );
+
+    _subs.add(
+      presence.bind(Channel.subscriptionErrorEventName).listen((ev) {
+        final d = ev.data;
+        if (kDebugMode) {
+          debugPrint(
+            '[ChatRealtime] presence subscription_error (${ev.channelName}) data=$d',
+          );
+        }
+        wayoDiagPrint(
+          '[ChatRealtime] presence subscription_error (${ev.channelName}) data=$d',
+          name: 'wayo.chat',
+        );
+      }),
+    );
     _subs.add(
       presence
           .bind(Channel.subscriptionSucceededEventName)
@@ -204,31 +263,39 @@ final class ChatRealtimeService {
     _subs.add(presence.whenMemberRemoved().listen(_onPresenceMemberRemoved));
   }
 
-  EndpointAuthorizableChannelTokenAuthorizationDelegate<
-    PresenceChannelAuthorizationData
-  >
-  _presenceDelegateFor(ChatCredentials creds) {
+  EndpointAuthorizableChannelAuthorizationDelegate<
+      PresenceChannelAuthorizationData>
+      _presenceDelegateFor(ChatCredentials creds) {
     final rt = creds.realtime;
-    return EndpointAuthorizableChannelTokenAuthorizationDelegate.forPresenceChannel(
+    return ChatPusherPresenceDioAuthDelegate(
       authorizationEndpoint: Uri.parse(rt.authEndpoint),
       headers: <String, String>{
         'Accept': 'application/json',
         'Authorization': 'Bearer ${creds.token}',
         'X-Application-ID': creds.appId,
       },
+      onAuthFailed: (ex, st) => _emitBroadcastAuthDiag(
+        'presence /broadcasting/auth',
+        ex,
+        st,
+      ),
     );
   }
 
   void _onPresenceSubscriptionSucceeded(ChannelReadEvent ev) {
-    final data = ev.tryGetDataAsMap();
+    final data = _presenceEventRoot(ev.tryGetDataAsMap()) ??
+        _presenceEventRoot(ev.data);
     if (data == null) {
       return;
     }
-    onlineChatUserIds.value = _idsFromPresencePayload(data);
+    final next = _idsFromPresencePayload(data);
+    onlineChatUserIds.value = next;
   }
 
   void _onPresenceMemberAdded(ChannelReadEvent ev) {
-    final id = _userIdFromPresenceMemberMap(ev.tryGetDataAsMap());
+    final raw =
+        _presenceEventRoot(ev.tryGetDataAsMap()) ?? _presenceEventRoot(ev.data);
+    final id = _userIdFromPresenceMemberMap(raw);
     if (id == null) {
       return;
     }
@@ -236,7 +303,9 @@ final class ChatRealtimeService {
   }
 
   void _onPresenceMemberRemoved(ChannelReadEvent ev) {
-    final id = _userIdFromPresenceMemberMap(ev.tryGetDataAsMap());
+    final raw =
+        _presenceEventRoot(ev.tryGetDataAsMap()) ?? _presenceEventRoot(ev.data);
+    final id = _userIdFromPresenceMemberMap(raw);
     if (id == null) {
       return;
     }
@@ -246,27 +315,162 @@ final class ChatRealtimeService {
 
   int? _userIdFromPresenceMemberMap(Map<String, dynamic>? m) {
     if (m == null) return null;
-    final v = m['id'] ?? m['user_id'];
+    dynamic v =
+        m['user_id'] ??
+        m['userId'] ??
+        m['id'] ??
+        m['chat_user_id'] ??
+        m['chatUserId'] ??
+        m['wayo_external_user_id'] ??
+        m['external_user_id'];
     if (v is num) return v.toInt();
-    return int.tryParse('$v');
+    final fromRoot = int.tryParse('$v');
+    if (fromRoot != null) {
+      return fromRoot;
+    }
+    final info = _mapFromDynamic(m['user_info'] ?? m['userInfo']);
+    if (info == null || identical(info, m)) return null;
+    return _userIdFromPresenceMemberMap(info);
+  }
+
+  Map<String, dynamic>? _mapFromDynamic(dynamic raw) {
+    if (raw == null) return null;
+    if (raw is Map<String, dynamic>) return raw;
+    if (raw is Map) return Map<String, dynamic>.from(raw);
+    if (raw is String) {
+      try {
+        final decoded = jsonDecode(raw);
+        if (decoded is Map<String, dynamic>) return decoded;
+        if (decoded is Map) return Map<String, dynamic>.from(decoded);
+      } catch (_) {}
+    }
+    return null;
+  }
+
+  /// Repeatedly decodes JSON text into a map when servers double-encode payloads.
+  Map<String, dynamic>? _jsonMapRecursive(dynamic raw, [int depth = 0]) {
+    const maxDepth = 10;
+    if (depth > maxDepth || raw == null) return null;
+    if (raw is Map<String, dynamic>) return raw;
+    if (raw is Map) return Map<String, dynamic>.from(raw);
+    if (raw is String) {
+      final t = raw.trim();
+      if (t.isEmpty) return null;
+      try {
+        final decoded = jsonDecode(t);
+        return _jsonMapRecursive(decoded, depth + 1);
+      } catch (_) {
+        return null;
+      }
+    }
+    return null;
+  }
+
+  bool _mapLooksLikePresenceSnapshot(Map<String, dynamic> x) =>
+      x.containsKey('presence') ||
+      x.containsKey('Presence') ||
+      x.containsKey('hash') ||
+      x.containsKey('Hash') ||
+      x.containsKey('ids') ||
+      x.containsKey('Ids');
+
+  /// Normalizes `{ presence/hash/… }`, nested JSON strings, and `{ data: "…encoded…" }` shells.
+  Map<String, dynamic>? _presenceEventRoot(dynamic raw, [int unwrapShell = 0]) {
+    if (unwrapShell > 8 || raw == null) return null;
+    Map<String, dynamic>? root = _jsonMapRecursive(raw);
+    root ??= _mapFromDynamic(raw);
+    if (root == null) return null;
+    var m = Map<String, dynamic>.from(root);
+
+    if (!_mapLooksLikePresenceSnapshot(m)) {
+      final nested = m['data'] ?? m['Data'];
+      if (nested != null) {
+        final inner = _presenceEventRoot(nested, unwrapShell + 1);
+        if (inner != null) {
+          m = inner;
+        }
+      }
+    }
+
+    for (final pk in ['presence', 'Presence']) {
+      final v = m[pk];
+      if (v is String) {
+        final decoded = _jsonMapRecursive(v);
+        if (decoded != null) {
+          m[pk] = decoded;
+        }
+      }
+    }
+
+    dynamic presDyn = m['presence'] ?? m['Presence'];
+    String? presKey = m.containsKey('presence')
+        ? 'presence'
+        : (m.containsKey('Presence') ? 'Presence' : null);
+    Map<String, dynamic>? pres;
+    if (presDyn is Map<String, dynamic>) {
+      pres = Map<String, dynamic>.from(presDyn);
+    } else if (presDyn is Map) {
+      pres = Map<String, dynamic>.from(presDyn);
+    }
+
+    if (pres != null && presKey != null) {
+      for (final hk in ['hash', 'Hash']) {
+        final h = pres[hk];
+        if (h is String) {
+          final decoded = _jsonMapRecursive(h);
+          if (decoded != null) {
+            pres[hk] = decoded;
+          }
+        }
+      }
+      m[presKey] = pres;
+    }
+
+    return m;
   }
 
   Set<int> _idsFromPresencePayload(Map<String, dynamic> data) {
+    final rooted = _presenceEventRoot(Map<String, dynamic>.from(data)) ??
+        Map<String, dynamic>.from(data);
+
     final out = <int>{};
-    final presence = data['presence'];
-    if (presence is Map) {
-      final hash = presence['hash'];
-      if (hash is Map) {
+    Map<String, dynamic>? presence =
+        _mapFromDynamic(rooted['presence'] ?? rooted['Presence']);
+
+    presence ??=
+        rooted.containsKey('hash') ||
+            rooted.containsKey('Hash') ||
+            rooted.containsKey('ids') ||
+            rooted.containsKey('Ids')
+        ? rooted
+        : null;
+
+    if (presence != null) {
+      final ids = presence['ids'] ?? presence['Ids'];
+      if (ids is List) {
+        for (final e in ids) {
+          if (e is num) {
+            out.add(e.toInt());
+          } else {
+            final p = int.tryParse('$e');
+            if (p != null) {
+              out.add(p);
+            }
+          }
+        }
+      }
+
+      final hashRaw = presence['hash'] ?? presence['Hash'];
+      final hash = _mapFromDynamic(hashRaw);
+      if (hash != null) {
         for (final e in hash.entries) {
           final keyId = int.tryParse(e.key.toString());
           if (keyId != null) {
             out.add(keyId);
           }
-          final val = e.value;
-          if (val is Map) {
-            final inner = _userIdFromPresenceMemberMap(
-              Map<String, dynamic>.from(val),
-            );
+          final nested = _mapFromDynamic(e.value);
+          if (nested != null) {
+            final inner = _userIdFromPresenceMemberMap(nested);
             if (inner != null) {
               out.add(inner);
             }
@@ -274,7 +478,60 @@ final class ChatRealtimeService {
         }
       }
     }
+
+    // Some Reverb payloads expose ids only at the root (no `presence` wrapper).
+    if (out.isEmpty) {
+      final rootHash = _mapFromDynamic(rooted['hash'] ?? rooted['Hash']);
+      if (rootHash != null &&
+          rootHash != _mapFromDynamic(rooted['presence'] ?? rooted['Presence'])) {
+        for (final e in rootHash.entries) {
+          final keyId = int.tryParse(e.key.toString());
+          if (keyId != null) {
+            out.add(keyId);
+          }
+          final nested = _mapFromDynamic(e.value);
+          if (nested != null) {
+            final inner = _userIdFromPresenceMemberMap(nested);
+            if (inner != null) {
+              out.add(inner);
+            }
+          }
+        }
+      }
+      final ids = rooted['ids'] ?? rooted['Ids'];
+      if (ids is List) {
+        for (final e in ids) {
+          if (e is num) {
+            out.add(e.toInt());
+          } else {
+            final p = int.tryParse('$e');
+            if (p != null) {
+              out.add(p);
+            }
+          }
+        }
+      }
+    }
+
     return out;
+  }
+
+  Map<String, dynamic>? _enrichConversationBroadcastPayload(
+    Map<String, dynamic> map,
+  ) {
+    final innerRaw = map['message'];
+    if (innerRaw is! Map) {
+      return null;
+    }
+    final enriched = Map<String, dynamic>.from(innerRaw);
+    final sender = map['sender'];
+    final hasUserEnvelope =
+        enriched['user'] != null || enriched['sender'] != null;
+    if (!hasUserEnvelope && sender is Map<String, dynamic>) {
+      // chat-service puts `sender` next to `message` (REST embeds `user` on the row).
+      enriched['user'] = sender;
+    }
+    return enriched;
   }
 
   Future<void> updateConversationSubscriptions(
@@ -291,28 +548,45 @@ final class ChatRealtimeService {
     );
   }
 
-  EndpointAuthorizableChannelTokenAuthorizationDelegate<
-    PrivateChannelAuthorizationData
-  >
-  _delegateFor(ChatCredentials creds) {
+  EndpointAuthorizableChannelAuthorizationDelegate<
+      PrivateChannelAuthorizationData>
+      _delegateFor(ChatCredentials creds) {
     final rt = creds.realtime;
-    return EndpointAuthorizableChannelTokenAuthorizationDelegate.forPrivateChannel(
+    return ChatPusherPrivateDioAuthDelegate(
       authorizationEndpoint: Uri.parse(rt.authEndpoint),
       headers: <String, String>{
         'Accept': 'application/json',
         'Authorization': 'Bearer ${creds.token}',
         'X-Application-ID': creds.appId,
       },
+      onAuthFailed: (ex, st) => _emitBroadcastAuthDiag(
+        'private /broadcasting/auth',
+        ex,
+        st,
+      ),
     );
+  }
+
+  static void _emitBroadcastAuthDiag(
+    String context,
+    Object exception,
+    StackTrace trace,
+  ) {
+    final msg =
+        '[ChatRealtime] broadcasting auth FAILED ($context): $exception '
+        '| stack: $trace';
+    if (kDebugMode) {
+      debugPrint(msg);
+    }
+    wayoDiagPrint(msg, name: 'wayo.chat');
   }
 
   Future<void> _syncConversationChannels(
     ChatCredentials creds,
     List<int> ids,
-    EndpointAuthorizableChannelTokenAuthorizationDelegate<
-      PrivateChannelAuthorizationData
-    >
-    delegate,
+    EndpointAuthorizableChannelAuthorizationDelegate<
+        PrivateChannelAuthorizationData>
+        delegate,
   ) async {
     final client = _client;
     if (client == null) {
@@ -349,7 +623,12 @@ final class ChatRealtimeService {
         }
         switch (eventName) {
           case 'message.sent':
-            final m = _unwrapMessage(map['message'] ?? map);
+            final m =
+                _unwrapMessage(
+                  _enrichConversationBroadcastPayload(map) ??
+                      map['message'] ??
+                      map,
+                );
             if (m != null) {
               _events.add(ChatMessageSentEvent(convoId(), m));
             }
@@ -403,7 +682,12 @@ final class ChatRealtimeService {
             _events.add(const ChatInboxRefreshEvent());
             return;
           case 'message.edited':
-            final m = _unwrapMessage(map['message'] ?? map);
+            final m =
+                _unwrapMessage(
+                  _enrichConversationBroadcastPayload(map) ??
+                      map['message'] ??
+                      map,
+                );
             if (m != null) {
               _events.add(
                 ChatMessageEditedEvent(

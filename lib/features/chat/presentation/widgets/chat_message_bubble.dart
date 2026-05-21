@@ -7,7 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../theme/liquid_neural_palette.dart';
-import '../../data/chat_media_utils.dart';
+import '../../data/chat_message_media.dart';
 import '../../domain/chat_message.dart';
 
 class ChatMessageBubble extends StatelessWidget {
@@ -37,10 +37,11 @@ class ChatMessageBubble extends StatelessWidget {
     final ln = liquidNeural ? LiquidNeuralTheme.of(context) : null;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final time = _formatTime(message.createdAt);
-    final mediaUrl = resolveChatMediaUrl(message.fileUrl, apiBaseUrl);
-    final isImage = message.type == 'image' && mediaUrl.isNotEmpty;
-    final isFile = message.type == 'file' && mediaUrl.isNotEmpty;
-    final text = message.content.trim();
+    final media = resolveChatMessageMedia(message, apiBaseUrl);
+    final mediaUrl = media.url;
+    final isImage = media.isImage;
+    final isFile = media.isFile;
+    final text = chatMessageDisplayCaption(message, apiBaseUrl);
 
     final sentGradient = liquidNeural
         ? ln!.sentBubble

@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../i18n/strings.g.dart';
 
+import '../widgets/chat_spam_cooldown_banner.dart';
 import 'cinematic_chat_colors.dart';
 
 /// ━━━ [6] BARRE DE SAISIE — Premium glass composer ━━━
@@ -31,7 +32,11 @@ class CinematicComposerBar extends StatefulWidget {
     this.replyBannerSubtitle,
     this.replyCancelTooltip,
     this.onCancelReply,
+    this.autoFocusOnMount = false,
+    this.spamCooldownRemaining,
+    this.spamCooldownTotal,
   });
+
 
   final TextEditingController controller;
   final VoidCallback onSend;
@@ -58,6 +63,13 @@ class CinematicComposerBar extends StatefulWidget {
   final String? replyCancelTooltip;
   final VoidCallback? onCancelReply;
 
+  /// Focus keyboard after first frame (e.g. opened from push “Répondre”).
+  final bool autoFocusOnMount;
+
+  /// Anti-spam cooldown — blocks send and shows [ChatSpamCooldownBanner].
+  final Duration? spamCooldownRemaining;
+  final Duration? spamCooldownTotal;
+
   @override
   State<CinematicComposerBar> createState() => _CinematicComposerBarState();
 }
@@ -75,6 +87,13 @@ class _CinematicComposerBarState extends State<CinematicComposerBar> {
       if (mounted) setState(() => _focused = _focus.hasFocus);
     });
     _hasText = widget.controller.text.trim().isNotEmpty;
+    if (widget.autoFocusOnMount) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _focus.requestFocus();
+        }
+      });
+    }
   }
 
   void _onText() {
@@ -213,21 +232,7 @@ class _CinematicComposerBarState extends State<CinematicComposerBar> {
             duration: const Duration(milliseconds: 220),
             curve: Curves.easeOutCubic,
             alignment: Alignment.bottomCenter,
-            child: widget.editing
-                ? _EditingBanner(
-                    title: widget.editingTitle ?? 'Editing message',
-                    preview: widget.editingPreview ?? '',
-                    cancelLabel: widget.editingCancelLabel ?? 'Cancel',
-                    onCancel: widget.onCancelEdit,
-                  )
-                : widget.replying
-                ? _ReplyComposerBanner(
-                    title: widget.replyBannerTitle ?? 'Reply',
-                    preview: widget.replyBannerSubtitle ?? '',
-                    cancelTooltip: widget.replyCancelTooltip ?? 'Dismiss',
-                    onCancel: widget.onCancelReply,
-                  )
-                : const SizedBox(width: double.infinity),
+            child: _composerTopBanner(context),
           ),
           if (widget.errorText != null && widget.errorText!.isNotEmpty)
             Padding(
@@ -289,6 +294,38 @@ class _CinematicComposerBarState extends State<CinematicComposerBar> {
     HapticFeedback.mediumImpact();
     widget.onSendBurst?.call();
     widget.onSend();
+  }
+
+  Widget _composerTopBanner(BuildContext context) {
+    final spamLeft = widget.spamCooldownRemaining;
+    final spamTotal = widget.spamCooldownTotal;
+    if (spamLeft != null &&
+        spamTotal != null &&
+        spamLeft > Duration.zero &&
+        spamTotal > Duration.zero) {
+      return ChatSpamCooldownBanner(
+        remaining: spamLeft,
+        total: spamTotal,
+        reduceMotion: widget.reduceMotion,
+      );
+    }
+    if (widget.editing) {
+      return _EditingBanner(
+        title: widget.editingTitle ?? 'Editing message',
+        preview: widget.editingPreview ?? '',
+        cancelLabel: widget.editingCancelLabel ?? 'Cancel',
+        onCancel: widget.onCancelEdit,
+      );
+    }
+    if (widget.replying) {
+      return _ReplyComposerBanner(
+        title: widget.replyBannerTitle ?? 'Reply',
+        preview: widget.replyBannerSubtitle ?? '',
+        cancelTooltip: widget.replyCancelTooltip ?? 'Dismiss',
+        onCancel: widget.onCancelReply,
+      );
+    }
+    return const SizedBox(width: double.infinity);
   }
 }
 

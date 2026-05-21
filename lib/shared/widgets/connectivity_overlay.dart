@@ -46,7 +46,9 @@ class _ConnectivityOverlayState extends ConsumerState<ConnectivityOverlay> {
   void _reloadAfterReconnect() {
     try {
       ref.invalidate(chatConversationsProvider);
-      ref.invalidate(chatRealtimeBindingProvider);
+      scheduleInvalidateChatRealtimeBinding(
+        () => ref.invalidate(chatRealtimeBindingProvider),
+      );
       ref.invalidate(chatRealtimeServiceProvider);
       ref.invalidate(dashboardStreamProvider);
       ref.invalidate(notificationsListProvider);

@@ -50,6 +50,8 @@
 		<!-- Privacy: required when linked code references Photo Library / Camera APIs (e.g. file_picker, SDKs). -->
 		<key>NSPhotoLibraryUsageDescription</key>
 		<string>Wayoadsgo needs access to your photo library so you can select photos or files to upload—for example to your profile, campaigns, or other features where you attach images.</string>
+		<key>NSPhotoLibraryAddUsageDescription</key>
+		<string>Wayoadsgo saves chat photos you download to your library when you choose “Download photo”.</string>
 		<key>NSCameraUsageDescription</key>
 		<string>Wayoadsgo needs access to the camera so you can take photos to upload when you choose that option—for example for your profile, campaigns, or document capture.</string>
 		<!-- ✅ URL SCHEMES -->
@@ -117,5 +119,9 @@
 		<true/>
 		<key>UIViewControllerBasedStatusBarAppearance</key>
 		<false/>
+		<key>UIBackgroundModes</key>
+		<array>
+			<string>remote-notification</string>
+		</array>
 	</dict>
 </plist>

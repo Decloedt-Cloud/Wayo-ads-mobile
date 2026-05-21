@@ -19,6 +19,7 @@ import '../../../dashboard/presentation/widgets/error_banner.dart';
 import '../../domain/advertiser_campaign.dart';
 import '../../domain/campaign_niche_catalog.dart';
 import '../providers/advertiser_campaigns_providers.dart';
+import '../theme/advertiser_campaigns_chrome.dart';
 import '../widgets/advertiser_campaign_card.dart';
 import '../widgets/advertiser_campaign_explorer_filters.dart';
 import '../widgets/advertiser_campaign_grid_tile.dart';
@@ -101,15 +102,12 @@ void _sanitizeAdvertiserExplorerFilters(
   }
 }
 
-/// Page background — dark mode matches [ThemeData.scaffoldBackgroundColor] / shell (see creator tab).
+/// Page background — aligned with campaign detail premium palette.
 BoxDecoration _campaignsPageBackground(BuildContext context) {
-  final theme = Theme.of(context);
-  final scheme = theme.colorScheme;
-  if (theme.brightness == Brightness.dark) {
-    return const BoxDecoration(
-      color: AppColors.black,
-    );
+  if (Theme.of(context).brightness == Brightness.dark) {
+    return BoxDecoration(color: AdvertiserCampaignsChrome.bg(context));
   }
+  final scheme = Theme.of(context).colorScheme;
   return BoxDecoration(
     gradient: LinearGradient(
       begin: Alignment.topCenter,
@@ -119,7 +117,7 @@ BoxDecoration _campaignsPageBackground(BuildContext context) {
   );
 }
 
-/// Advertiser campaigns — list, filters, search, and draft creation (Wayo-ads API).
+/// Advertiser campaigns — list, filters, and search (Wayo-ads API).
 class AdvertiserCampaignsScreen extends ConsumerStatefulWidget {
   const AdvertiserCampaignsScreen({super.key});
 
@@ -132,9 +130,6 @@ class _AdvertiserCampaignsScreenState
     extends ConsumerState<AdvertiserCampaignsScreen> {
   final _searchCtrl = TextEditingController();
   Timer? _debounce;
-
-  // OPTIMIZATION: Removed _searchCtrl.addListener(() => setState(() {}))
-  // _SearchField now uses ValueListenableBuilder internally for clear button.
 
   @override
   void dispose() {
@@ -283,7 +278,7 @@ class _LoadingShell extends StatelessWidget {
                   (i) => Padding(
                     padding: const EdgeInsets.only(bottom: 12),
                     child: Container(
-                      height: 168,
+                      height: 212,
                       decoration: BoxDecoration(
                         color: AppColors.surfaceElevatedOf(context),
                         borderRadius: BorderRadius.circular(20),
@@ -408,8 +403,6 @@ class _Body extends ConsumerWidget {
       context.push(
         '/campaigns/${c.id}',
         extra: <String, String?>{
-          'coverUrl': c.coverUrl,
-          'brandLogoUrl': c.brandLogoUrl,
           'title': c.name,
         },
       );
@@ -418,11 +411,23 @@ class _Body extends ConsumerWidget {
     return RefreshIndicator(
       color: AppColors.primary,
       onRefresh: onRefresh,
-      child: CustomScrollView(
-        physics: const AlwaysScrollableScrollPhysics(
-          parent: BouncingScrollPhysics(),
+      child: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 300),
+        switchInCurve: Curves.easeOutCubic,
+        switchOutCurve: Curves.easeInCubic,
+        layoutBuilder: (current, previous) => Stack(
+          alignment: Alignment.topCenter,
+          children: [
+            ...previous,
+            ?current,
+          ],
         ),
-        slivers: [
+        child: CustomScrollView(
+          key: ValueKey<CampaignExplorerLayout>(layout),
+          physics: const AlwaysScrollableScrollPhysics(
+            parent: BouncingScrollPhysics(),
+          ),
+          slivers: [
           SliverToBoxAdapter(child: _HeaderBlock(t: t)),
           SliverToBoxAdapter(
             child: Padding(
@@ -548,13 +553,15 @@ class _Body extends ConsumerWidget {
                   crossAxisCount: 2,
                   mainAxisSpacing: 12,
                   crossAxisSpacing: 12,
-                  childAspectRatio: 0.43,
+                  // Taller cells: 2-line titles + budget row without clipping.
+                  childAspectRatio: 0.56,
                 ),
                 delegate: SliverChildBuilderDelegate((context, i) {
                   final c = filtered[i];
                   return AdvertiserCampaignGridTile(
                     campaign: c,
                     moneyLocale: moneyLocale,
+                    gridIndex: i,
                     onTap: () => pushDetail(c),
                   );
                 }, childCount: filtered.length),
@@ -590,6 +597,7 @@ class _Body extends ConsumerWidget {
                       child: AdvertiserCampaignCard(
                         campaign: c,
                         moneyLocale: moneyLocale,
+                        listIndex: i,
                         onTap: () => pushDetail(c),
                       ),
                     );
@@ -610,7 +618,8 @@ class _Body extends ConsumerWidget {
                 }, childCount: filtered.length + (totalPages > 1 ? 1 : 0)),
               ),
             ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -679,12 +688,14 @@ class _HeaderBlock extends StatelessWidget {
         children: [
           Text(
             t.advertiser_campaigns.title,
-            style: AppTextStyles.pageTitle(context),
+            style: AdvertiserCampaignsChrome.heroTitle(context),
           ),
           const SizedBox(height: 6),
           Text(
             t.advertiser_campaigns.subtitle,
-            style: AppTextStyles.bodyLarge(context),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: AdvertiserCampaignsChrome.heroSubtitle(context),
           ),
         ],
       ),
@@ -692,9 +703,8 @@ class _HeaderBlock extends StatelessWidget {
   }
 }
 
-/// Search field that uses [ValueListenableBuilder] internally to update the
-/// clear button visibility without requiring parent rebuilds.
-class _SearchField extends StatelessWidget {
+/// Focus-aware search chrome (amber border glow, tinted icon, inline clear).
+class _SearchField extends StatefulWidget {
   const _SearchField({
     required this.controller,
     required this.onChanged,
@@ -706,58 +716,103 @@ class _SearchField extends StatelessWidget {
   final VoidCallback onClear;
 
   @override
+  State<_SearchField> createState() => _SearchFieldState();
+}
+
+class _SearchFieldState extends State<_SearchField> {
+  late final FocusNode _focusNode;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode = FocusNode(debugLabel: 'advertiserCampaignsExplorerSearch')
+      ..addListener(_onFocus);
+  }
+
+  void _onFocus() => setState(() {});
+
+  @override
+  void dispose() {
+    _focusNode.removeListener(_onFocus);
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final t = context.t;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final fillColor = isDark
-        ? AppColors.surfaceElevatedOf(context).withValues(alpha: 0.35)
-        : AppColors.surfaceElevatedOf(context);
-    final borderColor = AppColors.borderOf(context);
+    final fill = AdvertiserCampaignsChrome.card(context);
+    final amber = AdvertiserCampaignsChrome.amber(context);
     final hintColor = AppColors.textMutedOf(context);
+    final hasFocus = _focusNode.hasFocus;
 
     return ValueListenableBuilder<TextEditingValue>(
-      valueListenable: controller,
+      valueListenable: widget.controller,
       builder: (context, value, _) {
         final hasText = value.text.isNotEmpty;
-        return TextField(
-          controller: controller,
-          onChanged: onChanged,
-          onTapOutside: (_) => FocusManager.instance.primaryFocus?.unfocus(),
-          style: TextStyle(color: AppColors.textPrimaryOf(context)),
-          cursorColor: AppColors.primary,
-          decoration: InputDecoration(
-            hintText: t.advertiser_campaigns.search_placeholder,
-            hintStyle: TextStyle(color: hintColor),
-            prefixIcon: Icon(Icons.search_rounded, color: hintColor),
-            suffixIcon: hasText
-                ? IconButton(
-                    tooltip: MaterialLocalizations.of(
-                      context,
-                    ).deleteButtonTooltip,
-                    onPressed: onClear,
-                    icon: Icon(Icons.close_rounded, color: hintColor),
-                  )
+        final prefixColor = hasFocus ? amber : hintColor;
+        final borderClr = hasFocus
+            ? amber
+            : AppColors.borderOf(context).withValues(alpha: isDark ? 0.35 : 0.9);
+
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOutCubic,
+          decoration: BoxDecoration(
+            color: fill,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: borderClr,
+              width: hasFocus ? 1.5 : 1,
+            ),
+            boxShadow: hasFocus
+                ? [
+                    BoxShadow(
+                      color: amber.withValues(alpha: isDark ? 0.22 : 0.14),
+                      blurRadius: 16,
+                      offset: const Offset(0, 6),
+                      spreadRadius: -4,
+                    ),
+                  ]
                 : null,
-            filled: true,
-            fillColor: fillColor,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide(color: borderColor),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide(color: borderColor),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: const BorderSide(
-                color: AppColors.primary,
-                width: 1.4,
+          ),
+          child: TextField(
+            focusNode: _focusNode,
+            controller: widget.controller,
+            onChanged: widget.onChanged,
+            onTapOutside: (_) => FocusManager.instance.primaryFocus?.unfocus(),
+            style: TextStyle(color: AppColors.textPrimaryOf(context)),
+            cursorColor: amber,
+            decoration: InputDecoration(
+              hintText: t.advertiser_campaigns.search_placeholder,
+              hintStyle: TextStyle(color: hintColor),
+              prefixIcon: Icon(
+                Icons.search_rounded,
+                color: prefixColor.withValues(alpha: hasFocus ? 1 : 0.9),
               ),
-            ),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 4,
-              vertical: 14,
+              suffixIcon: hasText
+                  ? IconButton(
+                      tooltip:
+                          MaterialLocalizations.of(context).deleteButtonTooltip,
+                      onPressed: widget.onClear,
+                      icon: Icon(
+                        Icons.close_rounded,
+                        color: hasFocus
+                            ? amber.withValues(alpha: 0.9)
+                            : hintColor,
+                      ),
+                    )
+                  : null,
+              filled: true,
+              fillColor: Colors.transparent,
+              border: InputBorder.none,
+              enabledBorder: InputBorder.none,
+              focusedBorder: InputBorder.none,
+              errorBorder: InputBorder.none,
+              focusedErrorBorder: InputBorder.none,
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 4, vertical: 14),
             ),
           ),
         );

@@ -12,10 +12,12 @@ import '../../../../i18n/strings.g.dart';
 import '../../../auth/domain/wayo_ads_account_role.dart';
 import '../../../auth/presentation/providers/current_account_providers.dart';
 import '../../data/chat_media_utils.dart';
+import '../../data/chat_share_intent.dart';
 import '../../data/chat_realtime_service.dart';
 import '../../domain/chat_conversation.dart';
 import '../../domain/chat_credentials.dart';
 import '../../domain/chat_directory_user.dart';
+import '../providers/chat_pending_share_provider.dart';
 import '../providers/chat_providers.dart';
 import '../theme/liquid_neural_palette.dart';
 import '../theme/premium_chat_tokens.dart';
@@ -39,8 +41,28 @@ class _ChatInboxScreenState extends ConsumerState<ChatInboxScreen> {
   final Map<int, int> _pulseTokenByConv = {};
   final ScrollController _scroll = ScrollController();
 
+  /// Coalesce bursts of [ChatInboxRefreshEvent] from realtime (avoids hammering
+  /// `/conversations` when many channels signal at once).
+  Timer? _inboxRefreshDebounce;
+  static const Duration _inboxRefreshDebounceDelay = Duration(
+    milliseconds: 550,
+  );
+
+  /// Entry stagger uses flutter_animate — cap indices so long lists don't schedule
+  /// hundreds of overlapping animations during scroll/recycle.
+  static const int _maxStaggeredInboxIndices = 22;
+
+  @override
+  void initState() {
+    super.initState();
+    ChatShareIntent.bind((files) {
+      ref.read(chatPendingShareProvider.notifier).state = files;
+    });
+  }
+
   @override
   void dispose() {
+    _inboxRefreshDebounce?.cancel();
     _scroll.dispose();
     for (final t in _typingClearTimers.values) {
       t.cancel();
@@ -65,8 +87,12 @@ class _ChatInboxScreenState extends ConsumerState<ChatInboxScreen> {
     _rtSub ??= ref.read(chatRealtimeServiceProvider).events.listen((event) {
       if (!mounted) return;
       if (event is ChatInboxRefreshEvent) {
-        ref.invalidate(chatConversationsProvider);
-        unawaited(_resyncConversationChannels());
+        _inboxRefreshDebounce?.cancel();
+        _inboxRefreshDebounce = Timer(_inboxRefreshDebounceDelay, () {
+          if (!mounted) return;
+          ref.invalidate(chatConversationsProvider);
+          unawaited(_resyncConversationChannels());
+        });
         return;
       }
       if (event is ChatMessageSentEvent) {
@@ -153,7 +179,9 @@ class _ChatInboxScreenState extends ConsumerState<ChatInboxScreen> {
       return;
     }
     ref.invalidate(chatConversationsProvider);
-    ref.invalidate(chatRealtimeBindingProvider);
+    invalidateChatRealtimeBindingImmediate(
+      () => ref.invalidate(chatRealtimeBindingProvider),
+    );
     await _resyncConversationChannels();
     if (!mounted) return;
     context.push(
@@ -174,7 +202,10 @@ class _ChatInboxScreenState extends ConsumerState<ChatInboxScreen> {
     final p = PremiumChatTokens.of(context);
     final async = ref.watch(chatConversationsProvider);
     // Use valueOrNull to avoid throwing on error state (e.g. 404 from backend)
-    final myChatUserId = ref.watch(chatBootstrapProvider).valueOrNull?.chatUserId;
+    final myChatUserId = ref
+        .watch(chatBootstrapProvider)
+        .valueOrNull
+        ?.chatUserId;
     final rt = ref.watch(chatRealtimeServiceProvider);
     final role = ref.watch(currentWayoAdsAccountRoleProvider);
 
@@ -223,7 +254,11 @@ class _ChatInboxScreenState extends ConsumerState<ChatInboxScreen> {
                 ),
               ),
             ),
+            // Shell already reserves space for the floating bottom nav — avoid
+            // doubling [MediaQuery.padding.bottom] here (creates a dead zone and
+            // clips the last conversation cards above the nav bar).
             SafeArea(
+              bottom: false,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -253,11 +288,8 @@ class _ChatInboxScreenState extends ConsumerState<ChatInboxScreen> {
                               priorContactsOnly: priorOnly,
                               priorConversationList: convListSnapshot,
                               hiddenParticipantIds: hiddenIds,
-                              onUserSelected: (u) => _openChatWithUser(
-                                creds,
-                                u,
-                                convListSnapshot,
-                              ),
+                              onUserSelected: (u) =>
+                                  _openChatWithUser(creds, u, convListSnapshot),
                             );
                           },
                           loading: () => const SizedBox.shrink(),
@@ -274,7 +306,10 @@ class _ChatInboxScreenState extends ConsumerState<ChatInboxScreen> {
                         onRetry: () {
                           ref.invalidate(chatBootstrapProvider);
                           ref.invalidate(chatConversationsProvider);
-                          ref.invalidate(chatRealtimeBindingProvider);
+                          scheduleInvalidateChatRealtimeBinding(
+                            () =>
+                                ref.invalidate(chatRealtimeBindingProvider),
+                          );
                         },
                       ),
                       data: (list) {
@@ -310,11 +345,14 @@ class _ChatInboxScreenState extends ConsumerState<ChatInboxScreen> {
                                         const AlwaysScrollableScrollPhysics(
                                           parent: BouncingScrollPhysics(),
                                         ),
+                                    // Slightly wider prefetch than default — smoother flick scroll on tall lists.
+                                    cacheExtent: 360,
+                                    addAutomaticKeepAlives: false,
                                     padding: const EdgeInsets.fromLTRB(
                                       12,
                                       4,
                                       12,
-                                      28,
+                                      80,
                                     ),
                                     itemCount: list.length,
                                     itemBuilder: (context, index) {
@@ -376,7 +414,10 @@ class _ChatInboxScreenState extends ConsumerState<ChatInboxScreen> {
                                         ),
                                       );
 
-                                      if (!reduce) {
+                                      final allowEntryMotion =
+                                          !reduce &&
+                                          index < _maxStaggeredInboxIndices;
+                                      if (allowEntryMotion) {
                                         inner = inner
                                             .animate(delay: (index * 80).ms)
                                             .fadeIn(
@@ -390,79 +431,85 @@ class _ChatInboxScreenState extends ConsumerState<ChatInboxScreen> {
                                             );
                                       }
 
-                                      return Dismissible(
-                                        key: ValueKey('conv_${c.id}'),
-                                        confirmDismiss: (dir) async {
-                                          if (dir ==
-                                                  DismissDirection.endToStart ||
-                                              dir ==
-                                                  DismissDirection.startToEnd) {
-                                            if (context.mounted) {
-                                              ScaffoldMessenger.of(
-                                                context,
-                                              ).showSnackBar(
-                                                SnackBar(
-                                                  content: Text(
-                                                    t.chat.inbox_swipe_soon,
+                                      return RepaintBoundary(
+                                        child: Dismissible(
+                                          key: ValueKey('conv_${c.id}'),
+                                          confirmDismiss: (dir) async {
+                                            if (dir ==
+                                                    DismissDirection
+                                                        .endToStart ||
+                                                dir ==
+                                                    DismissDirection
+                                                        .startToEnd) {
+                                              if (context.mounted) {
+                                                ScaffoldMessenger.of(
+                                                  context,
+                                                ).showSnackBar(
+                                                  SnackBar(
+                                                    content: Text(
+                                                      t.chat.inbox_swipe_soon,
+                                                    ),
                                                   ),
-                                                ),
-                                              );
+                                                );
+                                              }
                                             }
-                                          }
-                                          return false;
-                                        },
-                                        background: Container(
-                                          alignment: Alignment.centerLeft,
-                                          padding: const EdgeInsets.only(
-                                            left: 26,
-                                          ),
-                                          margin: const EdgeInsets.symmetric(
-                                            vertical: 6,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            borderRadius: BorderRadius.circular(
-                                              p.radiusXL,
+                                            return false;
+                                          },
+                                          background: Container(
+                                            alignment: Alignment.centerLeft,
+                                            padding: const EdgeInsets.only(
+                                              left: 26,
                                             ),
-                                            gradient: LinearGradient(
-                                              begin: Alignment.centerLeft,
-                                              end: Alignment.centerRight,
-                                              colors: [
-                                                p.accentWarm.withValues(
-                                                  alpha: 0.9,
-                                                ),
-                                                p.accentWarm.withValues(
-                                                  alpha: 0.35,
-                                                ),
-                                              ],
+                                            margin: const EdgeInsets.symmetric(
+                                              vertical: 6,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              borderRadius:
+                                                  BorderRadius.circular(
+                                                    p.radiusXL,
+                                                  ),
+                                              gradient: LinearGradient(
+                                                begin: Alignment.centerLeft,
+                                                end: Alignment.centerRight,
+                                                colors: [
+                                                  p.accentWarm.withValues(
+                                                    alpha: 0.9,
+                                                  ),
+                                                  p.accentWarm.withValues(
+                                                    alpha: 0.35,
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            child: const Icon(
+                                              Icons.push_pin_rounded,
+                                              color: Colors.white,
                                             ),
                                           ),
-                                          child: const Icon(
-                                            Icons.push_pin_rounded,
-                                            color: Colors.white,
+                                          secondaryBackground: Container(
+                                            alignment: Alignment.centerRight,
+                                            padding: const EdgeInsets.only(
+                                              right: 26,
+                                            ),
+                                            margin: const EdgeInsets.symmetric(
+                                              vertical: 6,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              borderRadius:
+                                                  BorderRadius.circular(
+                                                    p.radiusXL,
+                                                  ),
+                                              color: AppColors.error.withValues(
+                                                alpha: 0.55,
+                                              ),
+                                            ),
+                                            child: const Icon(
+                                              Icons.delete_outline_rounded,
+                                              color: Colors.white,
+                                            ),
                                           ),
+                                          child: inner,
                                         ),
-                                        secondaryBackground: Container(
-                                          alignment: Alignment.centerRight,
-                                          padding: const EdgeInsets.only(
-                                            right: 26,
-                                          ),
-                                          margin: const EdgeInsets.symmetric(
-                                            vertical: 6,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            borderRadius: BorderRadius.circular(
-                                              p.radiusXL,
-                                            ),
-                                            color: AppColors.error.withValues(
-                                              alpha: 0.55,
-                                            ),
-                                          ),
-                                          child: const Icon(
-                                            Icons.delete_outline_rounded,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                        child: inner,
                                       );
                                     },
                                   ),

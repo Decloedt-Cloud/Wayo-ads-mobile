@@ -1,20 +1,21 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/format/money_formatter.dart';
 import '../../../../core/network/wayo_ads_public_url.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_text_styles.dart';
-import '../../../../core/theme/creator_colors.dart';
-import '../../../../core/widgets/campaign_grid_compact_parts.dart';
+import '../../../../core/widgets/campaign_grid_hero_image.dart';
 import '../../../../i18n/strings.g.dart';
-import '../../../advertiser_campaigns/domain/campaign_niche_catalog.dart';
 import '../../../creator_dashboard/domain/creator_application.dart';
 import '../../../dashboard/domain/entities/campaign_platform.dart';
+import '../../../dashboard/presentation/theme/campaign_detail_premium_palette.dart';
 import '../../domain/creator_browse_campaign.dart';
+import '../theme/creator_campaigns_chrome.dart';
 
-String? _creatorBrowseGridRateCaption(
+String? _gridRateCaption(
   CreatorBrowseCampaign c,
   Translations t,
   String moneyLocale,
@@ -45,17 +46,77 @@ String? _creatorBrowseGridRateCaption(
   return null;
 }
 
-IconData _browsePlatformIcon(CampaignPlatform p) => switch (p) {
-  CampaignPlatform.youtube => Icons.play_circle_filled_rounded,
-  CampaignPlatform.tiktok => Icons.music_note_rounded,
-  CampaignPlatform.instagram => Icons.photo_camera_rounded,
-  CampaignPlatform.unknown => Icons.public_rounded,
-};
+IconData _platformGlyph(CampaignPlatform p) => switch (p) {
+      CampaignPlatform.youtube => Icons.play_circle_filled_rounded,
+      CampaignPlatform.tiktok => Icons.music_note_rounded,
+      CampaignPlatform.instagram => Icons.photo_camera_rounded,
+      CampaignPlatform.unknown => Icons.public_rounded,
+    };
 
-/// Dense 2-column tile for [CampaignExplorerLayout.grid] (creator browse).
+/// Grid tile layout — fixed blocks align rows in the 2-column browse grid.
+abstract final class _CreatorGridTileLayout {
+  static const double titleFontSize = 13.5;
+  static const double titleLineHeight = 1.2;
+  static const int titleMaxLines = 2;
+  static const double titleBlockHeight =
+      titleFontSize * titleLineHeight * titleMaxLines;
+
+  static const double advertiserFontSize = 11;
+  static const double advertiserLineHeight = 1.2;
+  static const double advertiserBlockHeight =
+      advertiserFontSize * advertiserLineHeight;
+
+  static const double metaRowHeight = 22;
+  static const double budgetLabelHeight = 14;
+  static const double budgetValueHeight = 22;
+  static const double progressHeight = 3;
+  static const double progressTopGap = 6;
+}
+
+/// Compact 2‑column browse tile — minimal footer (creator).
 class CreatorBrowseCampaignGridTile extends StatelessWidget {
   const CreatorBrowseCampaignGridTile({
     super.key,
+    required this.campaign,
+    required this.moneyLocale,
+    required this.onTap,
+    required this.gridIndex,
+    this.applicationStatus,
+  });
+
+  final CreatorBrowseCampaign campaign;
+  final String moneyLocale;
+  final VoidCallback onTap;
+  final int gridIndex;
+  final CreatorApplicationStatus? applicationStatus;
+
+  @override
+  Widget build(BuildContext context) {
+    final tile = _GridTileBody(
+      campaign: campaign,
+      moneyLocale: moneyLocale,
+      onTap: onTap,
+      applicationStatus: applicationStatus,
+    );
+
+    return tile
+        .animate(key: ValueKey(campaign.id))
+        .fadeIn(
+          duration: 280.ms,
+          delay: Duration(milliseconds: 55 * gridIndex),
+          curve: Curves.easeOutCubic,
+        )
+        .slideY(
+          duration: 280.ms,
+          delay: Duration(milliseconds: 55 * gridIndex),
+          begin: 0.06,
+          curve: Curves.easeOutCubic,
+        );
+  }
+}
+
+class _GridTileBody extends StatefulWidget {
+  const _GridTileBody({
     required this.campaign,
     required this.moneyLocale,
     required this.onTap,
@@ -68,337 +129,305 @@ class CreatorBrowseCampaignGridTile extends StatelessWidget {
   final CreatorApplicationStatus? applicationStatus;
 
   @override
+  State<_GridTileBody> createState() => _GridTileBodyState();
+}
+
+class _GridTileBodyState extends State<_GridTileBody> {
+  bool _pressed = false;
+
+  @override
   Widget build(BuildContext context) {
     final t = context.t;
-    final c = campaign;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final c = widget.campaign;
+    final plat = CampaignPlatform.fromString(
+      (c.requiredPlatform ?? '').toLowerCase(),
+    );
+    final platLabel = switch (plat) {
+      CampaignPlatform.youtube => t.advertiser_campaigns.platform.youtube,
+      CampaignPlatform.tiktok => t.advertiser_campaigns.platform.tiktok,
+      CampaignPlatform.instagram =>
+        t.advertiser_campaigns.platform.instagram,
+      CampaignPlatform.unknown => t.advertiser_campaigns.platform.other,
+    };
     final typeLabel = switch (c.type) {
       CreatorCampaignType.link => t.creator.campaigns.type_link,
       CreatorCampaignType.video => t.creator.campaigns.type_video,
       CreatorCampaignType.shorts => t.creator.campaigns.type_shorts,
       CreatorCampaignType.unknown => '—',
     };
-    final platEnum = CampaignPlatform.fromString(
-      (c.requiredPlatform ?? '').toLowerCase(),
-    );
-    final platLabel = switch (platEnum) {
-      CampaignPlatform.youtube => t.advertiser_campaigns.platform.youtube,
-      CampaignPlatform.tiktok => t.advertiser_campaigns.platform.tiktok,
-      CampaignPlatform.instagram => t.advertiser_campaigns.platform.instagram,
-      CampaignPlatform.unknown => t.advertiser_campaigns.platform.other,
-    };
-    final rateCaption = _creatorBrowseGridRateCaption(c, t, moneyLocale);
-    final nicheLabel = c.niche != null && c.niche!.trim().isNotEmpty
-        ? campaignNicheFallbackLabel(c.niche!)
-        : null;
-    final locLabel = c.location != null && c.location!.trim().isNotEmpty
-        ? c.location!
-        : '—';
+    final rateCaption = _gridRateCaption(c, t, widget.moneyLocale);
     final spentFrac = c.totalBudgetCents > 0
         ? (c.spentBudgetCents / c.totalBudgetCents).clamp(0.0, 1.0)
         : 0.0;
-    final linkMetric = c.type == CreatorCampaignType.link;
 
-    final borderColor = AppColors.borderOf(context);
-    final footerBg = Theme.of(context).colorScheme.surfaceContainerLowest;
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () {
-          HapticFeedback.lightImpact();
-          onTap();
-        },
-        borderRadius: BorderRadius.circular(18),
-        child: Ink(
+    return Listener(
+      onPointerDown: (_) => setState(() => _pressed = true),
+      onPointerUp: (_) => setState(() => _pressed = false),
+      onPointerCancel: (_) => setState(() => _pressed = false),
+      child: AnimatedScale(
+        scale: _pressed ? 0.98 : 1,
+        duration: const Duration(milliseconds: 110),
+        curve: Curves.easeOutCubic,
+        child: DecoratedBox(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: borderColor.withValues(alpha: 0.9)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: isDark ? 0.22 : 0.06),
-                blurRadius: 16,
-                offset: const Offset(0, 8),
-              ),
-            ],
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: CreatorCampaignsChrome.cardElevation(context),
           ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(17),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(
-                  flex: 50,
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      _GridHeroImage(
-                        coverUrl: normalizeWayoAdsMediaUrl(c.coverUrl),
-                        brandLogoUrl: resolveWayoAdsPublicUrl(c.brandLogoUrl),
-                        type: c.type,
-                      ),
-                      if (rateCaption != null)
-                        PositionedDirectional(
-                          start: 8,
-                          top: 8,
-                          child: CampaignGridRateBadge(text: rateCaption),
-                        ),
-                      Positioned(
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        height: 52,
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [
-                                Colors.transparent,
-                                Colors.black.withValues(alpha: 0.42),
-                              ],
+          child: Material(
+            color: CreatorCampaignsChrome.card(context),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: CreatorCampaignsChrome.cardBorderSide(context),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: () {
+                HapticFeedback.lightImpact();
+                widget.onTap();
+              },
+              splashColor:
+                  CreatorCampaignsChrome.amber(context).withValues(alpha: 0.14),
+              highlightColor:
+                  CreatorCampaignsChrome.amber(context).withValues(alpha: 0.06),
+              borderRadius: BorderRadius.circular(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  AspectRatio(
+                    aspectRatio: 1.2,
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final scrimH = constraints.maxHeight *
+                            CreatorCampaignsChrome.heroScrimHeightFactor(
+                              context,
+                            );
+                        return Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            _HeroVisual(
+                              coverUrl: normalizeWayoAdsMediaUrl(c.coverUrl),
+                              brandLogoUrl:
+                                  resolveWayoAdsPublicUrl(c.brandLogoUrl),
+                              type: c.type,
                             ),
-                          ),
-                        ),
-                      ),
-                      if (applicationStatus != null)
-                        PositionedDirectional(
-                          top: 8,
-                          end: 8,
-                          child: _MiniAppBadge(status: applicationStatus!),
-                        ),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  flex: 50,
-                  child: ColoredBox(
-                    color: footerBg,
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(10, 6, 10, 6),
-                      child: LayoutBuilder(
-                        builder: (context, bx) {
-                          return ClipRect(
-                            child: FittedBox(
-                              fit: BoxFit.scaleDown,
-                              alignment: Alignment.topCenter,
-                              child: ConstrainedBox(
-                                constraints: BoxConstraints(
-                                  maxWidth: bx.maxWidth,
+                            if (scrimH > 0)
+                              Positioned(
+                                left: 0,
+                                right: 0,
+                                bottom: 0,
+                                height: scrimH,
+                                child: DecoratedBox(
+                                  decoration: CreatorCampaignsChrome
+                                      .heroImageBottomFade(context),
                                 ),
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      c.title,
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: AppTextStyles.labelLarge(context)
-                                          .copyWith(
-                                            fontSize: 13.5,
-                                            height: 1.16,
-                                            fontWeight: FontWeight.w800,
-                                            letterSpacing: -0.2,
-                                          ),
+                              ),
+                            if (rateCaption != null)
+                              PositionedDirectional(
+                                start: 8,
+                                top: 8,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.black.withValues(alpha: 0.45),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                      color: CreatorCampaignsChrome.green
+                                          .withValues(alpha: 0.65),
                                     ),
-                                    if (c.advertiserName != null &&
-                                        c.advertiserName!.isNotEmpty) ...[
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        c.advertiserName!,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: AppTextStyles.caption(context)
-                                            .copyWith(
-                                              color: AppColors.textSecondaryOf(
-                                                context,
-                                              ),
-                                              fontWeight: FontWeight.w500,
-                                              fontSize: 11,
-                                            ),
-                                      ),
-                                    ],
-                                    const SizedBox(height: 3),
-                                    Wrap(
-                                      spacing: 4,
-                                      runSpacing: 4,
-                                      children: [
-                                        _MiniTypePill(label: typeLabel),
-                                        _MiniTypePill(
-                                          label: platLabel,
-                                          muted: true,
-                                        ),
-                                      ],
+                                  ),
+                                  child: Text(
+                                    rateCaption,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: GoogleFonts.dmSans(
+                                      fontSize: 9.5,
+                                      fontWeight: FontWeight.w800,
+                                      color: CreatorCampaignsChrome.green,
                                     ),
-                                    if (nicheLabel != null) ...[
-                                      const SizedBox(height: 3),
-                                      Text(
-                                        '${t.advertiser_campaigns.create.field_niche}: $nicheLabel',
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: AppTextStyles.caption(context)
-                                            .copyWith(
-                                              fontSize: 10.5,
-                                              color: AppColors.textSecondaryOf(
-                                                context,
-                                              ),
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                      ),
-                                    ],
-                                    const SizedBox(height: 2),
-                                    Row(
-                                      children: [
-                                        Icon(
-                                          _browsePlatformIcon(platEnum),
-                                          size: 13,
-                                          color: AppColors.textSecondaryOf(
-                                            context,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 4),
-                                        Expanded(
-                                          child: Text(
-                                            platLabel,
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                            style:
-                                                AppTextStyles.caption(
-                                                  context,
-                                                ).copyWith(
-                                                  fontSize: 10.5,
-                                                  fontWeight: FontWeight.w700,
-                                                ),
-                                          ),
-                                        ),
-                                        Icon(
-                                          Icons.place_outlined,
-                                          size: 13,
-                                          color: AppColors.textSecondaryOf(
-                                            context,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 2),
-                                        Expanded(
-                                          child: Text(
-                                            locLabel,
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                            textAlign: TextAlign.end,
-                                            style:
-                                                AppTextStyles.caption(
-                                                  context,
-                                                ).copyWith(
-                                                  fontSize: 10.5,
-                                                  fontWeight: FontWeight.w700,
-                                                ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 3),
-                                    Text(
-                                      t
-                                          .creator
-                                          .campaigns
-                                          .budget_remaining_label,
-                                      style: AppTextStyles.caption(context)
-                                          .copyWith(
-                                            fontSize: 9.5,
-                                            color: AppColors.textMutedOf(
-                                              context,
-                                            ),
-                                            fontWeight: FontWeight.w700,
-                                          ),
-                                    ),
-                                    Text(
-                                      MoneyFormatter.format(
-                                        c.remainingBudgetCents / 100.0,
-                                        currency: c.currency,
-                                        locale: moneyLocale,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: AppTextStyles.labelLarge(context)
-                                          .copyWith(
-                                            fontSize: 12.5,
-                                            fontWeight: FontWeight.w800,
-                                            color: CreatorColors.primaryOf(
-                                              context,
-                                            ),
-                                          ),
-                                    ),
-                                    const SizedBox(height: 1),
-                                    ClipRRect(
-                                      borderRadius: BorderRadius.circular(3),
-                                      child: LinearProgressIndicator(
-                                        minHeight: 3,
-                                        value: spentFrac,
-                                        backgroundColor: AppColors.borderOf(
-                                          context,
-                                        ).withValues(alpha: 0.35),
-                                        color: CreatorColors.primaryOf(context),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 3),
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: CampaignGridMicroStat(
-                                            icon: linkMetric
-                                                ? Icons.ads_click_rounded
-                                                : Icons.visibility_outlined,
-                                            value:
-                                                '${linkMetric ? c.validClicks : c.validViews}',
-                                            tooltip: linkMetric
-                                                ? t
-                                                      .advertiser_campaigns
-                                                      .detail
-                                                      .valid_clicks
-                                                : t
-                                                      .advertiser_campaigns
-                                                      .detail
-                                                      .valid_views,
-                                          ),
-                                        ),
-                                        Expanded(
-                                          child: CampaignGridMicroStat(
-                                            icon: Icons.groups_2_outlined,
-                                            value: '${c.approvedCreators}',
-                                            tooltip: t
-                                                .advertiser_campaigns
-                                                .detail
-                                                .approved_creators,
-                                          ),
-                                        ),
-                                        Expanded(
-                                          child: CampaignGridMicroStat(
-                                            icon: Icons.payments_outlined,
-                                            value: MoneyFormatter.format(
-                                              c.totalBudgetCents / 100.0,
-                                              currency: c.currency,
-                                              locale: moneyLocale,
-                                            ),
-                                            tooltip: t
-                                                .advertiser_campaigns
-                                                .card
-                                                .budget_total,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
+                                  ),
+                                ),
+                              ),
+                            if (widget.applicationStatus != null)
+                              PositionedDirectional(
+                                top: 8,
+                                end: 8,
+                                child: _StatusDotBadge(
+                                  status: widget.applicationStatus!,
+                                ),
+                              ),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(10, 10, 10, 14),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SizedBox(
+                            height: _CreatorGridTileLayout.titleBlockHeight,
+                            child: Align(
+                              alignment: Alignment.topLeft,
+                              child: Text(
+                                c.title,
+                                maxLines: _CreatorGridTileLayout.titleMaxLines,
+                                overflow: TextOverflow.ellipsis,
+                                style: GoogleFonts.sora(
+                                  fontSize:
+                                      _CreatorGridTileLayout.titleFontSize,
+                                  fontWeight: FontWeight.w800,
+                                  height:
+                                      _CreatorGridTileLayout.titleLineHeight,
+                                  color: CampaignDetailPremiumPalette.value(
+                                    context,
+                                  ),
                                 ),
                               ),
                             ),
-                          );
-                        },
+                          ),
+                          const SizedBox(height: 4),
+                          SizedBox(
+                            height:
+                                _CreatorGridTileLayout.advertiserBlockHeight,
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                c.advertiserName ?? '',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: GoogleFonts.dmSans(
+                                  fontSize:
+                                      _CreatorGridTileLayout.advertiserFontSize,
+                                  fontWeight: FontWeight.w600,
+                                  height: _CreatorGridTileLayout
+                                      .advertiserLineHeight,
+                                  color: CreatorCampaignsChrome.muted(context),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          SizedBox(
+                            height: _CreatorGridTileLayout.metaRowHeight,
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 3,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color:
+                                        CreatorCampaignsChrome.typeBg(context),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                      color: CreatorCampaignsChrome.amber(
+                                        context,
+                                      ),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    typeLabel,
+                                    style: GoogleFonts.dmSans(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w800,
+                                      color: CreatorCampaignsChrome.amber(
+                                        context,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                Icon(
+                                  _platformGlyph(plat),
+                                  size: 14,
+                                  color: CreatorCampaignsChrome.muted(context),
+                                ),
+                                const SizedBox(width: 4),
+                                Expanded(
+                                  child: Text(
+                                    platLabel,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: GoogleFonts.dmSans(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w700,
+                                      color:
+                                          CreatorCampaignsChrome.muted(context),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          SizedBox(
+                            height: _CreatorGridTileLayout.budgetLabelHeight,
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                t.creator.campaigns.budget_remaining_label,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: GoogleFonts.dmSans(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                  height: 1.2,
+                                  color: CreatorCampaignsChrome.label(context),
+                                ),
+                              ),
+                            ),
+                          ),
+                          SizedBox(
+                            height: _CreatorGridTileLayout.budgetValueHeight,
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                MoneyFormatter.format(
+                                  c.remainingBudgetCents / 100.0,
+                                  currency: c.currency,
+                                  locale: widget.moneyLocale,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: GoogleFonts.dmSans(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w800,
+                                  height: 1.25,
+                                  color: CreatorCampaignsChrome.amber(context),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(
+                            height: _CreatorGridTileLayout.progressTopGap,
+                          ),
+                          SizedBox(
+                            height: _CreatorGridTileLayout.progressHeight,
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(3),
+                              child: LinearProgressIndicator(
+                                minHeight: _CreatorGridTileLayout.progressHeight,
+                                value: spentFrac,
+                                backgroundColor:
+                                    CreatorCampaignsChrome.divider(context),
+                                color: CreatorCampaignsChrome.amber(context)
+                                    .withValues(alpha: 0.85),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -407,52 +436,8 @@ class CreatorBrowseCampaignGridTile extends StatelessWidget {
   }
 }
 
-class _MiniTypePill extends StatelessWidget {
-  const _MiniTypePill({required this.label, this.muted = false});
-
-  final String label;
-  final bool muted;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-          color: CreatorColors.primaryOf(
-            context,
-          ).withValues(alpha: muted ? 0.22 : 0.4),
-        ),
-        gradient: muted
-            ? null
-            : LinearGradient(
-                colors: [
-                  CreatorColors.primaryOf(context).withValues(alpha: 0.12),
-                  CreatorColors.primaryOf(context).withValues(alpha: 0.04),
-                ],
-              ),
-        color: muted
-            ? Theme.of(context).colorScheme.surface.withValues(alpha: 0.35)
-            : null,
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 10,
-          fontWeight: FontWeight.w800,
-          letterSpacing: 0.1,
-          color: muted
-              ? AppColors.textSecondaryOf(context)
-              : CreatorColors.primaryOf(context),
-        ),
-      ),
-    );
-  }
-}
-
-class _GridHeroImage extends StatelessWidget {
-  const _GridHeroImage({
+class _HeroVisual extends StatelessWidget {
+  const _HeroVisual({
     required this.coverUrl,
     required this.brandLogoUrl,
     required this.type,
@@ -464,7 +449,7 @@ class _GridHeroImage extends StatelessWidget {
 
   Widget _fallback(BuildContext context) {
     return ColoredBox(
-      color: CreatorColors.primaryOf(context).withValues(alpha: 0.12),
+      color: AppColors.surfaceElevatedOf(context),
       child: Icon(
         switch (type) {
           CreatorCampaignType.link => Icons.link_rounded,
@@ -472,158 +457,51 @@ class _GridHeroImage extends StatelessWidget {
           CreatorCampaignType.shorts => Icons.movie_filter_rounded,
           CreatorCampaignType.unknown => Icons.campaign_outlined,
         },
-        color: CreatorColors.primaryOf(context),
-        size: 36,
+        color: CreatorCampaignsChrome.amber(context).withValues(alpha: 0.85),
+        size: 40,
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final cover = coverUrl;
-    final logo = brandLogoUrl;
-    final hasCover = cover != null && cover.trim().isNotEmpty;
-    final hasLogo = logo != null && logo.trim().isNotEmpty;
-
-    if (hasCover) {
-      return Stack(
-        fit: StackFit.expand,
-        children: [
-          CachedNetworkImage(
-            imageUrl: cover,
-            fit: BoxFit.cover,
-            width: double.infinity,
-            height: double.infinity,
-            memCacheWidth: 600,
-            memCacheHeight: 720,
-            placeholder: (context, url) => _fallback(context),
-            errorWidget: (context, url, err) => _fallback(context),
-          ),
-          if (hasLogo)
-            Positioned(
-              left: 10,
-              bottom: 10,
-              child: _CreatorLogoOverlay(imageUrl: logo),
-            ),
-        ],
-      );
-    }
-
-    if (hasLogo) {
-      return DecoratedBox(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              CreatorColors.primaryOf(context).withValues(alpha: 0.14),
-              Theme.of(context).colorScheme.surfaceContainerHighest,
-            ],
-          ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(10),
-          child: FittedBox(
-            fit: BoxFit.contain,
-            child: CachedNetworkImage(
-              imageUrl: logo,
-              fit: BoxFit.contain,
-              memCacheWidth: 400,
-              memCacheHeight: 400,
-              placeholder: (context, url) => _fallback(context),
-              errorWidget: (context, url, err) => _fallback(context),
-            ),
-          ),
-        ),
-      );
-    }
-
-    return _fallback(context);
-  }
-}
-
-class _CreatorLogoOverlay extends StatelessWidget {
-  const _CreatorLogoOverlay({required this.imageUrl});
-
-  final String imageUrl;
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.96),
-        borderRadius: BorderRadius.circular(10),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.18),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(6),
-        child: CachedNetworkImage(
-          imageUrl: imageUrl,
-          width: 44,
-          height: 44,
-          fit: BoxFit.contain,
-          memCacheWidth: 120,
-          memCacheHeight: 120,
-          placeholder: (context, url) => SizedBox(
-            width: 44,
-            height: 44,
-            child: Icon(
-              Icons.business_rounded,
-              size: 24,
-              color: CreatorColors.primaryOf(context),
-            ),
-          ),
-          errorWidget: (context, url, err) => SizedBox(
-            width: 44,
-            height: 44,
-            child: Icon(
-              Icons.business_rounded,
-              size: 24,
-              color: CreatorColors.primaryOf(context),
-            ),
-          ),
-        ),
-      ),
+    return CampaignGridHeroImage(
+      coverUrl: coverUrl,
+      brandLogoUrl: brandLogoUrl,
+      backdropColor: CreatorCampaignsChrome.card(context),
+      fallback: _fallback(context),
     );
   }
 }
 
-class _MiniAppBadge extends StatelessWidget {
-  const _MiniAppBadge({required this.status});
+class _StatusDotBadge extends StatelessWidget {
+  const _StatusDotBadge({required this.status});
 
   final CreatorApplicationStatus status;
 
   @override
   Widget build(BuildContext context) {
+    final fg = switch (status) {
+      CreatorApplicationStatus.approved => CreatorCampaignsChrome.green,
+      CreatorApplicationStatus.pending =>
+          CreatorCampaignsChrome.amber(context),
+      CreatorApplicationStatus.rejected => Colors.redAccent,
+      _ => CreatorCampaignsChrome.muted(context),
+    };
     final icon = switch (status) {
       CreatorApplicationStatus.approved => Icons.verified_rounded,
       CreatorApplicationStatus.pending => Icons.schedule_rounded,
       CreatorApplicationStatus.rejected => Icons.block_rounded,
       _ => Icons.info_outline_rounded,
     };
-    final color = switch (status) {
-      CreatorApplicationStatus.approved => const Color(0xFF10B981),
-      CreatorApplicationStatus.pending => const Color(0xFFF59E0B),
-      CreatorApplicationStatus.rejected => Colors.red,
-      _ => AppColors.textMutedOf(context),
-    };
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.92),
+        color: Colors.black.withValues(alpha: 0.5),
         shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.12), blurRadius: 8),
-        ],
       ),
       child: Padding(
         padding: const EdgeInsets.all(6),
-        child: Icon(icon, size: 16, color: color),
+        child: Icon(icon, size: 16, color: fg),
       ),
     );
   }

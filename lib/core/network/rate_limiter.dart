@@ -14,4 +14,8 @@ final class RateLimiter {
   }
 
   void mark(String key) => _lastCall[key] = DateTime.now();
+
+  /// Clears spacing state (call after login / logout so a new session is never
+  /// blocked by timestamps from the previous one).
+  void reset() => _lastCall.clear();
 }

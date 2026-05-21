@@ -2,7 +2,7 @@ name: wayoadsgo
 description: "A new Flutter project."
 publish_to: 'none'
 
-version: 1.0.1+28
+version: 1.0.1+30
 
 environment:
   sdk: ^3.11.4
@@ -36,7 +36,7 @@ dependencies:
   # mutex removed — unused
   cached_network_image: ^3.4.1
   skeletonizer: ^2.1.3
-  # shimmer removed — unused (using skeletonizer instead)
+  shimmer: ^3.0.0
   # animations removed — unused
   flutter_staggered_animations: ^1.1.1
   # SECURITY: Pinned to exact version (0.0.x is immature — audit before upgrading)
@@ -45,6 +45,9 @@ dependencies:
   # sensors_plus removed — unused (NSMotionUsageDescription also removed from iOS)
   dart_pusher_channels: ^1.2.3
   file_picker: ^11.0.2
+  receive_sharing_intent: ^1.8.1
+  cross_file: ^0.3.4
+  http_parser: ^4.1.2
   url_launcher: ^6.3.2
   connectivity_plus: ^7.1.1
   flutter_stripe: ^11.5.0
@@ -56,6 +59,14 @@ dependencies:
   path_provider: ^2.1.5
   share_plus: ^10.1.4
   open_filex: ^4.7.0
+  # Push notifications (replace lib/firebase_options.dart via `dart run flutterfire_cli:flutterfire configure`)
+  firebase_core: ^3.8.1
+  firebase_messaging: ^15.2.0
+  flutter_local_notifications: ^18.0.1
+  permission_handler: ^11.3.1
+  gal: ^2.3.2
+  flutter_cache_manager: ^3.4.1
+  in_app_review: ^2.0.12
 
 dev_dependencies:
   flutter_test:

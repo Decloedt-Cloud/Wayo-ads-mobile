@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/providers/app_providers.dart';
+import '../../core/storage/app_prefs.dart';
+import '../../i18n/strings.g.dart';
 import '../account_deletion/presentation/providers/account_deletion_providers.dart';
 import '../auth/domain/auth_notifier.dart';
 import '../auth/domain/wayo_ads_account_role.dart';
@@ -41,6 +43,59 @@ class _AppShellState extends ConsumerState<AppShell>
   final GlobalKey _chatKey = GlobalKey(debugLabel: 'shell.tab.chat');
 
   bool _tutorialTriggered = false;
+  Future<void>? _tutorialLaunch;
+
+  Future<void> _waitForCoachNavLayouts(
+    Map<ShellTutorialTarget, GlobalKey> keys,
+    int attempts,
+  ) async {
+    for (var i = 0;
+        i < attempts && mounted && !shellCoachNavTabsReady(keys);
+        i++) {
+      await WidgetsBinding.instance.endOfFrame;
+    }
+    if (mounted) {
+      await WidgetsBinding.instance.endOfFrame;
+    }
+  }
+
+  Future<void> _kickoffShellTutorialFirstRun({
+    required AppPrefs prefs,
+    required int userId,
+    required WayoAdsAccountRole role,
+    required Map<ShellTutorialTarget, GlobalKey> keys,
+  }) async {
+    await WidgetsBinding.instance.endOfFrame;
+    if (!mounted) return;
+
+    await _waitForCoachNavLayouts(keys, 24);
+    if (!mounted) return;
+
+    Future<bool> tryShow() {
+      return ShellTutorialController.instance.maybeShow(
+        context: context,
+        prefs: prefs,
+        userId: userId,
+        role: role,
+        keys: keys,
+      );
+    }
+
+    var ok = await tryShow();
+    if (!ok && mounted) {
+      await _waitForCoachNavLayouts(keys, 8);
+      if (mounted) ok = await tryShow();
+    }
+
+    if (!mounted) return;
+    _tutorialTriggered = true;
+
+    if (!ok) {
+      debugPrint(
+        '[AppShell] Shell onboarding tour did not anchor to bottom nav tabs',
+      );
+    }
+  }
 
   @override
   void initState() {
@@ -101,20 +156,24 @@ class _AppShellState extends ConsumerState<AppShell>
       return;
     }
 
-    _tutorialTriggered = true;
-    // One more frame so the bottom nav has a rendered context — the coach
-    // mark package relies on `GlobalKey.currentContext` to locate targets.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      ShellTutorialController.instance.maybeShow(
-        context: context,
-        prefs: prefs,
-        userId: auth.user.id,
-        role: role,
-        keys: _tutorialKeys(
-          auth.user.wayoAdsRole != WayoAdsAccountRole.creator,
-        ),
-      );
+    if (_tutorialLaunch != null) return;
+
+    final keys = _tutorialKeys(
+      role == WayoAdsAccountRole.advertiser ||
+          role == WayoAdsAccountRole.creator,
+    );
+
+    final Future<void> kickoff = _kickoffShellTutorialFirstRun(
+      prefs: prefs,
+      userId: auth.user.id,
+      role: role,
+      keys: keys,
+    );
+    _tutorialLaunch = kickoff;
+    kickoff.whenComplete(() {
+      if (identical(_tutorialLaunch, kickoff)) {
+        _tutorialLaunch = null;
+      }
     });
   }
 
@@ -128,24 +187,38 @@ class _AppShellState extends ConsumerState<AppShell>
     if (role == WayoAdsAccountRole.unknown) return;
 
     final prefs = ref.read(appPrefsProvider);
+    final keys = _tutorialKeys(
+      role == WayoAdsAccountRole.advertiser ||
+          role == WayoAdsAccountRole.creator,
+    );
     await ShellTutorialController.instance.reset(
       prefs: prefs,
       userId: auth.user.id,
       role: role,
     );
     if (!mounted) return;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+
+    await _waitForCoachNavLayouts(keys, 24);
+    if (!mounted) return;
+
+    var ok = await ShellTutorialController.instance.show(
+      context: context,
+      prefs: prefs,
+      userId: auth.user.id,
+      role: role,
+      keys: keys,
+    );
+    if (!ok && mounted) {
+      await _waitForCoachNavLayouts(keys, 8);
       if (!mounted) return;
-      ShellTutorialController.instance.show(
+      await ShellTutorialController.instance.show(
         context: context,
         prefs: prefs,
         userId: auth.user.id,
         role: role,
-        keys: _tutorialKeys(
-          auth.user.wayoAdsRole != WayoAdsAccountRole.creator,
-        ),
+        keys: keys,
       );
-    });
+    }
   }
 
   @override
@@ -185,8 +258,14 @@ class _AppShellState extends ConsumerState<AppShell>
     );
 
     final authState = ref.watch(authNotifierProvider).valueOrNull;
-    final showInvoicesTab = authState is! AuthAuthenticated ||
-        authState.user.wayoAdsRole != WayoAdsAccountRole.creator;
+    final showInvoicesTab = authState is AuthAuthenticated &&
+        (authState.user.wayoAdsRole == WayoAdsAccountRole.advertiser ||
+            authState.user.wayoAdsRole == WayoAdsAccountRole.creator);
+
+    final invoicesNavLabel = authState is AuthAuthenticated &&
+            authState.user.wayoAdsRole == WayoAdsAccountRole.creator
+        ? context.t.nav.invoices_creator
+        : context.t.nav.invoices;
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final systemNav = SystemUiOverlayStyle(
@@ -232,6 +311,7 @@ class _AppShellState extends ConsumerState<AppShell>
             chatUnread: chatUnread,
             campaignsAttentionCount: campaignsAttentionCount,
             showInvoicesTab: showInvoicesTab,
+            invoicesNavLabel: invoicesNavLabel,
             dashboardTabKey: _dashboardKey,
             campaignsTabKey: _campaignsKey,
             walletTabKey: _walletKey,

@@ -9,8 +9,12 @@ import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../i18n/strings.g.dart';
+import '../../data/chat_attachment_share.dart';
 import '../../data/chat_media_utils.dart';
+import '../../data/chat_message_media.dart';
 import '../../domain/chat_message.dart';
+import '../formatting/chat_message_plain_body.dart';
+import '../widgets/chat_fullscreen_image_page.dart';
 import 'cinematic_chat_colors.dart';
 
 /// ━━━ [3] BULLES + [4] MICRO-INTERACTIONS ━━━
@@ -32,6 +36,9 @@ class CinematicMessageBubble extends StatefulWidget {
     this.onReplyRequest,
     this.onEditRequest,
     this.onDeleteRequest,
+    this.onCopyRequest,
+    this.onForwardRequest,
+    this.chatImageRequestHeaders,
   });
 
   final ChatMessage message;
@@ -66,12 +73,42 @@ class CinematicMessageBubble extends StatefulWidget {
   /// confirmation dialog.
   final VoidCallback? onDeleteRequest;
 
+  /// Copies [plainBodyFromChatContent] via parent (clipboard + snackbar).
+  final VoidCallback? onCopyRequest;
+
+  /// Opens forward target picker (existing conversations only).
+  final VoidCallback? onForwardRequest;
+
+  /// Bearer + app id headers for protected chat media thumbnails (optional).
+  final Map<String, String>? chatImageRequestHeaders;
+
   @override
   State<CinematicMessageBubble> createState() => _CinematicMessageBubbleState();
 }
 
 class _CinematicMessageBubbleState extends State<CinematicMessageBubble> {
-  /// Horizontal inward drag (toward conversation center). WhatsApp-style reply.
+  Future<void> _shareAttachment(
+    BuildContext context,
+    String url, {
+    required bool isPdf,
+  }) async {
+    final u = url.trim();
+    if (u.isEmpty) return;
+    HapticFeedback.lightImpact();
+    final ok = await shareChatAttachmentAsFile(
+      mediaUrl: u,
+      httpHeaders: widget.chatImageRequestHeaders,
+      fileName: widget.message.fileName,
+      isPdf: isPdf,
+    );
+    if (!ok && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.t.chat.share_failed)),
+      );
+    }
+  }
+
+  /// ━━━ Horizontal inward drag (toward conversation center). WhatsApp-style reply.
   double _dragX = 0;
 
   static const double _swipeMaxShift = 64;
@@ -143,10 +180,27 @@ class _CinematicMessageBubbleState extends State<CinematicMessageBubble> {
     final m = widget.message;
     final isMine = widget.isMine;
     final reduce = widget.reduceMotion;
-    final mediaUrl = resolveChatMediaUrl(m.fileUrl, widget.apiBaseUrl);
-    final isImage = m.type == 'image' && mediaUrl.isNotEmpty;
-    final isFile = m.type == 'file' && mediaUrl.isNotEmpty;
-    final text = m.content.trim();
+    var media = resolveChatMessageMedia(m, widget.apiBaseUrl);
+    var mediaUrl = media.url;
+    var isImage = media.isImage || (m.pending && m.type == 'image');
+    var isFile = media.isFile || (m.pending && m.type == 'file');
+    if (!media.hasMedia) {
+      final bodyOnly = plainBodyFromChatContent(m.content).trim();
+      if (bodyOnly.isNotEmpty && looksLikeRemoteMediaUrl(bodyOnly)) {
+        final url = resolveChatMediaUrl(bodyOnly, widget.apiBaseUrl);
+        final ext = extensionFromFilename(bodyOnly) ?? '';
+        final pdf = isChatPdfExtension(ext);
+        if (url.isNotEmpty) {
+          mediaUrl = url;
+          isImage = !pdf;
+          isFile = pdf;
+          media = ChatMessageMediaView(url: url, isImage: isImage, isFile: isFile);
+        }
+      }
+    }
+    final text = chatMessageDisplayCaption(m, widget.apiBaseUrl);
+    final pendingAttachment =
+        m.pending && mediaUrl.isEmpty && (m.type == 'image' || m.type == 'file');
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final threaded = m.replyTo;
@@ -201,6 +255,13 @@ class _CinematicMessageBubbleState extends State<CinematicMessageBubble> {
             ],
     );
 
+    final canEdit = isMine && m.type == 'text' && !m.pending && !m.failed;
+    final canDelete = isMine && !m.pending;
+    final showCopy =
+        chatMessageHasCopyableText(m) && widget.onCopyRequest != null;
+    final showForward =
+        chatMessageCanForward(m) && widget.onForwardRequest != null;
+
     final bubbleContent = Padding(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       child: Column(
@@ -216,81 +277,270 @@ class _CinematicMessageBubbleState extends State<CinematicMessageBubble> {
               muted: ct.muted,
               isDark: isDark,
             ),
-            if (isImage || isFile || text.isNotEmpty) const SizedBox(height: 8),
+            if (pendingAttachment ||
+                isImage ||
+                isFile ||
+                text.isNotEmpty)
+              const SizedBox(height: 8),
           ],
-          if (isImage)
-            ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(
-                  maxHeight: 220,
-                  maxWidth: 260,
-                ),
-                child: CachedNetworkImage(
-                  imageUrl: mediaUrl,
-                  fit: BoxFit.cover,
-                  memCacheWidth: 520,
-                  memCacheHeight: 440,
-                  placeholder: (context, url) => SizedBox(
-                    height: 120,
-                    child: Center(
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: ct.amber,
+          if (pendingAttachment)
+            _PendingAttachmentPreview(
+              isPdf: m.type == 'file',
+              label: m.fileName?.trim().isNotEmpty == true
+                  ? m.fileName!
+                  : (m.type == 'file'
+                        ? widget.attachmentLabel
+                        : widget.openPdfLabel),
+              accent: ct.amber,
+              muted: ct.muted,
+              isMine: isMine,
+            )
+          else if (isImage)
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: isMine
+                  ? [
+                      Expanded(
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: () {
+                            HapticFeedback.lightImpact();
+                            openChatFullscreenImage(
+                              context,
+                              imageUrl: mediaUrl,
+                              httpHeaders: widget.chatImageRequestHeaders,
+                            );
+                          },
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: ConstrainedBox(
+                              constraints: const BoxConstraints(
+                                maxHeight: 420,
+                                maxWidth: 280,
+                              ),
+                              child: CachedNetworkImage(
+                                imageUrl: mediaUrl,
+                                httpHeaders: widget.chatImageRequestHeaders,
+                                fit: BoxFit.contain,
+                                alignment: Alignment.center,
+                                fadeInDuration: const Duration(milliseconds: 140),
+                                placeholder: (context, url) => SizedBox(
+                                  height: 140,
+                                  width: double.infinity,
+                                  child: Center(
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: ct.amber,
+                                    ),
+                                  ),
+                                ),
+                                errorWidget: (context, url, error) =>
+                                    Icon(Icons.broken_image_outlined, color: ct.muted),
+                              ),
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                  errorWidget: (context, url, error) =>
-                      Icon(Icons.broken_image_outlined, color: ct.muted),
-                ),
-              ),
+                      const SizedBox(width: 8),
+                      _ShareAttachmentCircle(
+                        tooltip: context.t.chat.share_media_tooltip,
+                        enabled: !m.pending && !m.failed,
+                        accent: ct.amber,
+                        surface: ct.surface,
+                        muted: ct.muted,
+                        onTap: () => _shareAttachment(
+                          context,
+                          mediaUrl,
+                          isPdf: false,
+                        ),
+                      ),
+                    ]
+                  : [
+                      _ShareAttachmentCircle(
+                        tooltip: context.t.chat.share_media_tooltip,
+                        enabled: !m.pending && !m.failed,
+                        accent: ct.amber,
+                        surface: ct.surface,
+                        muted: ct.muted,
+                        onTap: () => _shareAttachment(
+                          context,
+                          mediaUrl,
+                          isPdf: false,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: () {
+                            HapticFeedback.lightImpact();
+                            openChatFullscreenImage(
+                              context,
+                              imageUrl: mediaUrl,
+                              httpHeaders: widget.chatImageRequestHeaders,
+                            );
+                          },
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: ConstrainedBox(
+                              constraints: const BoxConstraints(
+                                maxHeight: 420,
+                                maxWidth: 280,
+                              ),
+                              child: CachedNetworkImage(
+                                imageUrl: mediaUrl,
+                                httpHeaders: widget.chatImageRequestHeaders,
+                                fit: BoxFit.contain,
+                                alignment: Alignment.center,
+                                fadeInDuration: const Duration(milliseconds: 140),
+                                placeholder: (context, url) => SizedBox(
+                                  height: 140,
+                                  width: double.infinity,
+                                  child: Center(
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: ct.amber,
+                                    ),
+                                  ),
+                                ),
+                                errorWidget: (context, url, error) =>
+                                    Icon(Icons.broken_image_outlined, color: ct.muted),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
             ),
           if (isImage && text.isNotEmpty) const SizedBox(height: 8),
           if (isFile)
-            InkWell(
-              onTap: () => _openUrl(mediaUrl),
-              borderRadius: BorderRadius.circular(12),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 6),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.picture_as_pdf_rounded,
-                      color: isMine ? Colors.black87 : ct.amber,
-                      size: 28,
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            m.fileName?.trim().isNotEmpty == true
-                                ? m.fileName!
-                                : widget.attachmentLabel,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.inter(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: isMine
-                                  ? Colors.black.withValues(alpha: 0.9)
-                                  : ct.textPrimary,
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: isMine
+                  ? [
+                      Expanded(
+                        child: InkWell(
+                          onTap: () => _openUrl(mediaUrl),
+                          borderRadius: BorderRadius.circular(12),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 6),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.picture_as_pdf_rounded,
+                                  color: isMine ? Colors.black87 : ct.amber,
+                                  size: 28,
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        m.fileName?.trim().isNotEmpty == true
+                                            ? m.fileName!
+                                            : widget.attachmentLabel,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: GoogleFonts.inter(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                          color: isMine
+                                              ? Colors.black.withValues(alpha: 0.9)
+                                              : ct.textPrimary,
+                                        ),
+                                      ),
+                                      Text(
+                                        widget.openPdfLabel,
+                                        style: GoogleFonts.inter(
+                                          fontSize: 12,
+                                          color: isMine ? Colors.black54 : ct.amber,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                          Text(
-                            widget.openPdfLabel,
-                            style: GoogleFonts.inter(
-                              fontSize: 12,
-                              color: isMine ? Colors.black54 : ct.amber,
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              ),
+                      const SizedBox(width: 8),
+                      _ShareAttachmentCircle(
+                        tooltip: context.t.chat.share_media_tooltip,
+                        enabled: !m.pending && !m.failed,
+                        accent: ct.amber,
+                        surface: ct.surface,
+                        muted: ct.muted,
+                        onTap: () => _shareAttachment(
+                          context,
+                          mediaUrl,
+                          isPdf: true,
+                        ),
+                      ),
+                    ]
+                  : [
+                      _ShareAttachmentCircle(
+                        tooltip: context.t.chat.share_media_tooltip,
+                        enabled: !m.pending && !m.failed,
+                        accent: ct.amber,
+                        surface: ct.surface,
+                        muted: ct.muted,
+                        onTap: () => _shareAttachment(
+                          context,
+                          mediaUrl,
+                          isPdf: true,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: InkWell(
+                          onTap: () => _openUrl(mediaUrl),
+                          borderRadius: BorderRadius.circular(12),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 6),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.picture_as_pdf_rounded,
+                                  color: isMine ? Colors.black87 : ct.amber,
+                                  size: 28,
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        m.fileName?.trim().isNotEmpty == true
+                                            ? m.fileName!
+                                            : widget.attachmentLabel,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: GoogleFonts.inter(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                          color: isMine
+                                              ? Colors.black.withValues(alpha: 0.9)
+                                              : ct.textPrimary,
+                                        ),
+                                      ),
+                                      Text(
+                                        widget.openPdfLabel,
+                                        style: GoogleFonts.inter(
+                                          fontSize: 12,
+                                          color: isMine ? Colors.black54 : ct.amber,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
             ),
           if (isFile && text.isNotEmpty) const SizedBox(height: 8),
           if (text.isNotEmpty)
@@ -418,30 +668,27 @@ class _CinematicMessageBubbleState extends State<CinematicMessageBubble> {
       ),
     );
 
-    final canEdit = isMine && m.type == 'text' && !m.pending && !m.failed;
-    final canDelete = isMine && !m.pending;
-
     final bubbleStack = GestureDetector(
       behavior: HitTestBehavior.translucent,
       onTap: () {
-        if (isMine && !m.pending && !m.failed && (canEdit || canDelete)) {
-          HapticFeedback.selectionClick();
-          if (widget.selected) {
-            widget.onDismissSelection?.call();
-          } else {
-            widget.onSelect?.call();
-          }
+        if (m.pending || m.failed) return;
+        HapticFeedback.selectionClick();
+        if (widget.selected) {
+          widget.onDismissSelection?.call();
+        } else {
+          widget.onSelect?.call();
         }
       },
       onLongPress:
           (!m.pending && !m.failed)
               ? () {
                   HapticFeedback.mediumImpact();
-                  if (isMine && (canEdit || canDelete)) {
+                  if (isMine &&
+                      (canEdit || canDelete || showCopy || showForward)) {
                     if (!widget.selected) {
                       widget.onSelect?.call();
                     }
-                  } else if (widget.onReplyRequest != null) {
+                  } else if (!isMine && widget.onReplyRequest != null) {
                     widget.onReplyRequest!.call();
                   }
                 }
@@ -477,22 +724,51 @@ class _CinematicMessageBubbleState extends State<CinematicMessageBubble> {
       ),
     );
 
-    final actionBar = widget.selected && isMine && (canEdit || canDelete)
+    final showActionBar =
+        widget.selected &&
+        !m.pending &&
+        !m.failed &&
+        (showCopy ||
+            showForward ||
+            (isMine && (canEdit || canDelete)));
+
+    final actionBar = showActionBar
         ? Padding(
-            padding: const EdgeInsets.only(right: 12, top: 6),
-            child: _CinematicActionBar(
-              showEdit: canEdit,
-              showDelete: canDelete,
-              editLabel: context.t.chat.bubble_update,
-              deleteLabel: context.t.chat.bubble_delete,
-              onEdit: () {
-                widget.onDismissSelection?.call();
-                widget.onEditRequest?.call();
-              },
-              onDelete: () {
-                widget.onDismissSelection?.call();
-                widget.onDeleteRequest?.call();
-              },
+            padding: EdgeInsets.only(
+              left: isMine ? 0 : 12,
+              right: isMine ? 12 : 0,
+              top: 6,
+            ),
+            child: Align(
+              alignment: isMine
+                  ? AlignmentDirectional.centerEnd
+                  : AlignmentDirectional.centerStart,
+              child: _CinematicMessageActionBar(
+                showEdit: isMine && canEdit,
+                showDelete: isMine && canDelete,
+                showCopy: showCopy,
+                showForward: showForward,
+                editLabel: context.t.chat.bubble_update,
+                deleteLabel: context.t.chat.bubble_delete,
+                copyLabel: context.t.chat.bubble_copy,
+                forwardLabel: context.t.chat.bubble_forward,
+                onEdit: () {
+                  widget.onDismissSelection?.call();
+                  widget.onEditRequest?.call();
+                },
+                onDelete: () {
+                  widget.onDismissSelection?.call();
+                  widget.onDeleteRequest?.call();
+                },
+                onCopy: () {
+                  widget.onDismissSelection?.call();
+                  widget.onCopyRequest?.call();
+                },
+                onForward: () {
+                  widget.onDismissSelection?.call();
+                  widget.onForwardRequest?.call();
+                },
+              ),
             ),
           )
         : const SizedBox.shrink();
@@ -507,7 +783,7 @@ class _CinematicMessageBubbleState extends State<CinematicMessageBubble> {
         AnimatedSize(
           duration: const Duration(milliseconds: 220),
           curve: Curves.easeOutCubic,
-          alignment: Alignment.topRight,
+          alignment: isMine ? Alignment.topRight : Alignment.topLeft,
           child: actionBar,
         ),
         if (widget.showTimestampFooter)
@@ -618,6 +894,54 @@ class _CinematicPeerBubbleAvatar extends StatelessWidget {
   }
 }
 
+class _ShareAttachmentCircle extends StatelessWidget {
+  const _ShareAttachmentCircle({
+    required this.tooltip,
+    required this.enabled,
+    required this.accent,
+    required this.surface,
+    required this.muted,
+    required this.onTap,
+  });
+
+  final String tooltip;
+  final bool enabled;
+  final Color accent;
+  final Color surface;
+  final Color muted;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: tooltip,
+      child: Material(
+        color: surface.withValues(alpha: enabled ? 0.95 : 0.5),
+        shape: const CircleBorder(),
+        elevation: enabled ? 2 : 0,
+        shadowColor: Colors.black.withValues(alpha: 0.2),
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: enabled
+              ? () {
+                  HapticFeedback.selectionClick();
+                  onTap();
+                }
+              : null,
+          child: Padding(
+            padding: const EdgeInsets.all(9),
+            child: Icon(
+              Icons.ios_share_rounded,
+              size: 19,
+              color: enabled ? accent : muted.withValues(alpha: 0.45),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// ━━━ [9] RECEIPTS (pending → sent → delivered → seen) ━━━
 class _ReceiptSwitcher extends StatelessWidget {
   const _ReceiptSwitcher({
@@ -665,27 +989,99 @@ class _ReceiptSwitcher extends StatelessWidget {
   }
 }
 
-/// ━━━ Tap-to-edit / Tap-to-delete — horizontal glass action bar ━━━
-class _CinematicActionBar extends StatelessWidget {
-  const _CinematicActionBar({
+/// ━━━ Copy / forward / edit / delete — horizontal glass bar ━━━
+class _CinematicMessageActionBar extends StatelessWidget {
+  const _CinematicMessageActionBar({
     required this.showEdit,
     required this.showDelete,
+    required this.showCopy,
+    required this.showForward,
     required this.editLabel,
     required this.deleteLabel,
+    required this.copyLabel,
+    required this.forwardLabel,
     required this.onEdit,
     required this.onDelete,
+    required this.onCopy,
+    required this.onForward,
   });
 
   final bool showEdit;
   final bool showDelete;
+  final bool showCopy;
+  final bool showForward;
   final String editLabel;
   final String deleteLabel;
+  final String copyLabel;
+  final String forwardLabel;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
+  final VoidCallback onCopy;
+  final VoidCallback onForward;
 
   @override
   Widget build(BuildContext context) {
     final ct = CinematicChatTheme.of(context);
+    final parts = <Widget>[];
+
+    void pushSep() {
+      if (parts.isEmpty) return;
+      parts.add(
+        Container(
+          height: 22,
+          width: 1,
+          margin: const EdgeInsets.symmetric(horizontal: 2),
+          color: ct.borderSoft.withValues(alpha: 0.6),
+        ),
+      );
+    }
+
+    if (showEdit) {
+      parts.add(
+        _ActionChip(
+          icon: Icons.edit_rounded,
+          label: editLabel,
+          tint: ct.amber,
+          onTap: onEdit,
+        ),
+      );
+    }
+    if (showDelete) {
+      pushSep();
+      parts.add(
+        _ActionChip(
+          icon: Icons.delete_outline_rounded,
+          label: deleteLabel,
+          tint: const Color(0xFFEF4444),
+          onTap: onDelete,
+        ),
+      );
+    }
+    if (showCopy) {
+      pushSep();
+      parts.add(
+        _ActionChip(
+          icon: Icons.copy_rounded,
+          label: copyLabel,
+          tint: ct.textPrimary,
+          onTap: onCopy,
+        ),
+      );
+    }
+    if (showForward) {
+      pushSep();
+      parts.add(
+        _ActionChip(
+          icon: Icons.forward_rounded,
+          label: forwardLabel,
+          tint: ct.amber,
+          onTap: onForward,
+        ),
+      );
+    }
+
+    if (parts.isEmpty) return const SizedBox.shrink();
+
     return ClipRRect(
       borderRadius: BorderRadius.circular(22),
       child: BackdropFilter(
@@ -706,32 +1102,14 @@ class _CinematicActionBar extends StatelessWidget {
               ),
             ],
           ),
+          constraints: BoxConstraints(
+            maxWidth: MediaQuery.sizeOf(context).width - 48,
+          ),
           padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (showEdit)
-                _ActionChip(
-                  icon: Icons.edit_rounded,
-                  label: editLabel,
-                  tint: ct.amber,
-                  onTap: onEdit,
-                ),
-              if (showEdit && showDelete)
-                Container(
-                  height: 22,
-                  width: 1,
-                  margin: const EdgeInsets.symmetric(horizontal: 2),
-                  color: ct.borderSoft.withValues(alpha: 0.6),
-                ),
-              if (showDelete)
-                _ActionChip(
-                  icon: Icons.delete_outline_rounded,
-                  label: deleteLabel,
-                  tint: const Color(0xFFEF4444),
-                  onTap: onDelete,
-                ),
-            ],
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            child: Row(mainAxisSize: MainAxisSize.min, children: parts),
           ),
         ),
       ),
@@ -1027,6 +1405,78 @@ class _ThreadedReplyPreview extends StatelessWidget {
                       ),
                     ],
                   ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _PendingAttachmentPreview extends StatelessWidget {
+  const _PendingAttachmentPreview({
+    required this.isPdf,
+    required this.label,
+    required this.accent,
+    required this.muted,
+    required this.isMine,
+  });
+
+  final bool isPdf;
+  final String label;
+  final Color accent;
+  final Color muted;
+  final bool isMine;
+
+  @override
+  Widget build(BuildContext context) {
+    return ConstrainedBox(
+      constraints: BoxConstraints(
+        minHeight: isPdf ? 52 : 120,
+        maxWidth: 260,
+      ),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: (isMine ? Colors.white : muted).withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                isPdf ? Icons.picture_as_pdf_rounded : Icons.image_outlined,
+                size: isPdf ? 32 : 40,
+                color: isPdf
+                    ? (isMine ? Colors.black87 : accent)
+                    : accent.withValues(alpha: 0.9),
+              ),
+              if (isPdf) ...[
+                const SizedBox(height: 6),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: Text(
+                    label,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: isMine ? Colors.black87 : muted,
+                    ),
+                  ),
+                ),
+              ],
+              const SizedBox(height: 10),
+              SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.2,
+                  color: accent,
                 ),
               ),
             ],

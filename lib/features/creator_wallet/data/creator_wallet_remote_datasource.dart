@@ -1,5 +1,7 @@
 import 'package:dio/dio.dart';
 
+import '../../../core/config/auth_runtime_config.dart';
+import '../../../core/network/api_endpoints.dart';
 import '../domain/creator_business_profile.dart';
 import '../domain/creator_wallet_models.dart';
 
@@ -97,13 +99,49 @@ class CreatorWalletRemoteDatasource {
 
   final Dio _dio;
 
-  /// `GET /api/creator/withdrawal` — balance + platform settings + history.
-  Future<CreatorWalletPage> fetchWalletPage({
-    int limit = 20,
-    int offset = 0,
+  /// `GET /api/creator/withdrawal` — balance + platform settings + **full**
+  /// withdrawal history (loops with max `limit` until the API returns no more rows).
+  ///
+  /// UI pagination (e.g. 10 rows) is client-only — this call loads everything once.
+  Future<CreatorWalletPage> fetchWalletPage() async {
+    const batch = 100;
+    late final CreatorWalletPage first;
+    final byId = <String, CreatorWithdrawal>{};
+
+    var o = 0;
+    var isFirst = true;
+    while (true) {
+      final page = await _fetchWalletPageSlice(limit: batch, offset: o);
+      if (isFirst) {
+        first = page;
+        isFirst = false;
+      }
+      for (final w in page.withdrawals) {
+        if (w.id.isNotEmpty) {
+          byId[w.id] = w;
+        }
+      }
+      if (page.withdrawals.length < batch) break;
+      o += page.withdrawals.length;
+    }
+
+    final merged = byId.values.toList()
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+    return CreatorWalletPage(
+      balance: first.balance,
+      limits: first.limits,
+      withdrawals: merged,
+      canSimulate: first.canSimulate,
+    );
+  }
+
+  Future<CreatorWalletPage> _fetchWalletPageSlice({
+    required int limit,
+    required int offset,
   }) async {
     final res = await _dio.get<Object?>(
-      'api/creator/withdrawal',
+      AuthRuntimeConfig.instance.wayoAdsRequestPath(ApiEndpoints.creatorWithdrawal),
       queryParameters: {'limit': limit, 'offset': offset},
     );
     final body = res.data;
@@ -145,7 +183,7 @@ class CreatorWalletRemoteDatasource {
   }) async {
     try {
       final res = await _dio.post<Object?>(
-        'api/creator/withdrawal',
+        AuthRuntimeConfig.instance.wayoAdsRequestPath(ApiEndpoints.creatorWithdrawal),
         data: {'amountCents': amountCents},
       );
       final body = res.data;
@@ -173,7 +211,7 @@ class CreatorWalletRemoteDatasource {
   Future<void> cancelWithdrawal(String id) async {
     try {
       await _dio.delete<Object?>(
-        'api/creator/withdrawal',
+        AuthRuntimeConfig.instance.wayoAdsRequestPath(ApiEndpoints.creatorWithdrawal),
         queryParameters: {'id': id},
       );
     } on DioException catch (e) {
@@ -184,7 +222,10 @@ class CreatorWalletRemoteDatasource {
   /// `GET /api/creator/stripe-connect/status` — onboarding flags.
   Future<CreatorStripeStatus> fetchStripeStatus() async {
     try {
-      final res = await _dio.get<Object?>('api/creator/stripe-connect/status');
+      final res = await _dio.get<Object?>(
+        AuthRuntimeConfig.instance
+            .wayoAdsRequestPath(ApiEndpoints.creatorStripeConnectStatus),
+      );
       final body = res.data;
       if (body is! Map) return CreatorStripeStatus.disconnected;
       return CreatorStripeStatus.fromJson(Map<String, dynamic>.from(body));
@@ -203,7 +244,8 @@ class CreatorWalletRemoteDatasource {
   Future<String> createOnboardingUrl() async {
     try {
       final res = await _dio.post<Object?>(
-        'api/creator/stripe-connect/onboard',
+        AuthRuntimeConfig.instance
+            .wayoAdsRequestPath(ApiEndpoints.creatorStripeConnectOnboard),
       );
       final url = _extractUrl(res);
       if (url == null || url.isEmpty) {
@@ -221,7 +263,9 @@ class CreatorWalletRemoteDatasource {
   /// `GET /api/creator/business-profile` — current profile + completeness flag.
   Future<CreatorBusinessProfile> fetchBusinessProfile() async {
     try {
-      final res = await _dio.get<Object?>('api/creator/business-profile');
+      final res = await _dio.get<Object?>(
+        AuthRuntimeConfig.instance.wayoAdsRequestPath(ApiEndpoints.creatorBusinessProfile),
+      );
       final body = res.data;
       if (body is! Map) return CreatorBusinessProfile.empty();
       return CreatorBusinessProfile.fromEnvelope(
@@ -244,7 +288,7 @@ class CreatorWalletRemoteDatasource {
   ) async {
     try {
       await _dio.put<Object?>(
-        'api/creator/business-profile',
+        AuthRuntimeConfig.instance.wayoAdsRequestPath(ApiEndpoints.creatorBusinessProfile),
         data: input.toJson(),
       );
     } on DioException catch (e) {
@@ -256,7 +300,10 @@ class CreatorWalletRemoteDatasource {
   /// `POST /api/creator/stripe-connect/login` — returns the Express dashboard URL.
   Future<String> createLoginUrl() async {
     try {
-      final res = await _dio.post<Object?>('api/creator/stripe-connect/login');
+      final res = await _dio.post<Object?>(
+        AuthRuntimeConfig.instance
+            .wayoAdsRequestPath(ApiEndpoints.creatorStripeConnectLogin),
+      );
       final url = _extractUrl(res);
       if (url == null || url.isEmpty) {
         throw CreatorWalletApiException(

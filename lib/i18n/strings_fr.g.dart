@@ -48,6 +48,7 @@ class TranslationsFr extends Translations {
 	@override late final _TranslationsAdvertiserCampaignsFr advertiser_campaigns = _TranslationsAdvertiserCampaignsFr._(_root);
 	@override late final _TranslationsNavFr nav = _TranslationsNavFr._(_root);
 	@override late final _TranslationsInvoicesFr invoices = _TranslationsInvoicesFr._(_root);
+	@override late final _TranslationsPushFr push = _TranslationsPushFr._(_root);
 	@override late final _TranslationsCreatorFr creator = _TranslationsCreatorFr._(_root);
 	@override late final _TranslationsAdvertiserWalletFr advertiser_wallet = _TranslationsAdvertiserWalletFr._(_root);
 	@override late final _TranslationsChatFr chat = _TranslationsChatFr._(_root);
@@ -101,6 +102,10 @@ class _TranslationsCampaignsExplorerFr extends TranslationsCampaignsExplorerEn {
 	@override String get reset_filters => 'Réinitialiser les filtres';
 	@override String get toolbar_show_search_filters => 'Afficher recherche et filtres';
 	@override String get toolbar_hide_search_filters => 'Masquer recherche et filtres';
+	@override String get filter_label_type => 'Type';
+	@override String get filter_label_status => 'Statut';
+	@override String get filter_label_niche => 'Niche';
+	@override String get filter_label_location => 'Lieu';
 }
 
 // Path: login
@@ -304,6 +309,7 @@ class _TranslationsNavFr extends TranslationsNavEn {
 	@override String get wallet => 'Portefeuille';
 	@override String get chat => 'Messages';
 	@override String get invoices => 'Factures';
+	@override String get invoices_creator => 'Relevés';
 }
 
 // Path: invoices
@@ -314,9 +320,11 @@ class _TranslationsInvoicesFr extends TranslationsInvoicesEn {
 
 	// Translations
 	@override String get title => 'Factures';
+	@override String get title_creator => 'Relevés de paiement';
 	@override String get subtitle_advertiser => 'Chaque dépôt et chaque budget campagne — réunis en un seul endroit.';
 	@override String get subtitle_creator => 'Chaque revenu et chaque virement — sécurisés, téléchargeables, signés.';
 	@override String get summary_total_paid => 'Total payé';
+	@override String get summary_total_validated => 'Total validé';
 	@override String get summary_pending => 'En attente';
 	@override String get summary_count => 'Documents';
 	@override String get filter_all => 'Tout';
@@ -330,6 +338,7 @@ class _TranslationsInvoicesFr extends TranslationsInvoicesEn {
 	@override String get type_earnings => 'Revenus publicitaires';
 	@override String get type_unknown => 'Autre';
 	@override String get status_paid => 'Payée';
+	@override String get status_validated => 'Validée';
 	@override String get status_pending => 'En attente';
 	@override String get status_cancelled => 'Annulée';
 	@override String get role_advertiser => 'Annonceur';
@@ -337,6 +346,7 @@ class _TranslationsInvoicesFr extends TranslationsInvoicesEn {
 	@override String get search_hint => 'Rechercher par numéro, référence…';
 	@override String get empty_title => 'Aucune facture pour l\'instant';
 	@override String get empty_subtitle => 'Vos dépôts, budgets campagne et virements apparaîtront ici automatiquement — sans aucune action manuelle.';
+	@override String get empty_subtitle_creator => 'Vos revenus et documents de virement s’affichent dès qu’ils sont émis — mêmes PDF signés que sur le web.';
 	@override String get empty_cta => 'Actualiser';
 	@override String get error_title => 'Impossible de charger les factures';
 	@override String get error_subtitle => 'Tirez pour rafraîchir — nous réessayons immédiatement.';
@@ -368,6 +378,45 @@ class _TranslationsInvoicesFr extends TranslationsInvoicesEn {
 	@override String get share_subject => 'Facture {number}';
 	@override String get polling_live => 'Live';
 	@override String get polling_paused => 'En pause';
+	@override String get summary_this_month => 'Ce mois-ci';
+	@override String get pagination_detail => 'Page {current} sur {total} · {count} factures';
+	@override String get sort_sheet_title => 'Trier';
+	@override String get sort_date_newest => 'Plus récent';
+	@override String get sort_date_oldest => 'Plus ancien';
+	@override String get sort_amount_high => 'Montant · décroissant';
+	@override String get sort_amount_low => 'Montant · croissant';
+	@override String get sort_status_az => 'Statut · A à Z';
+	@override String get sort_status_za => 'Statut · Z à A';
+	@override String get date_range_title => 'Dates';
+	@override String get date_from => 'Du';
+	@override String get date_to => 'Au';
+	@override String get clear_dates => 'Effacer';
+	@override String get date_apply => 'Appliquer';
+	@override String get download_all_zip => 'ZIP';
+	@override String get zip_progress => 'Création du ZIP…';
+	@override String get zip_success => 'Enregistré : {filename}';
+	@override String get zip_error => 'Échec du téléchargement ZIP.';
+}
+
+// Path: push
+class _TranslationsPushFr extends TranslationsPushEn {
+	_TranslationsPushFr._(TranslationsFr root) : this._root = root, super.internal(root);
+
+	final TranslationsFr _root; // ignore: unused_field
+
+	// Translations
+	@override String get onboarding_title => 'Restez informé';
+	@override String get onboarding_subtitle => 'Recevez des alertes instantanées pour l’essentiel — même lorsque Wayo Ads est en arrière-plan.';
+	@override String get onboarding_bullet_campaigns => 'Campagnes, candidatures et budgets';
+	@override String get onboarding_bullet_messages => 'Nouveaux messages dans le chat';
+	@override String get onboarding_bullet_system => 'Factures, virements et alertes plateforme';
+	@override String get onboarding_enable => 'Activer les notifications';
+	@override String get onboarding_later => 'Pas maintenant';
+	@override String get onboarding_success => 'Notifications activées';
+	@override String get onboarding_denied_hint => 'Vous pourrez les activer plus tard dans les réglages du téléphone.';
+	@override String get onboarding_context_chat => 'Vous venez de recevoir un message — activez les alertes pour ne plus manquer une réponse.';
+	@override String get onboarding_context_campaign => 'Le statut d\'une campagne a changé — activez les notifications pour suivre candidatures et budgets.';
+	@override String get onboarding_context_invoice => 'Une facture ou un virement vient d\'être mis à jour — soyez alerté dès que l\'argent bouge.';
 }
 
 // Path: creator
@@ -427,6 +476,10 @@ class _TranslationsAdvertiserWalletFr extends TranslationsAdvertiserWalletEn {
 	@override String get business_profile_gate_cta => 'Renseigner mon activité';
 	@override String get business_profile_error => 'Impossible de charger le profil entreprise.';
 	@override String get pay_locked_until_business => 'Le paiement sera disponible une fois le profil complété.';
+	@override String get payment_title => 'Paiement';
+	@override String get payment_total => 'TOTAL';
+	@override String get payment_deposit_amount => 'Montant du dépôt';
+	@override String get payment_bank_fee => 'Frais de transaction bancaire (3.69%)';
 }
 
 // Path: chat
@@ -444,6 +497,9 @@ class _TranslationsChatFr extends TranslationsChatEn {
 	@override String get typing => 'En train d’écrire…';
 	@override String get error_load_threads => 'Impossible de charger vos conversations. Réessayez.';
 	@override String get error_phone => 'Le partage de numéros de téléphone dans le chat n’est pas autorisé.';
+	@override String get spam_cooldown_title => 'Vous envoyez trop de messages';
+	@override String spam_cooldown_body({required Object seconds}) => 'Patientez ${seconds} s avant d’envoyer à nouveau.';
+	@override String spam_cooldown_seconds({required Object seconds}) => '${seconds} s';
 	@override String get empty_threads_title => 'Aucune conversation';
 	@override String get empty_threads_hint => 'Quand quelqu’un vous écrit au sujet d’une campagne, ce sera ici.';
 	@override String get online => 'En ligne';
@@ -478,6 +534,15 @@ class _TranslationsChatFr extends TranslationsChatEn {
 	@override String get bubble_update => 'Modifier';
 	@override String get bubble_delete_unavailable => 'La suppression des messages depuis l\'app n\'est pas encore disponible.';
 	@override String get bubble_copied => 'Copié dans le presse-papiers';
+	@override String get bubble_forward => 'Transférer';
+	@override String get share_media_tooltip => 'Partager';
+	@override String get share_failed => 'Impossible de partager ce fichier. Réessayez.';
+	@override String get forward_sheet_title => 'Envoyer vers…';
+	@override String get forward_no_other_chats => 'Ouvrez ou créez une autre conversation d’abord.';
+	@override String get forward_sending => 'Transfert…';
+	@override String get forward_ok => 'Message transféré.';
+	@override String get forward_failed => 'Échec du transfert.';
+	@override String get forward_view => 'Ouvrir';
 	@override String get edited => 'modifié';
 	@override String get seen => 'Vu';
 	@override String get delivered => 'Livré';
@@ -493,6 +558,14 @@ class _TranslationsChatFr extends TranslationsChatEn {
 	@override String get delete_confirm_cta => 'Supprimer';
 	@override String get delete_confirm_cancel => 'Annuler';
 	@override String get scroll_to_latest => 'Récent';
+	@override String get loading_older_messages => 'Chargement des messages plus anciens…';
+	@override String get load_older_failed => 'Impossible de charger les messages plus anciens.';
+	@override String get image_download_tooltip => 'Télécharger la photo';
+	@override String get image_close_tooltip => 'Fermer';
+	@override String get image_saved_to_gallery => 'Photo enregistrée dans la galerie.';
+	@override String get image_download_failed => 'Impossible de télécharger cette photo.';
+	@override String get image_permission_denied => 'Accès aux photos refusé. Activez-la dans les réglages.';
+	@override String get image_saved_downloads_browser => 'Photo téléchargée — vérifiez votre dossier Téléchargements.';
 }
 
 // Path: common
@@ -592,6 +665,9 @@ class _TranslationsAppSettingsFr extends TranslationsAppSettingsEn {
 	@override String get section_account => 'Compte';
 	@override String get delete_account_entry => 'Supprimer le compte';
 	@override String get delete_account_entry_sub => 'Délai de 30 jours — suppression dans l’app';
+	@override String get section_about => 'À propos';
+	@override String get rate_app => 'Noter Wayo Ads';
+	@override String get rate_app_sub => 'Ouvre l’App Store ou Google Play';
 }
 
 // Path: account_deletion
@@ -773,6 +849,9 @@ class _TranslationsAdvertiserCampaignsCardFr extends TranslationsAdvertiserCampa
 	@override String get spent => 'Dépensé';
 	@override String get cpc => 'CPC';
 	@override String get valid_engagements => '{count} vues validées';
+	@override String get list_row_views => '{count} vues';
+	@override String get list_row_clicks => '{count} clics';
+	@override String get list_row_creators => '{count} créateurs';
 }
 
 // Path: advertiser_campaigns.status
@@ -824,6 +903,9 @@ class _TranslationsAdvertiserCampaignsDetailFr extends TranslationsAdvertiserCam
 	@override String get objective_conversion => 'Conversion';
 	@override String get cpm_metric => 'CPM (pour 1k vues)';
 	@override String get cpc_metric => 'CPC (par clic)';
+	@override String get description_title => 'Description';
+	@override String get show_more => 'Voir plus';
+	@override String get show_less => 'Voir moins';
 }
 
 // Path: advertiser_campaigns.create
@@ -913,10 +995,17 @@ class _TranslationsCreatorWalletFr extends TranslationsCreatorWalletEn {
 	@override String get withdraw_button => 'Retirer';
 	@override String get withdraw_sheet_title => 'Demander un retrait';
 	@override String get withdraw_sheet_subtitle => 'Solde disponible : {available}. Les fonds seront envoyés vers votre compte Stripe.';
-	@override String get withdraw_amount_label => 'Montant';
+	@override String get withdraw_amount_label => 'Montant (USD)';
+	@override String get withdraw_sheet_body => 'Entrez le montant que vous souhaitez retirer. Les fonds seront envoyés sur votre compte bancaire connecté.';
+	@override String get withdraw_quick_amounts => 'Montants rapides';
+	@override String get withdraw_gross_amount => 'Montant brut';
+	@override String get withdraw_platform_fee => 'Frais de plateforme ({percent}%)';
+	@override String get withdraw_tax_vat => 'TVA ({percent}%)';
+	@override String get withdraw_net_received => 'Net reçu';
 	@override String get withdraw_submit => 'Confirmer le retrait';
 	@override String get withdraw_submitting => 'Traitement…';
 	@override String get withdraw_max => 'Max';
+	@override String get withdraw_preset_all => 'Tout';
 	@override String get withdraw_success => 'Demande de retrait envoyée.';
 	@override String get withdraw_secure_footer => 'Paiement sécurisé — traité par Stripe. Vos coordonnées bancaires ne nous sont jamais transmises.';
 	@override String get withdraw_error_invalid => 'Saisissez un montant valide.';
@@ -1091,15 +1180,13 @@ class _TranslationsCreatorBusinessFr extends TranslationsCreatorBusinessEn {
 	@override String get cta_button => 'Finalize your Business Information';
 	@override String get dialog_title => 'Informations commerciales';
 	@override String get dialog_subtitle => 'Quelques infos légales pour que Stripe puisse ouvrir votre compte et traiter les paiements.';
-	@override String get section_type => 'Type de compte';
+	@override String get section_type => 'Type d\'entreprise';
 	@override String get section_company => 'Société';
 	@override String get section_address => 'Adresse';
 	@override String get section_stripe => 'Pays et devise de paiement';
-	@override String get type_personal_title => 'Particulier';
+	@override String get type_personal_title => 'Particulier / Personne privée';
 	@override String get type_personal_subtitle => 'Je reçois les paiements en tant que particulier.';
-	@override String get type_sole_title => 'Auto-entrepreneur';
-	@override String get type_sole_subtitle => 'J’exerce en freelance sous mon nom.';
-	@override String get type_company_title => 'Société immatriculée';
+	@override String get type_company_title => 'Société enregistrée';
 	@override String get type_company_subtitle => 'J’opère sous une entité juridique enregistrée.';
 	@override String get company_name => 'Nom de la société';
 	@override String get vat_number => 'Numéro de TVA';
@@ -1149,6 +1236,8 @@ class _TranslationsOnboardingCreatorFr extends TranslationsOnboardingCreatorEn {
 	@override String get campaigns_subtitle => 'Découvrez les campagnes éligibles, postulez en un clic et suivez l\'état de vos candidatures en direct.';
 	@override String get wallet_title => 'Revenus & retraits';
 	@override String get wallet_subtitle => 'Consultez votre solde, demandez un retrait via Stripe Connect et retrouvez vos paiements.';
+	@override String get invoices_title => 'Relevés de paiement';
+	@override String get invoices_subtitle => 'Filtrez revenus et virements, téléchargez des PDF signés ou un ZIP — tout se met à jour automatiquement.';
 	@override String get chat_title => 'Discuter avec l\'annonceur';
 	@override String get chat_subtitle => 'Dès l\'approbation, le chat s\'ouvre pour vous aligner avec l\'annonceur sur la livraison.';
 }
@@ -1184,6 +1273,10 @@ extension on TranslationsFr {
 			case 'campaigns_explorer.reset_filters': return 'Réinitialiser les filtres';
 			case 'campaigns_explorer.toolbar_show_search_filters': return 'Afficher recherche et filtres';
 			case 'campaigns_explorer.toolbar_hide_search_filters': return 'Masquer recherche et filtres';
+			case 'campaigns_explorer.filter_label_type': return 'Type';
+			case 'campaigns_explorer.filter_label_status': return 'Statut';
+			case 'campaigns_explorer.filter_label_niche': return 'Niche';
+			case 'campaigns_explorer.filter_label_location': return 'Lieu';
 			case 'login.brand': return 'Wayo Ads';
 			case 'login.headline_line1': return 'Bienvenue';
 			case 'login.headline_line2_prefix': return 'sur ';
@@ -1310,6 +1403,9 @@ extension on TranslationsFr {
 			case 'advertiser_campaigns.card.spent': return 'Dépensé';
 			case 'advertiser_campaigns.card.cpc': return 'CPC';
 			case 'advertiser_campaigns.card.valid_engagements': return '{count} vues validées';
+			case 'advertiser_campaigns.card.list_row_views': return '{count} vues';
+			case 'advertiser_campaigns.card.list_row_clicks': return '{count} clics';
+			case 'advertiser_campaigns.card.list_row_creators': return '{count} créateurs';
 			case 'advertiser_campaigns.status.active': return 'Active';
 			case 'advertiser_campaigns.status.paused': return 'En pause';
 			case 'advertiser_campaigns.status.completed': return 'Terminée';
@@ -1334,6 +1430,9 @@ extension on TranslationsFr {
 			case 'advertiser_campaigns.detail.objective_conversion': return 'Conversion';
 			case 'advertiser_campaigns.detail.cpm_metric': return 'CPM (pour 1k vues)';
 			case 'advertiser_campaigns.detail.cpc_metric': return 'CPC (par clic)';
+			case 'advertiser_campaigns.detail.description_title': return 'Description';
+			case 'advertiser_campaigns.detail.show_more': return 'Voir plus';
+			case 'advertiser_campaigns.detail.show_less': return 'Voir moins';
 			case 'advertiser_campaigns.create.title': return 'Nouvelle campagne';
 			case 'advertiser_campaigns.create.section_basics': return 'Informations';
 			case 'advertiser_campaigns.create.section_budget': return 'Budget et enchères';
@@ -1376,10 +1475,13 @@ extension on TranslationsFr {
 			case 'nav.wallet': return 'Portefeuille';
 			case 'nav.chat': return 'Messages';
 			case 'nav.invoices': return 'Factures';
+			case 'nav.invoices_creator': return 'Relevés';
 			case 'invoices.title': return 'Factures';
+			case 'invoices.title_creator': return 'Relevés de paiement';
 			case 'invoices.subtitle_advertiser': return 'Chaque dépôt et chaque budget campagne — réunis en un seul endroit.';
 			case 'invoices.subtitle_creator': return 'Chaque revenu et chaque virement — sécurisés, téléchargeables, signés.';
 			case 'invoices.summary_total_paid': return 'Total payé';
+			case 'invoices.summary_total_validated': return 'Total validé';
 			case 'invoices.summary_pending': return 'En attente';
 			case 'invoices.summary_count': return 'Documents';
 			case 'invoices.filter_all': return 'Tout';
@@ -1393,6 +1495,7 @@ extension on TranslationsFr {
 			case 'invoices.type_earnings': return 'Revenus publicitaires';
 			case 'invoices.type_unknown': return 'Autre';
 			case 'invoices.status_paid': return 'Payée';
+			case 'invoices.status_validated': return 'Validée';
 			case 'invoices.status_pending': return 'En attente';
 			case 'invoices.status_cancelled': return 'Annulée';
 			case 'invoices.role_advertiser': return 'Annonceur';
@@ -1400,6 +1503,7 @@ extension on TranslationsFr {
 			case 'invoices.search_hint': return 'Rechercher par numéro, référence…';
 			case 'invoices.empty_title': return 'Aucune facture pour l\'instant';
 			case 'invoices.empty_subtitle': return 'Vos dépôts, budgets campagne et virements apparaîtront ici automatiquement — sans aucune action manuelle.';
+			case 'invoices.empty_subtitle_creator': return 'Vos revenus et documents de virement s’affichent dès qu’ils sont émis — mêmes PDF signés que sur le web.';
 			case 'invoices.empty_cta': return 'Actualiser';
 			case 'invoices.error_title': return 'Impossible de charger les factures';
 			case 'invoices.error_subtitle': return 'Tirez pour rafraîchir — nous réessayons immédiatement.';
@@ -1431,6 +1535,36 @@ extension on TranslationsFr {
 			case 'invoices.share_subject': return 'Facture {number}';
 			case 'invoices.polling_live': return 'Live';
 			case 'invoices.polling_paused': return 'En pause';
+			case 'invoices.summary_this_month': return 'Ce mois-ci';
+			case 'invoices.pagination_detail': return 'Page {current} sur {total} · {count} factures';
+			case 'invoices.sort_sheet_title': return 'Trier';
+			case 'invoices.sort_date_newest': return 'Plus récent';
+			case 'invoices.sort_date_oldest': return 'Plus ancien';
+			case 'invoices.sort_amount_high': return 'Montant · décroissant';
+			case 'invoices.sort_amount_low': return 'Montant · croissant';
+			case 'invoices.sort_status_az': return 'Statut · A à Z';
+			case 'invoices.sort_status_za': return 'Statut · Z à A';
+			case 'invoices.date_range_title': return 'Dates';
+			case 'invoices.date_from': return 'Du';
+			case 'invoices.date_to': return 'Au';
+			case 'invoices.clear_dates': return 'Effacer';
+			case 'invoices.date_apply': return 'Appliquer';
+			case 'invoices.download_all_zip': return 'ZIP';
+			case 'invoices.zip_progress': return 'Création du ZIP…';
+			case 'invoices.zip_success': return 'Enregistré : {filename}';
+			case 'invoices.zip_error': return 'Échec du téléchargement ZIP.';
+			case 'push.onboarding_title': return 'Restez informé';
+			case 'push.onboarding_subtitle': return 'Recevez des alertes instantanées pour l’essentiel — même lorsque Wayo Ads est en arrière-plan.';
+			case 'push.onboarding_bullet_campaigns': return 'Campagnes, candidatures et budgets';
+			case 'push.onboarding_bullet_messages': return 'Nouveaux messages dans le chat';
+			case 'push.onboarding_bullet_system': return 'Factures, virements et alertes plateforme';
+			case 'push.onboarding_enable': return 'Activer les notifications';
+			case 'push.onboarding_later': return 'Pas maintenant';
+			case 'push.onboarding_success': return 'Notifications activées';
+			case 'push.onboarding_denied_hint': return 'Vous pourrez les activer plus tard dans les réglages du téléphone.';
+			case 'push.onboarding_context_chat': return 'Vous venez de recevoir un message — activez les alertes pour ne plus manquer une réponse.';
+			case 'push.onboarding_context_campaign': return 'Le statut d\'une campagne a changé — activez les notifications pour suivre candidatures et budgets.';
+			case 'push.onboarding_context_invoice': return 'Une facture ou un virement vient d\'être mis à jour — soyez alerté dès que l\'argent bouge.';
 			case 'creator.dashboard.title': return 'Studio Créateur';
 			case 'creator.dashboard.subtitle': return 'Suivez vos statistiques, candidatures et gains en temps réel.';
 			case 'creator.dashboard.coming_soon_title': return 'Votre tableau de bord créateur';
@@ -1448,10 +1582,17 @@ extension on TranslationsFr {
 			case 'creator.wallet.withdraw_button': return 'Retirer';
 			case 'creator.wallet.withdraw_sheet_title': return 'Demander un retrait';
 			case 'creator.wallet.withdraw_sheet_subtitle': return 'Solde disponible : {available}. Les fonds seront envoyés vers votre compte Stripe.';
-			case 'creator.wallet.withdraw_amount_label': return 'Montant';
+			case 'creator.wallet.withdraw_amount_label': return 'Montant (USD)';
+			case 'creator.wallet.withdraw_sheet_body': return 'Entrez le montant que vous souhaitez retirer. Les fonds seront envoyés sur votre compte bancaire connecté.';
+			case 'creator.wallet.withdraw_quick_amounts': return 'Montants rapides';
+			case 'creator.wallet.withdraw_gross_amount': return 'Montant brut';
+			case 'creator.wallet.withdraw_platform_fee': return 'Frais de plateforme ({percent}%)';
+			case 'creator.wallet.withdraw_tax_vat': return 'TVA ({percent}%)';
+			case 'creator.wallet.withdraw_net_received': return 'Net reçu';
 			case 'creator.wallet.withdraw_submit': return 'Confirmer le retrait';
 			case 'creator.wallet.withdraw_submitting': return 'Traitement…';
 			case 'creator.wallet.withdraw_max': return 'Max';
+			case 'creator.wallet.withdraw_preset_all': return 'Tout';
 			case 'creator.wallet.withdraw_success': return 'Demande de retrait envoyée.';
 			case 'creator.wallet.withdraw_secure_footer': return 'Paiement sécurisé — traité par Stripe. Vos coordonnées bancaires ne nous sont jamais transmises.';
 			case 'creator.wallet.withdraw_error_invalid': return 'Saisissez un montant valide.';
@@ -1590,15 +1731,13 @@ extension on TranslationsFr {
 			case 'creator.business.cta_button': return 'Finalize your Business Information';
 			case 'creator.business.dialog_title': return 'Informations commerciales';
 			case 'creator.business.dialog_subtitle': return 'Quelques infos légales pour que Stripe puisse ouvrir votre compte et traiter les paiements.';
-			case 'creator.business.section_type': return 'Type de compte';
+			case 'creator.business.section_type': return 'Type d\'entreprise';
 			case 'creator.business.section_company': return 'Société';
 			case 'creator.business.section_address': return 'Adresse';
 			case 'creator.business.section_stripe': return 'Pays et devise de paiement';
-			case 'creator.business.type_personal_title': return 'Particulier';
+			case 'creator.business.type_personal_title': return 'Particulier / Personne privée';
 			case 'creator.business.type_personal_subtitle': return 'Je reçois les paiements en tant que particulier.';
-			case 'creator.business.type_sole_title': return 'Auto-entrepreneur';
-			case 'creator.business.type_sole_subtitle': return 'J’exerce en freelance sous mon nom.';
-			case 'creator.business.type_company_title': return 'Société immatriculée';
+			case 'creator.business.type_company_title': return 'Société enregistrée';
 			case 'creator.business.type_company_subtitle': return 'J’opère sous une entité juridique enregistrée.';
 			case 'creator.business.company_name': return 'Nom de la société';
 			case 'creator.business.vat_number': return 'Numéro de TVA';
@@ -1649,6 +1788,10 @@ extension on TranslationsFr {
 			case 'advertiser_wallet.business_profile_gate_cta': return 'Renseigner mon activité';
 			case 'advertiser_wallet.business_profile_error': return 'Impossible de charger le profil entreprise.';
 			case 'advertiser_wallet.pay_locked_until_business': return 'Le paiement sera disponible une fois le profil complété.';
+			case 'advertiser_wallet.payment_title': return 'Paiement';
+			case 'advertiser_wallet.payment_total': return 'TOTAL';
+			case 'advertiser_wallet.payment_deposit_amount': return 'Montant du dépôt';
+			case 'advertiser_wallet.payment_bank_fee': return 'Frais de transaction bancaire (3.69%)';
 			case 'chat.inbox_title': return 'Messages';
 			case 'chat.inbox_subtitle': return 'Conversations sécurisées pour vos campagnes';
 			case 'chat.conversation_unknown': return 'Conversation';
@@ -1657,6 +1800,9 @@ extension on TranslationsFr {
 			case 'chat.typing': return 'En train d’écrire…';
 			case 'chat.error_load_threads': return 'Impossible de charger vos conversations. Réessayez.';
 			case 'chat.error_phone': return 'Le partage de numéros de téléphone dans le chat n’est pas autorisé.';
+			case 'chat.spam_cooldown_title': return 'Vous envoyez trop de messages';
+			case 'chat.spam_cooldown_body': return ({required Object seconds}) => 'Patientez ${seconds} s avant d’envoyer à nouveau.';
+			case 'chat.spam_cooldown_seconds': return ({required Object seconds}) => '${seconds} s';
 			case 'chat.empty_threads_title': return 'Aucune conversation';
 			case 'chat.empty_threads_hint': return 'Quand quelqu’un vous écrit au sujet d’une campagne, ce sera ici.';
 			case 'chat.online': return 'En ligne';
@@ -1691,6 +1837,15 @@ extension on TranslationsFr {
 			case 'chat.bubble_update': return 'Modifier';
 			case 'chat.bubble_delete_unavailable': return 'La suppression des messages depuis l\'app n\'est pas encore disponible.';
 			case 'chat.bubble_copied': return 'Copié dans le presse-papiers';
+			case 'chat.bubble_forward': return 'Transférer';
+			case 'chat.share_media_tooltip': return 'Partager';
+			case 'chat.share_failed': return 'Impossible de partager ce fichier. Réessayez.';
+			case 'chat.forward_sheet_title': return 'Envoyer vers…';
+			case 'chat.forward_no_other_chats': return 'Ouvrez ou créez une autre conversation d’abord.';
+			case 'chat.forward_sending': return 'Transfert…';
+			case 'chat.forward_ok': return 'Message transféré.';
+			case 'chat.forward_failed': return 'Échec du transfert.';
+			case 'chat.forward_view': return 'Ouvrir';
 			case 'chat.edited': return 'modifié';
 			case 'chat.seen': return 'Vu';
 			case 'chat.delivered': return 'Livré';
@@ -1706,6 +1861,14 @@ extension on TranslationsFr {
 			case 'chat.delete_confirm_cta': return 'Supprimer';
 			case 'chat.delete_confirm_cancel': return 'Annuler';
 			case 'chat.scroll_to_latest': return 'Récent';
+			case 'chat.loading_older_messages': return 'Chargement des messages plus anciens…';
+			case 'chat.load_older_failed': return 'Impossible de charger les messages plus anciens.';
+			case 'chat.image_download_tooltip': return 'Télécharger la photo';
+			case 'chat.image_close_tooltip': return 'Fermer';
+			case 'chat.image_saved_to_gallery': return 'Photo enregistrée dans la galerie.';
+			case 'chat.image_download_failed': return 'Impossible de télécharger cette photo.';
+			case 'chat.image_permission_denied': return 'Accès aux photos refusé. Activez-la dans les réglages.';
+			case 'chat.image_saved_downloads_browser': return 'Photo téléchargée — vérifiez votre dossier Téléchargements.';
 			case 'common.language': return 'Langue';
 			case 'common.theme': return 'Thème';
 			case 'common.light': return 'Clair';
@@ -1769,6 +1932,9 @@ extension on TranslationsFr {
 			case 'app_settings.section_account': return 'Compte';
 			case 'app_settings.delete_account_entry': return 'Supprimer le compte';
 			case 'app_settings.delete_account_entry_sub': return 'Délai de 30 jours — suppression dans l’app';
+			case 'app_settings.section_about': return 'À propos';
+			case 'app_settings.rate_app': return 'Noter Wayo Ads';
+			case 'app_settings.rate_app_sub': return 'Ouvre l’App Store ou Google Play';
 			case 'account_deletion.nav_title': return 'Suppression de compte';
 			case 'account_deletion.title': return 'Supprimer mon compte Wayo Ads';
 			case 'account_deletion.danger_zone_chip': return 'Zone de danger';
@@ -1862,6 +2028,8 @@ extension on TranslationsFr {
 			case 'onboarding.creator.campaigns_subtitle': return 'Découvrez les campagnes éligibles, postulez en un clic et suivez l\'état de vos candidatures en direct.';
 			case 'onboarding.creator.wallet_title': return 'Revenus & retraits';
 			case 'onboarding.creator.wallet_subtitle': return 'Consultez votre solde, demandez un retrait via Stripe Connect et retrouvez vos paiements.';
+			case 'onboarding.creator.invoices_title': return 'Relevés de paiement';
+			case 'onboarding.creator.invoices_subtitle': return 'Filtrez revenus et virements, téléchargez des PDF signés ou un ZIP — tout se met à jour automatiquement.';
 			case 'onboarding.creator.chat_title': return 'Discuter avec l\'annonceur';
 			case 'onboarding.creator.chat_subtitle': return 'Dès l\'approbation, le chat s\'ouvre pour vous aligner avec l\'annonceur sur la livraison.';
 			default: return null;

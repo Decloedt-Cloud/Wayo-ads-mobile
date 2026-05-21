@@ -1,5 +1,7 @@
 import 'package:dio/dio.dart';
 
+import '../../../core/config/auth_runtime_config.dart';
+import '../../../core/network/api_endpoints.dart';
 import '../domain/creator_browse_campaign.dart';
 import '../domain/creator_browse_page_result.dart';
 import '../domain/creator_campaign_detail.dart';
@@ -49,7 +51,7 @@ class CreatorCampaignsRemoteDatasource {
         qp['search'] = trimmed;
       }
       final res = await _dio.get<Object?>(
-        'api/campaigns',
+        AuthRuntimeConfig.instance.wayoAdsRequestPath(ApiEndpoints.campaigns),
         queryParameters: qp,
       );
       final body = res.data;
@@ -100,7 +102,9 @@ class CreatorCampaignsRemoteDatasource {
   /// we flatten it inside [CreatorCampaignDetail].
   Future<CreatorCampaignDetail> fetchCampaignDetail(String id) async {
     try {
-      final res = await _dio.get<Object?>('api/campaigns/$id');
+      final res = await _dio.get<Object?>(
+        AuthRuntimeConfig.instance.wayoAdsRequestPath(ApiEndpoints.campaignDetail(id)),
+      );
       final body = res.data;
       if (body is! Map) {
         throw CreatorCampaignsApiException(
@@ -126,7 +130,9 @@ class CreatorCampaignsRemoteDatasource {
   Future<String> applyToCampaign(String campaignId, {String? message}) async {
     try {
       final res = await _dio.post<Object?>(
-        'api/campaigns/$campaignId/apply',
+        AuthRuntimeConfig.instance.wayoAdsRequestPath(
+          ApiEndpoints.campaignApply(campaignId),
+        ),
         data: <String, dynamic>{
           if (message != null && message.trim().isNotEmpty)
             'message': message.trim(),
@@ -150,7 +156,9 @@ class CreatorCampaignsRemoteDatasource {
   Future<List<CreatorSocialPost>> fetchMySubmissions(String campaignId) async {
     try {
       final res = await _dio.get<Object?>(
-        'api/creator/campaigns/$campaignId/submit-post',
+        AuthRuntimeConfig.instance.wayoAdsRequestPath(
+          ApiEndpoints.creatorCampaignSubmitPost(campaignId),
+        ),
       );
       final body = res.data;
       if (body is! Map) return const [];
@@ -180,7 +188,9 @@ class CreatorCampaignsRemoteDatasource {
   }) async {
     try {
       final res = await _dio.post<Object?>(
-        'api/creator/campaigns/$campaignId/submit-post',
+        AuthRuntimeConfig.instance.wayoAdsRequestPath(
+          ApiEndpoints.creatorCampaignSubmitPost(campaignId),
+        ),
         data: <String, dynamic>{'platform': platform, 'postUrl': postUrl},
       );
       final body = res.data;

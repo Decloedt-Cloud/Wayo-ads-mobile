@@ -72,6 +72,21 @@ class AuthRepositoryImpl implements IAuthRepository {
 
   Future<Result<AppUser>>? _fetchCurrentUserInFlight;
 
+  /// Static deduplicator for Google login — prevents multiple concurrent API calls
+  /// (e.g. if the user double-taps or the widget rebuilds during login).
+  static Future<Result<AuthResponse>>? _googleLoginInFlight;
+
+  /// Static deduplicator for Apple login.
+  static Future<Result<AuthResponse>>? _appleLoginInFlight;
+
+  /// Last successful [fetchCurrentUser] result + timestamp for short TTL cache.
+  Result<AppUser>? _lastFetchCurrentUserResult;
+  DateTime? _lastFetchCurrentUserTime;
+
+  /// TTL for cached [fetchCurrentUser] result (avoids rate limits on rapid refreshes).
+  /// Set to 15 seconds to give more buffer against 429 during post-login flows.
+  static const Duration _fetchCurrentUserCacheTtl = Duration(seconds: 15);
+
   @override
   Future<Result<AuthResponse>> login({
     required String email,
@@ -113,7 +128,21 @@ class AuthRepositoryImpl implements IAuthRepository {
   @override
   Future<Result<AuthResponse>> loginWithGoogle({
     required String idToken,
-  }) async {
+  }) {
+    final existing = _googleLoginInFlight;
+    if (existing != null) {
+      return existing;
+    }
+    final runner = _loginWithGoogleOnce(idToken);
+    _googleLoginInFlight = runner;
+    return runner.whenComplete(() {
+      if (identical(_googleLoginInFlight, runner)) {
+        _googleLoginInFlight = null;
+      }
+    });
+  }
+
+  Future<Result<AuthResponse>> _loginWithGoogleOnce(String idToken) async {
     try {
       final cfg = AuthRuntimeConfig.instance;
       final body = mergeWayoAuthPayload(<String, dynamic>{
@@ -147,6 +176,30 @@ class AuthRepositoryImpl implements IAuthRepository {
 
   @override
   Future<Result<AuthResponse>> loginWithApple({
+    required String identityToken,
+    required String rawNonce,
+    String? authorizationCode,
+    String? appleUserId,
+  }) {
+    final existing = _appleLoginInFlight;
+    if (existing != null) {
+      return existing;
+    }
+    final runner = _loginWithAppleOnce(
+      identityToken: identityToken,
+      rawNonce: rawNonce,
+      authorizationCode: authorizationCode,
+      appleUserId: appleUserId,
+    );
+    _appleLoginInFlight = runner;
+    return runner.whenComplete(() {
+      if (identical(_appleLoginInFlight, runner)) {
+        _appleLoginInFlight = null;
+      }
+    });
+  }
+
+  Future<Result<AuthResponse>> _loginWithAppleOnce({
     required String identityToken,
     required String rawNonce,
     String? authorizationCode,
@@ -191,6 +244,15 @@ class AuthRepositoryImpl implements IAuthRepository {
 
   @override
   Future<Result<AppUser>> fetchCurrentUser() {
+    // Return cached result if fresh enough (avoids rapid-fire requests hitting rate limits).
+    final cached = _lastFetchCurrentUserResult;
+    final cachedAt = _lastFetchCurrentUserTime;
+    if (cached != null &&
+        cachedAt != null &&
+        DateTime.now().difference(cachedAt) < _fetchCurrentUserCacheTtl) {
+      return Future.value(cached);
+    }
+
     final existing = _fetchCurrentUserInFlight;
     if (existing != null) {
       return existing;
@@ -211,6 +273,8 @@ class AuthRepositoryImpl implements IAuthRepository {
       final once = await _fetchCurrentUserOnce();
       switch (once) {
         case Success():
+          _lastFetchCurrentUserResult = once;
+          _lastFetchCurrentUserTime = DateTime.now();
           return once;
         case Failure(:final error):
           final isLast = attempt >= maxAttempts - 1;

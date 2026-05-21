@@ -6,9 +6,14 @@ import '../../../../i18n/strings.g.dart';
 
 /// Modern empty-state — soft gradient receipt illustration + actionable CTA.
 class InvoicesEmptyState extends StatelessWidget {
-  const InvoicesEmptyState({super.key, required this.onRefresh});
+  const InvoicesEmptyState({
+    super.key,
+    required this.onRefresh,
+    this.subtitleOverride,
+  });
 
   final VoidCallback onRefresh;
+  final String? subtitleOverride;
 
   @override
   Widget build(BuildContext context) {
@@ -43,7 +48,7 @@ class InvoicesEmptyState extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                t.invoices.empty_subtitle,
+                subtitleOverride ?? t.invoices.empty_subtitle,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: AppColors.textMutedOf(context),

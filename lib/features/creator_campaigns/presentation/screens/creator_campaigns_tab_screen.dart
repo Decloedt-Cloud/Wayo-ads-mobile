@@ -10,7 +10,6 @@ import '../../../../core/campaigns/campaigns_explorer_toolbar_expanded_provider.
 import '../../../../core/providers/app_providers.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../../../../core/theme/creator_colors.dart';
 import '../../../../core/widgets/campaigns_explorer_toolbar.dart';
 import '../../../../i18n/strings.g.dart';
 import '../../../advertiser_campaigns/domain/campaign_niche_catalog.dart';
@@ -22,6 +21,7 @@ import '../providers/creator_campaigns_providers.dart';
 import '../widgets/creator_browse_campaign_card.dart';
 import '../widgets/creator_browse_campaign_grid_tile.dart';
 import '../widgets/creator_browse_explorer_filters.dart';
+import '../theme/creator_campaigns_chrome.dart';
 
 String _moneyLocale(AppLocale l) => switch (l) {
   AppLocale.en => 'en_US',
@@ -170,9 +170,11 @@ class _CreatorCampaignsTabScreenState
     );
 
     return Scaffold(
-      appBar: AppBar(title: Text(t.nav.campaigns), elevation: 0),
-      body: RefreshIndicator(
-        color: CreatorColors.primaryOf(context),
+      backgroundColor: CreatorCampaignsChrome.bg(context),
+      body: SafeArea(
+        bottom: false,
+        child: RefreshIndicator(
+        color: CreatorCampaignsChrome.amber(context),
         onRefresh: () async {
           HapticFeedback.lightImpact();
           ref.read(creatorBrowseCampaignPageProvider.notifier).state = 1;
@@ -188,8 +190,28 @@ class _CreatorCampaignsTabScreenState
           physics: const BouncingScrollPhysics(
             parent: AlwaysScrollableScrollPhysics(),
           ),
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 120),
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 120),
           children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(0, 8, 0, 4),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    t.creator.campaigns.browse_title,
+                    style: CreatorCampaignsChrome.heroTitle(context),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    t.creator.campaigns.browse_subtitle,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: CreatorCampaignsChrome.heroSubtitle(context),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
             CampaignsExplorerToolbar(
               searchField: Semantics(
                 label: t.campaigns_explorer.search_aria,
@@ -365,12 +387,12 @@ class _CreatorCampaignsTabScreenState
                     GridView.builder(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
-                      gridDelegate:
+                          gridDelegate:
                           const SliverGridDelegateWithFixedCrossAxisCount(
                             crossAxisCount: 2,
-                            mainAxisSpacing: 10,
-                            crossAxisSpacing: 10,
-                            childAspectRatio: 0.43,
+                            mainAxisSpacing: 12,
+                            crossAxisSpacing: 12,
+                            childAspectRatio: 0.50,
                           ),
                       itemCount: filtered.length,
                       itemBuilder: (ctx, i) {
@@ -378,14 +400,13 @@ class _CreatorCampaignsTabScreenState
                         return CreatorBrowseCampaignGridTile(
                           campaign: c,
                           moneyLocale: moneyLocale,
+                          gridIndex: i,
                           applicationStatus: statusByCampaign[c.id],
                           onTap: () {
                             FocusManager.instance.primaryFocus?.unfocus();
                             context.push(
                               '/creator/campaigns/${c.id}',
                               extra: <String, Object?>{
-                                'coverUrl': c.coverUrl,
-                                'brandLogoUrl': c.brandLogoUrl,
                                 'title': c.title,
                               },
                             );
@@ -394,24 +415,25 @@ class _CreatorCampaignsTabScreenState
                       },
                     )
                   else ...[
-                    for (final c in filtered) ...[
+                    for (var i = 0; i < filtered.length; i++) ...[
                       CreatorBrowseCampaignCard(
-                        campaign: c,
+                        campaign: filtered[i],
                         moneyLocale: moneyLocale,
-                        applicationStatus: statusByCampaign[c.id],
+                        listIndex: i,
+                        applicationStatus:
+                            statusByCampaign[filtered[i].id],
                         onTap: () {
+                          final c = filtered[i];
                           FocusManager.instance.primaryFocus?.unfocus();
                           context.push(
                             '/creator/campaigns/${c.id}',
                             extra: <String, Object?>{
-                              'coverUrl': c.coverUrl,
-                              'brandLogoUrl': c.brandLogoUrl,
                               'title': c.title,
                             },
                           );
                         },
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 12),
                     ],
                   ],
                   if (pageResult.totalPages > 1) ...[
@@ -453,7 +475,7 @@ class _CreatorCampaignsTabScreenState
                 return Column(children: browseItems);
               },
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 28),
             _SectionHeader(
               title: t.creator.campaigns.applications_title,
               subtitle: t.creator.campaigns.applications_subtitle,
@@ -489,7 +511,6 @@ class _CreatorCampaignsTabScreenState
                           context.push(
                             '/creator/campaigns/${a.campaignId}',
                             extra: <String, Object?>{
-                              'coverUrl': a.coverUrl,
                               'title': a.campaignTitle,
                             },
                           );
@@ -502,6 +523,7 @@ class _CreatorCampaignsTabScreenState
               },
             ),
           ],
+        ),
         ),
       ),
     );
@@ -532,8 +554,8 @@ class _CreatorCampaignsTabScreenState
   }
 }
 
-/// Search field using [ValueListenableBuilder] for clear button visibility.
-class _BrowseSearchField extends StatelessWidget {
+/// Focus-aware browse search (creator).
+class _BrowseSearchField extends StatefulWidget {
   const _BrowseSearchField({
     required this.controller,
     required this.onChanged,
@@ -545,58 +567,105 @@ class _BrowseSearchField extends StatelessWidget {
   final VoidCallback onClear;
 
   @override
+  State<_BrowseSearchField> createState() => _BrowseSearchFieldState();
+}
+
+class _BrowseSearchFieldState extends State<_BrowseSearchField> {
+  late final FocusNode _focusNode;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode = FocusNode(debugLabel: 'creatorCampaignBrowseSearch')
+      ..addListener(_onFocusChanged);
+  }
+
+  void _onFocusChanged() => setState(() {});
+
+  @override
+  void dispose() {
+    _focusNode.removeListener(_onFocusChanged);
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final t = context.t;
-    final primary = CreatorColors.primaryOf(context);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final amber = CreatorCampaignsChrome.amber(context);
+    final fill = CreatorCampaignsChrome.card(context);
     final hintColor = AppColors.textMutedOf(context);
-    final borderColor = AppColors.borderOf(context);
-    final fillColor = isDark
-        ? AppColors.surfaceElevatedOf(context).withValues(alpha: 0.35)
-        : AppColors.surfaceElevatedOf(context);
+    final hasFocus = _focusNode.hasFocus;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return ValueListenableBuilder<TextEditingValue>(
-      valueListenable: controller,
+      valueListenable: widget.controller,
       builder: (context, value, _) {
         final hasText = value.text.isNotEmpty;
-        return TextField(
-          controller: controller,
-          onChanged: onChanged,
-          onTapOutside: (_) => FocusManager.instance.primaryFocus?.unfocus(),
-          textInputAction: TextInputAction.search,
-          onSubmitted: onChanged,
-          style: TextStyle(color: AppColors.textPrimaryOf(context)),
-          cursorColor: primary,
-          decoration: InputDecoration(
-            hintText: t.creator.campaigns.browse_search_placeholder,
-            hintStyle: TextStyle(color: hintColor),
-            prefixIcon: Icon(Icons.search_rounded, color: hintColor),
-            suffixIcon: hasText
-                ? IconButton(
-                    tooltip: MaterialLocalizations.of(
-                      context,
-                    ).deleteButtonTooltip,
-                    onPressed: onClear,
-                    icon: Icon(Icons.close_rounded, color: hintColor),
-                  )
+        final prefixClr = hasFocus ? amber : hintColor;
+        final borderClr = hasFocus ? amber : Colors.transparent;
+
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOutCubic,
+          decoration: BoxDecoration(
+            color: fill,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: borderClr,
+              width: hasFocus ? 1.5 : 1,
+            ),
+            boxShadow: hasFocus && isDark
+                ? [
+                    BoxShadow(
+                      color: amber.withValues(alpha: 0.2),
+                      blurRadius: 16,
+                      offset: const Offset(0, 6),
+                      spreadRadius: -4,
+                    ),
+                  ]
                 : null,
-            filled: true,
-            fillColor: fillColor,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide(color: borderColor),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide(color: borderColor),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide(color: primary, width: 1.4),
-            ),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 4,
-              vertical: 14,
+          ),
+          child: TextField(
+            focusNode: _focusNode,
+            controller: widget.controller,
+            onChanged: widget.onChanged,
+            onTapOutside: (_) => FocusManager.instance.primaryFocus?.unfocus(),
+            textInputAction: TextInputAction.search,
+            onSubmitted: widget.onChanged,
+            style: TextStyle(color: AppColors.textPrimaryOf(context)),
+            cursorColor: amber,
+            decoration: InputDecoration(
+              hintText: t.creator.campaigns.browse_search_placeholder,
+              hintStyle: TextStyle(color: hintColor),
+              prefixIcon: Icon(
+                Icons.search_rounded,
+                color: prefixClr.withValues(alpha: hasFocus ? 1 : 0.92),
+              ),
+              suffixIcon: hasText
+                  ? IconButton(
+                      tooltip:
+                          MaterialLocalizations.of(context).deleteButtonTooltip,
+                      onPressed: widget.onClear,
+                      icon: Icon(
+                        Icons.close_rounded,
+                        color: hasFocus
+                            ? amber.withValues(alpha: 0.9)
+                            : hintColor,
+                      ),
+                    )
+                  : null,
+              filled: true,
+              fillColor: Colors.transparent,
+              border: InputBorder.none,
+              enabledBorder: InputBorder.none,
+              focusedBorder: InputBorder.none,
+              errorBorder: InputBorder.none,
+              focusedErrorBorder: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 4,
+                vertical: 14,
+              ),
             ),
           ),
         );
@@ -616,13 +685,14 @@ class _SectionHeader extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(title, style: AppTextStyles.pageTitle(context)),
-        const SizedBox(height: 2),
+        Text(
+          title,
+          style: CreatorCampaignsChrome.sectionTitle(context),
+        ),
+        const SizedBox(height: 4),
         Text(
           subtitle,
-          style: AppTextStyles.caption(
-            context,
-          ).copyWith(color: AppColors.textSecondaryOf(context)),
+          style: CreatorCampaignsChrome.bodyDm(context, size: 13),
         ),
       ],
     );
@@ -638,7 +708,7 @@ class _LoadingBlock extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 32),
       child: Center(
         child: CircularProgressIndicator(
-          color: CreatorColors.primaryOf(context),
+          color: CreatorCampaignsChrome.amber(context),
         ),
       ),
     );
@@ -686,29 +756,31 @@ class _EmptyBrowseBlock extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(18),
-        color: AppColors.surfaceElevatedOf(context),
-        border: Border.all(color: AppColors.borderOf(context)),
+        borderRadius: BorderRadius.circular(16),
+        color: CreatorCampaignsChrome.card(context),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(
             Icons.explore_outlined,
-            color: CreatorColors.primaryOf(context),
+            color: CreatorCampaignsChrome.amber(context),
             size: 32,
           ),
           const SizedBox(height: 10),
           Text(
             title,
-            style: AppTextStyles.headlineMedium(context).copyWith(fontSize: 16),
+            style:
+                CreatorCampaignsChrome.cardTitle(context).copyWith(fontSize: 17),
           ),
           const SizedBox(height: 4),
           Text(
             subtitle,
-            style: AppTextStyles.bodyLarge(
+            style: CreatorCampaignsChrome.bodyDm(
               context,
-            ).copyWith(color: AppColors.textSecondaryOf(context)),
+              size: 14,
+              color: CreatorCampaignsChrome.muted(context),
+            ),
           ),
         ],
       ),
@@ -762,16 +834,15 @@ class _ApplicationTile extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(16),
         onTap: () {
           HapticFeedback.lightImpact();
           onTap();
         },
         child: Container(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(18),
-            color: AppColors.surfaceElevatedOf(context),
-            border: Border.all(color: AppColors.borderOf(context)),
+            borderRadius: BorderRadius.circular(16),
+            color: CreatorCampaignsChrome.card(context),
           ),
           padding: const EdgeInsets.all(14),
           child: Row(
@@ -800,9 +871,9 @@ class _ApplicationTile extends StatelessWidget {
                       a.campaignTitle,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: AppTextStyles.labelLarge(
-                        context,
-                      ).copyWith(fontSize: 15),
+                      style: CreatorCampaignsChrome.cardTitle(context).copyWith(
+                            fontSize: 15,
+                          ),
                     ),
                     const SizedBox(height: 3),
                     if (a.advertiserName != null &&
@@ -811,9 +882,7 @@ class _ApplicationTile extends StatelessWidget {
                         a.advertiserName!,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: AppTextStyles.caption(
-                          context,
-                        ).copyWith(color: AppColors.textSecondaryOf(context)),
+                        style: CreatorCampaignsChrome.bodyDm(context, size: 12),
                       ),
                   ],
                 ),
@@ -873,7 +942,7 @@ class _BrowsePaginationBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: AppColors.surfaceElevatedOf(context),
+      color: CreatorCampaignsChrome.card(context),
       borderRadius: BorderRadius.circular(14),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),

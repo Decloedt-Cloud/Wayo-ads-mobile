@@ -10,7 +10,7 @@ import '../dashboard/presentation/providers/dashboard_state_providers.dart';
 import 'shell_tab_signed_in_gate.dart';
 
 /// Campaigns tab — role-branching:
-/// - [WayoAdsAccountRole.advertiser] → [AdvertiserCampaignsScreen] (browse + create drafts).
+/// - [WayoAdsAccountRole.advertiser] → [AdvertiserCampaignsScreen] (browse).
 /// - [WayoAdsAccountRole.creator] → [CreatorCampaignsTabScreen] (browse + apply).
 class CampaignsTabScreen extends ConsumerWidget {
   const CampaignsTabScreen({super.key});

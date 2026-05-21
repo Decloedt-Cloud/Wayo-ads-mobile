@@ -25,9 +25,16 @@ class InvoicesHeroKpi extends ConsumerWidget {
 
     final kpis = kpisAsync.valueOrNull;
     final totalPaid = (kpis?.totalPaidCents ?? 0) / 100.0;
+    final thisMonth = (kpis?.thisMonthCents ?? 0) / 100.0;
     final pending = kpis?.pendingCount ?? 0;
     final count = kpis?.count ?? 0;
     final currency = kpis?.currency ?? 'EUR';
+    final showMonth = true;
+    final summaryLabel = role == WayoAdsAccountRole.creator
+        ? t.invoices.summary_total_validated
+        : t.invoices.summary_total_paid;
+    final heroPillTitle =
+        role == WayoAdsAccountRole.creator ? t.invoices.title_creator : t.invoices.title;
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(28),
@@ -88,7 +95,7 @@ class InvoicesHeroKpi extends ConsumerWidget {
                 Row(
                   children: [
                     _Pill(
-                      text: t.invoices.title,
+                      text: heroPillTitle,
                       icon: Icons.receipt_long_rounded,
                     ),
                     const Spacer(),
@@ -97,7 +104,7 @@ class InvoicesHeroKpi extends ConsumerWidget {
                 ),
                 const SizedBox(height: 14),
                 Text(
-                  t.invoices.summary_total_paid,
+                  summaryLabel,
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.78),
                     fontSize: 13,
@@ -123,6 +130,17 @@ class InvoicesHeroKpi extends ConsumerWidget {
                     );
                   },
                 ),
+                if (showMonth) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    '${t.invoices.summary_this_month}: ${MoneyFormatter.format(thisMonth, currency: currency)}',
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.78),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 14),
                 Row(
                   children: [

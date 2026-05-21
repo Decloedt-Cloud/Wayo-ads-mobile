@@ -14,6 +14,22 @@ import '../../auth/domain/wayo_ads_account_role.dart';
 /// Identifier of each bottom-nav tab that can receive a coach-mark.
 enum ShellTutorialTarget { dashboard, campaigns, wallet, invoices, chat }
 
+bool _coachTargetBoxReady(GlobalKey key) {
+  final ctx = key.currentContext;
+  if (ctx == null) return false;
+  final box = ctx.findRenderObject() as RenderBox?;
+  if (box == null || !box.hasSize) return false;
+  return box.size.width > 8 && box.size.height > 8;
+}
+
+/// True once every supplied key is attached with a usable layout (for [TutorialCoachMark]).
+bool shellCoachNavTabsReady(Map<ShellTutorialTarget, GlobalKey> keys) {
+  for (final MapEntry(:value) in keys.entries) {
+    if (!_coachTargetBoxReady(value)) return false;
+  }
+  return true;
+}
+
 /// Orchestrates the first-login, role-aware **coach-mark tour** around the
 /// bottom navigation bar.
 ///
@@ -60,16 +76,16 @@ class ShellTutorialController {
 
   /// Launches the tour if it hasn't run yet for this user + role.
   ///
-  /// [keys] should include every target for the tour (4 for creators — no
-  /// invoices tab — 5 for advertisers). Missing keys are skipped.
-  Future<void> maybeShow({
+  /// [keys] should include every target for the tour (5 tabs for shell users
+  /// with an invoices branch). Missing keys are skipped.
+  Future<bool> maybeShow({
     required BuildContext context,
     required AppPrefs prefs,
     required int userId,
     required WayoAdsAccountRole role,
     required Map<ShellTutorialTarget, GlobalKey> keys,
   }) async {
-    if (hasSeen(prefs: prefs, userId: userId, role: role)) return;
+    if (hasSeen(prefs: prefs, userId: userId, role: role)) return false;
     return show(
       context: context,
       prefs: prefs,
@@ -80,7 +96,8 @@ class ShellTutorialController {
   }
 
   /// Forces the tour to run (used by "Replay tutorial" buttons).
-  Future<void> show({
+  /// Returns `true` if the overlay was shown (at least one valid target).
+  Future<bool> show({
     required BuildContext context,
     required AppPrefs prefs,
     required int userId,
@@ -88,7 +105,7 @@ class ShellTutorialController {
     required Map<ShellTutorialTarget, GlobalKey> keys,
   }) async {
     final targets = _buildTargets(context: context, role: role, keys: keys);
-    if (targets.isEmpty) return;
+    if (targets.isEmpty) return false;
 
     final accent = role == WayoAdsAccountRole.creator
         ? CreatorColors.primaryOf(context)
@@ -124,6 +141,7 @@ class ShellTutorialController {
       onClickTarget: (_) => HapticFeedback.selectionClick(),
       onClickOverlay: (_) => HapticFeedback.selectionClick(),
     ).show(context: context, rootOverlay: true);
+    return true;
   }
 
   /// Builds coach-mark targets in a fixed order, skipping any whose
@@ -154,6 +172,11 @@ class ShellTutorialController {
           tc.campaigns_subtitle,
         ),
         (ShellTutorialTarget.wallet, tc.wallet_title, tc.wallet_subtitle),
+        (
+          ShellTutorialTarget.invoices,
+          tc.invoices_title,
+          tc.invoices_subtitle,
+        ),
         (ShellTutorialTarget.chat, tc.chat_title, tc.chat_subtitle),
       ];
     } else {

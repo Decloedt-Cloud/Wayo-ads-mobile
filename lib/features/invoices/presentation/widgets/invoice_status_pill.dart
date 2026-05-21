@@ -24,6 +24,11 @@ class InvoiceStatusPill extends StatelessWidget {
         const Color(0xFF0F5132),
         t.invoices.status_paid,
       ),
+      InvoiceStatus.validated => (
+        const Color(0xFF22C55E),
+        const Color(0xFF0F5132),
+        t.invoices.status_validated,
+      ),
       InvoiceStatus.pending => (
         const Color(0xFFF4A237),
         const Color(0xFF7A3F00),
@@ -61,7 +66,11 @@ class InvoiceStatusPill extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _LivePulseDot(color: dotColor, animate: status == InvoiceStatus.paid),
+            _LivePulseDot(
+              color: dotColor,
+              animate:
+                  status == InvoiceStatus.paid || status == InvoiceStatus.validated,
+            ),
             SizedBox(width: dense ? 5 : 7),
             Text(
               label,

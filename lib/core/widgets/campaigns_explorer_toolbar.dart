@@ -5,6 +5,9 @@ import '../campaigns/campaign_explorer_layout.dart';
 import '../theme/app_colors.dart';
 import '../../i18n/strings.g.dart';
 
+const Color _layoutToggleAmber = Color(0xFFF59E0B);
+const Color _layoutToggleOnIcon = Color(0xFF0A0A0F);
+
 /// Web-inspired “control strip”: search, filter row (wraps on narrow widths),
 /// results caption, grid/list switch — tuned for dark & light international UIs.
 class CampaignsExplorerToolbar extends StatelessWidget {
@@ -37,138 +40,174 @@ class CampaignsExplorerToolbar extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final border = AppColors.borderOf(context);
-    final bg = isDark
-        ? AppColors.surfaceElevatedOf(context).withValues(alpha: 0.4)
-        : scheme.surfaceContainerHighest.withValues(alpha: 0.72);
+    final innerBg = isDark
+        ? const Color(0xFF161616)
+        : scheme.surfaceContainerHighest.withValues(alpha: 0.85);
+    final outerBg = isDark ? AppColors.surfaceElevatedOf(context) : scheme.surface;
 
-    return DecoratedBox(
+    return Container(
       decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: border.withValues(alpha: isDark ? 0.5 : 0.85),
-        ),
+        borderRadius: BorderRadius.circular(20),
+        gradient: isDark
+            ? LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  AppColors.primary.withValues(alpha: 0.14),
+                  AppColors.primary.withValues(alpha: 0.02),
+                  outerBg.withValues(alpha: 0.5),
+                ],
+                stops: const [0.0, 0.35, 1.0],
+              )
+            : LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  AppColors.primary.withValues(alpha: 0.1),
+                  scheme.surface.withValues(alpha: 0.001),
+                ],
+              ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.22 : 0.04),
-            blurRadius: 18,
-            offset: const Offset(0, 10),
+            color: Colors.black.withValues(alpha: isDark ? 0.26 : 0.05),
+            blurRadius: 20,
+            offset: const Offset(0, 12),
           ),
         ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            AnimatedSize(
-              duration: const Duration(milliseconds: 260),
-              curve: Curves.easeOutCubic,
-              alignment: Alignment.topCenter,
-              clipBehavior: Clip.hardEdge,
-              child: filtersExpanded
-                  ? Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        searchField,
-                        if (filterScrollContent != null) ...[
-                          const SizedBox(height: 12),
-                          filterScrollContent!,
-                          if (onResetExplorerFilters != null) ...[
-                            const SizedBox(height: 8),
-                            Align(
-                              alignment: AlignmentDirectional.centerEnd,
-                              child: TextButton.icon(
-                                onPressed: () {
-                                  HapticFeedback.selectionClick();
-                                  onResetExplorerFilters!();
-                                },
-                                icon: Icon(
-                                  Icons.restart_alt_rounded,
-                                  size: 18,
-                                  color: AppColors.primary,
-                                ),
-                                label: Text(
-                                  context.t.campaigns_explorer.reset_filters,
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w600,
+      padding: const EdgeInsets.all(1.1),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: isDark ? innerBg : scheme.surfaceContainerHighest.withValues(alpha: 0.72),
+          borderRadius: BorderRadius.circular(19),
+          border: Border.all(
+            color: border.withValues(alpha: isDark ? 0.45 : 0.88),
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              AnimatedSize(
+                duration: const Duration(milliseconds: 260),
+                curve: Curves.easeOutCubic,
+                alignment: Alignment.topCenter,
+                clipBehavior: Clip.hardEdge,
+                child: filtersExpanded
+                    ? Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          searchField,
+                          if (filterScrollContent != null) ...[
+                            const SizedBox(height: 16),
+                            filterScrollContent!,
+                            if (onResetExplorerFilters != null) ...[
+                              const SizedBox(height: 12),
+                              Align(
+                                alignment: AlignmentDirectional.centerEnd,
+                                child: OutlinedButton.icon(
+                                  onPressed: () {
+                                    HapticFeedback.selectionClick();
+                                    onResetExplorerFilters!();
+                                  },
+                                  icon: Icon(
+                                    Icons.restart_alt_rounded,
+                                    size: 18,
                                     color: AppColors.primary,
                                   ),
-                                ),
-                                style: TextButton.styleFrom(
-                                  visualDensity: VisualDensity.compact,
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 10,
-                                    vertical: 4,
+                                  label: Text(
+                                    context.t.campaigns_explorer.reset_filters,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: AppColors.primary,
+                                    side: BorderSide(
+                                      color: AppColors.primary.withValues(
+                                        alpha: isDark ? 0.55 : 0.45,
+                                      ),
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 14,
+                                      vertical: 10,
+                                    ),
+                                    visualDensity: VisualDensity.compact,
                                   ),
                                 ),
                               ),
-                            ),
+                            ],
                           ],
+                          SizedBox(height: filterScrollContent != null ? 12 : 8),
                         ],
-                        SizedBox(height: filterScrollContent != null ? 12 : 8),
-                      ],
-                    )
-                  : const SizedBox.shrink(),
-            ),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Expanded(
-                  child: Text(
-                    resultCountText,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                      color: AppColors.textSecondaryOf(context),
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.1,
+                      )
+                    : const SizedBox.shrink(),
+              ),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: Text(
+                      resultCountText,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                        color: AppColors.textSecondaryOf(context),
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.1,
+                      ),
                     ),
                   ),
-                ),
-                Semantics(
-                  button: true,
-                  label: filtersExpanded
-                      ? context.t.campaigns_explorer.toolbar_hide_search_filters
-                      : context.t.campaigns_explorer.toolbar_show_search_filters,
-                  child: IconButton(
-                    tooltip: filtersExpanded
-                        ? context
-                            .t
-                            .campaigns_explorer
-                            .toolbar_hide_search_filters
-                        : context
-                            .t
-                            .campaigns_explorer
-                            .toolbar_show_search_filters,
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(
-                      minWidth: 40,
-                      minHeight: 40,
-                    ),
-                    visualDensity: VisualDensity.compact,
-                    onPressed: () {
-                      HapticFeedback.selectionClick();
-                      onFiltersExpandedChanged(!filtersExpanded);
-                    },
-                    icon: Icon(
-                      filtersExpanded
-                          ? Icons.expand_less_rounded
-                          : Icons.expand_more_rounded,
-                      size: 26,
-                      color: AppColors.textMutedOf(context),
+                  Semantics(
+                    button: true,
+                    label: filtersExpanded
+                        ? context.t.campaigns_explorer.toolbar_hide_search_filters
+                        : context.t.campaigns_explorer.toolbar_show_search_filters,
+                    child: IconButton(
+                      tooltip: filtersExpanded
+                          ? context
+                              .t
+                              .campaigns_explorer
+                              .toolbar_hide_search_filters
+                          : context
+                              .t
+                              .campaigns_explorer
+                              .toolbar_show_search_filters,
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(
+                        minWidth: 40,
+                        minHeight: 40,
+                      ),
+                      visualDensity: VisualDensity.compact,
+                      onPressed: () {
+                        HapticFeedback.selectionClick();
+                        onFiltersExpandedChanged(!filtersExpanded);
+                      },
+                      icon: Icon(
+                        filtersExpanded
+                            ? Icons.expand_less_rounded
+                            : Icons.expand_more_rounded,
+                        size: 26,
+                        color: filtersExpanded
+                            ? _layoutToggleAmber
+                            : AppColors.textSecondaryOf(context),
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 4),
-                _LayoutSegment(
-                  layout: layout,
-                  onChanged: onLayoutChanged,
-                ),
-              ],
-            ),
-          ],
+                  const SizedBox(width: 4),
+                  _LayoutSegment(
+                    layout: layout,
+                    onChanged: onLayoutChanged,
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -186,18 +225,22 @@ class _LayoutSegment extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final border = AppColors.borderOf(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return DecoratedBox(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeOutCubic,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(11),
         border: Border.all(
-          color: border.withValues(alpha: isDark ? 0.55 : 0.9),
+          color: AppColors.borderOf(context).withValues(
+            alpha: isDark ? 0.5 : 0.88,
+          ),
         ),
-        color: Theme.of(context).colorScheme.surface.withValues(
-              alpha: isDark ? 0.2 : 0.45,
-            ),
+        color: isDark
+            ? const Color(0xFF13131A).withValues(alpha: 0.92)
+            : Theme.of(context).colorScheme.surface.withValues(alpha: 0.45),
       ),
+      padding: const EdgeInsets.all(3),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -236,23 +279,34 @@ class _LayoutIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final primary = AppColors.primary;
-    final fg = selected ? primary : AppColors.textMutedOf(context);
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(11),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(11),
-            color: selected
-                ? primary.withValues(alpha: 0.12)
-                : Colors.transparent,
-          ),
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 210),
+      curve: Curves.easeOutCubic,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8),
+        color: selected ? _layoutToggleAmber : Colors.transparent,
+        boxShadow: selected
+            ? [
+                BoxShadow(
+                  color: _layoutToggleAmber.withValues(alpha: 0.32),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ]
+            : null,
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(8),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
-            child: Icon(icon, size: 20, color: fg),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: Icon(
+              icon,
+              size: 20,
+              color: selected ? _layoutToggleOnIcon : AppColors.textMutedOf(context),
+            ),
           ),
         ),
       ),

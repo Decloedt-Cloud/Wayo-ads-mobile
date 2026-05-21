@@ -2,6 +2,8 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
+import '../../../core/config/auth_runtime_config.dart';
+
 /// Single [GoogleSignIn] per server client id — avoids repeated Pigeon `init` on Android.
 /// Call [signInForIdToken] after the UI is mounted; waits for a frame before touching the plugin.
 final class GoogleSignInFacade {
@@ -15,10 +17,7 @@ final class GoogleSignInFacade {
       return _client!;
     }
     _serverClientId = serverClientId;
-    _client = GoogleSignIn(
-      scopes: const ['email', 'profile'],
-      serverClientId: serverClientId,
-    );
+    _client = _buildClient(serverClientId);
     return _client!;
   }
 
@@ -28,18 +27,43 @@ final class GoogleSignInFacade {
     _serverClientId = null;
   }
 
-  /// Call after app logout so the next "Continue with Google" shows the account picker again.
-  static Future<void> signOutFromGoogle() async {
+  /// Clears cached Google account so the next [signIn] shows the account picker.
+  ///
+  /// [disconnect] only runs when a session exists — calling it with no prior
+  /// Google sign-in makes Android throw "Failed to disconnect.".
+  static Future<void> _clearGoogleSession(GoogleSignIn google) async {
     try {
-      if (_client != null) {
-        await _client!.signOut();
+      await google.signOut();
+    } catch (_) {}
+    try {
+      if (await google.isSignedIn()) {
+        await google.disconnect();
       }
+    } catch (_) {}
+  }
+
+  /// Clears the Google session on device so the next sign-in shows account picker.
+  static Future<void> signOutFromGoogle() async {
+    final cid =
+        _serverClientId ?? AuthRuntimeConfig.instance.googleServerClientId;
+    if (cid.isEmpty) {
+      reset();
+      return;
+    }
+    try {
+      final client = _client ?? _buildClient(cid);
+      await _clearGoogleSession(client);
     } catch (_) {
-      // Non-fatal: account may not have used Google this session.
+      // Non-fatal: user may not have signed in with Google this session.
     } finally {
       reset();
     }
   }
+
+  static GoogleSignIn _buildClient(String serverClientId) => GoogleSignIn(
+        scopes: const ['email', 'profile'],
+        serverClientId: serverClientId,
+      );
 
   static bool _isChannelError(Object e) {
     if (e is PlatformException) {
@@ -72,6 +96,8 @@ final class GoogleSignInFacade {
 
     Future<String?> attempt() async {
       final google = _ensureClient(serverClientId);
+      // signIn() reuses [currentUser] unless the session was cleared first.
+      await _clearGoogleSession(google);
       final account = await google.signIn();
       if (account == null) {
         return null;

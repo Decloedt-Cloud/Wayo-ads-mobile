@@ -91,6 +91,8 @@ class CreatorBrowseExplorerFilters extends StatelessWidget {
       final sel = typeFilter?.name;
       menus.add(
         CampaignExplorerFilterMenu(
+          caption: t.campaigns_explorer.filter_label_type,
+          isActive: typeFilter != null,
           selectedValue: sel,
           items: items,
           onChanged: (raw) {
@@ -110,9 +112,12 @@ class CreatorBrowseExplorerFilters extends StatelessWidget {
         (null, t.campaigns_explorer.filter_all_niches),
         for (final n in sorted) (n, campaignNicheFallbackLabel(n)),
       ];
+      final nSel = normalizeCampaignNicheApiValue(nicheFilter);
       menus.add(
         CampaignExplorerFilterMenu(
-          selectedValue: normalizeCampaignNicheApiValue(nicheFilter),
+          caption: t.campaigns_explorer.filter_label_niche,
+          isActive: nSel != null && nSel.isNotEmpty,
+          selectedValue: nSel,
           items: items,
           onChanged: onNicheChanged,
         ),
@@ -125,9 +130,12 @@ class CreatorBrowseExplorerFilters extends StatelessWidget {
         (null, t.campaigns_explorer.filter_all_locations),
         for (final loc in sorted) (loc, loc),
       ];
+      final lSel = normalizeCampaignLocationValue(locationFilter);
       menus.add(
         CampaignExplorerFilterMenu(
-          selectedValue: normalizeCampaignLocationValue(locationFilter),
+          caption: t.campaigns_explorer.filter_label_location,
+          isActive: lSel != null && lSel.isNotEmpty,
+          selectedValue: lSel,
           items: items,
           onChanged: onLocationChanged,
         ),
@@ -138,11 +146,43 @@ class CreatorBrowseExplorerFilters extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
-    return Wrap(
-      alignment: WrapAlignment.start,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      runSpacing: 8,
-      children: menus,
+    final gap = 10.0;
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final useTwoCols = constraints.maxWidth >= 360;
+        if (!useTwoCols) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (var i = 0; i < menus.length; i++) ...[
+                if (i > 0) SizedBox(height: gap),
+                menus[i],
+              ],
+            ],
+          );
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (var i = 0; i < menus.length; i += 2) ...[
+              if (i > 0) SizedBox(height: gap),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(child: menus[i]),
+                  SizedBox(width: gap),
+                  if (i + 1 < menus.length)
+                    Expanded(child: menus[i + 1])
+                  else
+                    const Expanded(child: SizedBox.shrink()),
+                ],
+              ),
+            ],
+          ],
+        );
+      },
     );
   }
 }

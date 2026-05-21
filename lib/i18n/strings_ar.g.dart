@@ -48,6 +48,7 @@ class TranslationsAr extends Translations {
 	@override late final _TranslationsAdvertiserCampaignsAr advertiser_campaigns = _TranslationsAdvertiserCampaignsAr._(_root);
 	@override late final _TranslationsNavAr nav = _TranslationsNavAr._(_root);
 	@override late final _TranslationsInvoicesAr invoices = _TranslationsInvoicesAr._(_root);
+	@override late final _TranslationsPushAr push = _TranslationsPushAr._(_root);
 	@override late final _TranslationsCreatorAr creator = _TranslationsCreatorAr._(_root);
 	@override late final _TranslationsAdvertiserWalletAr advertiser_wallet = _TranslationsAdvertiserWalletAr._(_root);
 	@override late final _TranslationsChatAr chat = _TranslationsChatAr._(_root);
@@ -101,6 +102,10 @@ class _TranslationsCampaignsExplorerAr extends TranslationsCampaignsExplorerEn {
 	@override String get reset_filters => 'إعادة ضبط المرشحات';
 	@override String get toolbar_show_search_filters => 'إظهار البحث والمرشحات';
 	@override String get toolbar_hide_search_filters => 'إخفاء البحث والمرشحات';
+	@override String get filter_label_type => 'النوع';
+	@override String get filter_label_status => 'الحالة';
+	@override String get filter_label_niche => 'المجال';
+	@override String get filter_label_location => 'الموقع';
 }
 
 // Path: login
@@ -304,6 +309,7 @@ class _TranslationsNavAr extends TranslationsNavEn {
 	@override String get wallet => 'المحفظة';
 	@override String get chat => 'المحادثات';
 	@override String get invoices => 'الفواتير';
+	@override String get invoices_creator => 'الإيصالات';
 }
 
 // Path: invoices
@@ -314,6 +320,7 @@ class _TranslationsInvoicesAr extends TranslationsInvoicesEn {
 
 	// Translations
 	@override String get title => 'الفواتير';
+	@override String get title_creator => 'إيصالات الدفع';
 	@override String get subtitle_advertiser => 'كل إيداع وكل ميزانية حملة — في مكان واحد.';
 	@override String get subtitle_creator => 'كل أرباحك وتحويلاتك — موقعة، محمية، قابلة للتنزيل.';
 	@override String get summary_total_paid => 'إجمالي المدفوع';
@@ -330,6 +337,7 @@ class _TranslationsInvoicesAr extends TranslationsInvoicesEn {
 	@override String get type_earnings => 'أرباح الإعلانات';
 	@override String get type_unknown => 'أخرى';
 	@override String get status_paid => 'مدفوعة';
+	@override String get status_validated => 'معتمدة';
 	@override String get status_pending => 'قيد الانتظار';
 	@override String get status_cancelled => 'ملغاة';
 	@override String get role_advertiser => 'المعلن';
@@ -337,6 +345,7 @@ class _TranslationsInvoicesAr extends TranslationsInvoicesEn {
 	@override String get search_hint => 'ابحث برقم الفاتورة أو المرجع…';
 	@override String get empty_title => 'لا توجد فواتير بعد';
 	@override String get empty_subtitle => 'ستظهر هنا الإيداعات وميزانيات الحملات والتحويلات تلقائياً — دون أي خطوة يدوية.';
+	@override String get empty_subtitle_creator => 'ستظهر أرباحك ومستندات التحويل هنا فور إصدارها — نفس ملفات PDF المعتمدة كما في الويب.';
 	@override String get empty_cta => 'تحديث';
 	@override String get error_title => 'تعذّر تحميل الفواتير';
 	@override String get error_subtitle => 'اسحب للتحديث — سنحاول من جديد فوراً.';
@@ -368,6 +377,45 @@ class _TranslationsInvoicesAr extends TranslationsInvoicesEn {
 	@override String get share_subject => 'فاتورة {number}';
 	@override String get polling_live => 'مباشر';
 	@override String get polling_paused => 'إيقاف';
+	@override String get summary_this_month => 'هذا الشهر';
+	@override String get pagination_detail => 'صفحة {current} من {total} · {count} فواتير';
+	@override String get sort_sheet_title => 'الترتيب';
+	@override String get sort_date_newest => 'الأحدث أولاً';
+	@override String get sort_date_oldest => 'الأقدم أولاً';
+	@override String get sort_amount_high => 'المبلغ · من الأعلى';
+	@override String get sort_amount_low => 'المبلغ · من الأدنى';
+	@override String get sort_status_az => 'الحالة · أ-ي';
+	@override String get sort_status_za => 'الحالة · ي-أ';
+	@override String get date_range_title => 'التواريخ';
+	@override String get date_from => 'من';
+	@override String get date_to => 'إلى';
+	@override String get clear_dates => 'مسح';
+	@override String get date_apply => 'تطبيق';
+	@override String get download_all_zip => 'ZIP';
+	@override String get zip_progress => 'جاري إنشاء ZIP…';
+	@override String get zip_success => 'تم الحفظ: {filename}';
+	@override String get zip_error => 'فشل تنزيل ZIP.';
+}
+
+// Path: push
+class _TranslationsPushAr extends TranslationsPushEn {
+	_TranslationsPushAr._(TranslationsAr root) : this._root = root, super.internal(root);
+
+	final TranslationsAr _root; // ignore: unused_field
+
+	// Translations
+	@override String get onboarding_title => 'ابقَ على اطلاع';
+	@override String get onboarding_subtitle => 'استقبل تنبيهات فورية لما يهمك — حتى عندما يكون التطبيق في الخلفية.';
+	@override String get onboarding_bullet_campaigns => 'تحديثات الحملات والطلبات والميزانيات';
+	@override String get onboarding_bullet_messages => 'رسائل الدردشة الجديدة';
+	@override String get onboarding_bullet_system => 'الفواتير والمدفوعات وتنبيهات المنصة';
+	@override String get onboarding_enable => 'تفعيل الإشعارات';
+	@override String get onboarding_later => 'ليس الآن';
+	@override String get onboarding_success => 'تم تفعيل الإشعارات';
+	@override String get onboarding_denied_hint => 'يمكنك تفعيلها لاحقاً من إعدادات الجهاز.';
+	@override String get onboarding_context_chat => 'وصلتك رسالة جديدة — فعّل التنبيهات حتى لا تفوتك أي رد.';
+	@override String get onboarding_context_campaign => 'تغيّرت حالة حملة — فعّل الإشعارات لمتابعة الطلبات والميزانيات.';
+	@override String get onboarding_context_invoice => 'فاتورة أو تحويل جديد — احصل على تنبيه فور تحرك الأموال.';
 }
 
 // Path: creator
@@ -427,6 +475,10 @@ class _TranslationsAdvertiserWalletAr extends TranslationsAdvertiserWalletEn {
 	@override String get business_profile_gate_cta => 'إكمال بيانات النشاط';
 	@override String get business_profile_error => 'تعذّر تحميل الملف التجاري.';
 	@override String get pay_locked_until_business => 'تُفعّل طرق الدفع بعد إكمال الملف التجاري.';
+	@override String get payment_title => 'الدفع';
+	@override String get payment_total => 'الإجمالي';
+	@override String get payment_deposit_amount => 'مبلغ الإيداع';
+	@override String get payment_bank_fee => 'رسوم المعاملة البنكية (3.69%)';
 }
 
 // Path: chat
@@ -444,6 +496,9 @@ class _TranslationsChatAr extends TranslationsChatEn {
 	@override String get typing => 'يكتب…';
 	@override String get error_load_threads => 'تعذّر تحميل محادثاتك. أعد المحاولة.';
 	@override String get error_phone => 'مشاركة أرقام الهاتف في الدردشة غير مسموحة.';
+	@override String get spam_cooldown_title => 'ترسل رسائلًا بسرعة كبيرة';
+	@override String spam_cooldown_body({required Object seconds}) => 'انتظر ${seconds} ث قبل الإرسال مرة أخرى.';
+	@override String spam_cooldown_seconds({required Object seconds}) => '${seconds} ث';
 	@override String get empty_threads_title => 'لا توجد محادثات بعد';
 	@override String get empty_threads_hint => 'عندما يراسلك أحدهم بخصوص حملة، ستظهر هنا.';
 	@override String get online => 'متصل';
@@ -478,6 +533,15 @@ class _TranslationsChatAr extends TranslationsChatEn {
 	@override String get bubble_update => 'تعديل';
 	@override String get bubble_delete_unavailable => 'حذف الرسائل من التطبيق غير متاح بعد.';
 	@override String get bubble_copied => 'تم النسخ إلى الحافظة';
+	@override String get bubble_forward => 'تحويل';
+	@override String get share_media_tooltip => 'مشاركة';
+	@override String get share_failed => 'تعذر مشاركة هذا الملف. حاول مرة أخرى.';
+	@override String get forward_sheet_title => 'إعادة الإرسال إلى…';
+	@override String get forward_no_other_chats => 'يلزم محادثة أخرى مفتوحة أولاً.';
+	@override String get forward_sending => 'جاري التحويل…';
+	@override String get forward_ok => 'تم تحويل الرسالة.';
+	@override String get forward_failed => 'فشل التحويل.';
+	@override String get forward_view => 'فتح';
 	@override String get edited => 'معدَّل';
 	@override String get seen => 'تمت القراءة';
 	@override String get delivered => 'تم التسليم';
@@ -493,6 +557,14 @@ class _TranslationsChatAr extends TranslationsChatEn {
 	@override String get delete_confirm_cta => 'حذف';
 	@override String get delete_confirm_cancel => 'إلغاء';
 	@override String get scroll_to_latest => 'الأحدث';
+	@override String get loading_older_messages => 'جاري تحميل الرسائل الأقدم…';
+	@override String get load_older_failed => 'تعذّر تحميل الرسائل الأقدم.';
+	@override String get image_download_tooltip => 'تنزيل الصورة';
+	@override String get image_close_tooltip => 'إغلاق';
+	@override String get image_saved_to_gallery => 'تم حفظ الصورة في معرض الصور.';
+	@override String get image_download_failed => 'تعذّر تنزيل هذه الصورة.';
+	@override String get image_permission_denied => 'تم رفض الوصول إلى الصور. فعّل الإذن من الإعدادات.';
+	@override String get image_saved_downloads_browser => 'تم تنزيل الصورة — تحقق من مجلد التحميلات.';
 }
 
 // Path: common
@@ -592,6 +664,9 @@ class _TranslationsAppSettingsAr extends TranslationsAppSettingsEn {
 	@override String get section_account => 'الحساب';
 	@override String get delete_account_entry => 'حذف الحساب';
 	@override String get delete_account_entry_sub => 'فترة سماح 30 يومًا — من داخل التطبيق';
+	@override String get section_about => 'حول التطبيق';
+	@override String get rate_app => 'قيّم Wayo Ads';
+	@override String get rate_app_sub => 'يفتح App Store أو Google Play';
 }
 
 // Path: account_deletion
@@ -773,6 +848,9 @@ class _TranslationsAdvertiserCampaignsCardAr extends TranslationsAdvertiserCampa
 	@override String get spent => 'المنفق';
 	@override String get cpc => 'CPC';
 	@override String get valid_engagements => '{count} مشاهدة مُصدّقة';
+	@override String get list_row_views => '{count} مشاهدة';
+	@override String get list_row_clicks => '{count} نقرات';
+	@override String get list_row_creators => '{count} منشئين';
 }
 
 // Path: advertiser_campaigns.status
@@ -824,6 +902,9 @@ class _TranslationsAdvertiserCampaignsDetailAr extends TranslationsAdvertiserCam
 	@override String get objective_conversion => 'التحويل';
 	@override String get cpm_metric => 'CPM (لكل 1000 مشاهدة)';
 	@override String get cpc_metric => 'CPC (لكل نقرة)';
+	@override String get description_title => 'الوصف';
+	@override String get show_more => 'عرض المزيد';
+	@override String get show_less => 'عرض أقل';
 }
 
 // Path: advertiser_campaigns.create
@@ -913,10 +994,17 @@ class _TranslationsCreatorWalletAr extends TranslationsCreatorWalletEn {
 	@override String get withdraw_button => 'سحب';
 	@override String get withdraw_sheet_title => 'طلب سحب';
 	@override String get withdraw_sheet_subtitle => 'الرصيد المتاح: {available}. ستُحوَّل الأموال إلى حساب Stripe المربوط.';
-	@override String get withdraw_amount_label => 'المبلغ';
+	@override String get withdraw_amount_label => 'المبلغ (USD)';
+	@override String get withdraw_sheet_body => 'أدخل المبلغ الذي تريد سحبه. سيتم تحويل الأموال إلى حسابك البنكي المرتبط.';
+	@override String get withdraw_quick_amounts => 'مبالغ سريعة';
+	@override String get withdraw_gross_amount => 'المبلغ الإجمالي';
+	@override String get withdraw_platform_fee => 'رسوم المنصة ({percent}%)';
+	@override String get withdraw_tax_vat => 'ضريبة القيمة المضافة ({percent}%)';
+	@override String get withdraw_net_received => 'صافي المستلم';
 	@override String get withdraw_submit => 'تأكيد السحب';
 	@override String get withdraw_submitting => 'جارٍ المعالجة…';
 	@override String get withdraw_max => 'الحد الأقصى';
+	@override String get withdraw_preset_all => 'الكل';
 	@override String get withdraw_success => 'تم إرسال طلب السحب.';
 	@override String get withdraw_secure_footer => 'سحب آمن — تعالجه Stripe. بياناتك المصرفية لا تصل إلينا أبدًا.';
 	@override String get withdraw_error_invalid => 'أدخل مبلغًا صالحًا.';
@@ -1091,14 +1179,12 @@ class _TranslationsCreatorBusinessAr extends TranslationsCreatorBusinessEn {
 	@override String get cta_button => 'Finalize your Business Information';
 	@override String get dialog_title => 'معلومات النشاط التجاري';
 	@override String get dialog_subtitle => 'قدّم بعض المعلومات القانونية حتى يتمكن Stripe من فتح حسابك ومعالجة المدفوعات.';
-	@override String get section_type => 'نوع الحساب';
+	@override String get section_type => 'نوع النشاط';
 	@override String get section_company => 'الشركة';
 	@override String get section_address => 'العنوان';
 	@override String get section_stripe => 'بلد وعملة الدفع';
-	@override String get type_personal_title => 'فرد';
+	@override String get type_personal_title => 'فرد / شخص خاص';
 	@override String get type_personal_subtitle => 'أتلقى المدفوعات بصفتي فردًا.';
-	@override String get type_sole_title => 'عامل حر';
-	@override String get type_sole_subtitle => 'أدير نشاطًا مستقلًا باسمي.';
 	@override String get type_company_title => 'شركة مسجّلة';
 	@override String get type_company_subtitle => 'أعمل تحت كيان قانوني مسجّل.';
 	@override String get company_name => 'اسم الشركة';
@@ -1149,6 +1235,8 @@ class _TranslationsOnboardingCreatorAr extends TranslationsOnboardingCreatorEn {
 	@override String get campaigns_subtitle => 'اكتشف الحملات المتاحة، قدّم بنقرة واحدة وتابع حالة طلبك مباشرة.';
 	@override String get wallet_title => 'الأرباح والسحوبات';
 	@override String get wallet_subtitle => 'اطّلع على رصيدك واطلب تحويلاً عبر Stripe Connect واستعرض سحوباتك السابقة.';
+	@override String get invoices_title => 'إيصالات الدفع';
+	@override String get invoices_subtitle => 'صفِّ الأرباح والتحويلات، وحمّل ملفات PDF المعتمدة أو أرشيف ZIP — يُحدَّث تلقائياً أثناء استخدام التطبيق.';
 	@override String get chat_title => 'تحدث مع المعلن';
 	@override String get chat_subtitle => 'فور الاعتماد، تُفتح الدردشة للتنسيق مع المعلن حول المخرجات.';
 }
@@ -1184,6 +1272,10 @@ extension on TranslationsAr {
 			case 'campaigns_explorer.reset_filters': return 'إعادة ضبط المرشحات';
 			case 'campaigns_explorer.toolbar_show_search_filters': return 'إظهار البحث والمرشحات';
 			case 'campaigns_explorer.toolbar_hide_search_filters': return 'إخفاء البحث والمرشحات';
+			case 'campaigns_explorer.filter_label_type': return 'النوع';
+			case 'campaigns_explorer.filter_label_status': return 'الحالة';
+			case 'campaigns_explorer.filter_label_niche': return 'المجال';
+			case 'campaigns_explorer.filter_label_location': return 'الموقع';
 			case 'login.brand': return 'وايو أدز';
 			case 'login.headline_line1': return 'مرحبًا بك';
 			case 'login.headline_line2_prefix': return 'في ';
@@ -1310,6 +1402,9 @@ extension on TranslationsAr {
 			case 'advertiser_campaigns.card.spent': return 'المنفق';
 			case 'advertiser_campaigns.card.cpc': return 'CPC';
 			case 'advertiser_campaigns.card.valid_engagements': return '{count} مشاهدة مُصدّقة';
+			case 'advertiser_campaigns.card.list_row_views': return '{count} مشاهدة';
+			case 'advertiser_campaigns.card.list_row_clicks': return '{count} نقرات';
+			case 'advertiser_campaigns.card.list_row_creators': return '{count} منشئين';
 			case 'advertiser_campaigns.status.active': return 'نشطة';
 			case 'advertiser_campaigns.status.paused': return 'معلّقة';
 			case 'advertiser_campaigns.status.completed': return 'مكتملة';
@@ -1334,6 +1429,9 @@ extension on TranslationsAr {
 			case 'advertiser_campaigns.detail.objective_conversion': return 'التحويل';
 			case 'advertiser_campaigns.detail.cpm_metric': return 'CPM (لكل 1000 مشاهدة)';
 			case 'advertiser_campaigns.detail.cpc_metric': return 'CPC (لكل نقرة)';
+			case 'advertiser_campaigns.detail.description_title': return 'الوصف';
+			case 'advertiser_campaigns.detail.show_more': return 'عرض المزيد';
+			case 'advertiser_campaigns.detail.show_less': return 'عرض أقل';
 			case 'advertiser_campaigns.create.title': return 'حملة جديدة';
 			case 'advertiser_campaigns.create.section_basics': return 'المعلومات الأساسية';
 			case 'advertiser_campaigns.create.section_budget': return 'الميزانية والتسعير';
@@ -1376,7 +1474,9 @@ extension on TranslationsAr {
 			case 'nav.wallet': return 'المحفظة';
 			case 'nav.chat': return 'المحادثات';
 			case 'nav.invoices': return 'الفواتير';
+			case 'nav.invoices_creator': return 'الإيصالات';
 			case 'invoices.title': return 'الفواتير';
+			case 'invoices.title_creator': return 'إيصالات الدفع';
 			case 'invoices.subtitle_advertiser': return 'كل إيداع وكل ميزانية حملة — في مكان واحد.';
 			case 'invoices.subtitle_creator': return 'كل أرباحك وتحويلاتك — موقعة، محمية، قابلة للتنزيل.';
 			case 'invoices.summary_total_paid': return 'إجمالي المدفوع';
@@ -1393,6 +1493,7 @@ extension on TranslationsAr {
 			case 'invoices.type_earnings': return 'أرباح الإعلانات';
 			case 'invoices.type_unknown': return 'أخرى';
 			case 'invoices.status_paid': return 'مدفوعة';
+			case 'invoices.status_validated': return 'معتمدة';
 			case 'invoices.status_pending': return 'قيد الانتظار';
 			case 'invoices.status_cancelled': return 'ملغاة';
 			case 'invoices.role_advertiser': return 'المعلن';
@@ -1400,6 +1501,7 @@ extension on TranslationsAr {
 			case 'invoices.search_hint': return 'ابحث برقم الفاتورة أو المرجع…';
 			case 'invoices.empty_title': return 'لا توجد فواتير بعد';
 			case 'invoices.empty_subtitle': return 'ستظهر هنا الإيداعات وميزانيات الحملات والتحويلات تلقائياً — دون أي خطوة يدوية.';
+			case 'invoices.empty_subtitle_creator': return 'ستظهر أرباحك ومستندات التحويل هنا فور إصدارها — نفس ملفات PDF المعتمدة كما في الويب.';
 			case 'invoices.empty_cta': return 'تحديث';
 			case 'invoices.error_title': return 'تعذّر تحميل الفواتير';
 			case 'invoices.error_subtitle': return 'اسحب للتحديث — سنحاول من جديد فوراً.';
@@ -1431,6 +1533,36 @@ extension on TranslationsAr {
 			case 'invoices.share_subject': return 'فاتورة {number}';
 			case 'invoices.polling_live': return 'مباشر';
 			case 'invoices.polling_paused': return 'إيقاف';
+			case 'invoices.summary_this_month': return 'هذا الشهر';
+			case 'invoices.pagination_detail': return 'صفحة {current} من {total} · {count} فواتير';
+			case 'invoices.sort_sheet_title': return 'الترتيب';
+			case 'invoices.sort_date_newest': return 'الأحدث أولاً';
+			case 'invoices.sort_date_oldest': return 'الأقدم أولاً';
+			case 'invoices.sort_amount_high': return 'المبلغ · من الأعلى';
+			case 'invoices.sort_amount_low': return 'المبلغ · من الأدنى';
+			case 'invoices.sort_status_az': return 'الحالة · أ-ي';
+			case 'invoices.sort_status_za': return 'الحالة · ي-أ';
+			case 'invoices.date_range_title': return 'التواريخ';
+			case 'invoices.date_from': return 'من';
+			case 'invoices.date_to': return 'إلى';
+			case 'invoices.clear_dates': return 'مسح';
+			case 'invoices.date_apply': return 'تطبيق';
+			case 'invoices.download_all_zip': return 'ZIP';
+			case 'invoices.zip_progress': return 'جاري إنشاء ZIP…';
+			case 'invoices.zip_success': return 'تم الحفظ: {filename}';
+			case 'invoices.zip_error': return 'فشل تنزيل ZIP.';
+			case 'push.onboarding_title': return 'ابقَ على اطلاع';
+			case 'push.onboarding_subtitle': return 'استقبل تنبيهات فورية لما يهمك — حتى عندما يكون التطبيق في الخلفية.';
+			case 'push.onboarding_bullet_campaigns': return 'تحديثات الحملات والطلبات والميزانيات';
+			case 'push.onboarding_bullet_messages': return 'رسائل الدردشة الجديدة';
+			case 'push.onboarding_bullet_system': return 'الفواتير والمدفوعات وتنبيهات المنصة';
+			case 'push.onboarding_enable': return 'تفعيل الإشعارات';
+			case 'push.onboarding_later': return 'ليس الآن';
+			case 'push.onboarding_success': return 'تم تفعيل الإشعارات';
+			case 'push.onboarding_denied_hint': return 'يمكنك تفعيلها لاحقاً من إعدادات الجهاز.';
+			case 'push.onboarding_context_chat': return 'وصلتك رسالة جديدة — فعّل التنبيهات حتى لا تفوتك أي رد.';
+			case 'push.onboarding_context_campaign': return 'تغيّرت حالة حملة — فعّل الإشعارات لمتابعة الطلبات والميزانيات.';
+			case 'push.onboarding_context_invoice': return 'فاتورة أو تحويل جديد — احصل على تنبيه فور تحرك الأموال.';
 			case 'creator.dashboard.title': return 'استوديو المبدع';
 			case 'creator.dashboard.subtitle': return 'تابع إحصائياتك وطلباتك وأرباحك في الوقت الفعلي.';
 			case 'creator.dashboard.coming_soon_title': return 'لوحة تحكّم المبدع';
@@ -1448,10 +1580,17 @@ extension on TranslationsAr {
 			case 'creator.wallet.withdraw_button': return 'سحب';
 			case 'creator.wallet.withdraw_sheet_title': return 'طلب سحب';
 			case 'creator.wallet.withdraw_sheet_subtitle': return 'الرصيد المتاح: {available}. ستُحوَّل الأموال إلى حساب Stripe المربوط.';
-			case 'creator.wallet.withdraw_amount_label': return 'المبلغ';
+			case 'creator.wallet.withdraw_amount_label': return 'المبلغ (USD)';
+			case 'creator.wallet.withdraw_sheet_body': return 'أدخل المبلغ الذي تريد سحبه. سيتم تحويل الأموال إلى حسابك البنكي المرتبط.';
+			case 'creator.wallet.withdraw_quick_amounts': return 'مبالغ سريعة';
+			case 'creator.wallet.withdraw_gross_amount': return 'المبلغ الإجمالي';
+			case 'creator.wallet.withdraw_platform_fee': return 'رسوم المنصة ({percent}%)';
+			case 'creator.wallet.withdraw_tax_vat': return 'ضريبة القيمة المضافة ({percent}%)';
+			case 'creator.wallet.withdraw_net_received': return 'صافي المستلم';
 			case 'creator.wallet.withdraw_submit': return 'تأكيد السحب';
 			case 'creator.wallet.withdraw_submitting': return 'جارٍ المعالجة…';
 			case 'creator.wallet.withdraw_max': return 'الحد الأقصى';
+			case 'creator.wallet.withdraw_preset_all': return 'الكل';
 			case 'creator.wallet.withdraw_success': return 'تم إرسال طلب السحب.';
 			case 'creator.wallet.withdraw_secure_footer': return 'سحب آمن — تعالجه Stripe. بياناتك المصرفية لا تصل إلينا أبدًا.';
 			case 'creator.wallet.withdraw_error_invalid': return 'أدخل مبلغًا صالحًا.';
@@ -1590,14 +1729,12 @@ extension on TranslationsAr {
 			case 'creator.business.cta_button': return 'Finalize your Business Information';
 			case 'creator.business.dialog_title': return 'معلومات النشاط التجاري';
 			case 'creator.business.dialog_subtitle': return 'قدّم بعض المعلومات القانونية حتى يتمكن Stripe من فتح حسابك ومعالجة المدفوعات.';
-			case 'creator.business.section_type': return 'نوع الحساب';
+			case 'creator.business.section_type': return 'نوع النشاط';
 			case 'creator.business.section_company': return 'الشركة';
 			case 'creator.business.section_address': return 'العنوان';
 			case 'creator.business.section_stripe': return 'بلد وعملة الدفع';
-			case 'creator.business.type_personal_title': return 'فرد';
+			case 'creator.business.type_personal_title': return 'فرد / شخص خاص';
 			case 'creator.business.type_personal_subtitle': return 'أتلقى المدفوعات بصفتي فردًا.';
-			case 'creator.business.type_sole_title': return 'عامل حر';
-			case 'creator.business.type_sole_subtitle': return 'أدير نشاطًا مستقلًا باسمي.';
 			case 'creator.business.type_company_title': return 'شركة مسجّلة';
 			case 'creator.business.type_company_subtitle': return 'أعمل تحت كيان قانوني مسجّل.';
 			case 'creator.business.company_name': return 'اسم الشركة';
@@ -1649,6 +1786,10 @@ extension on TranslationsAr {
 			case 'advertiser_wallet.business_profile_gate_cta': return 'إكمال بيانات النشاط';
 			case 'advertiser_wallet.business_profile_error': return 'تعذّر تحميل الملف التجاري.';
 			case 'advertiser_wallet.pay_locked_until_business': return 'تُفعّل طرق الدفع بعد إكمال الملف التجاري.';
+			case 'advertiser_wallet.payment_title': return 'الدفع';
+			case 'advertiser_wallet.payment_total': return 'الإجمالي';
+			case 'advertiser_wallet.payment_deposit_amount': return 'مبلغ الإيداع';
+			case 'advertiser_wallet.payment_bank_fee': return 'رسوم المعاملة البنكية (3.69%)';
 			case 'chat.inbox_title': return 'الرسائل';
 			case 'chat.inbox_subtitle': return 'محادثات آمنة لحملاتك';
 			case 'chat.conversation_unknown': return 'محادثة';
@@ -1657,6 +1798,9 @@ extension on TranslationsAr {
 			case 'chat.typing': return 'يكتب…';
 			case 'chat.error_load_threads': return 'تعذّر تحميل محادثاتك. أعد المحاولة.';
 			case 'chat.error_phone': return 'مشاركة أرقام الهاتف في الدردشة غير مسموحة.';
+			case 'chat.spam_cooldown_title': return 'ترسل رسائلًا بسرعة كبيرة';
+			case 'chat.spam_cooldown_body': return ({required Object seconds}) => 'انتظر ${seconds} ث قبل الإرسال مرة أخرى.';
+			case 'chat.spam_cooldown_seconds': return ({required Object seconds}) => '${seconds} ث';
 			case 'chat.empty_threads_title': return 'لا توجد محادثات بعد';
 			case 'chat.empty_threads_hint': return 'عندما يراسلك أحدهم بخصوص حملة، ستظهر هنا.';
 			case 'chat.online': return 'متصل';
@@ -1691,6 +1835,15 @@ extension on TranslationsAr {
 			case 'chat.bubble_update': return 'تعديل';
 			case 'chat.bubble_delete_unavailable': return 'حذف الرسائل من التطبيق غير متاح بعد.';
 			case 'chat.bubble_copied': return 'تم النسخ إلى الحافظة';
+			case 'chat.bubble_forward': return 'تحويل';
+			case 'chat.share_media_tooltip': return 'مشاركة';
+			case 'chat.share_failed': return 'تعذر مشاركة هذا الملف. حاول مرة أخرى.';
+			case 'chat.forward_sheet_title': return 'إعادة الإرسال إلى…';
+			case 'chat.forward_no_other_chats': return 'يلزم محادثة أخرى مفتوحة أولاً.';
+			case 'chat.forward_sending': return 'جاري التحويل…';
+			case 'chat.forward_ok': return 'تم تحويل الرسالة.';
+			case 'chat.forward_failed': return 'فشل التحويل.';
+			case 'chat.forward_view': return 'فتح';
 			case 'chat.edited': return 'معدَّل';
 			case 'chat.seen': return 'تمت القراءة';
 			case 'chat.delivered': return 'تم التسليم';
@@ -1706,6 +1859,14 @@ extension on TranslationsAr {
 			case 'chat.delete_confirm_cta': return 'حذف';
 			case 'chat.delete_confirm_cancel': return 'إلغاء';
 			case 'chat.scroll_to_latest': return 'الأحدث';
+			case 'chat.loading_older_messages': return 'جاري تحميل الرسائل الأقدم…';
+			case 'chat.load_older_failed': return 'تعذّر تحميل الرسائل الأقدم.';
+			case 'chat.image_download_tooltip': return 'تنزيل الصورة';
+			case 'chat.image_close_tooltip': return 'إغلاق';
+			case 'chat.image_saved_to_gallery': return 'تم حفظ الصورة في معرض الصور.';
+			case 'chat.image_download_failed': return 'تعذّر تنزيل هذه الصورة.';
+			case 'chat.image_permission_denied': return 'تم رفض الوصول إلى الصور. فعّل الإذن من الإعدادات.';
+			case 'chat.image_saved_downloads_browser': return 'تم تنزيل الصورة — تحقق من مجلد التحميلات.';
 			case 'common.language': return 'اللغة';
 			case 'common.theme': return 'المظهر';
 			case 'common.light': return 'فاتح';
@@ -1769,6 +1930,9 @@ extension on TranslationsAr {
 			case 'app_settings.section_account': return 'الحساب';
 			case 'app_settings.delete_account_entry': return 'حذف الحساب';
 			case 'app_settings.delete_account_entry_sub': return 'فترة سماح 30 يومًا — من داخل التطبيق';
+			case 'app_settings.section_about': return 'حول التطبيق';
+			case 'app_settings.rate_app': return 'قيّم Wayo Ads';
+			case 'app_settings.rate_app_sub': return 'يفتح App Store أو Google Play';
 			case 'account_deletion.nav_title': return 'حذف الحساب';
 			case 'account_deletion.title': return 'حذف حساب Wayo Ads';
 			case 'account_deletion.danger_zone_chip': return 'منطقة الخطر';
@@ -1862,6 +2026,8 @@ extension on TranslationsAr {
 			case 'onboarding.creator.campaigns_subtitle': return 'اكتشف الحملات المتاحة، قدّم بنقرة واحدة وتابع حالة طلبك مباشرة.';
 			case 'onboarding.creator.wallet_title': return 'الأرباح والسحوبات';
 			case 'onboarding.creator.wallet_subtitle': return 'اطّلع على رصيدك واطلب تحويلاً عبر Stripe Connect واستعرض سحوباتك السابقة.';
+			case 'onboarding.creator.invoices_title': return 'إيصالات الدفع';
+			case 'onboarding.creator.invoices_subtitle': return 'صفِّ الأرباح والتحويلات، وحمّل ملفات PDF المعتمدة أو أرشيف ZIP — يُحدَّث تلقائياً أثناء استخدام التطبيق.';
 			case 'onboarding.creator.chat_title': return 'تحدث مع المعلن';
 			case 'onboarding.creator.chat_subtitle': return 'فور الاعتماد، تُفتح الدردشة للتنسيق مع المعلن حول المخرجات.';
 			default: return null;

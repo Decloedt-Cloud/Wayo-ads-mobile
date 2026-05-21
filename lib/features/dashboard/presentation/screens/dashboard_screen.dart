@@ -37,6 +37,19 @@ String _moneyLocale(AppLocale l) => switch (l) {
   AppLocale.ar => 'ar_SA',
 };
 
+String _localizedAdvertiserCampaignStatus(
+  CampaignStatus status,
+  Translations t,
+) {
+  return switch (status) {
+    CampaignStatus.active => t.advertiser_campaigns.status.active,
+    CampaignStatus.paused => t.advertiser_campaigns.status.paused,
+    CampaignStatus.completed => t.advertiser_campaigns.status.completed,
+    CampaignStatus.draft => t.advertiser_campaigns.status.draft,
+    CampaignStatus.unknown => t.advertiser_campaigns.status.other,
+  };
+}
+
 /// Advertiser home — balance, campaigns, premium visuals.
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -98,7 +111,7 @@ class DashboardScreen extends ConsumerWidget {
                         snapshot: snap,
                         moneyLocale: _moneyLocale(locale),
                       ),
-                    _CampaignsSection(
+                      _CampaignsSection(
                         snapshot: snap,
                         isLoading: async.isLoading,
                       ),
@@ -446,7 +459,7 @@ class _BalanceSection extends StatelessWidget {
                         icon: Icons.lock_outline_rounded,
                       ),
                     ),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: _AdvertiserMiniStatCard(
                         label: t.dashboard.balance.spent,
@@ -459,10 +472,10 @@ class _BalanceSection extends StatelessWidget {
                         icon: Icons.trending_down_rounded,
                       ),
                     ),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: _AdvertiserMiniStatCard(
-                        label: t.nav.campaigns,
+                        label: t.advertiser_campaigns.title,
                         value: '${snapshot.campaignsTotalCount}',
                         accent: AppColors.primary,
                         icon: Icons.grid_view_rounded,
@@ -572,7 +585,8 @@ class _AdvertiserMiniStatCard extends StatelessWidget {
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
         child: Container(
-          padding: const EdgeInsets.all(12),
+          width: double.infinity,
+          padding: const EdgeInsets.fromLTRB(10, 12, 10, 12),
           decoration: BoxDecoration(
             color: (isDark ? AppColors.black : Colors.black).withValues(
               alpha: isDark ? 0.35 : 0.04,
@@ -585,6 +599,7 @@ class _AdvertiserMiniStatCard extends StatelessWidget {
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
               Row(
                 children: [
@@ -621,7 +636,7 @@ class _AdvertiserMiniStatCard extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 style: AppTextStyles.headlineMedium(
                   context,
-                ).copyWith(fontSize: 15, fontWeight: FontWeight.w800),
+                ).copyWith(fontSize: 14, fontWeight: FontWeight.w800),
               ),
             ],
           ),
@@ -912,8 +927,6 @@ class _CampaignTile extends StatelessWidget {
             context.push(
               '/campaigns/${c.id}',
               extra: <String, String?>{
-                'coverUrl': c.coverUrl,
-                'brandLogoUrl': c.brandLogoUrl,
                 'title': c.name,
               },
             );
@@ -977,7 +990,10 @@ class _CampaignTile extends StatelessWidget {
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: Text(
-                              c.status.name,
+                              _localizedAdvertiserCampaignStatus(
+                                c.status,
+                                t,
+                              ),
                               style: TextStyle(
                                 color: statusColor,
                                 fontSize: 11,

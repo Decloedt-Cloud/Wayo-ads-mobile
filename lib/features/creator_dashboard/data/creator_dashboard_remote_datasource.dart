@@ -1,5 +1,7 @@
 import 'package:dio/dio.dart';
 
+import '../../../core/config/auth_runtime_config.dart';
+import '../../../core/network/api_endpoints.dart';
 import '../domain/creator_application.dart';
 import '../domain/creator_stats.dart';
 
@@ -14,7 +16,9 @@ class CreatorDashboardRemoteDatasource {
 
   /// `GET /api/creator/stats` — KPIs for the active creator.
   Future<CreatorStats> fetchStats() async {
-    final res = await _dio.get<Object?>('api/creator/stats');
+    final res = await _dio.get<Object?>(
+      AuthRuntimeConfig.instance.wayoAdsRequestPath(ApiEndpoints.creatorStats),
+    );
     final body = res.data;
     if (body is! Map) {
       throw DioException(
@@ -28,7 +32,10 @@ class CreatorDashboardRemoteDatasource {
 
   /// `GET /api/creator/applications` — list of all the creator's applications.
   Future<List<CreatorApplication>> fetchApplications() async {
-    final res = await _dio.get<Object?>('api/creator/applications');
+    final res = await _dio.get<Object?>(
+      AuthRuntimeConfig.instance
+          .wayoAdsRequestPath(ApiEndpoints.creatorApplications),
+    );
     final body = res.data;
     final raw = body is Map ? body['applications'] : null;
     if (raw is! List) {

@@ -1,4 +1,3 @@
-import FirebaseCore
 import Flutter
 import UIKit
 import flutter_local_notifications
@@ -14,7 +13,8 @@ import flutter_local_notifications
     FlutterLocalNotificationsPlugin.setPluginRegistrantCallback { registry in
       GeneratedPluginRegistrant.register(with: registry)
     }
-    FirebaseApp.configure()
+    // Firebase is initialized from Dart (`initializeFirebaseForPush` in lib/main.dart)
+    // with `DefaultFirebaseOptions` — do not call FirebaseApp.configure() here.
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 

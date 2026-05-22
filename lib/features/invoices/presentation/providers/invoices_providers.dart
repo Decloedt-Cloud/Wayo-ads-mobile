@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -76,6 +75,28 @@ final invoiceDateFromProvider = StateProvider<DateTime?>((ref) => null);
 
 final invoiceDateToProvider = StateProvider<DateTime?>((ref) => null);
 
+enum InvoiceDatePreset { all, last30, last90, custom }
+
+final invoiceDatePresetProvider = StateProvider<InvoiceDatePreset>(
+  (_) => InvoiceDatePreset.all,
+);
+
+const int kCreatorInvoicesPageSize = 10;
+const int kAdvertiserInvoicesPageSize = 10;
+
+/// Creator and advertiser lists use server pages + prev/next (no infinite scroll).
+bool invoicesUsePagedList(WayoAdsAccountRole role) {
+  switch (role) {
+    case WayoAdsAccountRole.creator:
+    case WayoAdsAccountRole.advertiser:
+    case WayoAdsAccountRole.superAdmin:
+      return true;
+    case WayoAdsAccountRole.user:
+    case WayoAdsAccountRole.unknown:
+      return false;
+  }
+}
+
 /// Accumulated list of invoices across pages + paging metadata.
 @immutable
 class InvoicesState {
@@ -86,9 +107,8 @@ class InvoicesState {
     required this.totalCount,
     required this.isLoadingMore,
     this.advertiserStats,
+    this.creatorStats,
     this.statsCurrency,
-    this.creatorUsesClientPaging = false,
-    this.creatorUiVisibleCount = 0,
   });
 
   final List<Invoice> invoices;
@@ -97,30 +117,14 @@ class InvoicesState {
   final int totalCount;
   final bool isLoadingMore;
   final AdvertiserInvoicesStats? advertiserStats;
+  final CreatorInvoicesStats? creatorStats;
   final String? statsCurrency;
 
-  /// Creator: full list is loaded up front; [creatorUiVisibleCount] steps by 10 in the UI.
-  final bool creatorUsesClientPaging;
-  final int creatorUiVisibleCount;
+  bool get hasNextPage => page < totalPages;
 
-  bool get hasNextPage {
-    if (creatorUsesClientPaging) {
-      return creatorUiVisibleCount < invoices.length;
-    }
-    return page < totalPages;
-  }
+  int get displayCurrentPage => page;
 
-  /// Footer / scroll UX: server pages (advertiser) or 10-row windows (creator).
-  int get displayCurrentPage => creatorUsesClientPaging
-      ? math.max(
-          1,
-          (math.min(creatorUiVisibleCount, invoices.length) + 9) ~/ 10,
-        )
-      : page;
-
-  int get displayTotalPages => creatorUsesClientPaging
-      ? math.max(1, (invoices.length + 9) ~/ 10)
-      : totalPages;
+  int get displayTotalPages => totalPages;
 
   InvoicesState copyWith({
     List<Invoice>? invoices,
@@ -129,9 +133,8 @@ class InvoicesState {
     int? totalCount,
     bool? isLoadingMore,
     AdvertiserInvoicesStats? advertiserStats,
+    CreatorInvoicesStats? creatorStats,
     String? statsCurrency,
-    bool? creatorUsesClientPaging,
-    int? creatorUiVisibleCount,
   }) => InvoicesState(
     invoices: invoices ?? this.invoices,
     page: page ?? this.page,
@@ -139,9 +142,8 @@ class InvoicesState {
     totalCount: totalCount ?? this.totalCount,
     isLoadingMore: isLoadingMore ?? this.isLoadingMore,
     advertiserStats: advertiserStats ?? this.advertiserStats,
+    creatorStats: creatorStats ?? this.creatorStats,
     statsCurrency: statsCurrency ?? this.statsCurrency,
-    creatorUsesClientPaging: creatorUsesClientPaging ?? this.creatorUsesClientPaging,
-    creatorUiVisibleCount: creatorUiVisibleCount ?? this.creatorUiVisibleCount,
   );
 
   static const InvoicesState empty = InvoicesState(
@@ -151,9 +153,8 @@ class InvoicesState {
     totalCount: 0,
     isLoadingMore: false,
     advertiserStats: null,
+    creatorStats: null,
     statsCurrency: null,
-    creatorUsesClientPaging: false,
-    creatorUiVisibleCount: 0,
   );
 }
 
@@ -166,10 +167,8 @@ class InvoicesController extends AsyncNotifier<InvoicesState> {
     ref.watch(currentWayoAdsAccountRoleProvider);
     ref.watch(invoicesFilterProvider);
     ref.watch(invoiceSearchQueryProvider);
-    // Date range is updated from the invoices toolbar; call
-    // `ref.invalidate(invoicesControllerProvider)` there so the list refetches
-    // with `dateFrom` / `dateTo` query params (watching [DateTime?] here did not
-    // reliably rebuild this [AsyncNotifier] across all navigation/modal flows).
+    ref.watch(invoiceDateFromProvider);
+    ref.watch(invoiceDateToProvider);
 
     final role = ref.read(currentWayoAdsAccountRoleProvider);
     if (role == WayoAdsAccountRole.unknown) {
@@ -204,23 +203,16 @@ class InvoicesController extends AsyncNotifier<InvoicesState> {
     if (current == null || !current.hasNextPage || current.isLoadingMore) {
       return;
     }
-    if (current.creatorUsesClientPaging) {
-      final nextVisible = math.min(
-        current.creatorUiVisibleCount + 10,
-        current.invoices.length,
-      );
-      state = AsyncValue<InvoicesState>.data(
-        current.copyWith(creatorUiVisibleCount: nextVisible, isLoadingMore: false),
-      );
-      return;
-    }
     state = AsyncValue<InvoicesState>.data(
       current.copyWith(isLoadingMore: true),
     );
     try {
+      final role = ref.read(currentWayoAdsAccountRoleProvider);
+      final replaceOnly = invoicesUsePagedList(role);
       final merged = await _fetchPage(
         current.page + 1,
-        accumulated: current.invoices,
+        accumulated: replaceOnly ? const [] : current.invoices,
+        replaceOnly: replaceOnly,
       );
       state = AsyncValue<InvoicesState>.data(merged);
     } catch (e, st) {
@@ -234,53 +226,37 @@ class InvoicesController extends AsyncNotifier<InvoicesState> {
     }
   }
 
-  static const int _creatorFetchBatch = 100;
-
-  Future<InvoicesPage> _loadAllCreatorPages({
-    required String? invoiceType,
-    required String search,
-    required DateTime? dateFrom,
-    required DateTime? dateTo,
-  }) async {
-    final byId = <String, Invoice>{};
-    late InvoicesPage last;
-    var page = 1;
-    while (true) {
-      final chunk = await _repo.loadCreatorPage(
-        page: page,
-        limit: _creatorFetchBatch,
-        invoiceType: invoiceType,
-        search: search,
-        dateFrom: dateFrom,
-        dateTo: dateTo,
-        sortBy: 'createdAt',
-        sortDir: 'desc',
-      );
-      last = chunk;
-      for (final inv in chunk.invoices) {
-        byId[inv.id] = inv;
-      }
-      if (chunk.invoices.isEmpty) break;
-      if (chunk.invoices.length < _creatorFetchBatch) break;
-      if (page >= chunk.totalPages) break;
-      page++;
+  /// Replace the list with the previous server page (creator / advertiser).
+  Future<void> loadPrevious() async {
+    final current = state.valueOrNull;
+    if (current == null || current.page <= 1 || current.isLoadingMore) {
+      return;
     }
-    final merged = byId.values.toList()
-      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
-    return InvoicesPage(
-      invoices: merged,
-      page: 1,
-      pageSize: last.pageSize,
-      totalCount: merged.length,
-      totalPages: math.max(1, (merged.length + 9) ~/ 10),
-      currency: last.currency,
-      advertiserStats: last.advertiserStats,
+    state = AsyncValue<InvoicesState>.data(
+      current.copyWith(isLoadingMore: true),
     );
+    try {
+      final prev = await _fetchPage(
+        current.page - 1,
+        accumulated: const [],
+        replaceOnly: true,
+      );
+      state = AsyncValue<InvoicesState>.data(prev);
+    } catch (e, st) {
+      state = AsyncValue<InvoicesState>.data(
+        current.copyWith(isLoadingMore: false),
+      );
+      state = AsyncValue<InvoicesState>.error(
+        InvoicesRepository.mapError(e),
+        st,
+      );
+    }
   }
 
   Future<InvoicesState> _fetchPage(
     int page, {
     required List<Invoice> accumulated,
+    bool replaceOnly = false,
   }) async {
     final role = ref.read(currentWayoAdsAccountRoleProvider);
     final filter = ref.read(invoicesFilterProvider);
@@ -288,18 +264,22 @@ class InvoicesController extends AsyncNotifier<InvoicesState> {
 
     switch (role) {
       case WayoAdsAccountRole.creator:
-        result = await _loadAllCreatorPages(
+        result = await _repo.loadCreatorPage(
+          page: page,
+          limit: kCreatorInvoicesPageSize,
           invoiceType: _invoiceTypeForServer(role, filter),
           search: ref.read(invoiceSearchQueryProvider),
           dateFrom: ref.read(invoiceDateFromProvider),
           dateTo: ref.read(invoiceDateToProvider),
+          sortBy: 'createdAt',
+          sortDir: 'desc',
         );
         break;
       case WayoAdsAccountRole.advertiser:
       case WayoAdsAccountRole.superAdmin:
         result = await _repo.loadAdvertiserPage(
           page: page,
-          limit: 15,
+          limit: kAdvertiserInvoicesPageSize,
           invoiceType: _invoiceTypeForServer(role, filter),
           search: ref.read(invoiceSearchQueryProvider),
           dateFrom: ref.read(invoiceDateFromProvider),
@@ -313,21 +293,21 @@ class InvoicesController extends AsyncNotifier<InvoicesState> {
         return InvoicesState.empty;
     }
 
-    final byId = <String, Invoice>{
-      for (final inv in accumulated) inv.id: inv,
-    };
-    for (final inv in result.invoices) {
-      byId[inv.id] = inv;
+    final List<Invoice> merged;
+    if (replaceOnly || accumulated.isEmpty) {
+      merged = List<Invoice>.from(result.invoices);
+    } else {
+      final byId = <String, Invoice>{
+        for (final inv in accumulated) inv.id: inv,
+      };
+      for (final inv in result.invoices) {
+        byId[inv.id] = inv;
+      }
+      merged = byId.values.toList()
+        ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
     }
-    final merged = byId.values.toList()
-      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
     final prev = accumulated.isEmpty ? null : state.valueOrNull;
-
-    final creatorPaging = role == WayoAdsAccountRole.creator;
-    final initialVisible = creatorPaging
-        ? math.min(10, merged.length)
-        : merged.length;
 
     return InvoicesState(
       invoices: merged,
@@ -336,9 +316,8 @@ class InvoicesController extends AsyncNotifier<InvoicesState> {
       totalCount: result.totalCount,
       isLoadingMore: false,
       advertiserStats: result.advertiserStats ?? prev?.advertiserStats,
+      creatorStats: result.creatorStats ?? prev?.creatorStats,
       statsCurrency: result.currency ?? prev?.statsCurrency,
-      creatorUsesClientPaging: creatorPaging,
-      creatorUiVisibleCount: initialVisible,
     );
   }
 }
@@ -350,14 +329,7 @@ final invoicesControllerProvider =
 
 /// Server-side filters for both roles; list order preserved from API.
 final filteredInvoicesProvider = Provider<AsyncValue<List<Invoice>>>((ref) {
-  return ref.watch(invoicesControllerProvider).whenData((s) {
-    if (s.creatorUsesClientPaging) {
-      final n = math.min(s.creatorUiVisibleCount, s.invoices.length);
-      if (n <= 0) return const <Invoice>[];
-      return s.invoices.take(n).toList(growable: false);
-    }
-    return s.invoices;
-  });
+  return ref.watch(invoicesControllerProvider).whenData((s) => s.invoices);
 });
 
 /// Derived: KPIs for the hero card.
@@ -391,6 +363,17 @@ final invoicesKpisProvider = Provider<AsyncValue<InvoicesKpis>>((ref) {
         (role == WayoAdsAccountRole.advertiser ||
             role == WayoAdsAccountRole.superAdmin) &&
         filter != InvoiceFilter.all;
+
+    if (role == WayoAdsAccountRole.creator && s.creatorStats != null) {
+      final cs = s.creatorStats!;
+      return InvoicesKpis(
+        totalPaidCents: cs.totalValidatedCents,
+        thisMonthCents: cs.totalThisMonthCents,
+        pendingCount: cs.pendingCount,
+        count: s.totalCount,
+        currency: currency,
+      );
+    }
 
     if (server != null && !useAdvertiserFilteredKpis) {
       var pending = 0;

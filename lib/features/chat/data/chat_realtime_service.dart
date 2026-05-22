@@ -72,10 +72,8 @@ final class ChatMessageEditedEvent extends ChatRealtimeEvent {
 final class ChatRealtimeService {
   ChatRealtimeService({this.onConnectionError});
 
-  /// Hook called whenever the WebSocket/Pusher layer reports a connection
-  /// error (typically DNS / TCP / handshake failure). Wired by the Riverpod
-  /// provider to `ConnectivityService.reportRemoteFailure` so the offline
-  /// popup appears within ~1 s instead of waiting for the periodic probe.
+  /// Optional hook when the WebSocket/Pusher layer reports a connection error.
+  /// Not wired to the global offline overlay (chat can fail while ads API works).
   final void Function(Object error)? onConnectionError;
 
   /// Chat-service user ids on **`presence-chat.{appId}`** — same presence channel as

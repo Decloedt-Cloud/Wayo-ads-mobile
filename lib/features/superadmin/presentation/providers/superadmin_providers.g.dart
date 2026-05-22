@@ -344,6 +344,20 @@ class _AiUsageProviderElement
   String get period => (origin as AiUsageProvider).period;
 }
 
+String _$taxRatesHash() => r'8ee7d66f2d603ab4416d00d186d7691137aff54e';
+
+/// See also [taxRates].
+@ProviderFor(taxRates)
+final taxRatesProvider = AutoDisposeFutureProvider<TaxRatesPage>.internal(
+  taxRates,
+  name: r'taxRatesProvider',
+  debugGetCreateSourceHash:
+      const bool.fromEnvironment('dart.vm.product') ? null : _$taxRatesHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+typedef TaxRatesRef = AutoDisposeFutureProviderRef<TaxRatesPage>;
 String _$bannedUsersNotifierHash() =>
     r'fba11400af2b46d8d784c60fcf5569f866854f20';
 
@@ -491,7 +505,7 @@ class _BannedUsersNotifierProviderElement
 }
 
 String _$adminUsersNotifierHash() =>
-    r'0ea0f73a651f07f3149f89bf06b92164c52433b4';
+    r'7cf05900974c81d4a34a51a80f7f8c667f489158';
 
 abstract class _$AdminUsersNotifier
     extends BuildlessAutoDisposeAsyncNotifier<AdminUsersPage> {

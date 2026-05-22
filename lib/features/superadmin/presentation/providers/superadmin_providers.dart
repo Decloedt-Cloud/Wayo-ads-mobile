@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../core/network/wayo_ads_dio.dart';
+import '../../../dashboard/presentation/providers/dashboard_state_providers.dart';
 import '../../data/superadmin_remote_datasource.dart';
 import '../../data/superadmin_repository.dart';
 import '../../domain/entities/admin_user.dart';
@@ -9,6 +10,9 @@ import '../../domain/entities/ai_usage.dart';
 import '../../domain/entities/announcement.dart';
 import '../../domain/entities/banned_user.dart';
 import '../../domain/entities/dashboard_stats.dart';
+import '../../../creator_campaigns/domain/creator_browse_campaign.dart';
+import '../../../creator_campaigns/domain/creator_browse_page_result.dart';
+import '../../domain/entities/country_tax_rate.dart';
 import '../../domain/entities/ledger_entry.dart';
 import '../../domain/entities/withdrawal.dart';
 
@@ -388,8 +392,68 @@ class LedgerNotifier extends _$LedgerNotifier {
   }
 }
 
+// Tax rates
+@riverpod
+Future<TaxRatesPage> taxRates(TaxRatesRef ref) async {
+  final repo = ref.watch(superadminRepositoryProvider);
+  final result = await repo.getTaxRates();
+  return result.when(
+    success: (page) => page,
+    failure: (e) => throw e,
+  );
+}
+
+/// Browse campaigns list page (1-based).
+final superadminBrowseCampaignPageProvider = StateProvider<int>((ref) => 1);
+
+final superadminBrowseCampaignSearchProvider = StateProvider<String>(
+  (ref) => '',
+);
+
+final superadminBrowseTypeFilterProvider =
+    StateProvider<CreatorCampaignType?>((ref) => null);
+
+final superadminBrowseNicheProvider = StateProvider<String?>((ref) => null);
+
+final superadminBrowseLocationProvider = StateProvider<String?>((ref) => null);
+
+typedef SuperadminBrowsePagedKey = ({
+  int page,
+  String search,
+  String? typeApi,
+  String? nicheApi,
+  String? countryApi,
+});
+
+/// Public marketplace — `GET /api/campaigns?status=ACTIVE`.
+final superadminBrowseCampaignsPagedProvider = FutureProvider.autoDispose
+    .family<CreatorBrowsePageResult, SuperadminBrowsePagedKey>((ref, key) async {
+      ref.watch(superadminBrowseLivePulseProvider);
+      final repo = ref.watch(superadminRepositoryProvider);
+      final result = await repo.getMarketplaceCampaignsPage(
+        page: key.page,
+        limit: 10,
+        search: key.search.trim().isEmpty ? null : key.search.trim(),
+        type: key.typeApi,
+        niche: key.nicheApi,
+        countryCode: key.countryApi,
+      );
+      return result.when(
+        success: (page) => page,
+        failure: (e) => throw e,
+      );
+    });
+
 /// Bumps when Reverb invalidates superadmin payout data (live refresh pulse).
 final superadminWithdrawalsLivePulseProvider = StateProvider<int>((ref) => 0);
+
+/// Bumps when campaign marketplace stats change (live browse refresh).
+final superadminBrowseLivePulseProvider = StateProvider<int>((ref) => 0);
+
+void invalidateSuperadminBrowseCampaigns(dynamic ref) {
+  ref.read(superadminBrowseLivePulseProvider.notifier).update((n) => n + 1);
+  ref.invalidate(superadminBrowseCampaignsPagedProvider);
+}
 
 /// Refreshes withdrawals list, payout stats, and dashboard KPIs after a realtime signal.
 void invalidateSuperadminWithdrawalData(dynamic ref) {
@@ -397,4 +461,11 @@ void invalidateSuperadminWithdrawalData(dynamic ref) {
   ref.invalidate(withdrawalsNotifierProvider);
   ref.invalidate(payoutStatsProvider);
   ref.invalidate(dashboardStatsProvider);
+}
+
+void invalidateSuperadminRealtimePanels(dynamic ref) {
+  invalidateSuperadminWithdrawalData(ref);
+  invalidateSuperadminBrowseCampaigns(ref);
+  ref.invalidate(notificationsListProvider);
+  ref.invalidate(notificationsUnreadCountsProvider);
 }

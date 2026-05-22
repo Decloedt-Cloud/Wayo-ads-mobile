@@ -11,6 +11,8 @@ final class NotificationItem extends Equatable {
     this.type,
     this.actionUrl,
     this.metadata,
+    this.isImportant = false,
+    this.deliveryStatus,
   });
 
   final String id;
@@ -30,6 +32,21 @@ final class NotificationItem extends Equatable {
 
   /// JSON metadata (e.g. `campaignId`, `applicationId` for [CREATOR_APPLIED]).
   final Map<String, dynamic>? metadata;
+
+  /// Wayo-ads `isImportant` flag.
+  final bool isImportant;
+
+  /// `UNREAD` | `READ` | `ARCHIVED` | `DISMISSED` from delivery.status.
+  final String? deliveryStatus;
+
+  bool get isUnread => deliveryStatus == 'UNREAD' || !isRead;
+
+  bool get isArchived => deliveryStatus == 'ARCHIVED';
+
+  bool get showUrgentBadge =>
+      isImportant ||
+      (priority?.startsWith('P0') ?? false) ||
+      (priority?.startsWith('P1') ?? false);
 
   /// True when this row is about a creator who applied — advertiser may approve/reject.
   ///
@@ -171,5 +188,7 @@ final class NotificationItem extends Equatable {
     type,
     actionUrl,
     metadata,
+    isImportant,
+    deliveryStatus,
   ];
 }

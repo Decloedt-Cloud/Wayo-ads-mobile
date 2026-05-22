@@ -228,6 +228,17 @@ class SuperadminMoreScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 12),
           _MoreOptionCard(
+            icon: Icons.explore_rounded,
+            title: 'Browse campaigns',
+            subtitle: 'Live marketplace — budgets, views, and campaign details',
+            gradientColors: const [
+              Color(0xFF0EA5E9),
+              Color(0xFF6366F1),
+            ],
+            onTap: () => context.push('/superadmin/browse-campaigns'),
+          ),
+          const SizedBox(height: 12),
+          _MoreOptionCard(
             icon: Icons.auto_awesome_rounded,
             title: 'AI Usage',
             subtitle: 'Monitor AI consumption and platform costs',
@@ -247,6 +258,17 @@ class SuperadminMoreScreen extends ConsumerWidget {
               AppColors.primaryDeep,
             ],
             onTap: () => context.push('/superadmin/ledger'),
+          ),
+          const SizedBox(height: 12),
+          _MoreOptionCard(
+            icon: Icons.percent_rounded,
+            title: 'Tax rates',
+            subtitle: 'VAT/GST per country — applies to advertiser invoices',
+            gradientColors: const [
+              Color(0xFFEA580C),
+              Color(0xFFC2410C),
+            ],
+            onTap: () => context.push('/superadmin/tax-rates'),
           ),
           const SizedBox(height: 32),
           Container(

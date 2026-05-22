@@ -34,10 +34,30 @@ class ConnectivityOverlay extends ConsumerStatefulWidget {
       _ConnectivityOverlayState();
 }
 
-class _ConnectivityOverlayState extends ConsumerState<ConnectivityOverlay> {
+class _ConnectivityOverlayState extends ConsumerState<ConnectivityOverlay>
+    with WidgetsBindingObserver {
   ConnectivityStatus _previous = ConnectivityStatus.unknown;
   bool _showSuccessToast = false;
   int _toastVersion = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      ref.read(connectivityServiceProvider).onAppForeground();
+    }
+  }
 
   /// Re-fetch user-facing realtime surfaces as soon as the connection is back:
   /// chat conversations + messages, the Pusher/Reverb bindings and the main

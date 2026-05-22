@@ -12,8 +12,8 @@ import '../network/api_endpoints.dart';
 
 import '../storage/app_prefs.dart';
 
+import 'user_push_notifications_preference.dart';
 import 'wayo_push_intent.dart';
-
 import 'wayo_push_service.dart';
 
 
@@ -41,6 +41,12 @@ Future<bool> registerWayoPushDeviceIfTokenPresent({
 }) async {
 
   if (!wayoFirebaseCoreReady) {
+
+    return false;
+
+  }
+
+  if (!await isUserPushNotificationsEnabled(prefs)) {
 
     return false;
 

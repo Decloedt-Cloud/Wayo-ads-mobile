@@ -14,6 +14,7 @@ import '../../../core/network/wayo_ads_dio.dart';
 import '../../../core/providers/app_providers.dart';
 import '../../../core/push/push_permission_policy.dart';
 import '../../../core/push/system_push_permission.dart';
+import '../../../core/push/user_push_notifications_preference.dart';
 import '../../../core/push/wayo_push_device_register.dart';
 import '../../../core/push/wayo_push_intent.dart';
 import '../../../core/push/wayo_push_service.dart';
@@ -306,6 +307,7 @@ class _PushPermissionPromptHostState
               await attachForegroundFcmHandlers();
               final granted = await requestSystemPushPermission();
               if (granted) {
+                await setUserPushNotificationsEnabled(prefs, true);
                 await refreshAndCacheFcmToken(prefs);
                 await registerWayoPushDeviceIfTokenPresent(
                   wayoAdsDio: ref.read(wayoAdsDioProvider),

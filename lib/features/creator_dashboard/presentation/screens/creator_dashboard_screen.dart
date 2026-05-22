@@ -17,6 +17,7 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/creator_colors.dart';
 import '../../../../i18n/strings.g.dart';
 import '../../../../shared/widgets/animated_logout_icon.dart';
+import '../../../../core/push/push_disabled_settings_badge.dart';
 import '../../../app_settings/presentation/widgets/app_settings_side_panel.dart';
 import '../../../auth/domain/auth_notifier.dart';
 import '../../../auth/presentation/providers/current_account_providers.dart';
@@ -258,22 +259,24 @@ class _CreatorHeader extends ConsumerWidget {
           const Spacer(),
           Tooltip(
             message: t.app_settings.title,
-            child: Material(
-              color: AppColors.surfaceElevatedOf(
-                context,
-              ).withValues(alpha: 0.5),
-              shape: const CircleBorder(),
-              child: InkWell(
-                customBorder: const CircleBorder(),
-                onTap: () {
-                  HapticFeedback.lightImpact();
-                  showAppSettingsSidePanel(context);
-                },
-                child: Padding(
-                  padding: const EdgeInsets.all(10),
-                  child: Icon(
-                    Icons.tune_rounded,
-                    color: AppColors.textPrimaryOf(context),
+            child: PushDisabledSettingsBadge(
+              child: Material(
+                color: AppColors.surfaceElevatedOf(
+                  context,
+                ).withValues(alpha: 0.5),
+                shape: const CircleBorder(),
+                child: InkWell(
+                  customBorder: const CircleBorder(),
+                  onTap: () {
+                    HapticFeedback.lightImpact();
+                    showAppSettingsSidePanel(context);
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.all(10),
+                    child: Icon(
+                      Icons.tune_rounded,
+                      color: AppColors.textPrimaryOf(context),
+                    ),
                   ),
                 ),
               ),

@@ -257,8 +257,15 @@ final class InvoicesRemoteDatasource implements InvoicesRemote {
     }
 
     final statsRaw = row['stats'];
-    final advertiserStats = statsRaw is Map
-        ? AdvertiserInvoicesStats.fromJson(Map<String, dynamic>.from(statsRaw))
+    final statsMap =
+        statsRaw is Map ? Map<String, dynamic>.from(statsRaw) : null;
+    final advertiserStats = statsMap != null
+        ? AdvertiserInvoicesStats.fromJson(statsMap)
+        : null;
+    final creatorStats = statsMap != null &&
+            (statsMap.containsKey('totalValidated') ||
+                statsMap.containsKey('totalValidatedCents'))
+        ? CreatorInvoicesStats.fromJson(statsMap)
         : null;
     final currency = row['currency'] is String ? (row['currency'] as String).trim() : null;
 
@@ -270,6 +277,7 @@ final class InvoicesRemoteDatasource implements InvoicesRemote {
       totalPages: totalPages,
       currency: currency,
       advertiserStats: advertiserStats,
+      creatorStats: creatorStats,
     );
   }
 

@@ -1,35 +1,110 @@
+/// Shell tab routes — use [GoRouter.go], not push.
+const Set<String> kNotificationShellTabRoutes = {
+  '/dashboard',
+  '/campaigns',
+  '/wallet',
+  '/invoices',
+  '/chat',
+};
+
+String? _stripLocalePrefix(String path) {
+  var p = path.trim();
+  if (p.isEmpty) return null;
+  p = p.replaceFirst(RegExp(r'^/(en|fr|ar)(?=/|$)'), '');
+  if (p.isEmpty) return '/';
+  if (!p.startsWith('/')) p = '/$p';
+  return p;
+}
+
+bool isNotificationsCenterOnlyPath(String path) {
+  final base = path.split('?').first;
+  return base == '/notifications';
+}
+
+/// Extracts an app path from relative or absolute Wayo-ads [actionUrl].
+String? extractNotificationPath(String? actionUrl) {
+  final raw = (actionUrl ?? '').trim();
+  if (raw.isEmpty) return null;
+  if (raw.startsWith('/') && !raw.startsWith('//')) {
+    return _stripLocalePrefix(raw);
+  }
+  try {
+    final uri = Uri.parse(raw);
+    if (uri.hasScheme && uri.host.isNotEmpty) {
+      final path = uri.path;
+      if (path.isEmpty) return null;
+      final q = uri.query.isNotEmpty ? '?${uri.query}' : '';
+      return _stripLocalePrefix('$path$q');
+    }
+  } catch (_) {}
+  return null;
+}
+
 /// Normalizes web [actionUrl] paths from Wayo-ads into Flutter go_router paths.
 String? normalizeMobilePushRoute(String? actionUrl) {
-  final u = (actionUrl ?? '').trim();
-  if (u.isEmpty) return null;
-  if (!u.startsWith('/')) return null;
+  final path = extractNotificationPath(actionUrl);
+  if (path == null) return null;
+  if (isNotificationsCenterOnlyPath(path)) return null;
 
-  final lower = u.toLowerCase();
+  final lower = path.toLowerCase();
+
+  if (lower.contains('/chat') || lower.contains('/messages')) {
+    return '/chat';
+  }
+  if (lower.contains('/invoices') || lower.contains('/invoice')) {
+    return '/invoices';
+  }
+  if (lower.contains('/wallet') ||
+      lower.contains('/deposit') ||
+      lower.contains('/billing')) {
+    return '/wallet';
+  }
+
+  if (lower.contains('/superadmin') &&
+      (lower.contains('withdraw') || lower.contains('payout'))) {
+    return '/superadmin/withdrawals';
+  }
+  if (lower.contains('/admin') &&
+      (lower.contains('withdraw') ||
+          lower.contains('payout') ||
+          lower.contains('payment'))) {
+    return '/superadmin/withdrawals';
+  }
+
+  final campaignMatch = RegExp(r'/campaigns/([^/?#]+)').firstMatch(lower);
+  final campaignId = campaignMatch?.group(1);
+  if (campaignId != null && campaignId.isNotEmpty) {
+    if (lower.contains('/links') ||
+        lower.contains('/application') ||
+        lower.contains('/applications')) {
+      return '/creator/campaigns/$campaignId/application';
+    }
+    if (lower.contains('/creator/') || lower.contains('/dashboard/creator')) {
+      return '/creator/campaigns/$campaignId';
+    }
+    return '/campaigns/$campaignId';
+  }
+
   if (lower.contains('/dashboard/creator')) {
-    if (lower.contains('withdraw') || lower.contains('earning')) {
+    if (lower.contains('withdraw') ||
+        lower.contains('earning') ||
+        lower.contains('payout')) {
       return '/wallet';
     }
     return '/dashboard';
   }
   if (lower.contains('/dashboard/advertiser')) {
+    if (lower.contains('wallet') || lower.contains('deposit')) {
+      return '/wallet';
+    }
+    if (lower.contains('invoice')) return '/invoices';
+    if (lower.contains('campaign')) return '/campaigns';
     return '/dashboard';
-  }
-
-  final campaignMatch = RegExp(r'/campaigns/([^/?#]+)').firstMatch(u);
-  final campaignId = campaignMatch?.group(1);
-  if (campaignId != null && campaignId.isNotEmpty) {
-    if (lower.contains('/links') || lower.contains('/application')) {
-      return '/creator/campaigns/$campaignId/application';
-    }
-    if (lower.startsWith('/creator/')) {
-      return '/creator/campaigns/$campaignId';
-    }
-    return '/campaigns/$campaignId';
   }
 
   if (lower.contains('withdraw') || lower.contains('payout')) {
     return '/superadmin/withdrawals';
   }
 
-  return u;
+  return path.split('?').first;
 }

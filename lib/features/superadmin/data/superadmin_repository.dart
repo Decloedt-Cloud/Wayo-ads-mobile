@@ -7,6 +7,8 @@ import '../domain/entities/ai_usage.dart';
 import '../domain/entities/announcement.dart';
 import '../domain/entities/banned_user.dart';
 import '../domain/entities/dashboard_stats.dart';
+import '../../creator_campaigns/domain/creator_browse_page_result.dart';
+import '../domain/entities/country_tax_rate.dart';
 import '../domain/entities/ledger_entry.dart';
 import '../domain/entities/withdrawal.dart';
 import 'superadmin_remote_datasource.dart';
@@ -89,6 +91,26 @@ abstract interface class ISuperadminRepository {
     String? campaignId,
     DateTime? startDate,
     DateTime? endDate,
+  });
+
+  Future<Result<TaxRatesPage>> getTaxRates();
+
+  Future<Result<void>> upsertTaxRate({
+    required String countryCode,
+    required double rate,
+    String? label,
+    String? subdivision,
+  });
+
+  Future<Result<void>> deleteTaxRateOverride(String id);
+
+  Future<Result<CreatorBrowsePageResult>> getMarketplaceCampaignsPage({
+    int page = 1,
+    int limit = 10,
+    String? search,
+    String? type,
+    String? niche,
+    String? countryCode,
   });
 }
 
@@ -366,6 +388,78 @@ final class SuperadminRepository implements ISuperadminRepository {
         endDate: endDate,
       );
       return Success(ledger);
+    } on DioException catch (e) {
+      return Failure(_mapDioError(e));
+    } catch (e) {
+      return Failure(ServerException(e.toString()));
+    }
+  }
+
+  @override
+  Future<Result<TaxRatesPage>> getTaxRates() async {
+    try {
+      final page = await _remote.fetchTaxRates();
+      return Success(page);
+    } on DioException catch (e) {
+      return Failure(_mapDioError(e));
+    } catch (e) {
+      return Failure(ServerException(e.toString()));
+    }
+  }
+
+  @override
+  Future<Result<void>> upsertTaxRate({
+    required String countryCode,
+    required double rate,
+    String? label,
+    String? subdivision,
+  }) async {
+    try {
+      await _remote.upsertTaxRate(
+        countryCode: countryCode,
+        rate: rate,
+        label: label,
+        subdivision: subdivision,
+      );
+      return const Success(null);
+    } on DioException catch (e) {
+      return Failure(_mapDioError(e));
+    } catch (e) {
+      return Failure(ServerException(e.toString()));
+    }
+  }
+
+  @override
+  Future<Result<void>> deleteTaxRateOverride(String id) async {
+    try {
+      await _remote.deleteTaxRateOverride(id);
+      return const Success(null);
+    } on DioException catch (e) {
+      return Failure(_mapDioError(e));
+    } catch (e) {
+      return Failure(ServerException(e.toString()));
+    }
+  }
+
+  @override
+  Future<Result<CreatorBrowsePageResult>> getMarketplaceCampaignsPage({
+    int page = 1,
+    int limit = 10,
+    String? search,
+    String? type,
+    String? niche,
+    String? countryCode,
+  }) async {
+    try {
+      final pageResult = await _remote.fetchMarketplaceCampaignsPage(
+        page: page,
+        limit: limit,
+        search: search,
+        type: type,
+        niche: niche,
+        countryCode: countryCode,
+      );
+      return Success(pageResult);
     } on DioException catch (e) {
       return Failure(_mapDioError(e));
     } catch (e) {

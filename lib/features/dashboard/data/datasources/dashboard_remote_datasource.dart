@@ -15,6 +15,7 @@ import '../../domain/entities/campaign_platform.dart';
 import '../../domain/entities/campaign_status.dart';
 import '../../domain/entities/campaign_summary.dart';
 import '../../domain/entities/notification_item.dart';
+import '../../domain/entities/notifications_page_result.dart';
 import '../../domain/entities/user_profile.dart';
 import '../../domain/advertiser_campaigns_page_result.dart';
 
@@ -33,6 +34,18 @@ abstract interface class DashboardRemote {
 
   Future<List<NotificationItem>> fetchNotifications({bool unreadOnly = false});
 
+  Future<NotificationsPageResult> fetchNotificationsPage({
+    int limit = 20,
+    String? cursor,
+    String? status,
+    bool importantOnly = false,
+    String? type,
+    String? priority,
+    String? search,
+  });
+
+  Future<NotificationsUnreadCounts> fetchUnreadCounts();
+
   Future<int> fetchUnreadCount();
 
   Future<void> markNotificationRead(String id, {String? conversationId});
@@ -40,6 +53,8 @@ abstract interface class DashboardRemote {
   Future<void> markAllNotificationsRead();
 
   Future<void> dismissNotification(String id);
+
+  Future<void> archiveNotification(String id);
 }
 
 final class DashboardRemoteDatasource implements DashboardRemote {
@@ -172,50 +187,84 @@ final class DashboardRemoteDatasource implements DashboardRemote {
     return int.tryParse('$v') ?? fallback;
   }
 
+  static NotificationItem _parseNotificationRow(Map<String, dynamic> m) {
+    final delivery = m['delivery'];
+    String? deliveryStatus;
+    var isRead = true;
+    if (delivery is Map<String, dynamic>) {
+      deliveryStatus = delivery['status'] as String?;
+      isRead = deliveryStatus != 'UNREAD';
+    }
+    final meta = _mergeNotificationMetadata(m);
+    return NotificationItem(
+      id: '${m['id'] ?? ''}',
+      title: m['title'] as String? ?? '',
+      body: m['message'] as String? ?? m['body'] as String? ?? '',
+      isRead: isRead,
+      createdAt: _parseDateTime(m['createdAt'] ?? m['created_at']),
+      priority: m['priority'] as String?,
+      type: m['type'] as String? ?? m['notificationType'] as String?,
+      actionUrl: m['actionUrl'] as String?,
+      metadata: meta,
+      isImportant: m['isImportant'] == true,
+      deliveryStatus: deliveryStatus,
+    );
+  }
+
+  static List<NotificationItem> _parseNotificationList(dynamic raw) {
+    if (raw is! List<dynamic>) return const [];
+    return raw
+        .map((e) => _parseNotificationRow(Map<String, dynamic>.from(e as Map)))
+        .toList();
+  }
+
   @override
   Future<List<NotificationItem>> fetchNotifications({
     bool unreadOnly = false,
   }) async {
-    final qp = <String, dynamic>{'limit': 100};
-    if (unreadOnly) {
-      qp['status'] = 'UNREAD';
-    }
+    final page = await fetchNotificationsPage(
+      limit: 100,
+      status: unreadOnly ? 'UNREAD' : null,
+    );
+    return page.notifications;
+  }
+
+  @override
+  Future<NotificationsPageResult> fetchNotificationsPage({
+    int limit = 20,
+    String? cursor,
+    String? status,
+    bool importantOnly = false,
+    String? type,
+    String? priority,
+    String? search,
+  }) async {
+    final qp = <String, dynamic>{
+      'limit': limit.clamp(1, 100),
+      if (cursor != null && cursor.isNotEmpty) 'cursor': cursor,
+      if (status != null && status.isNotEmpty) 'status': status,
+      if (importantOnly) 'important': '1',
+      if (type != null && type.isNotEmpty) 'type': type,
+      if (priority != null && priority.isNotEmpty) 'priority': priority,
+      if (search != null && search.trim().isNotEmpty) 'search': search.trim(),
+    };
     final res = await _adsDio.get<Map<String, dynamic>>(
       AuthRuntimeConfig.instance.wayoAdsRequestPath(ApiEndpoints.notifications),
       queryParameters: qp,
     );
     final data = res.data;
     if (data == null) {
-      return const [];
+      return const NotificationsPageResult(notifications: []);
     }
-    dynamic list = data['notifications'];
-    if (list is! List<dynamic>) {
-      list = const [];
-    }
-    return list.map((e) {
-      final m = e as Map<String, dynamic>;
-      final delivery = m['delivery'];
-      var isRead = false;
-      if (delivery is Map<String, dynamic>) {
-        isRead = delivery['status'] == 'READ' || delivery['readAt'] != null;
-      }
-      final meta = _mergeNotificationMetadata(m);
-      return NotificationItem(
-        id: '${m['id'] ?? ''}',
-        title: m['title'] as String? ?? '',
-        body: m['message'] as String? ?? m['body'] as String? ?? '',
-        isRead: isRead,
-        createdAt: _parseDateTime(m['createdAt'] ?? m['created_at']),
-        priority: m['priority'] as String?,
-        type: m['type'] as String? ?? m['notificationType'] as String?,
-        actionUrl: m['actionUrl'] as String?,
-        metadata: meta,
-      );
-    }).toList();
+    final next = data['nextCursor'] as String?;
+    return NotificationsPageResult(
+      notifications: _parseNotificationList(data['notifications']),
+      nextCursor: next,
+    );
   }
 
   @override
-  Future<int> fetchUnreadCount() async {
+  Future<NotificationsUnreadCounts> fetchUnreadCounts() async {
     final res = await _adsDio.get<Map<String, dynamic>>(
       AuthRuntimeConfig.instance.wayoAdsRequestPath(
         ApiEndpoints.notificationsUnread,
@@ -223,21 +272,22 @@ final class DashboardRemoteDatasource implements DashboardRemote {
     );
     final data = res.data;
     if (data == null) {
-      return 0;
+      return const NotificationsUnreadCounts(total: 0, important: 0);
     }
-    final t = data['total'];
-    if (t is num) {
-      return t.toInt();
+    int pick(dynamic v) {
+      if (v is num) return v.toInt();
+      return int.tryParse('$v') ?? 0;
     }
-    final inner = data['data'];
-    if (inner is Map && inner['count'] is num) {
-      return (inner['count'] as num).toInt();
-    }
-    final c = data['count'];
-    if (c is num) {
-      return c.toInt();
-    }
-    return 0;
+
+    final total = pick(data['total'] ?? data['unread'] ?? data['count']);
+    final important = pick(data['important']);
+    return NotificationsUnreadCounts(total: total, important: important);
+  }
+
+  @override
+  Future<int> fetchUnreadCount() async {
+    final counts = await fetchUnreadCounts();
+    return counts.total;
   }
 
   @override
@@ -269,6 +319,16 @@ final class DashboardRemoteDatasource implements DashboardRemote {
     await _adsDio.post<Map<String, dynamic>>(
       AuthRuntimeConfig.instance.wayoAdsRequestPath(
         ApiEndpoints.notificationsDismiss,
+      ),
+      data: <String, dynamic>{'notificationId': id},
+    );
+  }
+
+  @override
+  Future<void> archiveNotification(String id) async {
+    await _adsDio.post<Map<String, dynamic>>(
+      AuthRuntimeConfig.instance.wayoAdsRequestPath(
+        ApiEndpoints.notificationsArchive,
       ),
       data: <String, dynamic>{'notificationId': id},
     );

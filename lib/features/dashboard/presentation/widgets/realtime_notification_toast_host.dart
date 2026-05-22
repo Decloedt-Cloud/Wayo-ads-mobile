@@ -44,10 +44,11 @@ class _RealtimeNotificationToastHostState
     if (!mounted) return;
     final role = ref.read(currentWayoAdsAccountRoleProvider);
     final isWithdrawalEvent = _isWithdrawalRealtimeEventName(sig.name);
+    final isNotificationEvent = _isIncomingNotificationEvent(sig.name);
     final isSuperadminWithdrawal =
         role == WayoAdsAccountRole.superAdmin &&
         (isWithdrawalEvent || isWithdrawalNotificationPayload(sig.raw));
-    if (!_isIncomingNotificationEvent(sig.name) && !isSuperadminWithdrawal) {
+    if (!isNotificationEvent && !isSuperadminWithdrawal) {
       return;
     }
     final t = context.t;
@@ -93,17 +94,18 @@ class _RealtimeNotificationToastHostState
           ],
         ),
         action: SnackBarAction(
-          label: isSuperadminWithdrawal
+          label: role == WayoAdsAccountRole.superAdmin && isSuperadminWithdrawal
               ? 'View payouts'
               : t.dashboard.notification_view,
           onPressed: () {
-            if (isSuperadminWithdrawal) {
+            if (role == WayoAdsAccountRole.superAdmin && isSuperadminWithdrawal) {
               ref.read(goRouterProvider).push(kSuperadminWithdrawalsRoute);
               return;
             }
             final r = switch (role) {
               WayoAdsAccountRole.creator => 'creator',
               WayoAdsAccountRole.advertiser => 'advertiser',
+              WayoAdsAccountRole.superAdmin => 'superadmin',
               _ => 'app',
             };
             ref.read(goRouterProvider).push('/notifications?role=$r');

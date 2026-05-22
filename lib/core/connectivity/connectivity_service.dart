@@ -20,8 +20,8 @@ class ConnectivityService {
   ConnectivityService({
     Connectivity? connectivity,
     Duration probeInterval = const Duration(seconds: 10),
-    Duration probeTimeout = const Duration(seconds: 3),
-    Duration reportDebounce = const Duration(seconds: 1),
+    Duration probeTimeout = const Duration(seconds: 5),
+    Duration reportDebounce = const Duration(seconds: 2),
     List<String> probeHosts = const [
       'cloudflare.com',
       'google.com',
@@ -47,10 +47,17 @@ class ConnectivityService {
   StreamSubscription<List<ConnectivityResult>>? _sub;
   Timer? _probeTimer;
   Timer? _debounceTimer;
+  Timer? _confirmOfflineTimer;
+  Timer? _foregroundProbeTimer;
   bool _probeInFlight = false;
+  bool _probePending = false;
+  int _consecutiveProbeFailures = 0;
   bool _started = false;
   ConnectivityStatus _status = ConnectivityStatus.unknown;
   bool _radioUp = false;
+
+  /// Failed probes required before showing offline (avoids resume DNS blips).
+  static const int kOfflineAfterFailedProbes = 2;
 
   ConnectivityStatus get status => _status;
 
@@ -88,6 +95,22 @@ class ConnectivityService {
     _probeTimer = null;
     _debounceTimer?.cancel();
     _debounceTimer = null;
+    _confirmOfflineTimer?.cancel();
+    _confirmOfflineTimer = null;
+    _foregroundProbeTimer?.cancel();
+    _foregroundProbeTimer = null;
+  }
+
+  /// Call when the app returns to foreground — delayed probe avoids false offline
+  /// while the OS network stack and DNS are still waking up.
+  void onAppForeground() {
+    if (!_started) return;
+    _consecutiveProbeFailures = 0;
+    _confirmOfflineTimer?.cancel();
+    _foregroundProbeTimer?.cancel();
+    _foregroundProbeTimer = Timer(const Duration(milliseconds: 1500), () {
+      unawaited(_probeNow(reason: 'foreground'));
+    });
   }
 
   Future<void> dispose() async {
@@ -142,10 +165,15 @@ class ConnectivityService {
   }
 
   Future<void> _probeNow({String? reason}) async {
-    if (_probeInFlight) return;
+    if (_probeInFlight) {
+      _probePending = true;
+      return;
+    }
     _probeInFlight = true;
     try {
       if (!_radioUp) {
+        _consecutiveProbeFailures = 0;
+        _confirmOfflineTimer?.cancel();
         _emit(ConnectivityStatus.offline);
         return;
       }
@@ -153,12 +181,31 @@ class ConnectivityService {
       final ok = await _ping();
       sw.stop();
       if (!ok) {
-        _emit(ConnectivityStatus.offline);
+        _consecutiveProbeFailures++;
         if (kWayoDiagnosticsLogging) {
-          wayoDiagPrint('[connectivity] probe failed (reason=$reason)', name: 'wayo.net');
+          wayoDiagPrint(
+            '[connectivity] probe failed (reason=$reason, streak=$_consecutiveProbeFailures)',
+            name: 'wayo.net',
+          );
         }
+        if (_status == ConnectivityStatus.offline) {
+          _emit(ConnectivityStatus.offline);
+          return;
+        }
+        if (_consecutiveProbeFailures >= kOfflineAfterFailedProbes) {
+          _consecutiveProbeFailures = 0;
+          _confirmOfflineTimer?.cancel();
+          _emit(ConnectivityStatus.offline);
+          return;
+        }
+        _confirmOfflineTimer?.cancel();
+        _confirmOfflineTimer = Timer(const Duration(seconds: 2), () {
+          unawaited(_probeNow(reason: 'confirm_offline'));
+        });
         return;
       }
+      _consecutiveProbeFailures = 0;
+      _confirmOfflineTimer?.cancel();
       if (sw.elapsedMilliseconds >= kWeakLatencyMs) {
         _emit(ConnectivityStatus.weak);
       } else {
@@ -166,6 +213,10 @@ class ConnectivityService {
       }
     } finally {
       _probeInFlight = false;
+      if (_probePending) {
+        _probePending = false;
+        unawaited(_probeNow(reason: 'pending'));
+      }
     }
   }
 

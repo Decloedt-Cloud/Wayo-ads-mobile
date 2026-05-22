@@ -1,5 +1,9 @@
-import 'package:flutter/material.dart';
+import 'dart:async';
 
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../../core/push/push_notifications_status_provider.dart';
 import '../../../../i18n/strings.g.dart';
 import 'app_settings_panel_content.dart';
 
@@ -8,6 +12,7 @@ import 'app_settings_panel_content.dart';
 /// Uses [showGeneralDialog] so we keep full control over motion, barrier, and
 /// `AlignmentDirectional` (correct on RTL).
 Future<void> showAppSettingsSidePanel(BuildContext context) {
+  final container = ProviderScope.containerOf(context, listen: false);
   final barrierLabel = MaterialLocalizations.of(
     context,
   ).modalBarrierDismissLabel;
@@ -58,7 +63,11 @@ Future<void> showAppSettingsSidePanel(BuildContext context) {
         child: FadeTransition(opacity: curved, child: child),
       );
     },
-  );
+  ).whenComplete(() {
+    unawaited(
+      container.read(pushNotificationsActiveProvider.notifier).refresh(),
+    );
+  });
 }
 
 class _AnimatedPanel extends StatelessWidget {

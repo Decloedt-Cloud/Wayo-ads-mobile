@@ -105,13 +105,8 @@ android {
                     signingConfigs.getByName("debug")
                 }
 
-            // =====================================================
-            // TEMP TEST
-            // Disable R8 / Proguard
-            // =====================================================
-
-            isMinifyEnabled = false
-            isShrinkResources = false
+            isMinifyEnabled = true
+            isShrinkResources = true
 
             proguardFiles(
                 getDefaultProguardFile(

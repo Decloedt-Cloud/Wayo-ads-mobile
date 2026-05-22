@@ -13,6 +13,7 @@ import '../../creator_wallet/presentation/providers/creator_wallet_providers.dar
 import '../../wallet/presentation/providers/advertiser_wallet_providers.dart';
 import '../../superadmin/presentation/providers/superadmin_providers.dart';
 import 'providers/dashboard_state_providers.dart';
+import 'providers/notifications_feed_providers.dart';
 
 /// How often we refresh advertiser data while the app is foregrounded.
 ///
@@ -115,6 +116,8 @@ class _RealtimeDashboardWireState extends ConsumerState<RealtimeDashboardWire>
     );
     ref.invalidate(dashboardStreamProvider);
     ref.invalidate(notificationsListProvider);
+    ref.invalidate(notificationsUnreadCountsProvider);
+    ref.invalidate(notificationsFeedProvider);
     final role = ref.read(authNotifierProvider).valueOrNull is AuthAuthenticated
         ? (ref.read(authNotifierProvider).valueOrNull as AuthAuthenticated)
               .user
@@ -133,7 +136,7 @@ class _RealtimeDashboardWireState extends ConsumerState<RealtimeDashboardWire>
       ref.invalidate(creatorCampaignDetailProvider);
       ref.invalidate(creatorMySubmissionsProvider);
     } else if (role == WayoAdsAccountRole.superAdmin) {
-      invalidateSuperadminWithdrawalData(ref);
+      invalidateSuperadminRealtimePanels(ref);
     } else {
       ref.invalidate(advertiserWalletPageProvider);
       ref.invalidate(creatorBusinessProfileProvider);

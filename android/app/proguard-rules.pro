@@ -27,7 +27,15 @@
 -keep class io.flutter.** { *; }
 -dontwarn io.flutter.**
 
-
--keep class io.flutter.** { *; }
+## App package (MethodChannels, native entrypoints).
 -keep class ma.wayo.** { *; }
--dontwarn **
+
+## Firebase / FCM
+-keep class com.google.firebase.** { *; }
+-keep class com.google.android.gms.** { *; }
+-dontwarn com.google.firebase.**
+
+## Sentry — stack traces + SDK internals
+-keepattributes SourceFile,LineNumberTable
+-keep class io.sentry.** { *; }
+-dontwarn io.sentry.**

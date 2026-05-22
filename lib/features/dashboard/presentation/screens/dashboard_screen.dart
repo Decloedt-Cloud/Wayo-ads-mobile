@@ -25,6 +25,7 @@ import '../../domain/entities/campaign_platform.dart';
 import '../../domain/entities/campaign_status.dart';
 import '../../domain/entities/campaign_summary.dart';
 import '../../../../shared/widgets/animated_logout_icon.dart';
+import '../../../../core/push/push_disabled_settings_badge.dart';
 import '../../../app_settings/presentation/widgets/app_settings_side_panel.dart';
 import '../../../creator_campaigns/domain/creator_browse_campaign.dart';
 import '../../../shell/presentation/widgets/shell_tutorial_replay_scope.dart';
@@ -167,28 +168,30 @@ class _HeaderState extends ConsumerState<_Header> {
           const Spacer(),
           Tooltip(
             message: t.app_settings.title,
-            child: Material(
-              color: AppColors.surfaceElevatedOf(
-                context,
-              ).withValues(alpha: 0.65),
-              shape: const CircleBorder(),
-              elevation: 0,
-              child: InkWell(
-                customBorder: const CircleBorder(),
-                onTap: () {
-                  HapticFeedback.lightImpact();
-                  showAppSettingsSidePanel(context);
-                },
-                child: Container(
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: AppColors.primary.withValues(alpha: 0.45),
-                      width: 1,
+            child: PushDisabledSettingsBadge(
+              child: Material(
+                color: AppColors.surfaceElevatedOf(
+                  context,
+                ).withValues(alpha: 0.65),
+                shape: const CircleBorder(),
+                elevation: 0,
+                child: InkWell(
+                  customBorder: const CircleBorder(),
+                  onTap: () {
+                    HapticFeedback.lightImpact();
+                    showAppSettingsSidePanel(context);
+                  },
+                  child: Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: AppColors.primary.withValues(alpha: 0.45),
+                        width: 1,
+                      ),
                     ),
+                    padding: const EdgeInsets.all(10),
+                    child: Icon(Icons.tune_rounded, color: AppColors.primary),
                   ),
-                  padding: const EdgeInsets.all(10),
-                  child: Icon(Icons.tune_rounded, color: AppColors.primary),
                 ),
               ),
             ),

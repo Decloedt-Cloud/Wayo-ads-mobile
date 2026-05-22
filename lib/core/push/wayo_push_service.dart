@@ -18,6 +18,7 @@ import '../../router/app_router.dart';
 import '../observability/app_log.dart';
 import '../storage/app_prefs.dart';
 import 'wayo_background_chat_quick_reply.dart';
+import 'user_push_notifications_preference.dart';
 import 'wayo_push_intent.dart';
 
 void _logPush(String message, {Object? error, StackTrace? stackTrace}) {
@@ -115,6 +116,9 @@ Future<String?> readRegisteredPushWayoUserId() async {
 
 /// Whether this FCM [data] payload is for the account that registered push on this device.
 Future<bool> shouldDeliverFcmData(Map<String, dynamic> data) async {
+  if (!await isUserPushNotificationsEnabledFromDisk()) {
+    return false;
+  }
   if (await isPushExternalDeliverySuppressed()) {
     return false;
   }

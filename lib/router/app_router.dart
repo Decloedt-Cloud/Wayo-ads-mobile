@@ -33,6 +33,8 @@ import '../features/superadmin/presentation/screens/ledger_screen.dart';
 import '../features/superadmin/presentation/screens/withdrawals_screen.dart';
 import '../features/superadmin/presentation/screens/banned_users_screen.dart';
 import '../features/superadmin/presentation/screens/announcements_screen.dart';
+import '../features/superadmin/presentation/screens/superadmin_browse_campaigns_screen.dart';
+import '../features/superadmin/presentation/screens/tax_rates_screen.dart';
 import '../screens/privacy_policy_screen.dart';
 import '../features/splash/splash_screen.dart';
 
@@ -76,6 +78,18 @@ bool _isPublicPath(String loc) {
   if (loc.startsWith('/forgot-password')) {
     return true;
   }
+  return false;
+}
+
+/// Superadmin home is [/superadmin], but they may open shared full-screen routes
+/// (notifications centre, campaign detail from a notif, chat thread, etc.).
+bool _superadminAllowedPath(String loc) {
+  if (loc.startsWith('/superadmin')) return true;
+  if (loc == '/notifications') return true;
+  if (loc.startsWith('/campaigns/')) return true;
+  if (loc.startsWith('/creator/campaigns/')) return true;
+  if (loc.startsWith('/chat/thread/')) return true;
+  if (loc.startsWith('/invoices/')) return true;
   return false;
 }
 
@@ -154,8 +168,8 @@ GoRouter goRouter(GoRouterRef ref) {
             if (loc == '/login') {
               return isSuperAdmin ? '/superadmin' : '/dashboard';
             }
-            // Superadmin should only use superadmin routes
-            if (isSuperAdmin && !loc.startsWith('/superadmin')) {
+            // Superadmin panel + shared deep links (notifications, etc.)
+            if (isSuperAdmin && !_superadminAllowedPath(loc)) {
               return '/superadmin';
             }
             return null;
@@ -409,6 +423,25 @@ GoRouter goRouter(GoRouterRef ref) {
         parentNavigatorKey: rootNavigatorKey,
         path: '/superadmin/announcements',
         builder: (context, state) => const AnnouncementsScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: '/superadmin/browse-campaigns',
+        builder: (context, state) => const SuperadminBrowseCampaignsScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: '/superadmin/tax-rates',
+        builder: (context, state) => const TaxRatesScreen(),
+        routes: [
+          GoRoute(
+            parentNavigatorKey: rootNavigatorKey,
+            path: 'subdivisions/:countryCode',
+            builder: (context, state) => TaxRatesScreen(
+              countryCode: state.pathParameters['countryCode'],
+            ),
+          ),
+        ],
       ),
     ],
   );

@@ -2,11 +2,15 @@ import 'package:dio/dio.dart';
 
 import '../../../core/config/auth_runtime_config.dart';
 import '../../../core/network/admin_api_endpoints.dart';
+import '../../../core/network/api_endpoints.dart';
+import '../../creator_campaigns/domain/creator_browse_campaign.dart';
+import '../../creator_campaigns/domain/creator_browse_page_result.dart';
 import '../domain/entities/admin_user.dart';
 import '../domain/entities/ai_usage.dart';
 import '../domain/entities/announcement.dart';
 import '../domain/entities/banned_user.dart';
 import '../domain/entities/dashboard_stats.dart';
+import '../domain/entities/country_tax_rate.dart';
 import '../domain/entities/ledger_entry.dart';
 import '../domain/entities/withdrawal.dart';
 
@@ -85,6 +89,28 @@ abstract interface class SuperadminRemote {
     String? campaignId,
     DateTime? startDate,
     DateTime? endDate,
+  });
+
+  // Tax rates
+  Future<TaxRatesPage> fetchTaxRates();
+
+  Future<void> upsertTaxRate({
+    required String countryCode,
+    required double rate,
+    String? label,
+    String? subdivision,
+  });
+
+  Future<void> deleteTaxRateOverride(String id);
+
+  /// Public marketplace — `GET /api/campaigns?status=ACTIVE` (no creatorOnly).
+  Future<CreatorBrowsePageResult> fetchMarketplaceCampaignsPage({
+    int page = 1,
+    int limit = 10,
+    String? search,
+    String? type,
+    String? niche,
+    String? countryCode,
   });
 }
 
@@ -365,6 +391,113 @@ final class SuperadminRemoteDatasource implements SuperadminRemote {
       },
     );
     return LedgerPage.fromJson(_extractMap(res.data));
+  }
+
+  @override
+  Future<TaxRatesPage> fetchTaxRates() async {
+    final res = await _dio.get<Object?>(_path(AdminApiEndpoints.taxRates));
+    return TaxRatesPage.fromJson(_extractMap(res.data));
+  }
+
+  @override
+  Future<void> upsertTaxRate({
+    required String countryCode,
+    required double rate,
+    String? label,
+    String? subdivision,
+  }) async {
+    await _dio.post<Object?>(
+      _path(AdminApiEndpoints.taxRates),
+      data: <String, dynamic>{
+        'countryCode': countryCode.toUpperCase(),
+        'rate': rate,
+        if (label != null && label.isNotEmpty) 'label': label,
+        if (subdivision != null && subdivision.isNotEmpty)
+          'subdivision': subdivision.toUpperCase(),
+      },
+    );
+  }
+
+  @override
+  Future<void> deleteTaxRateOverride(String id) async {
+    await _dio.delete<Object?>(
+      _path(AdminApiEndpoints.taxRates),
+      queryParameters: <String, dynamic>{'id': id},
+    );
+  }
+
+  @override
+  Future<CreatorBrowsePageResult> fetchMarketplaceCampaignsPage({
+    int page = 1,
+    int limit = 10,
+    String? search,
+    String? type,
+    String? niche,
+    String? countryCode,
+  }) async {
+    final qp = <String, dynamic>{
+      'status': 'ACTIVE',
+      'page': page,
+      'limit': limit.clamp(1, 100),
+    };
+    final trimmed = search?.trim();
+    if (trimmed != null && trimmed.isNotEmpty) {
+      qp['search'] = trimmed;
+    }
+    if (type != null && type.isNotEmpty) {
+      qp['type'] = type.toUpperCase();
+    }
+    if (niche != null && niche.isNotEmpty) {
+      qp['niche'] = niche;
+    }
+    if (countryCode != null && countryCode.length == 2) {
+      qp['country'] = countryCode.toUpperCase();
+    }
+
+    final res = await _dio.get<Object?>(
+      _path(ApiEndpoints.campaigns),
+      queryParameters: qp,
+    );
+    final body = res.data;
+    if (body is! Map) {
+      return CreatorBrowsePageResult(
+        campaigns: const [],
+        total: 0,
+        page: page,
+        totalPages: 1,
+      );
+    }
+    final map = Map<String, dynamic>.from(body);
+    final raw = map['campaigns'];
+    final list = raw is List
+        ? raw
+            .whereType<Map>()
+            .map(
+              (e) => CreatorBrowseCampaign.fromJson(
+                Map<String, dynamic>.from(e),
+              ),
+            )
+            .toList(growable: false)
+        : const <CreatorBrowseCampaign>[];
+    final total = _intFromDynamic(map['total'], list.length);
+    final pageNum = _intFromDynamic(map['page'], page);
+    var totalPages = _intFromDynamic(map['totalPages'], 0);
+    if (totalPages < 1) {
+      final lim = limit.clamp(1, 100);
+      totalPages = total <= 0 ? 1 : ((total + lim - 1) / lim).ceil();
+    }
+    return CreatorBrowsePageResult(
+      campaigns: list,
+      total: total,
+      page: pageNum,
+      totalPages: totalPages,
+    );
+  }
+
+  int _intFromDynamic(Object? v, int fallback) {
+    if (v is int) return v;
+    if (v is num) return v.toInt();
+    return int.tryParse('$v') ?? fallback;
   }
 
   Map<String, dynamic> _extractMap(Object? data) {

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../i18n/strings.g.dart';
@@ -9,12 +8,15 @@ import '../../../auth/domain/wayo_ads_account_role.dart';
 import '../../../auth/presentation/providers/current_account_providers.dart';
 import '../../domain/entities/notification_item.dart';
 import '../providers/dashboard_state_providers.dart';
-import 'creator_application_notification_actions.dart';
+import '../providers/notifications_feed_providers.dart';
 import '../../../../router/app_router.dart';
+import 'notification_list_tile.dart';
+import 'notification_open_helper.dart';
+import 'notification_time_groups.dart';
 
-const int _kPreviewCount = 8;
+const int _kPreviewCount = 10;
 
-/// Opens a dark “notification center” sheet (web-style) anchored top-right.
+/// Opens the Wayo-ads style notification center (web bell dropdown).
 Future<void> showNotificationCenterPopup(
   BuildContext context,
   WidgetRef ref,
@@ -26,7 +28,7 @@ Future<void> showNotificationCenterPopup(
     context: context,
     barrierDismissible: true,
     barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
-    barrierColor: Colors.black.withValues(alpha: 0.45),
+    barrierColor: Colors.black.withValues(alpha: 0.5),
     transitionDuration: const Duration(milliseconds: 200),
     pageBuilder: (ctx, _, _) {
       return _NotificationCenterOverlay(
@@ -37,10 +39,9 @@ Future<void> showNotificationCenterPopup(
       return FadeTransition(
         opacity: anim,
         child: ScaleTransition(
-          scale: Tween<double>(
-            begin: 0.96,
-            end: 1,
-          ).animate(CurvedAnimation(parent: anim, curve: Curves.easeOutCubic)),
+          scale: Tween<double>(begin: 0.96, end: 1).animate(
+            CurvedAnimation(parent: anim, curve: Curves.easeOutCubic),
+          ),
           alignment: Alignment.topRight,
           child: child,
         ),
@@ -94,28 +95,28 @@ class _NotificationCenterPanel extends ConsumerWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final async = ref.watch(notificationsListProvider);
     final role = ref.watch(currentWayoAdsAccountRoleProvider);
+    final snap = ref.watch(dashboardStreamProvider).valueOrNull;
+    final unreadBadge = snap?.unreadCount ?? 0;
 
-    final bg = isDark
-        ? const Color(0xFF181818)
-        : AppColors.surfaceElevatedOf(context);
+    final bg = isDark ? const Color(0xFF181818) : AppColors.surfaceElevatedOf(context);
     final border = isDark
         ? const Color(0xFF2A2A2A)
         : AppColors.borderOf(context).withValues(alpha: 0.55);
     final muted = isDark
-        ? const Color(0xFFA0A0A0)
+        ? const Color(0xFF9A9A9A)
         : AppColors.textMutedOf(context);
 
     return Container(
-      constraints: const BoxConstraints(maxHeight: 500),
+      constraints: const BoxConstraints(maxHeight: 520),
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: border, width: 1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: border),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.45 : 0.12),
-            blurRadius: 28,
-            offset: const Offset(0, 12),
+            color: Colors.black.withValues(alpha: isDark ? 0.5 : 0.14),
+            blurRadius: 30,
+            offset: const Offset(0, 10),
           ),
         ],
       ),
@@ -124,109 +125,90 @@ class _NotificationCenterPanel extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 14, 8, 10),
+            padding: const EdgeInsets.fromLTRB(16, 14, 12, 12),
             child: Row(
               children: [
                 Expanded(
-                  child: Text(
-                    t.dashboard.notifications_title,
-                    style: TextStyle(
-                      color: AppColors.textPrimaryOf(context),
-                      fontSize: 17,
-                      fontWeight: FontWeight.w800,
-                    ),
+                  child: Row(
+                    children: [
+                      Text(
+                        t.dashboard.notifications_title,
+                        style: TextStyle(
+                          color: AppColors.textPrimaryOf(context),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      if (unreadBadge > 0) ...[
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.error.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Text(
+                            unreadBadge > 99 ? '99+' : '$unreadBadge',
+                            style: TextStyle(
+                              color: AppColors.error,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
-                TextButton(
-                  onPressed: () async {
-                    await HapticFeedback.selectionClick();
-                    try {
-                      await ref
-                          .read(notificationsRepositoryProvider)
-                          .markAllRead();
-                      ref.invalidate(notificationsListProvider);
-                      ref.invalidate(dashboardStreamProvider);
-                    } catch (_) {}
-                  },
-                  child: Text(
-                    t.dashboard.notifications_mark_all_read,
-                    style: TextStyle(
-                      color: AppColors.textPrimaryOf(context),
-                      fontWeight: FontWeight.w600,
-                      fontSize: 13,
+                if (unreadBadge > 0)
+                  TextButton(
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppColors.primary,
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    onPressed: () async {
+                      await HapticFeedback.selectionClick();
+                      try {
+                        await ref
+                            .read(notificationsRepositoryProvider)
+                            .markAllRead();
+                        invalidateAllNotifications(ref);
+                      } catch (_) {}
+                    },
+                    child: Text(
+                      t.dashboard.notifications_mark_all_read,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 12,
+                      ),
                     ),
                   ),
-                ),
               ],
             ),
           ),
           Divider(height: 1, color: border),
-          ConstrainedBox(
-            constraints: const BoxConstraints(maxHeight: 300),
+          Flexible(
             child: async.when(
-              data: (list) {
-                if (list.isEmpty) {
-                  return Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Text(
-                      t.dashboard.notifications_empty,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: muted, fontSize: 14),
-                    ),
-                  );
-                }
-                final preview = list.take(_kPreviewCount).toList();
-                return ListView.separated(
-                  padding: const EdgeInsets.symmetric(vertical: 4),
-                  itemCount: preview.length,
-                  separatorBuilder: (_, _) =>
-                      Divider(height: 1, color: border.withValues(alpha: 0.6)),
-                  itemBuilder: (context, i) {
-                    final n = preview[i];
-                    return _PopupNotificationTile(
-                      item: n,
-                      muted: muted,
-                      onMarkRead: () async {
-                        if (n.isRead) return;
-                        await ref
-                            .read(notificationsRepositoryProvider)
-                            .markRead(n.id);
-                        ref.invalidate(notificationsListProvider);
-                        ref.invalidate(dashboardStreamProvider);
-                      },
-                      onDismiss: () async {
-                        try {
-                          await ref
-                              .read(notificationsRepositoryProvider)
-                              .dismiss(n.id);
-                          ref.invalidate(notificationsListProvider);
-                          ref.invalidate(dashboardStreamProvider);
-                        } catch (_) {}
-                      },
-                      onOpenDetail: () async {
-                        if (!n.isRead) {
-                          await ref
-                              .read(notificationsRepositoryProvider)
-                              .markRead(n.id);
-                          ref.invalidate(dashboardStreamProvider);
-                        }
-                        onClose();
-                        Future<void>.microtask(() {
-                          ref
-                              .read(goRouterProvider)
-                              .push(_notificationsListUri(role));
-                        });
-                      },
-                    );
-                  },
-                );
-              },
+              data: (list) => _NotificationPopupList(
+                list: sortNotificationsForDisplay(list)
+                    .take(_kPreviewCount)
+                    .toList(),
+                border: border,
+                muted: muted,
+                onClose: onClose,
+                role: role,
+              ),
               loading: () => const Padding(
-                padding: EdgeInsets.all(32),
+                padding: EdgeInsets.all(36),
                 child: Center(
                   child: SizedBox(
-                    width: 28,
-                    height: 28,
+                    width: 26,
+                    height: 26,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   ),
                 ),
@@ -246,11 +228,9 @@ class _NotificationCenterPanel extends ConsumerWidget {
                 side: BorderSide(color: border),
                 backgroundColor: isDark
                     ? const Color(0xFF222222)
-                    : AppColors.surfaceElevatedOf(
-                        context,
-                      ).withValues(alpha: 0.6),
+                    : AppColors.surfaceElevatedOf(context).withValues(alpha: 0.6),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(10),
                 ),
                 padding: const EdgeInsets.symmetric(vertical: 14),
               ),
@@ -264,7 +244,7 @@ class _NotificationCenterPanel extends ConsumerWidget {
                 t.dashboard.notifications_view_all,
                 style: const TextStyle(
                   fontWeight: FontWeight.w800,
-                  fontSize: 15,
+                  fontSize: 14,
                 ),
               ),
             ),
@@ -275,179 +255,100 @@ class _NotificationCenterPanel extends ConsumerWidget {
   }
 }
 
-String _notificationsListUri(WayoAdsAccountRole role) {
-  final r = switch (role) {
-    WayoAdsAccountRole.creator => 'creator',
-    WayoAdsAccountRole.advertiser => 'advertiser',
-    _ => 'app',
-  };
-  return '/notifications?role=$r';
-}
-
-class _PopupNotificationTile extends StatelessWidget {
-  const _PopupNotificationTile({
-    required this.item,
+class _NotificationPopupList extends ConsumerWidget {
+  const _NotificationPopupList({
+    required this.list,
+    required this.border,
     required this.muted,
-    required this.onMarkRead,
-    required this.onDismiss,
-    required this.onOpenDetail,
+    required this.onClose,
+    required this.role,
   });
 
-  final NotificationItem item;
+  final List<NotificationItem> list;
+  final Color border;
   final Color muted;
-  final Future<void> Function() onMarkRead;
-  final Future<void> Function() onDismiss;
-  final Future<void> Function() onOpenDetail;
+  final VoidCallback onClose;
+  final WayoAdsAccountRole role;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final t = context.t;
-    final important = _isHighPriority(item.priority);
-    final (icon, iconColor) = _iconFor(item, important);
-
-    final dateStr = item.createdAt != null
-        ? DateFormat.yMd(
-            Localizations.localeOf(context).toString(),
-          ).format(item.createdAt!.toLocal())
-        : '';
-
-    return InkWell(
-      onTap: onOpenDetail,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 10, 8, 10),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    if (list.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 24),
+        child: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.only(top: 2, right: 10),
-              child: Icon(icon, size: 22, color: iconColor),
-            ),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (important)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 2),
-                      child: Text(
-                        t.dashboard.notifications_important,
-                        style: const TextStyle(
-                          color: Color(0xFFFF4D4D),
-                          fontWeight: FontWeight.w800,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
-                  Text(
-                    item.title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: AppColors.textPrimaryOf(context),
-                      fontWeight: item.isRead
-                          ? FontWeight.w600
-                          : FontWeight.w800,
-                      fontSize: 14,
-                    ),
-                  ),
-                  if (item.body.isNotEmpty) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      item.body,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: muted,
-                        fontSize: 12.5,
-                        height: 1.3,
-                      ),
-                    ),
-                  ],
-                  CreatorApplicationNotificationActions(
-                    item: item,
-                    compact: true,
-                  ),
-                  if (dateStr.isNotEmpty) ...[
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Text(
-                          dateStr,
-                          style: TextStyle(color: muted, fontSize: 11.5),
-                        ),
-                        const SizedBox(width: 4),
-                        Icon(
-                          Icons.chevron_right_rounded,
-                          size: 16,
-                          color: muted,
-                        ),
-                      ],
-                    ),
-                  ],
-                ],
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: muted.withValues(alpha: 0.15),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.notifications_off_outlined,
+                color: muted,
+                size: 24,
               ),
             ),
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  visualDensity: VisualDensity.compact,
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(
-                    minWidth: 32,
-                    minHeight: 32,
-                  ),
-                  icon: Icon(
-                    Icons.check_rounded,
-                    size: 20,
-                    color: item.isRead
-                        ? muted
-                        : AppColors.textPrimaryOf(context),
-                  ),
-                  onPressed: () => onMarkRead(),
-                ),
-                IconButton(
-                  visualDensity: VisualDensity.compact,
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(
-                    minWidth: 32,
-                    minHeight: 32,
-                  ),
-                  icon: Icon(
-                    Icons.close_rounded,
-                    size: 20,
-                    color: AppColors.textPrimaryOf(context),
-                  ),
-                  onPressed: () => onDismiss(),
-                ),
-              ],
+            const SizedBox(height: 12),
+            Text(
+              t.dashboard.notifications_caught_up_title,
+              style: TextStyle(
+                color: AppColors.textPrimaryOf(context),
+                fontWeight: FontWeight.w700,
+                fontSize: 14,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              t.dashboard.notifications_caught_up_subtitle,
+              textAlign: TextAlign.center,
+              style: TextStyle(color: muted, fontSize: 12),
             ),
           ],
         ),
-      ),
+      );
+    }
+
+    return ListView.separated(
+      shrinkWrap: true,
+      padding: EdgeInsets.zero,
+      itemCount: list.length,
+      separatorBuilder: (_, _) => Divider(height: 1, color: border.withValues(alpha: 0.7)),
+      itemBuilder: (context, i) {
+        final n = list[i];
+        return NotificationListTile(
+          item: n,
+          mode: NotificationTileMode.popup,
+          role: ref.read(currentWayoAdsAccountRoleProvider),
+          onTap: () async {
+            onClose();
+            await openNotificationItem(ref, n);
+          },
+          onMarkRead: () async {
+            if (n.isRead) return;
+            await ref.read(notificationsRepositoryProvider).markRead(n.id);
+                      invalidateAllNotifications(ref);
+          },
+          onDismiss: () async {
+            try {
+              await ref.read(notificationsRepositoryProvider).dismiss(n.id);
+                      invalidateAllNotifications(ref);
+            } catch (_) {}
+          },
+        );
+      },
     );
   }
 }
 
-bool _isHighPriority(String? p) {
-  if (p == null) return false;
-  return p.startsWith('P0') || p.startsWith('P1');
-}
-
-(IconData, Color) _iconFor(NotificationItem n, bool important) {
-  if (important) {
-    return (Icons.warning_amber_rounded, const Color(0xFFFFA500));
-  }
-  final ty = n.type?.toUpperCase() ?? '';
-  if (ty.contains('CREDENTIALS') ||
-      ty.contains('FRAUD') ||
-      ty.contains('SUSPICIOUS')) {
-    return (Icons.warning_amber_rounded, const Color(0xFFFFA500));
-  }
-  if (ty.contains('CAMPAIGN') ||
-      ty.contains('CREATOR') ||
-      ty.contains('VIDEO')) {
-    return (Icons.info_outline_rounded, const Color(0xFFF4A237));
-  }
-  return (Icons.notifications_none_rounded, const Color(0xFFF4A237));
+String _notificationsListUri(WayoAdsAccountRole role) {
+  final r = switch (role) {
+    WayoAdsAccountRole.creator => 'creator',
+    WayoAdsAccountRole.advertiser => 'advertiser',
+    WayoAdsAccountRole.superAdmin => 'superadmin',
+    _ => 'app',
+  };
+  return '/notifications?role=$r';
 }

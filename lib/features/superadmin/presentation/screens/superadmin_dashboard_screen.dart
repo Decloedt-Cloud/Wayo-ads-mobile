@@ -5,7 +5,9 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/dashboard_stats.dart';
+import '../../../dashboard/presentation/providers/dashboard_state_providers.dart';
 import '../providers/superadmin_providers.dart';
+import '../../../dashboard/presentation/widgets/internal_notification_bell.dart';
 import '../widgets/admin_section_header.dart';
 import '../widgets/admin_stat_card.dart';
 
@@ -26,13 +28,15 @@ class SuperadminDashboardScreen extends ConsumerWidget {
         onRefresh: () async {
           ref.invalidate(dashboardStatsProvider);
           ref.invalidate(payoutStatsProvider);
+          ref.invalidate(notificationsListProvider);
+          ref.invalidate(notificationsUnreadCountsProvider);
         },
         child: CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(
             parent: BouncingScrollPhysics(),
           ),
           slivers: [
-            _buildHeader(context),
+            _buildHeader(context, ref),
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
               sliver: SliverToBoxAdapter(
@@ -73,7 +77,7 @@ class SuperadminDashboardScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildHeader(BuildContext context) {
+  Widget _buildHeader(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final topInset = MediaQuery.paddingOf(context).top;
 
@@ -115,29 +119,32 @@ class SuperadminDashboardScreen extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(width: 16),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Superadmin',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.textPrimaryOf(context),
-                        letterSpacing: -0.5,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Superadmin',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textPrimaryOf(context),
+                          letterSpacing: -0.5,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'Platform overview & management',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.primary,
+                      const SizedBox(height: 2),
+                      Text(
+                        'Platform overview & management',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.primary,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
+                const InternalNotificationBell(),
               ],
             ),
           ],

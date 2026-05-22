@@ -11,11 +11,14 @@ import 'package:shimmer/shimmer.dart';
 
 import '../../../../core/errors/auth_exceptions.dart';
 import '../../../../core/format/money_formatter.dart';
+import '../../../../core/layout/wayo_black_bottom_bar.dart';
 import '../../../../core/providers/app_providers.dart';
 import '../../../../i18n/strings.g.dart';
 import '../../../advertiser_campaigns/domain/campaign_niche_catalog.dart';
 import '../../../advertiser_campaigns/presentation/providers/advertiser_campaigns_providers.dart';
 import '../../../advertiser_campaigns/presentation/widgets/campaign_applications_section.dart';
+import '../../../auth/domain/auth_notifier.dart';
+import '../../../auth/domain/wayo_ads_account_role.dart';
 import '../../../creator_campaigns/domain/creator_browse_campaign.dart';
 import '../../domain/entities/campaign_platform.dart';
 import '../../domain/entities/campaign_status.dart';
@@ -256,9 +259,16 @@ class CampaignDetailScreen extends ConsumerWidget {
     final locale = ref.watch(localeProvider);
     final moneyLocale = _moneyLocale(locale);
     final async = ref.watch(advertiserCampaignDetailProvider(id));
+    final auth = ref.watch(authNotifierProvider).valueOrNull;
+    final role = auth is AuthAuthenticated ? auth.user.wayoAdsRole : null;
+    final showBlackBottomBar =
+        role == WayoAdsAccountRole.superAdmin ||
+        role == WayoAdsAccountRole.advertiser;
 
     return Scaffold(
       backgroundColor: CampaignDetailPremiumPalette.bg(context),
+      bottomNavigationBar:
+          showBlackBottomBar ? const WayoBlackBottomBar() : null,
       body: async.when(
         data: (json) {
           final parsed = _ParsedCampaignDetail.fromJson(json, title, t);
@@ -481,6 +491,11 @@ class _CampaignPremiumScrollBodyState extends ConsumerState<_CampaignPremiumScro
   Widget build(BuildContext context) {
     final parsed = widget.parsed;
     final t = widget.t;
+    final auth = ref.watch(authNotifierProvider).valueOrNull;
+    final role = auth is AuthAuthenticated ? auth.user.wayoAdsRole : null;
+    final isSuperadmin = role == WayoAdsAccountRole.superAdmin;
+    final showBlackBottomBar =
+        isSuperadmin || role == WayoAdsAccountRole.advertiser;
 
     final currency = parsed.currency;
 
@@ -594,7 +609,9 @@ class _CampaignPremiumScrollBodyState extends ConsumerState<_CampaignPremiumScro
       onRefresh: () async {
         HapticFeedback.lightImpact();
         ref.invalidate(advertiserCampaignDetailProvider(widget.id));
-        ref.invalidate(campaignApplicationsProvider(widget.id));
+        if (!isSuperadmin) {
+          ref.invalidate(campaignApplicationsProvider(widget.id));
+        }
         await ref.read(advertiserCampaignDetailProvider(widget.id).future);
       },
       child: CustomScrollView(
@@ -744,32 +761,39 @@ class _CampaignPremiumScrollBodyState extends ConsumerState<_CampaignPremiumScro
               ),
             ),
           ),
-          SliverPadding(
-            padding: CampaignDetailPremiumPalette.kScreenPadding
-                .copyWith(top: 12, bottom: 0),
-            sliver: SliverToBoxAdapter(
-              child: _ApprovedCreatorsRow(
-                count: parsed.approved,
-                titleHint: parsed.title,
-                t: t,
-              )
-                  .animate()
-                  .fadeIn(duration: 400.ms, curve: Curves.easeOutCubic)
-                  .slideY(begin: 0.06, curve: Curves.easeOutCubic),
+          if (!isSuperadmin) ...[
+            SliverPadding(
+              padding: CampaignDetailPremiumPalette.kScreenPadding
+                  .copyWith(top: 12, bottom: 0),
+              sliver: SliverToBoxAdapter(
+                child: _ApprovedCreatorsRow(
+                  count: parsed.approved,
+                  titleHint: parsed.title,
+                  t: t,
+                )
+                    .animate()
+                    .fadeIn(duration: 400.ms, curve: Curves.easeOutCubic)
+                    .slideY(begin: 0.06, curve: Curves.easeOutCubic),
+              ),
             ),
-          ),
-          SliverToBoxAdapter(
-              child: SizedBox(height: CampaignDetailPremiumPalette.kSectionGap)),
-          SliverPadding(
-            padding: CampaignDetailPremiumPalette.kScreenPadding
-                .copyWith(bottom: 40),
-            sliver: SliverToBoxAdapter(
-              child: CampaignApplicationsSection(
-                campaignId: widget.id,
-                premiumChrome: true,
-              ).animate().fadeIn(duration: 400.ms),
+            SliverToBoxAdapter(
+              child: SizedBox(height: CampaignDetailPremiumPalette.kSectionGap),
             ),
-          ),
+            SliverPadding(
+              padding: CampaignDetailPremiumPalette.kScreenPadding
+                  .copyWith(bottom: 40),
+              sliver: SliverToBoxAdapter(
+                child: CampaignApplicationsSection(
+                  campaignId: widget.id,
+                  premiumChrome: true,
+                ).animate().fadeIn(duration: 400.ms),
+              ),
+            ),
+          ],
+          if (showBlackBottomBar)
+            const SliverToBoxAdapter(
+              child: SizedBox(height: 16),
+            ),
         ],
       ),
     );

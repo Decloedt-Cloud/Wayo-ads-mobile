@@ -21,7 +21,9 @@ import '../../domain/invoice.dart';
 import '../providers/invoices_providers.dart';
 import '../widgets/invoice_advertiser_toolbar.dart';
 import '../widgets/invoice_card.dart';
+import '../widgets/invoice_date_filter_bar.dart';
 import '../widgets/invoice_filter_bar.dart';
+import '../widgets/invoice_list_pagination_bar.dart';
 import '../widgets/invoices_empty_state.dart';
 import '../widgets/invoices_hero_kpi.dart';
 
@@ -31,7 +33,7 @@ String _invoicesErrorDebugText(Object error) {
 }
 
 /// Invoices tab — role-aware (advertiser or creator endpoint), with hero KPI,
-/// segmented filters, animated card grid, infinite "load more" pagination,
+/// segmented filters, animated card grid, server pagination (prev/next),
 /// pull-to-refresh and 60s foreground polling.
 class InvoicesTabScreen extends StatelessWidget {
   const InvoicesTabScreen({super.key});
@@ -95,8 +97,9 @@ class _InvoicesTabBodyState extends ConsumerState<_InvoicesTabBody>
 
   void _onScroll() {
     if (!_scrollCtrl.hasClients) return;
+    final role = ref.read(currentWayoAdsAccountRoleProvider);
+    if (invoicesUsePagedList(role)) return;
     final pos = _scrollCtrl.position;
-    // Pre-fetch ~200px before reaching the end → smoother feel.
     if (pos.pixels >= pos.maxScrollExtent - 220) {
       ref.read(invoicesControllerProvider.notifier).loadNext();
     }
@@ -238,6 +241,10 @@ class _InvoicesTabBodyState extends ConsumerState<_InvoicesTabBody>
                     InvoicesHeroKpi(role: role, isLive: isPolling),
                     const SizedBox(height: 16),
                     InvoiceFilterBar(role: role),
+                    if (invoicesUsePagedList(role)) ...[
+                      const SizedBox(height: 8),
+                      const InvoiceDateFilterBar(),
+                    ],
                     const InvoiceAdvertiserToolbar(),
                     const SizedBox(height: 4),
                   ],
@@ -285,7 +292,8 @@ class _InvoicesTabBodyState extends ConsumerState<_InvoicesTabBody>
                   list,
                   locale,
                   s,
-                  hasMore: s.hasNextPage,
+                  role: role,
+                  hasMore: !invoicesUsePagedList(role) && s.hasNextPage,
                   isLoadingMore: s.isLoadingMore,
                 );
               },
@@ -303,9 +311,11 @@ class _InvoicesTabBodyState extends ConsumerState<_InvoicesTabBody>
     List<Invoice> invoices,
     String locale,
     InvoicesState paging, {
+    required WayoAdsAccountRole role,
     required bool hasMore,
     required bool isLoadingMore,
   }) {
+    final usePageBar = invoicesUsePagedList(role);
     return [
       SliverPadding(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
@@ -334,6 +344,13 @@ class _InvoicesTabBodyState extends ConsumerState<_InvoicesTabBody>
           },
         ),
       ),
+      if (usePageBar)
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: InvoiceListPaginationBar(state: paging),
+          ),
+        ),
       if (isLoadingMore)
         const SliverToBoxAdapter(
           child: Padding(
@@ -341,7 +358,7 @@ class _InvoicesTabBodyState extends ConsumerState<_InvoicesTabBody>
             child: Center(child: CircularProgressIndicator(strokeWidth: 2.5)),
           ),
         ),
-      if (!hasMore && invoices.isNotEmpty)
+      if (!usePageBar && !hasMore && invoices.isNotEmpty)
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 22),

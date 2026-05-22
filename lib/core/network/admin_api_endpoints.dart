@@ -27,4 +27,7 @@ abstract final class AdminApiEndpoints {
   
   // Ledger
   static const String ledger = 'api/admin/ledger';
+
+  // Tax rates (VAT/GST overrides)
+  static const String taxRates = 'api/admin/tax-rates';
 }

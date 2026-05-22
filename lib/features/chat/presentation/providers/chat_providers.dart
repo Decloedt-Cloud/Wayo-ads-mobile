@@ -4,7 +4,6 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/connectivity/connectivity_providers.dart';
 import '../../../../core/network/wayo_ads_dio.dart';
 import '../../data/chat_repository.dart';
 import '../../data/chat_realtime_service.dart';
@@ -15,10 +14,9 @@ import '../../domain/chat_message.dart';
 final chatRealtimeServiceProvider = Provider.autoDispose<ChatRealtimeService>((
   ref,
 ) {
-  final connectivity = ref.read(connectivityServiceProvider);
-  final s = ChatRealtimeService(
-    onConnectionError: connectivity.reportRemoteFailure,
-  );
+  // Chat Reverb errors must not trigger the global offline overlay — the user
+  // can still use ads/auth while chat reconnects in the background.
+  final s = ChatRealtimeService();
   ref.keepAlive();
   ref.onDispose(s.dispose);
   return s;

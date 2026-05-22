@@ -14,6 +14,7 @@ import '../../data/repositories/dashboard_repository.dart';
 import '../../data/repositories/notifications_repository.dart';
 import '../../domain/advertiser_campaigns_page_result.dart';
 import '../../domain/entities/notification_item.dart';
+import '../../domain/entities/notifications_page_result.dart';
 import '../../../account_deletion/presentation/providers/account_deletion_providers.dart';
 import '../../../advertiser_campaigns/presentation/providers/advertiser_campaigns_providers.dart';
 import '../../../creator_campaigns/presentation/providers/creator_campaigns_providers.dart';
@@ -88,6 +89,12 @@ final dashboardStreamProvider = StreamProvider<DashboardSnapshot>((ref) {
 final notificationsListProvider =
     FutureProvider.autoDispose<List<NotificationItem>>((ref) {
       return ref.watch(notificationsRepositoryProvider).fetchNotifications();
+    });
+
+/// Unread badge for notification bell (all roles including superadmin).
+final notificationsUnreadCountsProvider =
+    FutureProvider.autoDispose<NotificationsUnreadCounts>((ref) {
+      return ref.watch(notificationsRepositoryProvider).fetchUnreadCounts();
     });
 
 final wayoReverbRealtimeProvider = Provider<WayoReverbRealtime>((ref) {
@@ -170,9 +177,15 @@ final realtimeInvalidationProvider = Provider<void>((ref) {
       ref.invalidate(advertiserCampaignsPagedProvider);
       ref.invalidate(advertiserCampaignsCountsProvider);
       ref.invalidate(advertiserDashboardCampaignsPageFetchProvider);
+      final authCampaign = ref.read(authNotifierProvider).valueOrNull;
+      if (authCampaign is AuthAuthenticated &&
+          authCampaign.user.wayoAdsRole == WayoAdsAccountRole.superAdmin) {
+        invalidateSuperadminBrowseCampaigns(ref);
+      }
     }
     if (notif) {
       ref.invalidate(notificationsListProvider);
+      ref.invalidate(notificationsUnreadCountsProvider);
       final auth = ref.read(authNotifierProvider).valueOrNull;
       final isSuperadmin = auth is AuthAuthenticated &&
           auth.user.wayoAdsRole == WayoAdsAccountRole.superAdmin;

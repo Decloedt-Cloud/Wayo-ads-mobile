@@ -161,11 +161,16 @@ final chatMessagesFamilyProvider = FutureProvider.autoDispose
     });
 
 /// Call on logout so chat tokens and sockets are dropped.
+///
+/// Uses microtask scheduling to avoid [CircularDependencyError] when called
+/// from within [AuthNotifier] (since chat providers may depend on auth state).
 void invalidateChatProviders(Ref ref) {
-  ref.invalidate(chatBootstrapProvider);
-  ref.invalidate(chatConversationsProvider);
-  invalidateChatRealtimeBindingImmediate(
-    () => ref.invalidate(chatRealtimeBindingProvider),
-  );
-  ref.invalidate(chatRealtimeServiceProvider);
+  Future.microtask(() {
+    ref.invalidate(chatBootstrapProvider);
+    ref.invalidate(chatConversationsProvider);
+    invalidateChatRealtimeBindingImmediate(
+      () => ref.invalidate(chatRealtimeBindingProvider),
+    );
+    ref.invalidate(chatRealtimeServiceProvider);
+  });
 }

@@ -33,11 +33,16 @@ final creatorWalletRepositoryProvider = Provider<CreatorWalletRepository>((
 });
 
 /// Drops cached wallet / Stripe / business reads (login, logout, account switch).
+///
+/// Uses microtask scheduling to avoid [CircularDependencyError] when called
+/// from within [AuthNotifier] (since wallet providers depend on auth state).
 void invalidateCreatorWalletProviders(Ref ref) {
   ref.read(creatorWalletRateLimiterProvider).reset();
-  ref.invalidate(creatorWalletPageProvider);
-  ref.invalidate(creatorStripeStatusProvider);
-  ref.invalidate(creatorBusinessProfileProvider);
+  Future.microtask(() {
+    ref.invalidate(creatorWalletPageProvider);
+    ref.invalidate(creatorStripeStatusProvider);
+    ref.invalidate(creatorBusinessProfileProvider);
+  });
 }
 
 int? _creatorWalletSessionUserId(Ref ref) {

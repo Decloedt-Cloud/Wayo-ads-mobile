@@ -54,11 +54,7 @@ abstract final class AppConfig {
 
   static bool get pinningEnabled => pinnedKeys.isNotEmpty;
 
-  /// **Temporary / diagnostic only.** When `true`, [CertificatePinning.attach] is a
-  /// no-op in release (normal system CA trust). Build with
-  /// `--dart-define=DISABLE_CERT_PINNING=true` — remove before shipping.
-  static const bool disableCertPinning = bool.fromEnvironment(
-    'DISABLE_CERT_PINNING',
-    defaultValue: false,
-  );
+  /// Certificate pinning is permanently disabled.
+  /// To re-enable, change this to `false` and configure CERT_PIN_* values.
+  static const bool disableCertPinning = true;
 }

@@ -2,18 +2,24 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>CLIENT_ID</key>
+	<string>458504508199-vprq2p3mk2su77b4mnav0b8gl2p4ie6e.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.458504508199-vprq2p3mk2su77b4mnav0b8gl2p4ie6e</string>
+	<key>ANDROID_CLIENT_ID</key>
+	<string>458504508199-07reguockcqp4tsj088kh1am3rkte98l.apps.googleusercontent.com</string>
 	<key>API_KEY</key>
-	<string>AIzaSyC3tyTqXKSPEEC_pIf9mUTGhCEU441-y-I</string>
+	<string>AIzaSyD5oFlFDVgNAiKT9gCYx78uYCbjulSVggI</string>
 	<key>GCM_SENDER_ID</key>
-	<string>540462242334</string>
+	<string>458504508199</string>
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
 	<string>ma.wayo.wayoadsgo</string>
 	<key>PROJECT_ID</key>
-	<string>wayo-ads-82232</string>
+	<string>wayo-ads-27cbf</string>
 	<key>STORAGE_BUCKET</key>
-	<string>wayo-ads-82232.firebasestorage.app</string>
+	<string>wayo-ads-27cbf.firebasestorage.app</string>
 	<key>IS_ADS_ENABLED</key>
 	<false></false>
 	<key>IS_ANALYTICS_ENABLED</key>
@@ -25,6 +31,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:540462242334:ios:573b7495d8122c34d36c0f</string>
+	<string>1:458504508199:ios:5862a1b1dadc29831a4f02</string>
 </dict>
 </plist>

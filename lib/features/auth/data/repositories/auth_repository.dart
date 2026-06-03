@@ -219,8 +219,11 @@ class AuthRepositoryImpl implements IAuthRepository {
         if (cfg.wayoAdsAppKey.isNotEmpty) 'app_key': cfg.wayoAdsAppKey,
       });
       final path = AuthRuntimeConfig.instance.authHttpPath('apple');
-      final appleOptions = Options(extra: {kSkipAuthInjection: true})
-        ..disableRetry = true;
+      final appleOptions = Options(
+        extra: {kSkipAuthInjection: true},
+        // Auth_Wayo may return 503 with JSON `{ success: false, message: … }`.
+        validateStatus: (status) => status != null && status < 600,
+      )..disableRetry = true;
       final res = await _dio.post<Map<String, dynamic>>(
         path,
         data: body,
@@ -233,6 +236,11 @@ class AuthRepositoryImpl implements IAuthRepository {
       if (data['success'] == false) {
         final msg = data['message'] as String? ?? 'Apple sign-in failed';
         return Failure(InvalidCredentialsException(msg));
+      }
+      final code = res.statusCode ?? 0;
+      if (code >= 400) {
+        final msg = data['message'] as String? ?? 'Apple sign-in failed';
+        return Failure(ServerException(msg, code));
       }
       return Success(AuthResponse.fromJson(data));
     } on DioException catch (e) {

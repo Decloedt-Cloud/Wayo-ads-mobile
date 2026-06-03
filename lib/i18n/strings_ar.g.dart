@@ -157,6 +157,7 @@ class _TranslationsLoginAr extends TranslationsLoginEn {
 	@override String get apple_cta => 'تسجيل الدخول عبر Apple';
 	@override String get apple_unavailable => 'تسجيل الدخول عبر Apple غير متاح على هذا الجهاز.';
 	@override String get apple_failed => 'فشل تسجيل الدخول عبر Apple. حاول مرة أخرى.';
+	@override String get apple_server_not_configured => 'تسجيل الدخول عبر Apple غير مفعّل على خادم Wayo ID بعد. اطلب من المسؤول إعداد Apple على Auth_Wayo (الإنتاج)، ثم أعد المحاولة.';
 	@override String get apple_canceled => 'تم إلغاء تسجيل الدخول عبر Apple.';
 	@override String get google_not_configured => 'لم يُضبط تسجيل الدخول عبر Google. أضف AUTH_GOOGLE_SERVER_CLIENT_ID في dart_defines.json (معرّف عميل الويب من Google ينتهي بـ .apps.googleusercontent.com) ثم أعد تشغيل التطبيق بالكامل.';
 	@override String get google_wrong_client_id => 'يجب أن يكون AUTH_GOOGLE_SERVER_CLIENT_ID هو معرّف عميل الويب في Google Cloud (…apps.googleusercontent.com) وليس UUID عميل OAuth في Passport.';
@@ -1365,6 +1366,7 @@ extension on TranslationsAr {
 			case 'login.apple_cta': return 'تسجيل الدخول عبر Apple';
 			case 'login.apple_unavailable': return 'تسجيل الدخول عبر Apple غير متاح على هذا الجهاز.';
 			case 'login.apple_failed': return 'فشل تسجيل الدخول عبر Apple. حاول مرة أخرى.';
+			case 'login.apple_server_not_configured': return 'تسجيل الدخول عبر Apple غير مفعّل على خادم Wayo ID بعد. اطلب من المسؤول إعداد Apple على Auth_Wayo (الإنتاج)، ثم أعد المحاولة.';
 			case 'login.apple_canceled': return 'تم إلغاء تسجيل الدخول عبر Apple.';
 			case 'login.google_not_configured': return 'لم يُضبط تسجيل الدخول عبر Google. أضف AUTH_GOOGLE_SERVER_CLIENT_ID في dart_defines.json (معرّف عميل الويب من Google ينتهي بـ .apps.googleusercontent.com) ثم أعد تشغيل التطبيق بالكامل.';
 			case 'login.google_wrong_client_id': return 'يجب أن يكون AUTH_GOOGLE_SERVER_CLIENT_ID هو معرّف عميل الويب في Google Cloud (…apps.googleusercontent.com) وليس UUID عميل OAuth في Passport.';

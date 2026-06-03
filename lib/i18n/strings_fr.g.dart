@@ -157,6 +157,7 @@ class _TranslationsLoginFr extends TranslationsLoginEn {
 	@override String get apple_cta => 'Se connecter avec Apple';
 	@override String get apple_unavailable => 'Connexion avec Apple indisponible sur cet appareil.';
 	@override String get apple_failed => 'Échec de la connexion avec Apple. Réessayez.';
+	@override String get apple_server_not_configured => 'La connexion avec Apple n’est pas encore activée sur le serveur Wayo ID. Demandez à l’administrateur de configurer Apple sur Auth_Wayo (production), puis réessayez.';
 	@override String get apple_canceled => 'Connexion avec Apple annulée.';
 	@override String get google_not_configured => 'Connexion Google non configurée. Ajoutez AUTH_GOOGLE_SERVER_CLIENT_ID dans dart_defines.json (ID client Web Google se terminant par .apps.googleusercontent.com), puis redémarrez complètement l’app.';
 	@override String get google_wrong_client_id => 'AUTH_GOOGLE_SERVER_CLIENT_ID doit être l’ID client Web Google Cloud (…apps.googleusercontent.com), pas l’UUID du client OAuth Passport.';
@@ -1366,6 +1367,7 @@ extension on TranslationsFr {
 			case 'login.apple_cta': return 'Se connecter avec Apple';
 			case 'login.apple_unavailable': return 'Connexion avec Apple indisponible sur cet appareil.';
 			case 'login.apple_failed': return 'Échec de la connexion avec Apple. Réessayez.';
+			case 'login.apple_server_not_configured': return 'La connexion avec Apple n’est pas encore activée sur le serveur Wayo ID. Demandez à l’administrateur de configurer Apple sur Auth_Wayo (production), puis réessayez.';
 			case 'login.apple_canceled': return 'Connexion avec Apple annulée.';
 			case 'login.google_not_configured': return 'Connexion Google non configurée. Ajoutez AUTH_GOOGLE_SERVER_CLIENT_ID dans dart_defines.json (ID client Web Google se terminant par .apps.googleusercontent.com), puis redémarrez complètement l’app.';
 			case 'login.google_wrong_client_id': return 'AUTH_GOOGLE_SERVER_CLIENT_ID doit être l’ID client Web Google Cloud (…apps.googleusercontent.com), pas l’UUID du client OAuth Passport.';

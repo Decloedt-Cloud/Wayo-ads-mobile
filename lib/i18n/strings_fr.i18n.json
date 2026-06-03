@@ -68,6 +68,7 @@
     "apple_cta": "Se connecter avec Apple",
     "apple_unavailable": "Connexion avec Apple indisponible sur cet appareil.",
     "apple_failed": "Échec de la connexion avec Apple. Réessayez.",
+    "apple_server_not_configured": "La connexion avec Apple n’est pas encore activée sur le serveur Wayo ID. Demandez à l’administrateur de configurer Apple sur Auth_Wayo (production), puis réessayez.",
     "apple_canceled": "Connexion avec Apple annulée.",
     "google_not_configured": "Connexion Google non configurée. Ajoutez AUTH_GOOGLE_SERVER_CLIENT_ID dans dart_defines.json (ID client Web Google se terminant par .apps.googleusercontent.com), puis redémarrez complètement l’app.",
     "google_wrong_client_id": "AUTH_GOOGLE_SERVER_CLIENT_ID doit être l’ID client Web Google Cloud (…apps.googleusercontent.com), pas l’UUID du client OAuth Passport.",

@@ -56,5 +56,12 @@ String? _fromServerMessage(String raw, Translations t) {
   if (m.contains('missing access token')) {
     return t.errors.session_invalid;
   }
+  if (m.contains('apple sign-in is not configured') ||
+      m.contains('sign in with apple is not enabled')) {
+    return t.login.apple_server_not_configured;
+  }
+  if (m.contains('invalid apple token')) {
+    return t.login.apple_failed;
+  }
   return null;
 }

@@ -68,6 +68,7 @@
     "apple_cta": "Sign in with Apple",
     "apple_unavailable": "Sign in with Apple is not available on this device.",
     "apple_failed": "Apple sign-in failed. Try again.",
+    "apple_server_not_configured": "Sign in with Apple is not enabled on the Wayo ID server yet. Ask your administrator to configure Apple credentials on Auth_Wayo (production), then try again.",
     "apple_canceled": "Sign in with Apple was canceled.",
     "google_not_configured": "Google sign-in is not configured. Add AUTH_GOOGLE_SERVER_CLIENT_ID to dart_defines.json (Web client ID ending in .apps.googleusercontent.com) and do a full restart.",
     "google_wrong_client_id": "AUTH_GOOGLE_SERVER_CLIENT_ID must be your Google Cloud Web client ID (…apps.googleusercontent.com), not the Passport OAuth client UUID.",

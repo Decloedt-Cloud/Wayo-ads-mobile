@@ -2,10 +2,11 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 	<dict>
+		<!-- Must match ios/Runner/GoogleService-Info.plist (CLIENT_ID) and AUTH_GOOGLE_SERVER_CLIENT_ID (Web client). -->
 		<key>GIDClientID</key>
-		<string>418718041924-q9qnrrrgqf04hddkro28ensd4dcooajt.apps.googleusercontent.com</string>
+		<string>458504508199-vprq2p3mk2su77b4mnav0b8gl2p4ie6e.apps.googleusercontent.com</string>
 		<key>GIDServerClientID</key>
-		<string>418718041924-fcujk5vfppueq260k43r582rovrj5ghh.apps.googleusercontent.com</string>
+		<string>458504508199-1ifkt7dc1g6cn2mrn9379k8u2uni4985.apps.googleusercontent.com</string>
 		<key>ITSAppUsesNonExemptEncryption</key>
 		<false/>
 		<key>CFBundleDevelopmentRegion</key>
@@ -76,7 +77,7 @@
 				<string>google</string>
 				<key>CFBundleURLSchemes</key>
 				<array>
-					<string>com.googleusercontent.apps.418718041924-q9qnrrrgqf04hddkro28ensd4dcooajt</string>
+					<string>com.googleusercontent.apps.458504508199-vprq2p3mk2su77b4mnav0b8gl2p4ie6e</string>
 				</array>
 			</dict>
 			<!-- ✅ STRIPE -->

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -29,12 +30,15 @@ final class GoogleSignInFacade {
 
   /// Clears cached Google account so the next [signIn] shows the account picker.
   ///
-  /// [disconnect] only runs when a session exists — calling it with no prior
-  /// Google sign-in makes Android throw "Failed to disconnect.".
+  /// [disconnect] is Android-only — on iOS it can abort the process when no
+  /// prior Google session exists. [signOut] is enough to show the account picker.
   static Future<void> _clearGoogleSession(GoogleSignIn google) async {
     try {
       await google.signOut();
     } catch (_) {}
+    if (defaultTargetPlatform != TargetPlatform.android) {
+      return;
+    }
     try {
       if (await google.isSignedIn()) {
         await google.disconnect();

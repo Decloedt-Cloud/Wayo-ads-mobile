@@ -35,6 +35,7 @@ class TranslationsAr extends Translations {
 	late final TranslationsAr _root = this; // ignore: unused_field
 
 	// Translations
+	@override late final _TranslationsForceUpdateAr force_update = _TranslationsForceUpdateAr._(_root);
 	@override late final _TranslationsConnectivityAr connectivity = _TranslationsConnectivityAr._(_root);
 	@override late final _TranslationsCampaignsExplorerAr campaigns_explorer = _TranslationsCampaignsExplorerAr._(_root);
 	@override late final _TranslationsLoginAr login = _TranslationsLoginAr._(_root);
@@ -58,6 +59,19 @@ class TranslationsAr extends Translations {
 	@override late final _TranslationsAppSettingsAr app_settings = _TranslationsAppSettingsAr._(_root);
 	@override late final _TranslationsAccountDeletionAr account_deletion = _TranslationsAccountDeletionAr._(_root);
 	@override late final _TranslationsOnboardingAr onboarding = _TranslationsOnboardingAr._(_root);
+}
+
+// Path: force_update
+class _TranslationsForceUpdateAr extends TranslationsForceUpdateEn {
+	_TranslationsForceUpdateAr._(TranslationsAr root) : this._root = root, super.internal(root);
+
+	final TranslationsAr _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'مطلوب تحديث';
+	@override String get subtitle => 'يتوفر إصدار جديد من Wayo Ads. يرجى التحديث من المتجر للمتابعة.';
+	@override String get action_update => 'تحديث الآن';
+	@override String get checking => 'جاري التحقق من التحديثات…';
 }
 
 // Path: connectivity
@@ -1289,6 +1303,10 @@ class _TranslationsOnboardingCreatorAr extends TranslationsOnboardingCreatorEn {
 extension on TranslationsAr {
 	dynamic _flatMapFunction(String path) {
 		switch (path) {
+			case 'force_update.title': return 'مطلوب تحديث';
+			case 'force_update.subtitle': return 'يتوفر إصدار جديد من Wayo Ads. يرجى التحديث من المتجر للمتابعة.';
+			case 'force_update.action_update': return 'تحديث الآن';
+			case 'force_update.checking': return 'جاري التحقق من التحديثات…';
 			case 'connectivity.offline_title': return 'لا يوجد اتصال بالإنترنت';
 			case 'connectivity.offline_subtitle': return 'يرجى التحقق من الشبكة ثم المحاولة مرة أخرى.';
 			case 'connectivity.reconnecting_title': return 'إعادة الاتصال…';

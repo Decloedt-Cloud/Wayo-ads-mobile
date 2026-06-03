@@ -6,6 +6,7 @@ import 'core/providers/app_providers.dart';
 import 'core/theme/app_theme.dart';
 import 'core/ui/root_scaffold_messenger_key.dart';
 import 'core/review/app_review_prompt_host.dart';
+import 'core/update/force_update_gate.dart';
 import 'features/dashboard/presentation/widgets/realtime_notification_toast_host.dart';
 import 'features/push/presentation/push_permission_prompt_host.dart';
 import 'i18n/strings.g.dart';
@@ -36,11 +37,13 @@ class WayoAdsGoApp extends ConsumerWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      builder: (context, child) => ConnectivityOverlay(
-        child: RealtimeNotificationToastHost(
-          child: AppReviewPromptHost(
-            child: PushPermissionPromptHost(
-              child: child ?? const SizedBox.shrink(),
+      builder: (context, child) => ForceUpdateGate(
+        child: ConnectivityOverlay(
+          child: RealtimeNotificationToastHost(
+            child: AppReviewPromptHost(
+              child: PushPermissionPromptHost(
+                child: child ?? const SizedBox.shrink(),
+              ),
             ),
           ),
         ),

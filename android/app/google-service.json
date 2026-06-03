@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "458504508199",
+    "project_id": "wayo-ads-27cbf",
+    "storage_bucket": "wayo-ads-27cbf.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:458504508199:android:96028da30c62bf171a4f02",
+        "android_client_info": {
+          "package_name": "ma.wayo.wayoadsgo"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "458504508199-07reguockcqp4tsj088kh1am3rkte98l.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "ma.wayo.wayoadsgo",
+            "certificate_hash": "7c5124ce73237167ca655589222f5e1e264303fd"
+          }
+        },
+        {
+          "client_id": "458504508199-1ifkt7dc1g6cn2mrn9379k8u2uni4985.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBd3XYKwlz6udWKoPS4sBLHrjSxLT0djLo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "458504508199-1ifkt7dc1g6cn2mrn9379k8u2uni4985.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "458504508199-vprq2p3mk2su77b4mnav0b8gl2p4ie6e.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "ma.wayo.wayoadsgo"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

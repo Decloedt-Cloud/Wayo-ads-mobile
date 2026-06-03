@@ -35,6 +35,7 @@ class TranslationsFr extends Translations {
 	late final TranslationsFr _root = this; // ignore: unused_field
 
 	// Translations
+	@override late final _TranslationsForceUpdateFr force_update = _TranslationsForceUpdateFr._(_root);
 	@override late final _TranslationsConnectivityFr connectivity = _TranslationsConnectivityFr._(_root);
 	@override late final _TranslationsCampaignsExplorerFr campaigns_explorer = _TranslationsCampaignsExplorerFr._(_root);
 	@override late final _TranslationsLoginFr login = _TranslationsLoginFr._(_root);
@@ -58,6 +59,19 @@ class TranslationsFr extends Translations {
 	@override late final _TranslationsAppSettingsFr app_settings = _TranslationsAppSettingsFr._(_root);
 	@override late final _TranslationsAccountDeletionFr account_deletion = _TranslationsAccountDeletionFr._(_root);
 	@override late final _TranslationsOnboardingFr onboarding = _TranslationsOnboardingFr._(_root);
+}
+
+// Path: force_update
+class _TranslationsForceUpdateFr extends TranslationsForceUpdateEn {
+	_TranslationsForceUpdateFr._(TranslationsFr root) : this._root = root, super.internal(root);
+
+	final TranslationsFr _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'Mise à jour requise';
+	@override String get subtitle => 'Une nouvelle version de Wayo Ads est disponible. Installez-la depuis le store pour continuer.';
+	@override String get action_update => 'Mettre à jour';
+	@override String get checking => 'Vérification des mises à jour…';
 }
 
 // Path: connectivity
@@ -1290,6 +1304,10 @@ class _TranslationsOnboardingCreatorFr extends TranslationsOnboardingCreatorEn {
 extension on TranslationsFr {
 	dynamic _flatMapFunction(String path) {
 		switch (path) {
+			case 'force_update.title': return 'Mise à jour requise';
+			case 'force_update.subtitle': return 'Une nouvelle version de Wayo Ads est disponible. Installez-la depuis le store pour continuer.';
+			case 'force_update.action_update': return 'Mettre à jour';
+			case 'force_update.checking': return 'Vérification des mises à jour…';
 			case 'connectivity.offline_title': return 'Aucune connexion Internet';
 			case 'connectivity.offline_subtitle': return 'Vérifiez votre réseau puis réessayez.';
 			case 'connectivity.reconnecting_title': return 'Reconnexion…';

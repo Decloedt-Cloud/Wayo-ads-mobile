@@ -1,4 +1,10 @@
 {
+  "force_update": {
+    "title": "Update required",
+    "subtitle": "A new version of Wayo Ads is available. Please update from the store to continue.",
+    "action_update": "Update now",
+    "checking": "Checking for updates…"
+  },
   "connectivity": {
     "offline_title": "No Internet Connection",
     "offline_subtitle": "Please check your network and try again.",

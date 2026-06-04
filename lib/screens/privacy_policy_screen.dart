@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../core/theme/app_colors.dart';
 import '../core/theme/app_text_styles.dart';
@@ -65,7 +66,7 @@ class PrivacyPolicyScreen extends ConsumerWidget {
         top: false,
         child: ListView.separated(
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-          itemCount: sections.length + 1,
+          itemCount: sections.length + 2,
           separatorBuilder: (_, _) => const SizedBox(height: 20),
           itemBuilder: (context, index) {
             if (index == 0) {
@@ -77,7 +78,10 @@ class PrivacyPolicyScreen extends ConsumerWidget {
                 ),
               );
             }
-            final s = sections[index - 1];
+            if (index == 1) {
+              return _LegalEntityCard(pp: pp);
+            }
+            final s = sections[index - 2];
             return Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -98,6 +102,115 @@ class PrivacyPolicyScreen extends ConsumerWidget {
               ],
             );
           },
+        ),
+      ),
+    );
+  }
+}
+
+class _LegalEntityCard extends StatelessWidget {
+  const _LegalEntityCard({required this.pp});
+
+  final TranslationsPrivacyPolicyEn pp;
+
+  @override
+  Widget build(BuildContext context) {
+    final border = AppColors.borderOf(context);
+    const primary = AppColors.primary;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceElevatedOf(context),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            pp.legal_entity_operator,
+            style: AppTextStyles.bodyLarge(context).copyWith(
+              fontSize: 14,
+              color: AppColors.textSecondaryOf(context),
+              height: 1.45,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            pp.legal_entity_name,
+            style: AppTextStyles.labelLarge(context).copyWith(
+              fontSize: 15,
+              color: AppColors.textPrimaryOf(context),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            pp.legal_entity_address,
+            style: AppTextStyles.bodyLarge(context).copyWith(
+              fontSize: 14,
+              color: AppColors.textSecondaryOf(context),
+              height: 1.45,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            '${pp.legal_entity_support}:',
+            style: AppTextStyles.caption(context).copyWith(
+              fontWeight: FontWeight.w600,
+              color: AppColors.textSecondaryOf(context),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Wrap(
+            spacing: 12,
+            runSpacing: 4,
+            children: [
+              _LegalLink(
+                label: pp.legal_entity_email,
+                uri: Uri.parse('mailto:${pp.legal_entity_email}'),
+                color: primary,
+              ),
+              _LegalLink(
+                label: pp.legal_entity_phone,
+                uri: Uri.parse('tel:${pp.legal_entity_phone.replaceAll(' ', '')}'),
+                color: primary,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _LegalLink extends StatelessWidget {
+  const _LegalLink({
+    required this.label,
+    required this.uri,
+    required this.color,
+  });
+
+  final String label;
+  final Uri uri;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () => launchUrl(uri),
+      borderRadius: BorderRadius.circular(6),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 2),
+        child: Text(
+          label,
+          style: AppTextStyles.bodyLarge(context).copyWith(
+            fontSize: 14,
+            color: color,
+            decoration: TextDecoration.underline,
+            decorationColor: color.withValues(alpha: 0.6),
+          ),
         ),
       ),
     );

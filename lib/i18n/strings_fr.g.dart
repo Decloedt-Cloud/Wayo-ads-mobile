@@ -658,6 +658,12 @@ class _TranslationsPrivacyPolicyFr extends TranslationsPrivacyPolicyEn {
 	// Translations
 	@override String get title => 'Politique de confidentialité';
 	@override String get last_updated => 'Dernière mise à jour : 7 octobre 2025';
+	@override String get legal_entity_operator => 'Cette application et la plateforme Wayo Ads sont exploitées par :';
+	@override String get legal_entity_name => 'AL BOUHOUTI SOFTWARE DESIGN COMPANY L.L.C';
+	@override String get legal_entity_address => 'Al Barshaa 1, Dubai, Dubai, United Arab Emirates';
+	@override String get legal_entity_support => 'Support client';
+	@override String get legal_entity_email => 'support@wayo.cloud';
+	@override String get legal_entity_phone => '+971 542396643';
 	@override String get intro_title => '1. Introduction';
 	@override String get intro_body => 'Chez Wayo Ads, nous nous engageons à collecter et à utiliser vos données de manière responsable, conformément aux lois applicables en matière de protection des données, notamment la loi marocaine n° 09-08 et, le cas échéant, le RGPD (UE 2016/679). En utilisant notre plateforme, vous acceptez la collecte, le traitement et l’utilisation de vos données tel que décrit dans la présente politique de confidentialité.';
 	@override String get data_title => '2. Données que nous collectons';
@@ -681,7 +687,7 @@ class _TranslationsPrivacyPolicyFr extends TranslationsPrivacyPolicyEn {
 	@override String get changes_title => '11. Modifications de la présente politique';
 	@override String get changes_body => 'Nous pouvons mettre à jour cette politique de confidentialité occasionnellement. Nous vous informerons des changements importants en publiant la nouvelle politique sur cette page et en mettant à jour la date de « Dernière mise à jour ».';
 	@override String get contact_title => '12. Coordonnées';
-	@override String get contact_body => 'Responsable du traitement : Wayo, Dubaï, Émirats arabes unis.\nE-mail : info@wayo.cloud\nAdresse : R320 Umm Hurair 2, Dubaï, Émirats arabes unis.';
+	@override String get contact_body => 'Responsable du traitement : AL BOUHOUTI SOFTWARE DESIGN COMPANY L.L.C\nAl Barshaa 1, Dubai, Dubai, United Arab Emirates\nE-mail : support@wayo.cloud\nTéléphone : +971 542396643';
 }
 
 // Path: app_settings
@@ -1982,6 +1988,12 @@ extension on TranslationsFr {
 			case 'errors.email_not_found': return 'Aucun compte pour cet email.';
 			case 'privacy_policy.title': return 'Politique de confidentialité';
 			case 'privacy_policy.last_updated': return 'Dernière mise à jour : 7 octobre 2025';
+			case 'privacy_policy.legal_entity_operator': return 'Cette application et la plateforme Wayo Ads sont exploitées par :';
+			case 'privacy_policy.legal_entity_name': return 'AL BOUHOUTI SOFTWARE DESIGN COMPANY L.L.C';
+			case 'privacy_policy.legal_entity_address': return 'Al Barshaa 1, Dubai, Dubai, United Arab Emirates';
+			case 'privacy_policy.legal_entity_support': return 'Support client';
+			case 'privacy_policy.legal_entity_email': return 'support@wayo.cloud';
+			case 'privacy_policy.legal_entity_phone': return '+971 542396643';
 			case 'privacy_policy.intro_title': return '1. Introduction';
 			case 'privacy_policy.intro_body': return 'Chez Wayo Ads, nous nous engageons à collecter et à utiliser vos données de manière responsable, conformément aux lois applicables en matière de protection des données, notamment la loi marocaine n° 09-08 et, le cas échéant, le RGPD (UE 2016/679). En utilisant notre plateforme, vous acceptez la collecte, le traitement et l’utilisation de vos données tel que décrit dans la présente politique de confidentialité.';
 			case 'privacy_policy.data_title': return '2. Données que nous collectons';
@@ -2005,7 +2017,7 @@ extension on TranslationsFr {
 			case 'privacy_policy.changes_title': return '11. Modifications de la présente politique';
 			case 'privacy_policy.changes_body': return 'Nous pouvons mettre à jour cette politique de confidentialité occasionnellement. Nous vous informerons des changements importants en publiant la nouvelle politique sur cette page et en mettant à jour la date de « Dernière mise à jour ».';
 			case 'privacy_policy.contact_title': return '12. Coordonnées';
-			case 'privacy_policy.contact_body': return 'Responsable du traitement : Wayo, Dubaï, Émirats arabes unis.\nE-mail : info@wayo.cloud\nAdresse : R320 Umm Hurair 2, Dubaï, Émirats arabes unis.';
+			case 'privacy_policy.contact_body': return 'Responsable du traitement : AL BOUHOUTI SOFTWARE DESIGN COMPANY L.L.C\nAl Barshaa 1, Dubai, Dubai, United Arab Emirates\nE-mail : support@wayo.cloud\nTéléphone : +971 542396643';
 			case 'app_settings.title': return 'Préférences';
 			case 'app_settings.subtitle': return 'Apparence et langue';
 			case 'app_settings.section_appearance': return 'Apparence';

@@ -9,13 +9,11 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/observability/app_log.dart';
 import '../../../core/network/wayo_ads_dio.dart';
 import '../../../core/providers/app_providers.dart';
 import '../../../core/push/push_permission_policy.dart';
 import '../../../core/push/system_push_permission.dart';
 import '../../../core/push/user_push_notifications_preference.dart';
-import '../../../core/push/wayo_push_device_register.dart';
 import '../../../core/push/wayo_push_intent.dart';
 import '../../../core/push/wayo_push_service.dart';
 import '../../../core/theme/app_colors.dart';
@@ -303,24 +301,12 @@ class _PushPermissionPromptHostState
               final auth = ref.read(authNotifierProvider).valueOrNull;
               if (auth is! AuthAuthenticated) return;
 
-              await initializeFirebaseForPush();
-              await attachForegroundFcmHandlers();
-              final granted = await requestSystemPushPermission();
-              if (granted) {
-                await setUserPushNotificationsEnabled(prefs, true);
-                await refreshAndCacheFcmToken(prefs);
-                await registerWayoPushDeviceIfTokenPresent(
-                  wayoAdsDio: ref.read(wayoAdsDioProvider),
-                  prefs: prefs,
-                );
+              final ok = await enableUserPushNotifications(
+                wayoAdsDio: ref.read(wayoAdsDioProvider),
+                prefs: prefs,
+              );
+              if (ok) {
                 await PushPermissionPolicy(prefs).recordEnabled(auth.user.id);
-              }
-              if (!wayoFirebaseCoreReady && granted) {
-                wayoConfigDiagPrint(
-                  'Push: permission granted but Firebase failed to initialize — '
-                  'no FCM token. Check google-services.json / firebase_options / SHA-1.',
-                  name: 'wayo.push',
-                );
               }
               if (!mounted) return;
               setState(() => _overlayVisible = false);
@@ -330,7 +316,7 @@ class _PushPermissionPromptHostState
               messenger?.showSnackBar(
                 SnackBar(
                   content: Text(
-                    granted
+                    ok
                         ? context.t.push.onboarding_success
                         : context.t.push.onboarding_denied_hint,
                   ),

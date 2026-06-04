@@ -40,6 +40,28 @@ void _logPush(String message, {Object? error, StackTrace? stackTrace}) {
   }
 }
 
+/// Shared lifecycle logger for push modules (permission, register, enable).
+void logPushLifecycle(
+  String message, {
+  Object? error,
+  StackTrace? stackTrace,
+}) {
+  _logPush(message, error: error, stackTrace: stackTrace);
+}
+
+typedef FcmTokenBackendRegistrationCallback = Future<void> Function(
+  String token,
+);
+
+FcmTokenBackendRegistrationCallback? _fcmTokenBackendRegistrationCallback;
+
+/// When FCM rotates the device token, re-register with Wayo-ads (wired from [AuthNotifier]).
+void setFcmTokenBackendRegistrationCallback(
+  FcmTokenBackendRegistrationCallback? callback,
+) {
+  _fcmTokenBackendRegistrationCallback = callback;
+}
+
 /// Android: one tray notification per conversation (MessagingStyle + stable id/tag).
 int wayoAndroidChatNotificationId(String conversationId) =>
     conversationId.hashCode & 0x7fffffff;
@@ -670,12 +692,24 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 Future<bool> initializeFirebaseForPush() async {
   if (_firebaseCoreReady) return true;
   try {
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
+    final options = DefaultFirebaseOptions.currentPlatform;
+    logPushLifecycle(
+      'Firebase.initializeApp start projectId=${options.projectId} '
+      'appId=${options.appId} senderId=${options.messagingSenderId}',
     );
+    await Firebase.initializeApp(options: options);
     FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
     _firebaseCoreReady = true;
-    _logPush('Firebase initialized for push');
+    logPushLifecycle(
+      'Firebase.initializeApp SUCCESS — project ${options.projectId} '
+      '(expect wayo-ads-27cbf)',
+    );
+    if (options.projectId != 'wayo-ads-27cbf') {
+      logPushLifecycle(
+        'WARNING: Firebase projectId=${options.projectId} is not wayo-ads-27cbf — '
+        'FCM tokens may not match backend ADC project',
+      );
+    }
     return true;
   } catch (e, st) {
     _logPush(
@@ -684,8 +718,8 @@ Future<bool> initializeFirebaseForPush() async {
       stackTrace: st,
     );
     wayoConfigDiagPrint(
-      'Push: Firebase.initializeApp failed — check google-services.json, '
-      'SHA-1 in Firebase Console, and lib/firebase_options.dart.',
+      'Push: Firebase.initializeApp failed — check android/app/google-services.json '
+      '(wayo-ads-27cbf), SHA-1/SHA-256 in Firebase Console, and lib/firebase_options.dart.',
       name: 'wayo.push',
     );
     return false;
@@ -795,15 +829,43 @@ bool _tokenRefreshAttached = false;
 
 Future<bool> requestSystemPushPermission() async {
   if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+    final before = await Permission.notification.status;
+    logPushLifecycle('permission: Android POST_NOTIFICATIONS before=$before');
     final status = await Permission.notification.request();
-    if (status.isDenied || status.isPermanentlyDenied) {
+    logPushLifecycle('permission: Android POST_NOTIFICATIONS after=$status');
+    if (status.isPermanentlyDenied) {
+      logPushLifecycle('permission: permanently denied — open system settings');
       return false;
     }
+    if (status.isDenied) {
+      logPushLifecycle('permission: denied by user');
+      return false;
+    }
+    // Android 13+ granted (or pre-13 implicit grant). FCM getToken does not need
+    // FirebaseMessaging.requestPermission on Android.
+    if (!_firebaseCoreReady) {
+      logPushLifecycle(
+        'permission: Android granted but Firebase not ready — token will fail until init',
+      );
+      return true;
+    }
+    final settings = await FirebaseMessaging.instance.getNotificationSettings();
+    logPushLifecycle(
+      'permission: Android FCM settings authorizationStatus='
+      '${settings.authorizationStatus}',
+    );
+    return true;
   }
 
   if (!_firebaseCoreReady) {
-    return defaultTargetPlatform == TargetPlatform.android;
+    logPushLifecycle('permission: skipped — Firebase not ready (non-Android)');
+    return false;
   }
+
+  final before = await FirebaseMessaging.instance.getNotificationSettings();
+  logPushLifecycle(
+    'permission: iOS before authorizationStatus=${before.authorizationStatus}',
+  );
 
   final settings = await FirebaseMessaging.instance.requestPermission(
     alert: true,
@@ -815,19 +877,30 @@ Future<bool> requestSystemPushPermission() async {
     sound: true,
   );
 
+  logPushLifecycle(
+    'permission: iOS after authorizationStatus=${settings.authorizationStatus}',
+  );
+
   final ok = settings.authorizationStatus == AuthorizationStatus.authorized ||
       settings.authorizationStatus == AuthorizationStatus.provisional;
   return ok;
 }
 
 Future<void> refreshAndCacheFcmToken(AppPrefs prefs) async {
-  if (!_firebaseCoreReady) return;
+  if (!_firebaseCoreReady) {
+    logPushLifecycle('getToken: skipped — Firebase not ready');
+    return;
+  }
   try {
     String? token;
-    const maxAttempts = 8;
+    const maxAttempts = 10;
     for (var attempt = 0; attempt < maxAttempts; attempt++) {
       try {
         token = await FirebaseMessaging.instance.getToken();
+        logPushLifecycle(
+          'getToken: attempt ${attempt + 1}/$maxAttempts '
+          'result=${token == null ? 'null' : '${token.length} chars'}',
+        );
       } catch (e, st) {
         _logPush(
           'FCM getToken attempt ${attempt + 1} failed: $e',
@@ -843,17 +916,18 @@ Future<void> refreshAndCacheFcmToken(AppPrefs prefs) async {
         break;
       }
       final delayMs =
-          defaultTargetPlatform == TargetPlatform.iOS ? 450 * (attempt + 1) : 280;
+          defaultTargetPlatform == TargetPlatform.iOS ? 450 * (attempt + 1) : 350 * (attempt + 1);
+      logPushLifecycle('getToken: retry in ${delayMs}ms');
       await Future<void>.delayed(Duration(milliseconds: delayMs));
     }
     if (token == null || token.isEmpty) {
       _logPush(
-        'FCM getToken: no token after retries — Android: add release SHA-1 in '
-        'Firebase Console; ensure Google Play services; iOS: check APNs in Firebase.',
+        'FCM getToken: no token after $maxAttempts retries — Android: add debug AND '
+        'release SHA-1 + SHA-256 in Firebase Console (wayo-ads-27cbf); ensure Google Play '
+        'services; package ma.wayo.wayoadsgo. Run: cd android && ./gradlew signingReport',
       );
       wayoConfigDiagPrint(
-        'Push: getToken() failed after retries. Release Android needs matching '
-        'keystore SHA-1 in Firebase.',
+        'Push: getToken() failed after retries. Add matching keystore SHA-1/SHA-256 in Firebase.',
         name: 'wayo.push',
       );
       return;
@@ -863,20 +937,34 @@ Future<void> refreshAndCacheFcmToken(AppPrefs prefs) async {
     if (prev != token) {
       _logPush('FCM token cached (${token.length} chars)');
       wayoConfigDiagPrint(
-        'Push: copy this FCM token for Firebase Console test (Engage → Messaging): '
-        'stored under prefs key $_kFcmTokenPrefKey',
+        'Push: FCM token stored (prefs key $_kFcmTokenPrefKey, ${token.length} chars)',
         name: 'wayo.push',
       );
+    } else {
+      logPushLifecycle('getToken: unchanged (${token.length} chars)');
     }
     if (!_tokenRefreshAttached) {
       _tokenRefreshAttached = true;
       FirebaseMessaging.instance.onTokenRefresh.listen((t) {
         final old = prefs.getString(_kFcmTokenPrefKey);
         if (old != t) {
-          _logPush('FCM token refreshed (${t.length} chars)');
+          _logPush('FCM token refreshed (${t.length} chars) — re-registering with backend');
+        } else {
+          logPushLifecycle('FCM onTokenRefresh (${t.length} chars)');
         }
         unawaited(prefs.setString(_kFcmTokenPrefKey, t));
+        final hook = _fcmTokenBackendRegistrationCallback;
+        if (hook != null) {
+          unawaited(
+            hook(t).catchError((Object e, StackTrace st) {
+              _logPush('FCM token refresh backend sync failed: $e', error: e, stackTrace: st);
+            }),
+          );
+        } else {
+          logPushLifecycle('FCM onTokenRefresh: no backend hook installed yet');
+        }
       });
+      logPushLifecycle('getToken: onTokenRefresh listener attached');
     }
   } catch (e, st) {
     _logPush('FCM getToken failed: $e', error: e, stackTrace: st);

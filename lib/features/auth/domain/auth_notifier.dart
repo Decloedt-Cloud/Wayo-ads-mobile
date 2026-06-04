@@ -12,6 +12,7 @@ import '../../../core/providers/app_providers.dart';
 import '../../../core/push/user_push_notifications_preference.dart';
 import '../../../core/push/wayo_push_device_register.dart';
 import '../../../core/push/wayo_push_service.dart';
+import '../../../core/push/system_push_permission.dart';
 import '../../../core/result.dart';
 import '../../../core/storage/secure_storage.dart';
 import '../../chat/presentation/providers/chat_providers.dart';
@@ -65,6 +66,9 @@ class AuthNotifier extends _$AuthNotifier {
   Future<AuthState> build() async {
     setAuthForceLogoutHandler(forceLogout);
     ref.onDispose(clearAuthForceLogoutHandler);
+
+    setFcmTokenBackendRegistrationCallback((_) => _syncPushTokenBestEffort());
+    ref.onDispose(() => setFcmTokenBackendRegistrationCallback(null));
 
     try {
       return await _restoreSessionOnColdStart().timeout(
@@ -423,26 +427,34 @@ class AuthNotifier extends _$AuthNotifier {
     try {
       final auth = ref.read(authNotifierProvider).valueOrNull;
       if (auth is! AuthAuthenticated) {
+        logPushLifecycle('sync: skipped — not authenticated');
         return;
       }
       if (!wayoFirebaseCoreReady) {
         await initializeFirebaseForPush();
       }
       if (!wayoFirebaseCoreReady) {
+        logPushLifecycle('sync: skipped — Firebase not ready');
         return;
       }
       await attachForegroundFcmHandlers();
       final prefs = ref.read(appPrefsProvider);
       if (!await isUserPushNotificationsEnabled(prefs)) {
+        logPushLifecycle('sync: skipped — user disabled push');
+        return;
+      }
+      if (!await areSystemPushNotificationsGranted()) {
+        logPushLifecycle('sync: skipped — OS notification permission not granted');
         return;
       }
       await refreshAndCacheFcmToken(prefs);
-      await registerWayoPushDeviceIfTokenPresent(
+      final ok = await registerWayoPushDeviceIfTokenPresent(
         wayoAdsDio: ref.read(wayoAdsDioProvider),
         prefs: prefs,
       );
-    } catch (_) {
-      // FCM optional; avoid surfacing to auth flow.
+      logPushLifecycle('sync: register result=$ok');
+    } catch (e, st) {
+      logPushLifecycle('sync: failed: $e', error: e, stackTrace: st);
     }
   }
 }

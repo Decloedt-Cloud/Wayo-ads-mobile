@@ -750,6 +750,12 @@
   "privacy_policy": {
     "title": "سياسة الخصوصية",
     "last_updated": "آخر تحديث: 7 أكتوبر 2025",
+    "legal_entity_operator": "يتم تشغيل هذا التطبيق ومنصة Wayo Ads بواسطة:",
+    "legal_entity_name": "AL BOUHOUTI SOFTWARE DESIGN COMPANY L.L.C",
+    "legal_entity_address": "Al Barshaa 1, Dubai, Dubai, United Arab Emirates",
+    "legal_entity_support": "دعم العملاء",
+    "legal_entity_email": "support@wayo.cloud",
+    "legal_entity_phone": "+971 542396643",
     "intro_title": "1. مقدمة",
     "intro_body": "في Wayo Ads نلتزم بجمع بياناتك واستخدامها بمسؤولية، وفقًا للقوانين المعمول بها لحماية البيانات، بما في ذلك القانون المغربي رقم 09-08 وعند الاقتضاء اللائحة العامة لحماية البيانات (GDPR) (الاتحاد الأوروبي 2016/679). باستخدامك منصتنا، فإنك توافق على جمع بياناتك ومعالجتها واستخدامها كما هو موضح في سياسة الخصوصية هذه.",
     "data_title": "2. البيانات التي نجمعها",
@@ -773,7 +779,7 @@
     "changes_title": "11. تغييرات هذه السياسة",
     "changes_body": "قد نحدّث سياسة الخصوصية من وقت لآخر. سنُعلمك بأي تغييرات جوهرية بنشر السياسة الجديدة على هذه الصفحة وتحديث تاريخ «آخر تحديث».",
     "contact_title": "12. معلومات الاتصال",
-    "contact_body": "مسؤول المعالجة: Wayo، دبي، الإمارات العربية المتحدة.\nالبريد الإلكتروني: info@wayo.cloud\nالعنوان: R320 أم هرير 2، دبي، الإمارات العربية المتحدة."
+    "contact_body": "مسؤول المعالجة: AL BOUHOUTI SOFTWARE DESIGN COMPANY L.L.C\nAl Barshaa 1, Dubai, Dubai, United Arab Emirates\nالبريد الإلكتروني: support@wayo.cloud\nالهاتف: +971 542396643"
   },
   "app_settings": {
     "title": "التفضيلات",

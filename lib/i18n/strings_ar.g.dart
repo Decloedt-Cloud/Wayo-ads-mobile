@@ -657,6 +657,12 @@ class _TranslationsPrivacyPolicyAr extends TranslationsPrivacyPolicyEn {
 	// Translations
 	@override String get title => 'سياسة الخصوصية';
 	@override String get last_updated => 'آخر تحديث: 7 أكتوبر 2025';
+	@override String get legal_entity_operator => 'يتم تشغيل هذا التطبيق ومنصة Wayo Ads بواسطة:';
+	@override String get legal_entity_name => 'AL BOUHOUTI SOFTWARE DESIGN COMPANY L.L.C';
+	@override String get legal_entity_address => 'Al Barshaa 1, Dubai, Dubai, United Arab Emirates';
+	@override String get legal_entity_support => 'دعم العملاء';
+	@override String get legal_entity_email => 'support@wayo.cloud';
+	@override String get legal_entity_phone => '+971 542396643';
 	@override String get intro_title => '1. مقدمة';
 	@override String get intro_body => 'في Wayo Ads نلتزم بجمع بياناتك واستخدامها بمسؤولية، وفقًا للقوانين المعمول بها لحماية البيانات، بما في ذلك القانون المغربي رقم 09-08 وعند الاقتضاء اللائحة العامة لحماية البيانات (GDPR) (الاتحاد الأوروبي 2016/679). باستخدامك منصتنا، فإنك توافق على جمع بياناتك ومعالجتها واستخدامها كما هو موضح في سياسة الخصوصية هذه.';
 	@override String get data_title => '2. البيانات التي نجمعها';
@@ -680,7 +686,7 @@ class _TranslationsPrivacyPolicyAr extends TranslationsPrivacyPolicyEn {
 	@override String get changes_title => '11. تغييرات هذه السياسة';
 	@override String get changes_body => 'قد نحدّث سياسة الخصوصية من وقت لآخر. سنُعلمك بأي تغييرات جوهرية بنشر السياسة الجديدة على هذه الصفحة وتحديث تاريخ «آخر تحديث».';
 	@override String get contact_title => '12. معلومات الاتصال';
-	@override String get contact_body => 'مسؤول المعالجة: Wayo، دبي، الإمارات العربية المتحدة.\nالبريد الإلكتروني: info@wayo.cloud\nالعنوان: R320 أم هرير 2، دبي، الإمارات العربية المتحدة.';
+	@override String get contact_body => 'مسؤول المعالجة: AL BOUHOUTI SOFTWARE DESIGN COMPANY L.L.C\nAl Barshaa 1, Dubai, Dubai, United Arab Emirates\nالبريد الإلكتروني: support@wayo.cloud\nالهاتف: +971 542396643';
 }
 
 // Path: app_settings
@@ -1980,6 +1986,12 @@ extension on TranslationsAr {
 			case 'errors.email_not_found': return 'لا يوجد حساب بهذا البريد.';
 			case 'privacy_policy.title': return 'سياسة الخصوصية';
 			case 'privacy_policy.last_updated': return 'آخر تحديث: 7 أكتوبر 2025';
+			case 'privacy_policy.legal_entity_operator': return 'يتم تشغيل هذا التطبيق ومنصة Wayo Ads بواسطة:';
+			case 'privacy_policy.legal_entity_name': return 'AL BOUHOUTI SOFTWARE DESIGN COMPANY L.L.C';
+			case 'privacy_policy.legal_entity_address': return 'Al Barshaa 1, Dubai, Dubai, United Arab Emirates';
+			case 'privacy_policy.legal_entity_support': return 'دعم العملاء';
+			case 'privacy_policy.legal_entity_email': return 'support@wayo.cloud';
+			case 'privacy_policy.legal_entity_phone': return '+971 542396643';
 			case 'privacy_policy.intro_title': return '1. مقدمة';
 			case 'privacy_policy.intro_body': return 'في Wayo Ads نلتزم بجمع بياناتك واستخدامها بمسؤولية، وفقًا للقوانين المعمول بها لحماية البيانات، بما في ذلك القانون المغربي رقم 09-08 وعند الاقتضاء اللائحة العامة لحماية البيانات (GDPR) (الاتحاد الأوروبي 2016/679). باستخدامك منصتنا، فإنك توافق على جمع بياناتك ومعالجتها واستخدامها كما هو موضح في سياسة الخصوصية هذه.';
 			case 'privacy_policy.data_title': return '2. البيانات التي نجمعها';
@@ -2003,7 +2015,7 @@ extension on TranslationsAr {
 			case 'privacy_policy.changes_title': return '11. تغييرات هذه السياسة';
 			case 'privacy_policy.changes_body': return 'قد نحدّث سياسة الخصوصية من وقت لآخر. سنُعلمك بأي تغييرات جوهرية بنشر السياسة الجديدة على هذه الصفحة وتحديث تاريخ «آخر تحديث».';
 			case 'privacy_policy.contact_title': return '12. معلومات الاتصال';
-			case 'privacy_policy.contact_body': return 'مسؤول المعالجة: Wayo، دبي، الإمارات العربية المتحدة.\nالبريد الإلكتروني: info@wayo.cloud\nالعنوان: R320 أم هرير 2، دبي، الإمارات العربية المتحدة.';
+			case 'privacy_policy.contact_body': return 'مسؤول المعالجة: AL BOUHOUTI SOFTWARE DESIGN COMPANY L.L.C\nAl Barshaa 1, Dubai, Dubai, United Arab Emirates\nالبريد الإلكتروني: support@wayo.cloud\nالهاتف: +971 542396643';
 			case 'app_settings.title': return 'التفضيلات';
 			case 'app_settings.subtitle': return 'المظهر واللغة';
 			case 'app_settings.section_appearance': return 'المظهر';

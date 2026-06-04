@@ -660,6 +660,12 @@ class TranslationsPrivacyPolicyEn {
 	// Translations
 	String get title => 'Privacy Policy';
 	String get last_updated => 'Last updated: October 7, 2025';
+	String get legal_entity_operator => 'This application and the Wayo Ads platform are operated by:';
+	String get legal_entity_name => 'AL BOUHOUTI SOFTWARE DESIGN COMPANY L.L.C';
+	String get legal_entity_address => 'Al Barshaa 1, Dubai, Dubai, United Arab Emirates';
+	String get legal_entity_support => 'Customer support';
+	String get legal_entity_email => 'support@wayo.cloud';
+	String get legal_entity_phone => '+971 542396643';
 	String get intro_title => '1. Introduction';
 	String get intro_body => 'At Wayo Ads, we are committed to collecting and using your data responsibly, in compliance with applicable data protection laws, including Moroccan law no. 09-08 and, when applicable, the GDPR (EU 2016/679). By using our platform, you agree to the collection, processing, and use of your data as described in this privacy policy.';
 	String get data_title => '2. Data We Collect';
@@ -683,7 +689,7 @@ class TranslationsPrivacyPolicyEn {
 	String get changes_title => '11. Changes to This Policy';
 	String get changes_body => 'We may update this privacy policy from time to time. We will notify you of any material changes by posting the new policy on this page and updating the "Last updated" date.';
 	String get contact_title => '12. Contact Information';
-	String get contact_body => 'Data controller: Wayo, Dubai, UAE.\nEmail: info@wayo.cloud\nAddress: R320 Umm Hurair 2, Dubai, UAE.';
+	String get contact_body => 'Data controller: AL BOUHOUTI SOFTWARE DESIGN COMPANY L.L.C\nAl Barshaa 1, Dubai, Dubai, United Arab Emirates\nEmail: support@wayo.cloud\nPhone: +971 542396643';
 }
 
 // Path: app_settings
@@ -1984,6 +1990,12 @@ extension on Translations {
 			case 'errors.email_not_found': return 'No account found for this email.';
 			case 'privacy_policy.title': return 'Privacy Policy';
 			case 'privacy_policy.last_updated': return 'Last updated: October 7, 2025';
+			case 'privacy_policy.legal_entity_operator': return 'This application and the Wayo Ads platform are operated by:';
+			case 'privacy_policy.legal_entity_name': return 'AL BOUHOUTI SOFTWARE DESIGN COMPANY L.L.C';
+			case 'privacy_policy.legal_entity_address': return 'Al Barshaa 1, Dubai, Dubai, United Arab Emirates';
+			case 'privacy_policy.legal_entity_support': return 'Customer support';
+			case 'privacy_policy.legal_entity_email': return 'support@wayo.cloud';
+			case 'privacy_policy.legal_entity_phone': return '+971 542396643';
 			case 'privacy_policy.intro_title': return '1. Introduction';
 			case 'privacy_policy.intro_body': return 'At Wayo Ads, we are committed to collecting and using your data responsibly, in compliance with applicable data protection laws, including Moroccan law no. 09-08 and, when applicable, the GDPR (EU 2016/679). By using our platform, you agree to the collection, processing, and use of your data as described in this privacy policy.';
 			case 'privacy_policy.data_title': return '2. Data We Collect';
@@ -2007,7 +2019,7 @@ extension on Translations {
 			case 'privacy_policy.changes_title': return '11. Changes to This Policy';
 			case 'privacy_policy.changes_body': return 'We may update this privacy policy from time to time. We will notify you of any material changes by posting the new policy on this page and updating the "Last updated" date.';
 			case 'privacy_policy.contact_title': return '12. Contact Information';
-			case 'privacy_policy.contact_body': return 'Data controller: Wayo, Dubai, UAE.\nEmail: info@wayo.cloud\nAddress: R320 Umm Hurair 2, Dubai, UAE.';
+			case 'privacy_policy.contact_body': return 'Data controller: AL BOUHOUTI SOFTWARE DESIGN COMPANY L.L.C\nAl Barshaa 1, Dubai, Dubai, United Arab Emirates\nEmail: support@wayo.cloud\nPhone: +971 542396643';
 			case 'app_settings.title': return 'Preferences';
 			case 'app_settings.subtitle': return 'Appearance & language';
 			case 'app_settings.section_appearance': return 'Appearance';

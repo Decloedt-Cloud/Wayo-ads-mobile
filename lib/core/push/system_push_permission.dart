@@ -11,19 +11,25 @@ Future<bool> areSystemPushNotificationsGranted() async {
   }
   if (defaultTargetPlatform == TargetPlatform.android) {
     final status = await Permission.notification.status;
+    logPushLifecycle('permission: Android POST_NOTIFICATIONS status=$status');
     return status.isGranted;
   }
   if (defaultTargetPlatform == TargetPlatform.iOS ||
       defaultTargetPlatform == TargetPlatform.macOS) {
     if (!wayoFirebaseCoreReady) {
+      logPushLifecycle('permission: iOS check skipped — Firebase not ready');
       return false;
     }
     try {
       final settings =
           await FirebaseMessaging.instance.getNotificationSettings();
+      logPushLifecycle(
+        'permission: iOS authorizationStatus=${settings.authorizationStatus}',
+      );
       return settings.authorizationStatus == AuthorizationStatus.authorized ||
           settings.authorizationStatus == AuthorizationStatus.provisional;
-    } catch (_) {
+    } catch (e) {
+      logPushLifecycle('permission: iOS getNotificationSettings failed: $e');
       return false;
     }
   }

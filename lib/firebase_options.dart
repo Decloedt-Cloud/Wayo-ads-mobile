@@ -1,4 +1,5 @@
-// File generated manually from google-services.json & Firebase Console
+// Generated from android/app/google-services.json & ios/Runner/GoogleService-Info.plist
+// Firebase project: wayo-ads-27cbf (package ma.wayo.wayoadsgo)
 // ignore_for_file: lines_longer_than_80_chars, avoid_classes_with_only_static_members
 
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
@@ -42,19 +43,19 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyD-QZdQ9nI86mb0LKk2-l4ny4gn80H-b_0',
-    appId: '1:540462242334:android:cf2c87b87a1433bed36c0f',
-    messagingSenderId: '540462242334',
-    projectId: 'wayo-ads-82232',
-    storageBucket: 'wayo-ads-82232.firebasestorage.app',
+    apiKey: 'AIzaSyBd3XYKwlz6udWKoPS4sBLHrjSxLT0djLo',
+    appId: '1:458504508199:android:96028da30c62bf171a4f02',
+    messagingSenderId: '458504508199',
+    projectId: 'wayo-ads-27cbf',
+    storageBucket: 'wayo-ads-27cbf.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyC3tyTqXKSPEEC_pIf9mUTGhCEU441-y-I',
-    appId: '1:540462242334:ios:573b7495d8122c34d36c0f',
-    messagingSenderId: '540462242334',
-    projectId: 'wayo-ads-82232',
-    storageBucket: 'wayo-ads-82232.firebasestorage.app',
+    apiKey: 'AIzaSyD5oFlFDVgNAiKT9gCYx78uYCbjulSVggI',
+    appId: '1:458504508199:ios:5862a1b1dadc29831a4f02',
+    messagingSenderId: '458504508199',
+    projectId: 'wayo-ads-27cbf',
+    storageBucket: 'wayo-ads-27cbf.firebasestorage.app',
     iosBundleId: 'ma.wayo.wayoadsgo',
   );
 }

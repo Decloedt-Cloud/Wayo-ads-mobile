@@ -5,6 +5,8 @@ import 'dart:ui' show IsolateNameServer;
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import '../../../core/observability/app_log.dart';
+import '../../../core/push/push_registration_debug.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -313,13 +315,17 @@ class _PushPermissionPromptHostState
 
               if (!context.mounted) return;
               final messenger = ScaffoldMessenger.maybeOf(context);
+              final debugHint = !ok && (kDebugMode || kWayoVerboseLogs)
+                  ? '\n${PushRegistrationDebug.failureSummary}'
+                  : '';
               messenger?.showSnackBar(
                 SnackBar(
                   content: Text(
                     ok
                         ? context.t.push.onboarding_success
-                        : context.t.push.onboarding_denied_hint,
+                        : '${context.t.push.onboarding_denied_hint}$debugHint',
                   ),
+                  duration: Duration(seconds: ok ? 4 : 6),
                 ),
               );
             },

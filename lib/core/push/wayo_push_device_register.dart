@@ -5,6 +5,7 @@ import 'package:dio/dio.dart';
 import '../config/auth_runtime_config.dart';
 import '../network/api_endpoints.dart';
 import '../storage/app_prefs.dart';
+import 'push_registration_debug.dart';
 import 'user_push_notifications_preference.dart';
 import 'wayo_push_intent.dart';
 import 'wayo_push_service.dart';
@@ -98,16 +99,25 @@ Future<bool> _postPushDevice({
     ApiEndpoints.userPushDevice,
   );
   final baseUrl = wayoAdsDio.options.baseUrl;
+  final requestBody =
+      '{fcmToken: ${PushRegistrationDebug.maskFcmToken(token)}, platform: $platform}';
   logPushLifecycle(
     'register: POST $baseUrl$path platform=$platform fcmTokenLen=${token.length}',
   );
+  logPushLifecycle('register: request body=$requestBody');
   try {
     final res = await wayoAdsDio.post<Map<String, dynamic>>(
       path,
       data: <String, dynamic>{'fcmToken': token, 'platform': platform},
     );
+    final responseBody = res.data?.toString() ?? '(empty)';
+    PushRegistrationDebug.recordHttp(
+      status: res.statusCode,
+      requestBody: requestBody,
+      responseBody: responseBody,
+    );
     logPushLifecycle(
-      'register: POST succeeded status=${res.statusCode} body=${res.data}',
+      'register: POST succeeded status=${res.statusCode} body=$responseBody',
     );
     final body = res.data;
     var wayoUserId = body?['userId']?.toString().trim() ?? '';
@@ -118,12 +128,18 @@ Future<bool> _postPushDevice({
       logPushLifecycle('register: FAILED — no userId in response or profile');
       return false;
     }
+    PushRegistrationDebug.lastRegisteredUserId = wayoUserId;
     await activatePushDeliveryForWayoUser(wayoUserId);
     logPushLifecycle('register: delivery activated for userId=$wayoUserId');
     return true;
   } on DioException catch (e) {
     final status = e.response?.statusCode;
-    final data = e.response?.data;
+    final data = e.response?.data?.toString() ?? e.message ?? '(no body)';
+    PushRegistrationDebug.recordHttp(
+      status: status,
+      requestBody: requestBody,
+      responseBody: data,
+    );
     logPushLifecycle(
       'register: POST FAILED status=$status type=${e.type} '
       'message=${e.message} response=$data',

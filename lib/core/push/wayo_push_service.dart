@@ -18,6 +18,7 @@ import '../../router/app_router.dart';
 import '../observability/app_log.dart';
 import '../storage/app_prefs.dart';
 import 'wayo_background_chat_quick_reply.dart';
+import 'push_registration_debug.dart';
 import 'user_push_notifications_preference.dart';
 import 'wayo_push_intent.dart';
 
@@ -700,9 +701,15 @@ Future<bool> initializeFirebaseForPush() async {
     await Firebase.initializeApp(options: options);
     FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
     _firebaseCoreReady = true;
+    final platformLabel = Platform.isAndroid
+        ? 'android'
+        : Platform.isIOS
+        ? 'ios'
+        : defaultTargetPlatform.name;
     logPushLifecycle(
-      'Firebase.initializeApp SUCCESS — project ${options.projectId} '
-      '(expect wayo-ads-27cbf)',
+      'Firebase.initializeApp SUCCESS platform=$platformLabel '
+      'projectId=${options.projectId} appId=${options.appId} '
+      'senderId=${options.messagingSenderId} (expect wayo-ads-27cbf)',
     );
     if (options.projectId != 'wayo-ads-27cbf') {
       logPushLifecycle(
@@ -827,38 +834,57 @@ Future<void> attachForegroundFcmHandlers() async {
 
 bool _tokenRefreshAttached = false;
 
+/// Requests OS notification permission. Returns whether tray alerts can be shown.
+///
+/// On Android, FCM [getToken] does not require POST_NOTIFICATIONS — callers may
+/// still register the token when this returns false (Android 13+ tray blocked).
 Future<bool> requestSystemPushPermission() async {
   if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
     final before = await Permission.notification.status;
-    logPushLifecycle('permission: Android POST_NOTIFICATIONS before=$before');
-    final status = await Permission.notification.request();
+    logPushLifecycle(
+      'permission: Android POST_NOTIFICATIONS before=$before platform=android',
+    );
+    var status = before;
+    if (!status.isGranted && !status.isLimited) {
+      status = await Permission.notification.request();
+    }
     logPushLifecycle('permission: Android POST_NOTIFICATIONS after=$status');
+    PushRegistrationDebug.recordPermission(
+      'Android after=$status',
+      granted: status.isGranted || status.isLimited,
+    );
     if (status.isPermanentlyDenied) {
       logPushLifecycle('permission: permanently denied — open system settings');
       return false;
     }
     if (status.isDenied) {
-      logPushLifecycle('permission: denied by user');
+      logPushLifecycle(
+        'permission: denied — FCM getToken may still work; tray alerts blocked on API 33+',
+      );
       return false;
     }
-    // Android 13+ granted (or pre-13 implicit grant). FCM getToken does not need
-    // FirebaseMessaging.requestPermission on Android.
     if (!_firebaseCoreReady) {
       logPushLifecycle(
         'permission: Android granted but Firebase not ready — token will fail until init',
       );
       return true;
     }
-    final settings = await FirebaseMessaging.instance.getNotificationSettings();
-    logPushLifecycle(
-      'permission: Android FCM settings authorizationStatus='
-      '${settings.authorizationStatus}',
-    );
+    try {
+      final settings =
+          await FirebaseMessaging.instance.getNotificationSettings();
+      logPushLifecycle(
+        'permission: Android FCM settings authorizationStatus='
+        '${settings.authorizationStatus}',
+      );
+    } catch (e) {
+      logPushLifecycle('permission: Android getNotificationSettings: $e');
+    }
     return true;
   }
 
   if (!_firebaseCoreReady) {
     logPushLifecycle('permission: skipped — Firebase not ready (non-Android)');
+    PushRegistrationDebug.recordPermission('Firebase not ready', granted: false);
     return false;
   }
 
@@ -883,6 +909,10 @@ Future<bool> requestSystemPushPermission() async {
 
   final ok = settings.authorizationStatus == AuthorizationStatus.authorized ||
       settings.authorizationStatus == AuthorizationStatus.provisional;
+  PushRegistrationDebug.recordPermission(
+    'iOS after=${settings.authorizationStatus}',
+    granted: ok,
+  );
   return ok;
 }
 

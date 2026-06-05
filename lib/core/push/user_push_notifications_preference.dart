@@ -1,9 +1,13 @@
+import 'dart:io' show Platform;
+
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../config/auth_runtime_config.dart';
 import '../network/api_endpoints.dart';
 import '../storage/app_prefs.dart';
+import 'push_registration_debug.dart';
 import 'wayo_push_device_register.dart';
 import 'wayo_push_service.dart';
 
@@ -78,6 +82,7 @@ Future<bool> enableUserPushNotifications({
   required Dio wayoAdsDio,
   required AppPrefs prefs,
 }) async {
+  PushRegistrationDebug.reset();
   logPushLifecycle('enable: start');
   await setUserPushNotificationsEnabled(prefs, true);
 
@@ -86,11 +91,11 @@ Future<bool> enableUserPushNotifications({
     await initializeFirebaseForPush();
   }
   if (!wayoFirebaseCoreReady) {
-    logPushLifecycle(
-      'enable: FAILED — Firebase.initializeApp did not succeed. '
-      'Check google-services.json (project wayo-ads-27cbf), '
-      'lib/firebase_options.dart, and release SHA-1/SHA-256 in Firebase Console.',
-    );
+    const msg =
+        'Firebase.initializeApp failed — verify google-services.json / '
+        'GoogleService-Info.plist / firebase_options.dart (project wayo-ads-27cbf)';
+    PushRegistrationDebug.recordFailure(PushEnableStep.firebaseInit, msg);
+    logPushLifecycle('enable: FAILED — $msg');
     return false;
   }
 
@@ -99,38 +104,57 @@ Future<bool> enableUserPushNotifications({
 
   final granted = await requestSystemPushPermission();
   logPushLifecycle('enable: system permission granted=$granted');
-  if (!granted) {
-    logPushLifecycle(
-      'enable: FAILED — POST_NOTIFICATIONS denied or FCM permission not authorized',
-    );
+
+  final isApple = !kIsWeb &&
+      (defaultTargetPlatform == TargetPlatform.iOS ||
+          defaultTargetPlatform == TargetPlatform.macOS);
+  if (!granted && isApple) {
+    const msg =
+        'iOS notification permission denied — enable in Settings → Wayo Ads → Notifications';
+    PushRegistrationDebug.recordFailure(PushEnableStep.permission, msg);
+    logPushLifecycle('enable: FAILED — $msg');
     return false;
+  }
+  if (!granted && Platform.isAndroid) {
+    logPushLifecycle(
+      'enable: Android POST_NOTIFICATIONS not granted — continuing to getToken/register',
+    );
   }
 
   await refreshAndCacheFcmToken(prefs);
   final token = readCachedFcmToken(prefs);
+  PushRegistrationDebug.recordToken(token);
   if (token == null || token.isEmpty) {
-    logPushLifecycle(
-      'enable: FAILED — no FCM token after refresh. '
-      'Add debug/release SHA-1 and SHA-256 for ma.wayo.wayoadsgo in Firebase Console '
-      '(Project settings → Your apps → Android). '
-      'Run: cd android && ./gradlew signingReport',
-    );
+    final msg = granted
+        ? 'FirebaseMessaging.getToken() returned empty — add debug+release SHA-1/SHA-256 '
+            'for ma.wayo.wayoadsgo in Firebase Console (wayo-ads-27cbf). '
+            'Run: cd android && ./gradlew signingReport'
+        : 'No FCM token — grant POST_NOTIFICATIONS (Android 13+) or fix Firebase SHA fingerprints';
+    PushRegistrationDebug.recordFailure(PushEnableStep.getToken, msg);
+    logPushLifecycle('enable: FAILED — $msg');
     return false;
   }
-  logPushLifecycle('enable: FCM token cached (${token.length} chars)');
+  logPushLifecycle(
+    'enable: FCM token cached (${token.length} chars) '
+    '${PushRegistrationDebug.maskFcmToken(token)}',
+  );
 
   final registered = await registerWayoPushDeviceIfTokenPresent(
     wayoAdsDio: wayoAdsDio,
     prefs: prefs,
   );
   if (!registered) {
-    logPushLifecycle(
-      'enable: FAILED — POST /api/user/push-device did not succeed. '
-      'Check Wayo-ads auth session (Bearer token) and API base URL.',
-    );
+    const msg =
+        'POST /api/user/push-device failed — check auth Bearer token, '
+        'WAYO_ADS_API_BASE_URL, and server logs';
+    PushRegistrationDebug.recordFailure(PushEnableStep.backendRegister, msg);
+    logPushLifecycle('enable: FAILED — $msg');
     return false;
   }
 
+  PushRegistrationDebug.recordSuccess(
+    userId: PushRegistrationDebug.lastRegisteredUserId,
+  );
   logPushLifecycle('enable: SUCCESS — token registered with backend');
   return true;
 }

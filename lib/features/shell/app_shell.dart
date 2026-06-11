@@ -241,12 +241,7 @@ class _AppShellState extends ConsumerState<AppShell>
         (async) => async.valueOrNull?.unreadCount ?? 0,
       ),
     );
-    final chatUnread = ref
-        .watch(chatConversationsProvider)
-        .maybeWhen(
-          data: (list) => list.fold<int>(0, (sum, c) => sum + c.unreadCount),
-          orElse: () => 0,
-        );
+    final chatUnread = ref.watch(chatUnreadCountProvider);
     final campaignsAttentionCount = ref.watch(
       dashboardStreamProvider.select(
         (async) =>
@@ -278,6 +273,8 @@ class _AppShellState extends ConsumerState<AppShell>
           isDark ? Brightness.light : Brightness.dark,
     );
 
+    final keyboardOpen = wayoShellKeyboardOpen(context);
+
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: systemNav,
       child: Scaffold(
@@ -290,7 +287,7 @@ class _AppShellState extends ConsumerState<AppShell>
             Expanded(
               child: Padding(
                 padding: EdgeInsets.only(
-                  bottom: wayoFloatingBottomNavReserve(context),
+                  bottom: wayoShellBodyBottomPadding(context),
                 ),
                 child: ShellTutorialReplayScope(
                   replay: _replayShellTutorial,
@@ -300,25 +297,27 @@ class _AppShellState extends ConsumerState<AppShell>
             ),
           ],
         ),
-        bottomNavigationBar: Material(
-          color: Theme.of(context).scaffoldBackgroundColor,
-          elevation: 0,
-          shadowColor: Colors.transparent,
-          surfaceTintColor: Colors.transparent,
-          child: WayoBottomNav(
-            navigationShell: widget.navigationShell,
-            notificationUnread: notificationUnread,
-            chatUnread: chatUnread,
-            campaignsAttentionCount: campaignsAttentionCount,
-            showInvoicesTab: showInvoicesTab,
-            invoicesNavLabel: invoicesNavLabel,
-            dashboardTabKey: _dashboardKey,
-            campaignsTabKey: _campaignsKey,
-            walletTabKey: _walletKey,
-            invoicesTabKey: showInvoicesTab ? _invoicesKey : null,
-            chatTabKey: _chatKey,
-          ),
-        ),
+        bottomNavigationBar: keyboardOpen
+            ? null
+            : Material(
+                color: Theme.of(context).scaffoldBackgroundColor,
+                elevation: 0,
+                shadowColor: Colors.transparent,
+                surfaceTintColor: Colors.transparent,
+                child: WayoBottomNav(
+                  navigationShell: widget.navigationShell,
+                  notificationUnread: notificationUnread,
+                  chatUnread: chatUnread,
+                  campaignsAttentionCount: campaignsAttentionCount,
+                  showInvoicesTab: showInvoicesTab,
+                  invoicesNavLabel: invoicesNavLabel,
+                  dashboardTabKey: _dashboardKey,
+                  campaignsTabKey: _campaignsKey,
+                  walletTabKey: _walletKey,
+                  invoicesTabKey: showInvoicesTab ? _invoicesKey : null,
+                  chatTabKey: _chatKey,
+                ),
+              ),
       ),
     );
   }

@@ -5,6 +5,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/layout/wayo_black_bottom_bar.dart';
+import '../../../../core/layout/wayo_system_insets.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../i18n/strings.g.dart';
@@ -60,8 +62,11 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     final unreadTotal = counts.valueOrNull?.total ?? 0;
     final importantUnread = counts.valueOrNull?.important ?? 0;
 
+    final bottomScrollPad = wayoScrollBottomReserve(context, gap: 24);
+
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      extendBody: true,
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded),
@@ -70,11 +75,8 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
             context.pop();
           },
         ),
-        title: Text(
-          t.dashboard.notifications_center_title,
-          style: AppTextStyles.pageTitle(context),
-        ),
       ),
+      bottomNavigationBar: const WayoBlackBottomBar(),
       body: RefreshIndicator(
         color: AppColors.primary,
         onRefresh: () =>
@@ -90,6 +92,11 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    Text(
+                      t.dashboard.notifications_center_title,
+                      style: AppTextStyles.pageTitle(context),
+                    ),
+                    const SizedBox(height: 6),
                     Text(
                       unreadTotal > 0
                           ? t.dashboard.notifications_unread_count.replaceAll(
@@ -238,7 +245,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                     ),
                 ];
                 return SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                  padding: EdgeInsets.fromLTRB(16, 0, 16, bottomScrollPad),
                   sliver: SliverList(
                     delegate: SliverChildListDelegate(children),
                   ),

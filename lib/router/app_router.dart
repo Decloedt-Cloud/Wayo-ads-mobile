@@ -16,6 +16,8 @@ import '../features/auth/presentation/screens/otp_verification_screen.dart';
 import '../features/creator_campaigns/presentation/screens/creator_application_detail_screen.dart';
 import '../features/creator_campaigns/presentation/screens/creator_campaign_detail_screen.dart';
 import '../features/creator_dashboard/presentation/screens/creator_dashboard_screen.dart';
+import '../features/advertiser_video_reviews/domain/advertiser_submitted_video.dart';
+import '../features/advertiser_video_reviews/presentation/screens/advertiser_video_reviews_screen.dart';
 import '../features/dashboard/presentation/screens/campaign_detail_screen.dart';
 import '../features/dashboard/presentation/screens/dashboard_screen.dart';
 import '../features/dashboard/presentation/screens/notifications_screen.dart';
@@ -35,7 +37,8 @@ import '../features/superadmin/presentation/screens/banned_users_screen.dart';
 import '../features/superadmin/presentation/screens/announcements_screen.dart';
 import '../features/superadmin/presentation/screens/superadmin_browse_campaigns_screen.dart';
 import '../features/superadmin/presentation/screens/tax_rates_screen.dart';
-import '../screens/privacy_policy_screen.dart';
+import '../core/legal/wayo_legal_urls.dart';
+import '../screens/legal_web_page_screen.dart';
 import '../features/splash/splash_screen.dart';
 
 part 'app_router.g.dart';
@@ -72,7 +75,7 @@ bool _isAuthOnboardingPath(String loc) {
 /// Paths that never require an auth redirect away from the shell.
 /// Note: [/login] is intentionally omitted — authenticated users must be sent to [/dashboard].
 bool _isPublicPath(String loc) {
-  if (loc == '/privacy') {
+  if (loc == '/privacy' || loc == '/terms') {
     return true;
   }
   if (loc.startsWith('/forgot-password')) {
@@ -116,7 +119,7 @@ GoRouter goRouter(GoRouterRef ref) {
         return null;
       }
 
-      if (loc == '/privacy') {
+      if (loc == '/privacy' || loc == '/terms') {
         return null;
       }
 
@@ -208,7 +211,15 @@ GoRouter goRouter(GoRouterRef ref) {
       ),
       GoRoute(
         path: '/privacy',
-        builder: (context, state) => const PrivacyPolicyScreen(),
+        builder: (context, state) => const LegalWebPageScreen(
+          document: WayoLegalDocument.privacy,
+        ),
+      ),
+      GoRoute(
+        path: '/terms',
+        builder: (context, state) => const LegalWebPageScreen(
+          document: WayoLegalDocument.terms,
+        ),
       ),
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(
@@ -302,6 +313,21 @@ GoRouter goRouter(GoRouterRef ref) {
         parentNavigatorKey: rootNavigatorKey,
         path: '/notifications',
         builder: (context, state) => const NotificationsScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: '/advertiser/video-reviews',
+        pageBuilder: (context, state) {
+          final initialFilter = AdvertiserVideoReviewFilter.fromQuery(
+            state.uri.queryParameters['status'],
+          );
+          return MaterialPage<void>(
+            key: ValueKey(
+              'advertiser-video-reviews-${initialFilter?.apiValue ?? 'pending'}',
+            ),
+            child: AdvertiserVideoReviewsScreen(initialFilter: initialFilter),
+          );
+        },
       ),
       GoRoute(
         parentNavigatorKey: rootNavigatorKey,

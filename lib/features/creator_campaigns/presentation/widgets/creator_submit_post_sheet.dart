@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/layout/wayo_black_bottom_bar.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/creator_colors.dart';
@@ -22,11 +23,8 @@ Future<bool?> showCreatorSubmitPostSheet(
   return showModalBottomSheet<bool>(
     context: context,
     isScrollControlled: true,
-    useSafeArea: true,
-    backgroundColor: AppColors.surfaceOf(context),
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-    ),
+    useSafeArea: false,
+    backgroundColor: Colors.transparent,
     builder: (_) => _SubmitPostSheet(campaign: campaign),
   );
 }
@@ -117,20 +115,23 @@ class _SubmitPostSheetState extends ConsumerState<_SubmitPostSheet> {
   @override
   Widget build(BuildContext context) {
     final t = context.t;
-    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
-    return Padding(
-      padding: EdgeInsets.only(
-        left: 20,
-        right: 20,
-        top: 12,
-        bottom: 20 + bottomInset,
-      ),
-      child: Form(
-        key: _formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
+    final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Container(
+          decoration: BoxDecoration(
+            color: AppColors.surfaceOf(context),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          padding: EdgeInsets.fromLTRB(20, 12, 20, 20 + bottomInset),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
             Center(
               child: Container(
                 width: 40,
@@ -290,9 +291,12 @@ class _SubmitPostSheetState extends ConsumerState<_SubmitPostSheet> {
               ).copyWith(color: AppColors.textSecondaryOf(context)),
               textAlign: TextAlign.center,
             ),
-          ],
+              ],
+            ),
+          ),
         ),
-      ),
+        const WayoBlackBottomBar(),
+      ],
     );
   }
 }

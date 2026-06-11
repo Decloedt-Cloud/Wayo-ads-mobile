@@ -21,6 +21,7 @@ class CampaignsExplorerToolbar extends StatelessWidget {
     required this.resultCountText,
     required this.layout,
     required this.onLayoutChanged,
+    this.collapsible = true,
   });
 
   final Widget searchField;
@@ -35,8 +36,12 @@ class CampaignsExplorerToolbar extends StatelessWidget {
   final CampaignExplorerLayout layout;
   final ValueChanged<CampaignExplorerLayout> onLayoutChanged;
 
+  /// When false, search + filters stay visible and the collapse control is hidden.
+  final bool collapsible;
+
   @override
   Widget build(BuildContext context) {
+    final showFilters = collapsible ? filtersExpanded : true;
     final scheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final border = AppColors.borderOf(context);
@@ -94,7 +99,7 @@ class CampaignsExplorerToolbar extends StatelessWidget {
                 curve: Curves.easeOutCubic,
                 alignment: Alignment.topCenter,
                 clipBehavior: Clip.hardEdge,
-                child: filtersExpanded
+                child: showFilters
                     ? Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         mainAxisSize: MainAxisSize.min,
@@ -163,13 +168,10 @@ class CampaignsExplorerToolbar extends StatelessWidget {
                       ),
                     ),
                   ),
-                  Semantics(
-                    button: true,
-                    label: filtersExpanded
-                        ? context.t.campaigns_explorer.toolbar_hide_search_filters
-                        : context.t.campaigns_explorer.toolbar_show_search_filters,
-                    child: IconButton(
-                      tooltip: filtersExpanded
+                  if (collapsible) ...[
+                    Semantics(
+                      button: true,
+                      label: filtersExpanded
                           ? context
                               .t
                               .campaigns_explorer
@@ -178,28 +180,39 @@ class CampaignsExplorerToolbar extends StatelessWidget {
                               .t
                               .campaigns_explorer
                               .toolbar_show_search_filters,
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(
-                        minWidth: 40,
-                        minHeight: 40,
-                      ),
-                      visualDensity: VisualDensity.compact,
-                      onPressed: () {
-                        HapticFeedback.selectionClick();
-                        onFiltersExpandedChanged(!filtersExpanded);
-                      },
-                      icon: Icon(
-                        filtersExpanded
-                            ? Icons.expand_less_rounded
-                            : Icons.expand_more_rounded,
-                        size: 26,
-                        color: filtersExpanded
-                            ? _layoutToggleAmber
-                            : AppColors.textSecondaryOf(context),
+                      child: IconButton(
+                        tooltip: filtersExpanded
+                            ? context
+                                .t
+                                .campaigns_explorer
+                                .toolbar_hide_search_filters
+                            : context
+                                .t
+                                .campaigns_explorer
+                                .toolbar_show_search_filters,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(
+                          minWidth: 40,
+                          minHeight: 40,
+                        ),
+                        visualDensity: VisualDensity.compact,
+                        onPressed: () {
+                          HapticFeedback.selectionClick();
+                          onFiltersExpandedChanged(!filtersExpanded);
+                        },
+                        icon: Icon(
+                          filtersExpanded
+                              ? Icons.expand_less_rounded
+                              : Icons.expand_more_rounded,
+                          size: 26,
+                          color: filtersExpanded
+                              ? _layoutToggleAmber
+                              : AppColors.textSecondaryOf(context),
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 4),
+                    const SizedBox(width: 4),
+                  ],
                   _LayoutSegment(
                     layout: layout,
                     onChanged: onLayoutChanged,

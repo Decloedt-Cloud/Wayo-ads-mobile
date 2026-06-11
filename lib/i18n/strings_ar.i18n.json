@@ -5,6 +5,14 @@
     "action_update": "تحديث الآن",
     "checking": "جاري التحقق من التحديثات…"
   },
+  "maintenance": {
+    "title": "سنعود قريباً",
+    "subtitle": "نقوم بترقية الخدمة بميزات جديدة. سنعود قريباً.",
+    "apology": "نعتذر عن الإزعاج ونقدّر صبركم.",
+    "copyright": "© 2026 Wayo Ads. جميع الحقوق محفوظة.",
+    "support_email": "support@wayo.cloud",
+    "action_retry": "إعادة المحاولة"
+  },
   "connectivity": {
     "offline_title": "لا يوجد اتصال بالإنترنت",
     "offline_subtitle": "يرجى التحقق من الشبكة ثم المحاولة مرة أخرى.",
@@ -70,6 +78,7 @@
     "apple_failed": "فشل تسجيل الدخول عبر Apple. حاول مرة أخرى.",
     "apple_server_not_configured": "تسجيل الدخول عبر Apple غير مفعّل على خادم Wayo ID بعد. اطلب من المسؤول إعداد Apple على Auth_Wayo (الإنتاج)، ثم أعد المحاولة.",
     "apple_canceled": "تم إلغاء تسجيل الدخول عبر Apple.",
+    "apple_hide_my_email_hint": "لاستلام رمز التحقق، اختر مشاركة بريدي الإلكتروني — وليس إخفاء بريدي الإلكتروني عند تسجيل الدخول عبر Apple.",
     "google_not_configured": "لم يُضبط تسجيل الدخول عبر Google. أضف AUTH_GOOGLE_SERVER_CLIENT_ID في dart_defines.json (معرّف عميل الويب من Google ينتهي بـ .apps.googleusercontent.com) ثم أعد تشغيل التطبيق بالكامل.",
     "google_wrong_client_id": "يجب أن يكون AUTH_GOOGLE_SERVER_CLIENT_ID هو معرّف عميل الويب في Google Cloud (…apps.googleusercontent.com) وليس UUID عميل OAuth في Passport.",
     "google_failed": "فشل تسجيل الدخول عبر Google. حاول مرة أخرى.",
@@ -221,6 +230,7 @@
       "locked": "محجوز",
       "spent": "المنفق",
       "cpc": "CPC",
+      "cpm": "CPM",
       "valid_engagements": "{count} مشاهدة مُصدّقة",
       "list_row_views": "{count} مشاهدة",
       "list_row_clicks": "{count} نقرات",
@@ -254,6 +264,7 @@
       "objective_traffic": "الزيارات",
       "objective_conversion": "التحويل",
       "cpm_metric": "CPM (لكل 1000 مشاهدة)",
+      "cpm_consumed": "CPM المستهلك (لكل 1000 مشاهدة)",
       "cpc_metric": "CPC (لكل نقرة)",
       "description_title": "الوصف",
       "show_more": "عرض المزيد",
@@ -299,6 +310,32 @@
       "approved_status": "معتمد",
       "rejected_status": "مرفوض"
     }
+  },
+  "advertiser_video_reviews": {
+    "title": "مراجعة الفيديوهات",
+    "subtitle": "اعتمد أو ارفض فيديوهات المنشئين المقدّمة لحملاتك.",
+    "pending": "قيد الانتظار",
+    "approved": "معتمدة",
+    "rejected": "مرفوضة",
+    "flagged": "مُبلّغ عنها",
+    "empty": "لا توجد فيديوهات في هذه الفئة.",
+    "load_error": "تعذّر تحميل الفيديوهات المقدّمة",
+    "approve_button": "اعتماد",
+    "reject_button": "رفض",
+    "approve_success": "تم اعتماد الفيديو",
+    "reject_success": "تم رفض الفيديو",
+    "reject_reason_required": "يرجى إدخال سبب الرفض",
+    "reject_reason_hint": "سبب الرفض",
+    "reject_dialog_title": "رفض الفيديو",
+    "action_failed": "تعذّر تحديث الفيديو. حاول مرة أخرى.",
+    "submitted_at": "تاريخ التقديم",
+    "shorts_badge": "Short",
+    "flag_reason": "سبب الإبلاغ",
+    "rejection_reason": "سبب الرفض",
+    "status_pending": "قيد الانتظار",
+    "status_approved": "معتمدة",
+    "status_rejected": "مرفوضة",
+    "status_flagged": "مُبلّغ عنها"
   },
   "nav": {
     "dashboard": "لوحة التحكم",
@@ -516,6 +553,14 @@
       "reward_per_view": "$amount / مشاهدة",
       "reward_per_click": "$amount / نقرة",
       "budget_remaining_label": "الميزانية المتبقية",
+      "earnings_card_title": "أرباحي من هذه الحملة",
+      "earnings_card_subtitle": "أداؤك وتفاصيل المدفوعات",
+      "earnings_net": "صافي الأرباح",
+      "earnings_views": "مشاهدات مدفوعة",
+      "earnings_platform_views": "مشاهدات المنصة",
+      "earnings_valid_clicks": "نقرات مدفوعة",
+      "earnings_recorded_clicks": "نقرات مسجّلة",
+      "earnings_available_balance": "الرصيد المتاح",
       "requirement_platform": "انشر على $platform فقط",
       "requirement_min_duration": "أدنى مدة: $minutes دقيقة",
       "requirement_shorts_max": "Shorts حتى $seconds ثانية",
@@ -648,7 +693,10 @@
     "payment_title": "الدفع",
     "payment_total": "الإجمالي",
     "payment_deposit_amount": "مبلغ الإيداع",
-    "payment_bank_fee": "رسوم المعاملة البنكية (3.69%)"
+    "payment_bank_fee": "رسوم المعاملة البنكية (3.69%)",
+    "deposit_pending": "إيداع قيد الانتظار",
+    "deposit_resume_hint": "استئناف إيداعك بقيمة {amount} — أكمل الدفع أو اضغط إلغاء للتخلي عنه.",
+    "deposit_cancel": "إلغاء"
   },
   "chat": {
     "inbox_title": "الرسائل",
@@ -750,12 +798,6 @@
   "privacy_policy": {
     "title": "سياسة الخصوصية",
     "last_updated": "آخر تحديث: 7 أكتوبر 2025",
-    "legal_entity_operator": "يتم تشغيل هذا التطبيق ومنصة Wayo Ads بواسطة:",
-    "legal_entity_name": "AL BOUHOUTI SOFTWARE DESIGN COMPANY L.L.C",
-    "legal_entity_address": "Al Barshaa 1, Dubai, Dubai, United Arab Emirates",
-    "legal_entity_support": "دعم العملاء",
-    "legal_entity_email": "support@wayo.cloud",
-    "legal_entity_phone": "+971 542396643",
     "intro_title": "1. مقدمة",
     "intro_body": "في Wayo Ads نلتزم بجمع بياناتك واستخدامها بمسؤولية، وفقًا للقوانين المعمول بها لحماية البيانات، بما في ذلك القانون المغربي رقم 09-08 وعند الاقتضاء اللائحة العامة لحماية البيانات (GDPR) (الاتحاد الأوروبي 2016/679). باستخدامك منصتنا، فإنك توافق على جمع بياناتك ومعالجتها واستخدامها كما هو موضح في سياسة الخصوصية هذه.",
     "data_title": "2. البيانات التي نجمعها",
@@ -779,7 +821,7 @@
     "changes_title": "11. تغييرات هذه السياسة",
     "changes_body": "قد نحدّث سياسة الخصوصية من وقت لآخر. سنُعلمك بأي تغييرات جوهرية بنشر السياسة الجديدة على هذه الصفحة وتحديث تاريخ «آخر تحديث».",
     "contact_title": "12. معلومات الاتصال",
-    "contact_body": "مسؤول المعالجة: AL BOUHOUTI SOFTWARE DESIGN COMPANY L.L.C\nAl Barshaa 1, Dubai, Dubai, United Arab Emirates\nالبريد الإلكتروني: support@wayo.cloud\nالهاتف: +971 542396643"
+    "contact_body": "مسؤول المعالجة: Wayo، دبي، الإمارات العربية المتحدة.\nالبريد الإلكتروني: info@wayo.cloud\nالعنوان: R320 أم هرير 2، دبي، الإمارات العربية المتحدة."
   },
   "app_settings": {
     "title": "التفضيلات",
@@ -895,6 +937,12 @@
     "role_advertiser_desc": "أطلق الحملات وأدر المبدعين من لوحة التحكم.",
     "email_code_title": "تأكيد البريد",
     "email_code_subtitle": "أدخل الرمز المكوّن من 6 أرقام الذي أرسلناه إلى $email.",
+    "email_code_subtitle_prefix": "أدخل الرمز المكوّن من 6 أرقام الذي أرسلناه إلى ",
+    "email_code_subtitle_suffix": ".",
+    "email_code_hide_my_email_warning": "سجّلت الدخول بخيار إخفاء بريدي الإلكتروني من Apple. غالبًا لا تصل رموز التحقق إلى عناوين التوجيه. سجّل الخروج، ثم سجّل الدخول مجددًا عبر Apple واختر مشاركة بريدي الإلكتروني، أو استخدم بريد iCloud الحقيقي مع كلمة المرور.",
+    "email_code_otp_label": "أدخل رمز التحقق",
+    "email_code_sending": "جارٍ إرسال الرمز...",
+    "email_code_verifying": "جارٍ التحقق...",
     "skip": "تخطي",
     "next": "التالي",
     "done": "حسنًا",

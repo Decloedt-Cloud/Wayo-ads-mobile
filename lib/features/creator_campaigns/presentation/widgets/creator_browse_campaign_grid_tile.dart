@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../../core/format/campaign_finance_display.dart';
 import '../../../../core/format/money_formatter.dart';
 import '../../../../core/network/wayo_ads_public_url.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -20,30 +21,32 @@ String? _gridRateCaption(
   Translations t,
   String moneyLocale,
 ) {
-  String fmt(double major) =>
-      MoneyFormatter.format(major, currency: c.currency, locale: moneyLocale);
-  final type = c.type;
-  if (type == CreatorCampaignType.link && c.cpcCents > 0) {
-    return t.creator.campaigns.reward_per_click(
-      amount: fmt(c.cpcCents / 100.0),
-    );
-  }
-  if ((type == CreatorCampaignType.video ||
-          type == CreatorCampaignType.shorts) &&
-      c.cpmCents > 0) {
-    final perViewMajor = c.cpmCents / 1000.0 / 100.0;
-    return t.creator.campaigns.reward_per_view(amount: fmt(perViewMajor));
-  }
-  if (c.cpcCents > 0) {
-    return t.creator.campaigns.reward_per_click(
-      amount: fmt(c.cpcCents / 100.0),
-    );
-  }
-  if (c.cpmCents > 0) {
-    final perViewMajor = c.cpmCents / 1000.0 / 100.0;
-    return t.creator.campaigns.reward_per_view(amount: fmt(perViewMajor));
-  }
-  return null;
+  final rate = resolveCampaignPayoutMetric(
+    type: c.type,
+    cpcCents: c.cpcCents,
+    cpmCents: c.cpmCents,
+    spentBudgetCents: c.spentBudgetCents,
+    validViews: c.validViews,
+  );
+  if (!rate.hasValue) return null;
+  return switch (rate.kind) {
+    CampaignPayoutMetricKind.cpc => t.creator.campaigns.reward_per_click(
+        amount: MoneyFormatter.format(
+          rate.cents / 100.0,
+          currency: kWayoPublicCurrency,
+          locale: moneyLocale,
+        ),
+      ),
+    CampaignPayoutMetricKind.cpm ||
+    CampaignPayoutMetricKind.consumedCpm =>
+      t.creator.campaigns.reward_per_view(
+        amount: MoneyFormatter.format(
+          rate.cents / 1000.0 / 100.0,
+          currency: kWayoPublicCurrency,
+          locale: moneyLocale,
+        ),
+      ),
+  };
 }
 
 IconData _platformGlyph(CampaignPlatform p) => switch (p) {

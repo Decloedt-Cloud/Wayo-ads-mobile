@@ -29,6 +29,8 @@ import '../../../../core/push/push_disabled_settings_badge.dart';
 import '../../../app_settings/presentation/widgets/app_settings_side_panel.dart';
 import '../../../creator_campaigns/domain/creator_browse_campaign.dart';
 import '../../../shell/presentation/widgets/shell_tutorial_replay_scope.dart';
+import '../../../advertiser_video_reviews/presentation/providers/advertiser_video_reviews_providers.dart';
+import '../../../advertiser_video_reviews/presentation/widgets/advertiser_video_reviews_summary_card.dart';
 import '../widgets/error_banner.dart';
 import '../widgets/notification_center_popup.dart';
 
@@ -112,6 +114,7 @@ class DashboardScreen extends ConsumerWidget {
                         snapshot: snap,
                         moneyLocale: _moneyLocale(locale),
                       ),
+                      const AdvertiserVideoReviewsSummaryCard(),
                       _CampaignsSection(
                         snapshot: snap,
                         isLoading: async.isLoading,
@@ -136,6 +139,7 @@ class DashboardScreen extends ConsumerWidget {
     ref.read(advertiserDashboardCampaignPageProvider.notifier).state = 1;
     ref.invalidate(advertiserDashboardCampaignsPageFetchProvider);
     ref.invalidate(dashboardStreamProvider);
+    invalidateAdvertiserVideoReviews(ref);
     await ref.read(dashboardStreamProvider.future);
     HapticFeedback.lightImpact();
   }

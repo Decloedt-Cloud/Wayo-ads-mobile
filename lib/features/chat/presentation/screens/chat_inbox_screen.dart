@@ -9,6 +9,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../i18n/strings.g.dart';
+import '../../../auth/domain/auth_notifier.dart';
 import '../../../auth/domain/wayo_ads_account_role.dart';
 import '../../../auth/presentation/providers/current_account_providers.dart';
 import '../../data/chat_media_utils.dart';
@@ -52,6 +53,9 @@ class _ChatInboxScreenState extends ConsumerState<ChatInboxScreen> {
   /// hundreds of overlapping animations during scroll/recycle.
   static const int _maxStaggeredInboxIndices = 22;
 
+  int _inboxAutoRetryCount = 0;
+  Timer? _inboxAutoRetryTimer;
+
   @override
   void initState() {
     super.initState();
@@ -62,6 +66,7 @@ class _ChatInboxScreenState extends ConsumerState<ChatInboxScreen> {
 
   @override
   void dispose() {
+    _inboxAutoRetryTimer?.cancel();
     _inboxRefreshDebounce?.cancel();
     _scroll.dispose();
     for (final t in _typingClearTimers.values) {
@@ -190,12 +195,47 @@ class _ChatInboxScreenState extends ConsumerState<ChatInboxScreen> {
     );
   }
 
+  void _scheduleInboxAutoRetry() {
+    if (_inboxAutoRetryCount >= 3) return;
+    _inboxAutoRetryTimer?.cancel();
+    _inboxAutoRetryCount++;
+    _inboxAutoRetryTimer = Timer(
+      Duration(milliseconds: 900 + _inboxAutoRetryCount * 700),
+      () {
+        if (!mounted) return;
+        ref.invalidate(chatBootstrapProvider);
+        ref.invalidate(chatConversationsProvider);
+        scheduleInvalidateChatRealtimeBinding(
+          () => ref.invalidate(chatRealtimeBindingProvider),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final t = context.t;
     ref.watch(chatRealtimeBindingProvider);
     ref.watch(chatBootstrapProvider);
     _bindRtListener();
+
+    ref.listen<AsyncValue<AuthState>>(authNotifierProvider, (prev, next) {
+      final wasAuthed = prev?.valueOrNull is AuthAuthenticated;
+      final isAuthed = next.valueOrNull is AuthAuthenticated;
+      if (!wasAuthed && isAuthed) {
+        _inboxAutoRetryCount = 0;
+        ref.invalidate(chatBootstrapProvider);
+        ref.invalidate(chatConversationsProvider);
+      }
+    });
+
+    ref.listen(chatConversationsProvider, (prev, next) {
+      if (next.hasError && (prev == null || !prev.hasError)) {
+        _scheduleInboxAutoRetry();
+      } else if (next.hasValue) {
+        _inboxAutoRetryCount = 0;
+      }
+    });
 
     final reduce = MediaQuery.disableAnimationsOf(context);
     final ln = LiquidNeuralTheme.of(context);
@@ -301,17 +341,23 @@ class _ChatInboxScreenState extends ConsumerState<ChatInboxScreen> {
                       loading: () => Center(
                         child: CircularProgressIndicator(color: ln.plasma),
                       ),
-                      error: (e, _) => _ChatError(
-                        message: t.chat.error_load_threads,
-                        onRetry: () {
-                          ref.invalidate(chatBootstrapProvider);
-                          ref.invalidate(chatConversationsProvider);
-                          scheduleInvalidateChatRealtimeBinding(
-                            () =>
-                                ref.invalidate(chatRealtimeBindingProvider),
-                          );
-                        },
-                      ),
+                      error: (e, _) => _inboxAutoRetryCount < 3
+                          ? Center(
+                              child: CircularProgressIndicator(color: ln.plasma),
+                            )
+                          : _ChatError(
+                              message: t.chat.error_load_threads,
+                              onRetry: () {
+                                _inboxAutoRetryCount = 0;
+                                ref.invalidate(chatBootstrapProvider);
+                                ref.invalidate(chatConversationsProvider);
+                                scheduleInvalidateChatRealtimeBinding(
+                                  () => ref.invalidate(
+                                    chatRealtimeBindingProvider,
+                                  ),
+                                );
+                              },
+                            ),
                       data: (list) {
                         final creds = ref
                             .watch(chatBootstrapProvider)

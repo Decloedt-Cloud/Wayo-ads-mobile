@@ -315,7 +315,7 @@ class _PushPermissionPromptHostState
 
               if (!context.mounted) return;
               final messenger = ScaffoldMessenger.maybeOf(context);
-              final debugHint = !ok && (kDebugMode || kWayoVerboseLogs)
+              final debugHint = !ok && kWayoShowPushDebugUi
                   ? '\n${PushRegistrationDebug.failureSummary}'
                   : '';
               messenger?.showSnackBar(

@@ -5,6 +5,14 @@
     "action_update": "Update now",
     "checking": "Checking for updates…"
   },
+  "maintenance": {
+    "title": "We'll be back soon",
+    "subtitle": "We are busy upgrading the service with more features. We will return soon.",
+    "apology": "We apologize for the inconvenience and appreciate your patience.",
+    "copyright": "© 2026 Wayo Ads. All rights reserved.",
+    "support_email": "support@wayo.cloud",
+    "action_retry": "Retry"
+  },
   "connectivity": {
     "offline_title": "No Internet Connection",
     "offline_subtitle": "Please check your network and try again.",
@@ -70,6 +78,7 @@
     "apple_failed": "Apple sign-in failed. Try again.",
     "apple_server_not_configured": "Sign in with Apple is not enabled on the Wayo ID server yet. Ask your administrator to configure Apple credentials on Auth_Wayo (production), then try again.",
     "apple_canceled": "Sign in with Apple was canceled.",
+    "apple_hide_my_email_hint": "For verification codes to arrive, choose Share My Email — not Hide My Email when signing in with Apple.",
     "google_not_configured": "Google sign-in is not configured. Add AUTH_GOOGLE_SERVER_CLIENT_ID to dart_defines.json (Web client ID ending in .apps.googleusercontent.com) and do a full restart.",
     "google_wrong_client_id": "AUTH_GOOGLE_SERVER_CLIENT_ID must be your Google Cloud Web client ID (…apps.googleusercontent.com), not the Passport OAuth client UUID.",
     "google_failed": "Google sign-in failed. Try again.",
@@ -221,6 +230,7 @@
       "locked": "Locked",
       "spent": "Spent",
       "cpc": "CPC",
+      "cpm": "CPM",
       "valid_engagements": "{count} validated views",
       "list_row_views": "{count} views",
       "list_row_clicks": "{count} clicks",
@@ -254,6 +264,7 @@
       "objective_traffic": "Traffic",
       "objective_conversion": "Conversion",
       "cpm_metric": "CPM (per 1k views)",
+      "cpm_consumed": "Consumed CPM (per 1k views)",
       "cpc_metric": "CPC (per click)",
       "description_title": "Description",
       "show_more": "Show more",
@@ -299,6 +310,32 @@
       "approved_status": "Approved",
       "rejected_status": "Rejected"
     }
+  },
+  "advertiser_video_reviews": {
+    "title": "Video reviews",
+    "subtitle": "Approve or reject creator video submissions for your campaigns.",
+    "pending": "Pending",
+    "approved": "Approved",
+    "rejected": "Rejected",
+    "flagged": "Flagged",
+    "empty": "No videos in this category.",
+    "load_error": "Could not load video submissions",
+    "approve_button": "Approve",
+    "reject_button": "Reject",
+    "approve_success": "Video approved",
+    "reject_success": "Video rejected",
+    "reject_reason_required": "Please provide a rejection reason",
+    "reject_reason_hint": "Reason for rejection",
+    "reject_dialog_title": "Reject video",
+    "action_failed": "Could not update the video. Try again.",
+    "submitted_at": "Submitted",
+    "shorts_badge": "Short",
+    "flag_reason": "Flag reason",
+    "rejection_reason": "Rejection reason",
+    "status_pending": "Pending",
+    "status_approved": "Approved",
+    "status_rejected": "Rejected",
+    "status_flagged": "Flagged"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -517,6 +554,14 @@
       "reward_per_view": "$amount / view",
       "reward_per_click": "$amount / click",
       "budget_remaining_label": "Remaining budget",
+      "earnings_card_title": "My earnings from this campaign",
+      "earnings_card_subtitle": "Your performance and payout breakdown",
+      "earnings_net": "Net earnings",
+      "earnings_views": "Earnings views",
+      "earnings_platform_views": "Platform views",
+      "earnings_valid_clicks": "Earnings clicks",
+      "earnings_recorded_clicks": "Recorded clicks",
+      "earnings_available_balance": "Available balance",
       "requirement_platform": "Post on $platform only",
       "requirement_min_duration": "Minimum duration: $minutes min",
       "requirement_shorts_max": "Shorts up to $seconds s",
@@ -649,7 +694,10 @@
     "payment_title": "Payment",
     "payment_total": "TOTAL",
     "payment_deposit_amount": "Deposit amount",
-    "payment_bank_fee": "Bank transaction fee (3.69%)"
+    "payment_bank_fee": "Bank transaction fee (3.69%)",
+    "deposit_pending": "Deposit pending",
+    "deposit_resume_hint": "Resuming your deposit of {amount} — complete payment or tap Cancel to discard.",
+    "deposit_cancel": "Cancel"
   },
   "chat": {
     "inbox_title": "Messages",
@@ -751,12 +799,6 @@
   "privacy_policy": {
     "title": "Privacy Policy",
     "last_updated": "Last updated: October 7, 2025",
-    "legal_entity_operator": "This application and the Wayo Ads platform are operated by:",
-    "legal_entity_name": "AL BOUHOUTI SOFTWARE DESIGN COMPANY L.L.C",
-    "legal_entity_address": "Al Barshaa 1, Dubai, Dubai, United Arab Emirates",
-    "legal_entity_support": "Customer support",
-    "legal_entity_email": "support@wayo.cloud",
-    "legal_entity_phone": "+971 542396643",
     "intro_title": "1. Introduction",
     "intro_body": "At Wayo Ads, we are committed to collecting and using your data responsibly, in compliance with applicable data protection laws, including Moroccan law no. 09-08 and, when applicable, the GDPR (EU 2016/679). By using our platform, you agree to the collection, processing, and use of your data as described in this privacy policy.",
     "data_title": "2. Data We Collect",
@@ -780,7 +822,7 @@
     "changes_title": "11. Changes to This Policy",
     "changes_body": "We may update this privacy policy from time to time. We will notify you of any material changes by posting the new policy on this page and updating the \"Last updated\" date.",
     "contact_title": "12. Contact Information",
-    "contact_body": "Data controller: AL BOUHOUTI SOFTWARE DESIGN COMPANY L.L.C\nAl Barshaa 1, Dubai, Dubai, United Arab Emirates\nEmail: support@wayo.cloud\nPhone: +971 542396643"
+    "contact_body": "Data controller: Wayo, Dubai, UAE.\nEmail: info@wayo.cloud\nAddress: R320 Umm Hurair 2, Dubai, UAE."
   },
   "app_settings": {
     "title": "Preferences",
@@ -896,6 +938,12 @@
     "role_advertiser_desc": "Launch campaigns and manage creators from your dashboard.",
     "email_code_title": "Verify your email",
     "email_code_subtitle": "Enter the 6-digit code we sent to $email.",
+    "email_code_subtitle_prefix": "Enter the 6-digit code we sent to ",
+    "email_code_subtitle_suffix": ".",
+    "email_code_hide_my_email_warning": "You signed in with Apple's Hide My Email. Verification codes often don't reach relay addresses. Sign out, then sign in with Apple again and choose Share My Email, or use email and password with your real iCloud address.",
+    "email_code_otp_label": "Enter verification code",
+    "email_code_sending": "Sending code...",
+    "email_code_verifying": "Verifying...",
     "skip": "Skip",
     "next": "Next",
     "done": "Got it",

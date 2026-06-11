@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../../core/format/campaign_finance_display.dart';
 import '../../../../core/format/money_formatter.dart';
 import '../../../../core/network/wayo_ads_public_url.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -132,7 +133,7 @@ class _AdvertiserCampaignCardState extends State<AdvertiserCampaignCard> {
                           label: t.advertiser_campaigns.card.budget_total,
                           value: MoneyFormatter.format(
                             c.totalBudgetCents / 100.0,
-                            currency: c.currency,
+                            currency: kWayoPublicCurrency,
                             locale: widget.moneyLocale,
                           ),
                         ),
@@ -144,15 +145,26 @@ class _AdvertiserCampaignCardState extends State<AdvertiserCampaignCard> {
                         ),
                       ),
                       Expanded(
-                        child: _StatColumn(
-                          label: t.advertiser_campaigns.card.cpc,
-                          value: c.cpcCents > 0
-                              ? MoneyFormatter.format(
-                                  c.cpcCents / 100.0,
-                                  currency: c.currency,
-                                  locale: widget.moneyLocale,
-                                )
-                              : '—',
+                        child: Builder(
+                          builder: (context) {
+                            final rate = resolveCampaignPayoutMetric(
+                              type: c.campaignType,
+                              cpcCents: c.cpcCents,
+                              cpmCents: c.cpmCents,
+                              spentBudgetCents: c.spentBudgetCents,
+                              validViews: c.validViews,
+                            );
+                            return _StatColumn(
+                              label: campaignPayoutMetricLabel(t, rate.kind),
+                              value: rate.hasValue
+                                  ? MoneyFormatter.format(
+                                      rate.cents / 100.0,
+                                      currency: kWayoPublicCurrency,
+                                      locale: widget.moneyLocale,
+                                    )
+                                  : '—',
+                            );
+                          },
                         ),
                       ),
                     ],
@@ -202,7 +214,7 @@ class _AdvertiserCampaignCardState extends State<AdvertiserCampaignCard> {
         c.status == CampaignStatus.completed ? c.spentBudgetCents : c.remainingBudgetCents;
     return MoneyFormatter.format(
       cents / 100.0,
-      currency: c.currency,
+      currency: kWayoPublicCurrency,
       locale: widget.moneyLocale,
     );
   }

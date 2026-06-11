@@ -8,6 +8,7 @@ import '../../../../core/errors/auth_error_localizer.dart';
 import '../../../../core/result.dart';
 import '../../../../i18n/strings.g.dart';
 import '../../data/repositories/auth_repository.dart';
+import '../../domain/apple_email_policy.dart';
 import '../../domain/auth_notifier.dart';
 import '../../domain/onboarding_gate.dart';
 import '../widgets/otp_input_field.dart';
@@ -212,25 +213,19 @@ class _EmailVerificationOtpOnboardingScreenState
               height: 1.5,
             ),
             children: [
-              TextSpan(
-                text: t.onboarding
-                    .email_code_subtitle(email: '')
-                    .split(email)
-                    .first,
-              ),
+              TextSpan(text: t.onboarding.email_code_subtitle_prefix),
               TextSpan(
                 text: email,
                 style: TextStyle(color: _orange, fontWeight: FontWeight.w600),
               ),
-              TextSpan(
-                text: t.onboarding
-                    .email_code_subtitle(email: '')
-                    .split(email)
-                    .last,
-              ),
+              TextSpan(text: t.onboarding.email_code_subtitle_suffix),
             ],
           ),
         ),
+        if (isAppleHideMyEmailAddress(email)) ...[
+          const SizedBox(height: 16),
+          _buildHideMyEmailWarning(isDark, t),
+        ],
         if (_sendError != null) ...[
           const SizedBox(height: 16),
           Container(
@@ -262,6 +257,34 @@ class _EmailVerificationOtpOnboardingScreenState
     );
   }
 
+  Widget _buildHideMyEmailWarning(bool isDark, Translations t) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: _orange.withOpacity(isDark ? 0.12 : 0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: _orange.withOpacity(0.35)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.info_outline_rounded, color: _orange, size: 22),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              t.onboarding.email_code_hide_my_email_warning,
+              style: TextStyle(
+                fontSize: 14,
+                height: 1.45,
+                color: isDark ? Colors.grey[200] : Colors.grey[800],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildOtpSection(bool isDark, Translations t) {
     return Container(
       padding: const EdgeInsets.all(24),
@@ -273,7 +296,7 @@ class _EmailVerificationOtpOnboardingScreenState
       child: Column(
         children: [
           Text(
-            'Enter verification code',
+            t.onboarding.email_code_otp_label,
             style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w500,
@@ -294,7 +317,7 @@ class _EmailVerificationOtpOnboardingScreenState
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'Sending code...',
+                  t.onboarding.email_code_sending,
                   style: TextStyle(
                     fontSize: 14,
                     color: isDark ? Colors.grey[400] : Colors.grey[600],
@@ -315,7 +338,7 @@ class _EmailVerificationOtpOnboardingScreenState
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'Verifying...',
+                  t.onboarding.email_code_verifying,
                   style: TextStyle(
                     fontSize: 14,
                     color: isDark ? Colors.grey[400] : Colors.grey[600],

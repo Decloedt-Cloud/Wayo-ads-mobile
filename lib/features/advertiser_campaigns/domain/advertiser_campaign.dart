@@ -23,7 +23,7 @@ final class AdvertiserCampaign extends Equatable {
     required this.approvedCreators,
     this.coverUrl,
     this.brandLogoUrl,
-    this.currency = 'EUR',
+    this.currency = 'USD',
     this.niche,
     this.location,
   });

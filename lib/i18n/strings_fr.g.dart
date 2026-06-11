@@ -36,6 +36,7 @@ class TranslationsFr extends Translations {
 
 	// Translations
 	@override late final _TranslationsForceUpdateFr force_update = _TranslationsForceUpdateFr._(_root);
+	@override late final _TranslationsMaintenanceFr maintenance = _TranslationsMaintenanceFr._(_root);
 	@override late final _TranslationsConnectivityFr connectivity = _TranslationsConnectivityFr._(_root);
 	@override late final _TranslationsCampaignsExplorerFr campaigns_explorer = _TranslationsCampaignsExplorerFr._(_root);
 	@override late final _TranslationsLoginFr login = _TranslationsLoginFr._(_root);
@@ -47,6 +48,7 @@ class TranslationsFr extends Translations {
 	@override late final _TranslationsHomeFr home = _TranslationsHomeFr._(_root);
 	@override late final _TranslationsDashboardFr dashboard = _TranslationsDashboardFr._(_root);
 	@override late final _TranslationsAdvertiserCampaignsFr advertiser_campaigns = _TranslationsAdvertiserCampaignsFr._(_root);
+	@override late final _TranslationsAdvertiserVideoReviewsFr advertiser_video_reviews = _TranslationsAdvertiserVideoReviewsFr._(_root);
 	@override late final _TranslationsNavFr nav = _TranslationsNavFr._(_root);
 	@override late final _TranslationsInvoicesFr invoices = _TranslationsInvoicesFr._(_root);
 	@override late final _TranslationsPushFr push = _TranslationsPushFr._(_root);
@@ -72,6 +74,21 @@ class _TranslationsForceUpdateFr extends TranslationsForceUpdateEn {
 	@override String get subtitle => 'Une nouvelle version de Wayo Ads est disponible. Installez-la depuis le store pour continuer.';
 	@override String get action_update => 'Mettre à jour';
 	@override String get checking => 'Vérification des mises à jour…';
+}
+
+// Path: maintenance
+class _TranslationsMaintenanceFr extends TranslationsMaintenanceEn {
+	_TranslationsMaintenanceFr._(TranslationsFr root) : this._root = root, super.internal(root);
+
+	final TranslationsFr _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'Nous revenons bientôt';
+	@override String get subtitle => 'Nous améliorons le service avec de nouvelles fonctionnalités. Nous serons de retour très bientôt.';
+	@override String get apology => 'Nous nous excusons pour la gêne occasionnée et vous remercions de votre patience.';
+	@override String get copyright => '© 2026 Wayo Ads. Tous droits réservés.';
+	@override String get support_email => 'support@wayo.cloud';
+	@override String get action_retry => 'Réessayer';
 }
 
 // Path: connectivity
@@ -159,6 +176,7 @@ class _TranslationsLoginFr extends TranslationsLoginEn {
 	@override String get apple_failed => 'Échec de la connexion avec Apple. Réessayez.';
 	@override String get apple_server_not_configured => 'La connexion avec Apple n’est pas encore activée sur le serveur Wayo ID. Demandez à l’administrateur de configurer Apple sur Auth_Wayo (production), puis réessayez.';
 	@override String get apple_canceled => 'Connexion avec Apple annulée.';
+	@override String get apple_hide_my_email_hint => 'Pour recevoir le code de vérification, choisissez Partager mon adresse e-mail — pas Masquer mon adresse e-mail lors de la connexion avec Apple.';
 	@override String get google_not_configured => 'Connexion Google non configurée. Ajoutez AUTH_GOOGLE_SERVER_CLIENT_ID dans dart_defines.json (ID client Web Google se terminant par .apps.googleusercontent.com), puis redémarrez complètement l’app.';
 	@override String get google_wrong_client_id => 'AUTH_GOOGLE_SERVER_CLIENT_ID doit être l’ID client Web Google Cloud (…apps.googleusercontent.com), pas l’UUID du client OAuth Passport.';
 	@override String get google_failed => 'Échec de la connexion Google. Réessayez.';
@@ -337,6 +355,39 @@ class _TranslationsAdvertiserCampaignsFr extends TranslationsAdvertiserCampaigns
 	@override late final _TranslationsAdvertiserCampaignsDetailFr detail = _TranslationsAdvertiserCampaignsDetailFr._(_root);
 	@override late final _TranslationsAdvertiserCampaignsCreateFr create = _TranslationsAdvertiserCampaignsCreateFr._(_root);
 	@override late final _TranslationsAdvertiserCampaignsApplicationsFr applications = _TranslationsAdvertiserCampaignsApplicationsFr._(_root);
+}
+
+// Path: advertiser_video_reviews
+class _TranslationsAdvertiserVideoReviewsFr extends TranslationsAdvertiserVideoReviewsEn {
+	_TranslationsAdvertiserVideoReviewsFr._(TranslationsFr root) : this._root = root, super.internal(root);
+
+	final TranslationsFr _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'Révision des vidéos';
+	@override String get subtitle => 'Approuvez ou refusez les soumissions vidéo des créateurs pour vos campagnes.';
+	@override String get pending => 'En attente';
+	@override String get approved => 'Approuvées';
+	@override String get rejected => 'Refusées';
+	@override String get flagged => 'Signalées';
+	@override String get empty => 'Aucune vidéo dans cette catégorie.';
+	@override String get load_error => 'Impossible de charger les soumissions vidéo';
+	@override String get approve_button => 'Approuver';
+	@override String get reject_button => 'Refuser';
+	@override String get approve_success => 'Vidéo approuvée';
+	@override String get reject_success => 'Vidéo refusée';
+	@override String get reject_reason_required => 'Veuillez indiquer un motif de refus';
+	@override String get reject_reason_hint => 'Motif du refus';
+	@override String get reject_dialog_title => 'Refuser la vidéo';
+	@override String get action_failed => 'Impossible de mettre à jour la vidéo. Réessayez.';
+	@override String get submitted_at => 'Soumise le';
+	@override String get shorts_badge => 'Short';
+	@override String get flag_reason => 'Motif du signalement';
+	@override String get rejection_reason => 'Motif du refus';
+	@override String get status_pending => 'En attente';
+	@override String get status_approved => 'Approuvée';
+	@override String get status_rejected => 'Refusée';
+	@override String get status_flagged => 'Signalée';
 }
 
 // Path: nav
@@ -529,6 +580,9 @@ class _TranslationsAdvertiserWalletFr extends TranslationsAdvertiserWalletEn {
 	@override String get payment_total => 'TOTAL';
 	@override String get payment_deposit_amount => 'Montant du dépôt';
 	@override String get payment_bank_fee => 'Frais de transaction bancaire (3.69%)';
+	@override String get deposit_pending => 'Dépôt en attente';
+	@override String get deposit_resume_hint => 'Reprise de votre dépôt de {amount} — finalisez le paiement ou cliquez sur Annuler pour abandonner.';
+	@override String get deposit_cancel => 'Annuler';
 }
 
 // Path: chat
@@ -658,12 +712,6 @@ class _TranslationsPrivacyPolicyFr extends TranslationsPrivacyPolicyEn {
 	// Translations
 	@override String get title => 'Politique de confidentialité';
 	@override String get last_updated => 'Dernière mise à jour : 7 octobre 2025';
-	@override String get legal_entity_operator => 'Cette application et la plateforme Wayo Ads sont exploitées par :';
-	@override String get legal_entity_name => 'AL BOUHOUTI SOFTWARE DESIGN COMPANY L.L.C';
-	@override String get legal_entity_address => 'Al Barshaa 1, Dubai, Dubai, United Arab Emirates';
-	@override String get legal_entity_support => 'Support client';
-	@override String get legal_entity_email => 'support@wayo.cloud';
-	@override String get legal_entity_phone => '+971 542396643';
 	@override String get intro_title => '1. Introduction';
 	@override String get intro_body => 'Chez Wayo Ads, nous nous engageons à collecter et à utiliser vos données de manière responsable, conformément aux lois applicables en matière de protection des données, notamment la loi marocaine n° 09-08 et, le cas échéant, le RGPD (UE 2016/679). En utilisant notre plateforme, vous acceptez la collecte, le traitement et l’utilisation de vos données tel que décrit dans la présente politique de confidentialité.';
 	@override String get data_title => '2. Données que nous collectons';
@@ -687,7 +735,7 @@ class _TranslationsPrivacyPolicyFr extends TranslationsPrivacyPolicyEn {
 	@override String get changes_title => '11. Modifications de la présente politique';
 	@override String get changes_body => 'Nous pouvons mettre à jour cette politique de confidentialité occasionnellement. Nous vous informerons des changements importants en publiant la nouvelle politique sur cette page et en mettant à jour la date de « Dernière mise à jour ».';
 	@override String get contact_title => '12. Coordonnées';
-	@override String get contact_body => 'Responsable du traitement : AL BOUHOUTI SOFTWARE DESIGN COMPANY L.L.C\nAl Barshaa 1, Dubai, Dubai, United Arab Emirates\nE-mail : support@wayo.cloud\nTéléphone : +971 542396643';
+	@override String get contact_body => 'Responsable du traitement : Wayo, Dubaï, Émirats arabes unis.\nE-mail : info@wayo.cloud\nAdresse : R320 Umm Hurair 2, Dubaï, Émirats arabes unis.';
 }
 
 // Path: app_settings
@@ -824,6 +872,12 @@ class _TranslationsOnboardingFr extends TranslationsOnboardingEn {
 	@override String get role_advertiser_desc => 'Lancez des campagnes et pilotez les créateurs depuis votre tableau de bord.';
 	@override String get email_code_title => 'Vérifiez votre email';
 	@override String email_code_subtitle({required Object email}) => 'Saisissez le code à 6 chiffres envoyé à ${email}.';
+	@override String get email_code_subtitle_prefix => 'Saisissez le code à 6 chiffres envoyé à ';
+	@override String get email_code_subtitle_suffix => '.';
+	@override String get email_code_hide_my_email_warning => 'Vous vous êtes connecté avec Masquer mon adresse e-mail (Apple). Les codes de vérification n\'arrivent souvent pas sur les adresses relais. Déconnectez-vous, reconnectez-vous avec Apple en choisissant Partager mon adresse e-mail, ou utilisez votre vraie adresse iCloud avec e-mail et mot de passe.';
+	@override String get email_code_otp_label => 'Saisir le code de vérification';
+	@override String get email_code_sending => 'Envoi du code...';
+	@override String get email_code_verifying => 'Vérification...';
 	@override String get skip => 'Passer';
 	@override String get next => 'Suivant';
 	@override String get done => 'Compris';
@@ -912,6 +966,7 @@ class _TranslationsAdvertiserCampaignsCardFr extends TranslationsAdvertiserCampa
 	@override String get locked => 'Engagé';
 	@override String get spent => 'Dépensé';
 	@override String get cpc => 'CPC';
+	@override String get cpm => 'CPM';
 	@override String get valid_engagements => '{count} vues validées';
 	@override String get list_row_views => '{count} vues';
 	@override String get list_row_clicks => '{count} clics';
@@ -966,6 +1021,7 @@ class _TranslationsAdvertiserCampaignsDetailFr extends TranslationsAdvertiserCam
 	@override String get objective_traffic => 'Trafic';
 	@override String get objective_conversion => 'Conversion';
 	@override String get cpm_metric => 'CPM (pour 1k vues)';
+	@override String get cpm_consumed => 'CPM consommé (pour 1k vues)';
 	@override String get cpc_metric => 'CPC (par clic)';
 	@override String get description_title => 'Description';
 	@override String get show_more => 'Voir plus';
@@ -1154,6 +1210,14 @@ class _TranslationsCreatorCampaignsFr extends TranslationsCreatorCampaignsEn {
 	@override String reward_per_view({required Object amount}) => '${amount} / vue';
 	@override String reward_per_click({required Object amount}) => '${amount} / clic';
 	@override String get budget_remaining_label => 'Budget restant';
+	@override String get earnings_card_title => 'Mes gains sur cette campagne';
+	@override String get earnings_card_subtitle => 'Vos performances et le détail des paiements';
+	@override String get earnings_net => 'Gains nets';
+	@override String get earnings_views => 'Vues rémunérées';
+	@override String get earnings_platform_views => 'Vues plateforme';
+	@override String get earnings_valid_clicks => 'Clics rémunérés';
+	@override String get earnings_recorded_clicks => 'Clics enregistrés';
+	@override String get earnings_available_balance => 'Solde disponible';
 	@override String requirement_platform({required Object platform}) => 'Publiez uniquement sur ${platform}';
 	@override String requirement_min_duration({required Object minutes}) => 'Durée minimale : ${minutes} min';
 	@override String requirement_shorts_max({required Object seconds}) => 'Shorts jusqu\'à ${seconds} s';
@@ -1315,6 +1379,12 @@ extension on TranslationsFr {
 			case 'force_update.subtitle': return 'Une nouvelle version de Wayo Ads est disponible. Installez-la depuis le store pour continuer.';
 			case 'force_update.action_update': return 'Mettre à jour';
 			case 'force_update.checking': return 'Vérification des mises à jour…';
+			case 'maintenance.title': return 'Nous revenons bientôt';
+			case 'maintenance.subtitle': return 'Nous améliorons le service avec de nouvelles fonctionnalités. Nous serons de retour très bientôt.';
+			case 'maintenance.apology': return 'Nous nous excusons pour la gêne occasionnée et vous remercions de votre patience.';
+			case 'maintenance.copyright': return '© 2026 Wayo Ads. Tous droits réservés.';
+			case 'maintenance.support_email': return 'support@wayo.cloud';
+			case 'maintenance.action_retry': return 'Réessayer';
 			case 'connectivity.offline_title': return 'Aucune connexion Internet';
 			case 'connectivity.offline_subtitle': return 'Vérifiez votre réseau puis réessayez.';
 			case 'connectivity.reconnecting_title': return 'Reconnexion…';
@@ -1375,6 +1445,7 @@ extension on TranslationsFr {
 			case 'login.apple_failed': return 'Échec de la connexion avec Apple. Réessayez.';
 			case 'login.apple_server_not_configured': return 'La connexion avec Apple n’est pas encore activée sur le serveur Wayo ID. Demandez à l’administrateur de configurer Apple sur Auth_Wayo (production), puis réessayez.';
 			case 'login.apple_canceled': return 'Connexion avec Apple annulée.';
+			case 'login.apple_hide_my_email_hint': return 'Pour recevoir le code de vérification, choisissez Partager mon adresse e-mail — pas Masquer mon adresse e-mail lors de la connexion avec Apple.';
 			case 'login.google_not_configured': return 'Connexion Google non configurée. Ajoutez AUTH_GOOGLE_SERVER_CLIENT_ID dans dart_defines.json (ID client Web Google se terminant par .apps.googleusercontent.com), puis redémarrez complètement l’app.';
 			case 'login.google_wrong_client_id': return 'AUTH_GOOGLE_SERVER_CLIENT_ID doit être l’ID client Web Google Cloud (…apps.googleusercontent.com), pas l’UUID du client OAuth Passport.';
 			case 'login.google_failed': return 'Échec de la connexion Google. Réessayez.';
@@ -1499,6 +1570,7 @@ extension on TranslationsFr {
 			case 'advertiser_campaigns.card.locked': return 'Engagé';
 			case 'advertiser_campaigns.card.spent': return 'Dépensé';
 			case 'advertiser_campaigns.card.cpc': return 'CPC';
+			case 'advertiser_campaigns.card.cpm': return 'CPM';
 			case 'advertiser_campaigns.card.valid_engagements': return '{count} vues validées';
 			case 'advertiser_campaigns.card.list_row_views': return '{count} vues';
 			case 'advertiser_campaigns.card.list_row_clicks': return '{count} clics';
@@ -1526,6 +1598,7 @@ extension on TranslationsFr {
 			case 'advertiser_campaigns.detail.objective_traffic': return 'Trafic';
 			case 'advertiser_campaigns.detail.objective_conversion': return 'Conversion';
 			case 'advertiser_campaigns.detail.cpm_metric': return 'CPM (pour 1k vues)';
+			case 'advertiser_campaigns.detail.cpm_consumed': return 'CPM consommé (pour 1k vues)';
 			case 'advertiser_campaigns.detail.cpc_metric': return 'CPC (par clic)';
 			case 'advertiser_campaigns.detail.description_title': return 'Description';
 			case 'advertiser_campaigns.detail.show_more': return 'Voir plus';
@@ -1566,6 +1639,30 @@ extension on TranslationsFr {
 			case 'advertiser_campaigns.applications.reject_button': return 'Refuser';
 			case 'advertiser_campaigns.applications.approved_status': return 'Approuvée';
 			case 'advertiser_campaigns.applications.rejected_status': return 'Refusée';
+			case 'advertiser_video_reviews.title': return 'Révision des vidéos';
+			case 'advertiser_video_reviews.subtitle': return 'Approuvez ou refusez les soumissions vidéo des créateurs pour vos campagnes.';
+			case 'advertiser_video_reviews.pending': return 'En attente';
+			case 'advertiser_video_reviews.approved': return 'Approuvées';
+			case 'advertiser_video_reviews.rejected': return 'Refusées';
+			case 'advertiser_video_reviews.flagged': return 'Signalées';
+			case 'advertiser_video_reviews.empty': return 'Aucune vidéo dans cette catégorie.';
+			case 'advertiser_video_reviews.load_error': return 'Impossible de charger les soumissions vidéo';
+			case 'advertiser_video_reviews.approve_button': return 'Approuver';
+			case 'advertiser_video_reviews.reject_button': return 'Refuser';
+			case 'advertiser_video_reviews.approve_success': return 'Vidéo approuvée';
+			case 'advertiser_video_reviews.reject_success': return 'Vidéo refusée';
+			case 'advertiser_video_reviews.reject_reason_required': return 'Veuillez indiquer un motif de refus';
+			case 'advertiser_video_reviews.reject_reason_hint': return 'Motif du refus';
+			case 'advertiser_video_reviews.reject_dialog_title': return 'Refuser la vidéo';
+			case 'advertiser_video_reviews.action_failed': return 'Impossible de mettre à jour la vidéo. Réessayez.';
+			case 'advertiser_video_reviews.submitted_at': return 'Soumise le';
+			case 'advertiser_video_reviews.shorts_badge': return 'Short';
+			case 'advertiser_video_reviews.flag_reason': return 'Motif du signalement';
+			case 'advertiser_video_reviews.rejection_reason': return 'Motif du refus';
+			case 'advertiser_video_reviews.status_pending': return 'En attente';
+			case 'advertiser_video_reviews.status_approved': return 'Approuvée';
+			case 'advertiser_video_reviews.status_rejected': return 'Refusée';
+			case 'advertiser_video_reviews.status_flagged': return 'Signalée';
 			case 'nav.dashboard': return 'Tableau de bord';
 			case 'nav.campaigns': return 'Campagnes';
 			case 'nav.analytics': return 'Analytique';
@@ -1771,6 +1868,14 @@ extension on TranslationsFr {
 			case 'creator.campaigns.reward_per_view': return ({required Object amount}) => '${amount} / vue';
 			case 'creator.campaigns.reward_per_click': return ({required Object amount}) => '${amount} / clic';
 			case 'creator.campaigns.budget_remaining_label': return 'Budget restant';
+			case 'creator.campaigns.earnings_card_title': return 'Mes gains sur cette campagne';
+			case 'creator.campaigns.earnings_card_subtitle': return 'Vos performances et le détail des paiements';
+			case 'creator.campaigns.earnings_net': return 'Gains nets';
+			case 'creator.campaigns.earnings_views': return 'Vues rémunérées';
+			case 'creator.campaigns.earnings_platform_views': return 'Vues plateforme';
+			case 'creator.campaigns.earnings_valid_clicks': return 'Clics rémunérés';
+			case 'creator.campaigns.earnings_recorded_clicks': return 'Clics enregistrés';
+			case 'creator.campaigns.earnings_available_balance': return 'Solde disponible';
 			case 'creator.campaigns.requirement_platform': return ({required Object platform}) => 'Publiez uniquement sur ${platform}';
 			case 'creator.campaigns.requirement_min_duration': return ({required Object minutes}) => 'Durée minimale : ${minutes} min';
 			case 'creator.campaigns.requirement_shorts_max': return ({required Object seconds}) => 'Shorts jusqu\'à ${seconds} s';
@@ -1895,6 +2000,9 @@ extension on TranslationsFr {
 			case 'advertiser_wallet.payment_total': return 'TOTAL';
 			case 'advertiser_wallet.payment_deposit_amount': return 'Montant du dépôt';
 			case 'advertiser_wallet.payment_bank_fee': return 'Frais de transaction bancaire (3.69%)';
+			case 'advertiser_wallet.deposit_pending': return 'Dépôt en attente';
+			case 'advertiser_wallet.deposit_resume_hint': return 'Reprise de votre dépôt de {amount} — finalisez le paiement ou cliquez sur Annuler pour abandonner.';
+			case 'advertiser_wallet.deposit_cancel': return 'Annuler';
 			case 'chat.inbox_title': return 'Messages';
 			case 'chat.inbox_subtitle': return 'Conversations sécurisées pour vos campagnes';
 			case 'chat.conversation_unknown': return 'Conversation';
@@ -1988,12 +2096,6 @@ extension on TranslationsFr {
 			case 'errors.email_not_found': return 'Aucun compte pour cet email.';
 			case 'privacy_policy.title': return 'Politique de confidentialité';
 			case 'privacy_policy.last_updated': return 'Dernière mise à jour : 7 octobre 2025';
-			case 'privacy_policy.legal_entity_operator': return 'Cette application et la plateforme Wayo Ads sont exploitées par :';
-			case 'privacy_policy.legal_entity_name': return 'AL BOUHOUTI SOFTWARE DESIGN COMPANY L.L.C';
-			case 'privacy_policy.legal_entity_address': return 'Al Barshaa 1, Dubai, Dubai, United Arab Emirates';
-			case 'privacy_policy.legal_entity_support': return 'Support client';
-			case 'privacy_policy.legal_entity_email': return 'support@wayo.cloud';
-			case 'privacy_policy.legal_entity_phone': return '+971 542396643';
 			case 'privacy_policy.intro_title': return '1. Introduction';
 			case 'privacy_policy.intro_body': return 'Chez Wayo Ads, nous nous engageons à collecter et à utiliser vos données de manière responsable, conformément aux lois applicables en matière de protection des données, notamment la loi marocaine n° 09-08 et, le cas échéant, le RGPD (UE 2016/679). En utilisant notre plateforme, vous acceptez la collecte, le traitement et l’utilisation de vos données tel que décrit dans la présente politique de confidentialité.';
 			case 'privacy_policy.data_title': return '2. Données que nous collectons';
@@ -2017,7 +2119,7 @@ extension on TranslationsFr {
 			case 'privacy_policy.changes_title': return '11. Modifications de la présente politique';
 			case 'privacy_policy.changes_body': return 'Nous pouvons mettre à jour cette politique de confidentialité occasionnellement. Nous vous informerons des changements importants en publiant la nouvelle politique sur cette page et en mettant à jour la date de « Dernière mise à jour ».';
 			case 'privacy_policy.contact_title': return '12. Coordonnées';
-			case 'privacy_policy.contact_body': return 'Responsable du traitement : AL BOUHOUTI SOFTWARE DESIGN COMPANY L.L.C\nAl Barshaa 1, Dubai, Dubai, United Arab Emirates\nE-mail : support@wayo.cloud\nTéléphone : +971 542396643';
+			case 'privacy_policy.contact_body': return 'Responsable du traitement : Wayo, Dubaï, Émirats arabes unis.\nE-mail : info@wayo.cloud\nAdresse : R320 Umm Hurair 2, Dubaï, Émirats arabes unis.';
 			case 'app_settings.title': return 'Préférences';
 			case 'app_settings.subtitle': return 'Apparence et langue';
 			case 'app_settings.section_appearance': return 'Apparence';
@@ -2127,6 +2229,12 @@ extension on TranslationsFr {
 			case 'onboarding.role_advertiser_desc': return 'Lancez des campagnes et pilotez les créateurs depuis votre tableau de bord.';
 			case 'onboarding.email_code_title': return 'Vérifiez votre email';
 			case 'onboarding.email_code_subtitle': return ({required Object email}) => 'Saisissez le code à 6 chiffres envoyé à ${email}.';
+			case 'onboarding.email_code_subtitle_prefix': return 'Saisissez le code à 6 chiffres envoyé à ';
+			case 'onboarding.email_code_subtitle_suffix': return '.';
+			case 'onboarding.email_code_hide_my_email_warning': return 'Vous vous êtes connecté avec Masquer mon adresse e-mail (Apple). Les codes de vérification n\'arrivent souvent pas sur les adresses relais. Déconnectez-vous, reconnectez-vous avec Apple en choisissant Partager mon adresse e-mail, ou utilisez votre vraie adresse iCloud avec e-mail et mot de passe.';
+			case 'onboarding.email_code_otp_label': return 'Saisir le code de vérification';
+			case 'onboarding.email_code_sending': return 'Envoi du code...';
+			case 'onboarding.email_code_verifying': return 'Vérification...';
 			case 'onboarding.skip': return 'Passer';
 			case 'onboarding.next': return 'Suivant';
 			case 'onboarding.done': return 'Compris';

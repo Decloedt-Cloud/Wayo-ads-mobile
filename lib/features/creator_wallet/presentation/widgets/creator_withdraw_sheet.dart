@@ -165,16 +165,15 @@ class _CreatorWithdrawSheetState extends ConsumerState<_CreatorWithdrawSheet> {
       currency: balance.currency,
       locale: widget.moneyLocale,
     );
-    return Padding(
-      padding: EdgeInsets.only(bottom: insets.bottom),
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
-        decoration: BoxDecoration(
-          color: Theme.of(context).scaffoldBackgroundColor,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          border: Border.all(color: AppColors.borderOf(context)),
-        ),
-        child: Column(
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.fromLTRB(20, 12, 20, 20 + insets.bottom),
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        border: Border.all(color: AppColors.borderOf(context)),
+      ),
+      child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -331,7 +330,6 @@ class _CreatorWithdrawSheetState extends ConsumerState<_CreatorWithdrawSheet> {
             ),
           ],
         ),
-      ),
     );
   }
 

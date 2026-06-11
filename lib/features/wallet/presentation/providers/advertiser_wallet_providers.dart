@@ -15,3 +15,9 @@ final walletPspConfigProvider = FutureProvider.autoDispose<WalletPspConfig>((
 ) async {
   return ref.read(advertiserWalletRepositoryProvider).fetchPspConfig();
 });
+
+/// Abandoned Stripe deposit checkout — [GET /api/wallet/deposit-intent].
+final advertiserPendingDepositProvider =
+    FutureProvider.autoDispose<AdvertiserPendingDeposit?>((ref) async {
+      return ref.read(advertiserWalletRepositoryProvider).fetchPendingDeposit();
+    });

@@ -5,7 +5,9 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../../core/format/campaign_finance_display.dart';
 import '../../../../core/format/money_formatter.dart';
+import '../../../../core/layout/wayo_black_bottom_bar.dart';
 import '../../../../core/providers/app_providers.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -39,11 +41,7 @@ class CreatorCampaignDetailScreen extends ConsumerWidget {
 
   final String? title;
 
-  String _moneyLocale(AppLocale l) => switch (l) {
-    AppLocale.en => 'en_US',
-    AppLocale.fr => 'fr_FR',
-    AppLocale.ar => 'ar_SA',
-  };
+  String _moneyLocale(AppLocale l) => wayoPublicMoneyLocale(l);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -54,6 +52,7 @@ class CreatorCampaignDetailScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: CreatorCampaignsChrome.bg(context),
+      bottomNavigationBar: const WayoBlackBottomBar(),
       appBar: AppBar(
         elevation: 0,
         scrolledUnderElevation: 0,
@@ -194,6 +193,12 @@ class _Body extends ConsumerWidget {
         _PremiumCard(
           child: _RewardsBlock(campaign: c, moneyLocale: moneyLocale),
         ),
+        if (c.isApproved) ...[
+          const SizedBox(height: 14),
+          _PremiumCard(
+            child: _EarningsBlock(campaign: c, moneyLocale: moneyLocale),
+          ),
+        ],
         if (c.description != null && c.description!.isNotEmpty) ...[
           const SizedBox(height: 14),
           _PremiumCard(
@@ -368,6 +373,130 @@ class _CampaignNicheLocationSummary extends StatelessWidget {
   }
 }
 
+class _EarningsBlock extends StatelessWidget {
+  const _EarningsBlock({required this.campaign, required this.moneyLocale});
+
+  final CreatorCampaignDetail campaign;
+  final String moneyLocale;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.t;
+    final c = campaign;
+    final views = c.paidViews > 0 ? c.paidViews : c.earningsViews;
+
+    String money(int cents) => MoneyFormatter.format(
+      cents / 100.0,
+      currency: kWayoPublicCurrency,
+      locale: moneyLocale,
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          t.creator.campaigns.earnings_card_title,
+          style: CampaignDetailPremiumPalette.sectionTitle(context),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          t.creator.campaigns.earnings_card_subtitle,
+          style: GoogleFonts.dmSans(
+            fontSize: 12,
+            color: CreatorCampaignsChrome.label(context),
+          ),
+        ),
+        const SizedBox(height: 14),
+        Row(
+          children: [
+            Expanded(
+              child: _EarningsStat(
+                label: t.creator.campaigns.earnings_net,
+                value: money(c.netEarningsCents),
+              ),
+            ),
+            Expanded(
+              child: _EarningsStat(
+                label: t.creator.campaigns.earnings_views,
+                value: '$views',
+                sub: c.type.requiresVideoSubmission
+                    ? '${t.creator.campaigns.earnings_platform_views}: ${c.platformViews}'
+                    : null,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: _EarningsStat(
+                label: t.creator.campaigns.earnings_valid_clicks,
+                value: '${c.validatedClicks}',
+                sub:
+                    '${t.creator.campaigns.earnings_recorded_clicks}: ${c.recordedClicks}',
+              ),
+            ),
+            Expanded(
+              child: _EarningsStat(
+                label: t.creator.campaigns.earnings_available_balance,
+                value: money(c.availableBalanceCents),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _EarningsStat extends StatelessWidget {
+  const _EarningsStat({
+    required this.label,
+    required this.value,
+    this.sub,
+  });
+
+  final String label;
+  final String value;
+  final String? sub;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          value,
+          style: GoogleFonts.sora(
+            fontSize: 20,
+            fontWeight: FontWeight.w800,
+            color: CampaignDetailPremiumPalette.value(context),
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          label,
+          style: GoogleFonts.dmSans(
+            fontSize: 11,
+            color: CreatorCampaignsChrome.label(context),
+          ),
+        ),
+        if (sub != null) ...[
+          const SizedBox(height: 2),
+          Text(
+            sub!,
+            style: GoogleFonts.dmSans(
+              fontSize: 10,
+              color: CreatorCampaignsChrome.label(context),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
 class _RewardsBlock extends StatelessWidget {
   const _RewardsBlock({required this.campaign, required this.moneyLocale});
 
@@ -379,53 +508,63 @@ class _RewardsBlock extends StatelessWidget {
     final t = context.t;
     final c = campaign;
     final items = <Widget>[];
-    if (c.type.requiresVideoSubmission && c.cpmCents > 0) {
-      items.add(
-        _RewardTile(
-          label: t.creator.campaigns.reward_cpm_label,
-          value: MoneyFormatter.format(
-            c.cpmCents / 100.0,
-            currency: c.currency,
-            locale: moneyLocale,
-          ),
-          icon: Icons.visibility_rounded,
-          accent: CreatorCampaignsChrome.amber(context),
-        ),
-      );
-      items.add(
-        _RewardTile(
-          label: t.creator.campaigns.reward_per_view_label,
-          value: MoneyFormatter.format(
-            c.payoutPerViewCents / 100.0,
-            currency: c.currency,
-            locale: moneyLocale,
-          ),
-          icon: Icons.paid_rounded,
-          accent: const Color(0xFF10B981),
-        ),
-      );
-    } else if (c.type == CreatorCampaignType.link && c.cpcCents > 0) {
-      items.add(
-        _RewardTile(
-          label: t.creator.campaigns.reward_cpc_label,
-          value: MoneyFormatter.format(
-            c.cpcCents / 100.0,
-            currency: c.currency,
-            locale: moneyLocale,
-          ),
-          icon: Icons.ads_click_rounded,
-          accent: const Color(0xFF10B981),
-        ),
-      );
+    String fmt(int cents) => MoneyFormatter.format(
+          cents / 100.0,
+          currency: kWayoPublicCurrency,
+          locale: moneyLocale,
+        );
+    final rate = resolveCampaignPayoutMetric(
+      type: c.type,
+      cpcCents: c.cpcCents,
+      cpmCents: c.cpmCents,
+      spentBudgetCents: c.spentBudgetCents,
+      validViews: c.validViews,
+    );
+    if (rate.hasValue) {
+      switch (rate.kind) {
+        case CampaignPayoutMetricKind.cpc:
+          items.add(
+            _RewardTile(
+              label: t.creator.campaigns.reward_cpc_label,
+              value: fmt(rate.cents),
+              icon: Icons.ads_click_rounded,
+              accent: const Color(0xFF10B981),
+            ),
+          );
+        case CampaignPayoutMetricKind.cpm:
+          items.add(
+            _RewardTile(
+              label: t.creator.campaigns.reward_cpm_label,
+              value: fmt(rate.cents),
+              icon: Icons.visibility_rounded,
+              accent: CreatorCampaignsChrome.amber(context),
+            ),
+          );
+          if (c.payoutPerViewCents > 0) {
+            items.add(
+              _RewardTile(
+                label: t.creator.campaigns.reward_per_view_label,
+                value: fmt(c.payoutPerViewCents),
+                icon: Icons.paid_rounded,
+                accent: const Color(0xFF10B981),
+              ),
+            );
+          }
+        case CampaignPayoutMetricKind.consumedCpm:
+          items.add(
+            _RewardTile(
+              label: t.advertiser_campaigns.detail.cpm_consumed,
+              value: fmt(rate.cents),
+              icon: Icons.visibility_rounded,
+              accent: CreatorCampaignsChrome.amber(context),
+            ),
+          );
+      }
     }
     items.add(
       _RewardTile(
         label: t.creator.campaigns.budget_remaining_label,
-        value: MoneyFormatter.format(
-          c.remainingBudgetCents / 100.0,
-          currency: c.currency,
-          locale: moneyLocale,
-        ),
+        value: fmt(c.remainingBudgetCents),
         icon: Icons.account_balance_wallet_outlined,
         accent: const Color(0xFF8B5CF6),
       ),

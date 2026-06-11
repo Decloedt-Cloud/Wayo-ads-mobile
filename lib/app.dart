@@ -12,6 +12,7 @@ import 'features/push/presentation/push_permission_prompt_host.dart';
 import 'i18n/strings.g.dart';
 import 'router/app_router.dart';
 import 'shared/widgets/connectivity_overlay.dart';
+import 'shared/widgets/maintenance_gate.dart';
 
 class WayoAdsGoApp extends ConsumerWidget {
   const WayoAdsGoApp({super.key});
@@ -37,12 +38,14 @@ class WayoAdsGoApp extends ConsumerWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      builder: (context, child) => ForceUpdateGate(
-        child: ConnectivityOverlay(
-          child: RealtimeNotificationToastHost(
-            child: AppReviewPromptHost(
-              child: PushPermissionPromptHost(
-                child: child ?? const SizedBox.shrink(),
+      builder: (context, child) => MaintenanceGate(
+        child: ForceUpdateGate(
+          child: ConnectivityOverlay(
+            child: RealtimeNotificationToastHost(
+              child: AppReviewPromptHost(
+                child: PushPermissionPromptHost(
+                  child: child ?? const SizedBox.shrink(),
+                ),
               ),
             ),
           ),

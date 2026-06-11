@@ -5,6 +5,14 @@
     "action_update": "Mettre à jour",
     "checking": "Vérification des mises à jour…"
   },
+  "maintenance": {
+    "title": "Nous revenons bientôt",
+    "subtitle": "Nous améliorons le service avec de nouvelles fonctionnalités. Nous serons de retour très bientôt.",
+    "apology": "Nous nous excusons pour la gêne occasionnée et vous remercions de votre patience.",
+    "copyright": "© 2026 Wayo Ads. Tous droits réservés.",
+    "support_email": "support@wayo.cloud",
+    "action_retry": "Réessayer"
+  },
   "connectivity": {
     "offline_title": "Aucune connexion Internet",
     "offline_subtitle": "Vérifiez votre réseau puis réessayez.",
@@ -70,6 +78,7 @@
     "apple_failed": "Échec de la connexion avec Apple. Réessayez.",
     "apple_server_not_configured": "La connexion avec Apple n’est pas encore activée sur le serveur Wayo ID. Demandez à l’administrateur de configurer Apple sur Auth_Wayo (production), puis réessayez.",
     "apple_canceled": "Connexion avec Apple annulée.",
+    "apple_hide_my_email_hint": "Pour recevoir le code de vérification, choisissez Partager mon adresse e-mail — pas Masquer mon adresse e-mail lors de la connexion avec Apple.",
     "google_not_configured": "Connexion Google non configurée. Ajoutez AUTH_GOOGLE_SERVER_CLIENT_ID dans dart_defines.json (ID client Web Google se terminant par .apps.googleusercontent.com), puis redémarrez complètement l’app.",
     "google_wrong_client_id": "AUTH_GOOGLE_SERVER_CLIENT_ID doit être l’ID client Web Google Cloud (…apps.googleusercontent.com), pas l’UUID du client OAuth Passport.",
     "google_failed": "Échec de la connexion Google. Réessayez.",
@@ -221,6 +230,7 @@
       "locked": "Engagé",
       "spent": "Dépensé",
       "cpc": "CPC",
+      "cpm": "CPM",
       "valid_engagements": "{count} vues validées",
       "list_row_views": "{count} vues",
       "list_row_clicks": "{count} clics",
@@ -254,6 +264,7 @@
       "objective_traffic": "Trafic",
       "objective_conversion": "Conversion",
       "cpm_metric": "CPM (pour 1k vues)",
+      "cpm_consumed": "CPM consommé (pour 1k vues)",
       "cpc_metric": "CPC (par clic)",
       "description_title": "Description",
       "show_more": "Voir plus",
@@ -299,6 +310,32 @@
       "approved_status": "Approuvée",
       "rejected_status": "Refusée"
     }
+  },
+  "advertiser_video_reviews": {
+    "title": "Révision des vidéos",
+    "subtitle": "Approuvez ou refusez les soumissions vidéo des créateurs pour vos campagnes.",
+    "pending": "En attente",
+    "approved": "Approuvées",
+    "rejected": "Refusées",
+    "flagged": "Signalées",
+    "empty": "Aucune vidéo dans cette catégorie.",
+    "load_error": "Impossible de charger les soumissions vidéo",
+    "approve_button": "Approuver",
+    "reject_button": "Refuser",
+    "approve_success": "Vidéo approuvée",
+    "reject_success": "Vidéo refusée",
+    "reject_reason_required": "Veuillez indiquer un motif de refus",
+    "reject_reason_hint": "Motif du refus",
+    "reject_dialog_title": "Refuser la vidéo",
+    "action_failed": "Impossible de mettre à jour la vidéo. Réessayez.",
+    "submitted_at": "Soumise le",
+    "shorts_badge": "Short",
+    "flag_reason": "Motif du signalement",
+    "rejection_reason": "Motif du refus",
+    "status_pending": "En attente",
+    "status_approved": "Approuvée",
+    "status_rejected": "Refusée",
+    "status_flagged": "Signalée"
   },
   "nav": {
     "dashboard": "Tableau de bord",
@@ -517,6 +554,14 @@
       "reward_per_view": "$amount / vue",
       "reward_per_click": "$amount / clic",
       "budget_remaining_label": "Budget restant",
+      "earnings_card_title": "Mes gains sur cette campagne",
+      "earnings_card_subtitle": "Vos performances et le détail des paiements",
+      "earnings_net": "Gains nets",
+      "earnings_views": "Vues rémunérées",
+      "earnings_platform_views": "Vues plateforme",
+      "earnings_valid_clicks": "Clics rémunérés",
+      "earnings_recorded_clicks": "Clics enregistrés",
+      "earnings_available_balance": "Solde disponible",
       "requirement_platform": "Publiez uniquement sur $platform",
       "requirement_min_duration": "Durée minimale : $minutes min",
       "requirement_shorts_max": "Shorts jusqu'à $seconds s",
@@ -649,7 +694,10 @@
     "payment_title": "Paiement",
     "payment_total": "TOTAL",
     "payment_deposit_amount": "Montant du dépôt",
-    "payment_bank_fee": "Frais de transaction bancaire (3.69%)"
+    "payment_bank_fee": "Frais de transaction bancaire (3.69%)",
+    "deposit_pending": "Dépôt en attente",
+    "deposit_resume_hint": "Reprise de votre dépôt de {amount} — finalisez le paiement ou cliquez sur Annuler pour abandonner.",
+    "deposit_cancel": "Annuler"
   },
   "chat": {
     "inbox_title": "Messages",
@@ -751,12 +799,6 @@
   "privacy_policy": {
     "title": "Politique de confidentialité",
     "last_updated": "Dernière mise à jour : 7 octobre 2025",
-    "legal_entity_operator": "Cette application et la plateforme Wayo Ads sont exploitées par :",
-    "legal_entity_name": "AL BOUHOUTI SOFTWARE DESIGN COMPANY L.L.C",
-    "legal_entity_address": "Al Barshaa 1, Dubai, Dubai, United Arab Emirates",
-    "legal_entity_support": "Support client",
-    "legal_entity_email": "support@wayo.cloud",
-    "legal_entity_phone": "+971 542396643",
     "intro_title": "1. Introduction",
     "intro_body": "Chez Wayo Ads, nous nous engageons à collecter et à utiliser vos données de manière responsable, conformément aux lois applicables en matière de protection des données, notamment la loi marocaine n° 09-08 et, le cas échéant, le RGPD (UE 2016/679). En utilisant notre plateforme, vous acceptez la collecte, le traitement et l’utilisation de vos données tel que décrit dans la présente politique de confidentialité.",
     "data_title": "2. Données que nous collectons",
@@ -780,7 +822,7 @@
     "changes_title": "11. Modifications de la présente politique",
     "changes_body": "Nous pouvons mettre à jour cette politique de confidentialité occasionnellement. Nous vous informerons des changements importants en publiant la nouvelle politique sur cette page et en mettant à jour la date de « Dernière mise à jour ».",
     "contact_title": "12. Coordonnées",
-    "contact_body": "Responsable du traitement : AL BOUHOUTI SOFTWARE DESIGN COMPANY L.L.C\nAl Barshaa 1, Dubai, Dubai, United Arab Emirates\nE-mail : support@wayo.cloud\nTéléphone : +971 542396643"
+    "contact_body": "Responsable du traitement : Wayo, Dubaï, Émirats arabes unis.\nE-mail : info@wayo.cloud\nAdresse : R320 Umm Hurair 2, Dubaï, Émirats arabes unis."
   },
   "app_settings": {
     "title": "Préférences",
@@ -896,6 +938,12 @@
     "role_advertiser_desc": "Lancez des campagnes et pilotez les créateurs depuis votre tableau de bord.",
     "email_code_title": "Vérifiez votre email",
     "email_code_subtitle": "Saisissez le code à 6 chiffres envoyé à $email.",
+    "email_code_subtitle_prefix": "Saisissez le code à 6 chiffres envoyé à ",
+    "email_code_subtitle_suffix": ".",
+    "email_code_hide_my_email_warning": "Vous vous êtes connecté avec Masquer mon adresse e-mail (Apple). Les codes de vérification n'arrivent souvent pas sur les adresses relais. Déconnectez-vous, reconnectez-vous avec Apple en choisissant Partager mon adresse e-mail, ou utilisez votre vraie adresse iCloud avec e-mail et mot de passe.",
+    "email_code_otp_label": "Saisir le code de vérification",
+    "email_code_sending": "Envoi du code...",
+    "email_code_verifying": "Vérification...",
     "skip": "Passer",
     "next": "Suivant",
     "done": "Compris",

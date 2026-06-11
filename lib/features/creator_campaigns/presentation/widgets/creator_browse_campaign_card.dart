@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../../core/format/campaign_finance_display.dart';
 import '../../../../core/format/money_formatter.dart';
 import '../../../../core/network/wayo_ads_public_url.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -42,22 +43,32 @@ class _CreatorBrowseCampaignCardState extends State<CreatorBrowseCampaignCard> {
   Widget build(BuildContext context) {
     final t = context.t;
     final c = widget.campaign;
-    final payoutPerView = c.cpmCents / 1000.0;
-    final payoutLabel = c.type == CreatorCampaignType.link
-        ? t.creator.campaigns.reward_per_click(
-            amount: MoneyFormatter.format(
-              c.cpcCents / 100.0,
-              currency: c.currency,
-              locale: widget.moneyLocale,
-            ),
-          )
-        : t.creator.campaigns.reward_per_view(
-            amount: MoneyFormatter.format(
-              payoutPerView / 100.0,
-              currency: c.currency,
-              locale: widget.moneyLocale,
-            ),
-          );
+    final rate = resolveCampaignPayoutMetric(
+      type: c.type,
+      cpcCents: c.cpcCents,
+      cpmCents: c.cpmCents,
+      spentBudgetCents: c.spentBudgetCents,
+      validViews: c.validViews,
+    );
+    String fmtAmount(int cents) => MoneyFormatter.format(
+          cents / 100.0,
+          currency: kWayoPublicCurrency,
+          locale: widget.moneyLocale,
+        );
+    final payoutLabel = switch (rate.kind) {
+      CampaignPayoutMetricKind.cpc => t.creator.campaigns.reward_per_click(
+          amount: fmtAmount(rate.cents),
+        ),
+      CampaignPayoutMetricKind.cpm ||
+      CampaignPayoutMetricKind.consumedCpm =>
+        t.creator.campaigns.reward_per_view(
+          amount: MoneyFormatter.format(
+            rate.cents / 1000.0 / 100.0,
+            currency: kWayoPublicCurrency,
+            locale: widget.moneyLocale,
+          ),
+        ),
+    };
 
     Widget card = Listener(
       onPointerDown: (_) => setState(() => _pressed = true),

@@ -58,6 +58,10 @@ FutureOr<bool> wayoRetryEvaluator(
     if (code == 429) {
       return false;
     }
+    // Maintenance / gateway — show the maintenance screen immediately, do not retry.
+    if (code == 502 || code == 503 || code == 521) {
+      return false;
+    }
     if (code >= 400 && code < 500) {
       return kWayoRetryableHttpStatuses.contains(code);
     }

@@ -58,7 +58,7 @@ final class CreatorBrowseCampaign extends Equatable {
     this.brandLogoUrl,
     this.advertiserName,
     this.description,
-    this.currency = 'EUR',
+    this.currency = 'USD',
     this.approvedCreators = 0,
     this.validViews = 0,
     this.validClicks = 0,
@@ -173,7 +173,7 @@ final class CreatorBrowseCampaign extends Equatable {
           (advertiserMap?['company'] as String?) ??
           (m['advertiserName'] as String?),
       description: m['description'] as String?,
-      currency: (m['currency'] as String?)?.toUpperCase() ?? 'EUR',
+      currency: (m['currency'] as String?)?.toUpperCase() ?? 'USD',
       approvedCreators: (m['approvedCreators'] as num?)?.toInt() ?? 0,
       validViews:
           (m['validViews'] as num?)?.toInt() ??

@@ -8,6 +8,7 @@ import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../../../core/errors/auth_exceptions.dart';
 import '../../../../core/campaigns/campaign_explorer_layout.dart';
+import '../../../../core/format/campaign_finance_display.dart';
 import '../../../../core/campaigns/campaigns_explorer_toolbar_expanded_provider.dart';
 import '../../../../core/providers/app_providers.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -24,11 +25,7 @@ import '../widgets/advertiser_campaign_card.dart';
 import '../widgets/advertiser_campaign_explorer_filters.dart';
 import '../widgets/advertiser_campaign_grid_tile.dart';
 
-String _moneyLocale(AppLocale l) => switch (l) {
-  AppLocale.en => 'en_US',
-  AppLocale.fr => 'fr_FR',
-  AppLocale.ar => 'ar_SA',
-};
+String _moneyLocale(AppLocale l) => wayoPublicMoneyLocale(l);
 
 List<AdvertiserCampaign> _filterAdvertiserCampaigns(
   List<AdvertiserCampaign> raw,
@@ -159,8 +156,54 @@ class _AdvertiserCampaignsScreenState
     final countsAsync = ref.watch(advertiserCampaignsCountsProvider);
     Future<void> refresh() async {
       ref.invalidate(advertiserCampaignsPagedProvider);
-      ref.invalidate(advertiserCampaignsCountsProvider);
       await ref.read(advertiserCampaignsPagedProvider(key).future);
+    }
+
+    final cachedPage = pageAsync.valueOrNull;
+    final cachedCounts =
+        countsAsync.valueOrNull ??
+        (active: 0, draft: 0, paused: 0, completed: 0);
+
+    Widget buildBody({
+      required List<AdvertiserCampaign> campaigns,
+      required int totalPages,
+    }) {
+      return _Body(
+        campaigns: campaigns,
+        totalPages: totalPages,
+        currentPage: pageIdx,
+        counts: cachedCounts,
+        tab: tab,
+        searchCtrl: _searchCtrl,
+        searchQ: searchQ,
+        moneyLocale: moneyLocale,
+        onTab: (v) {
+          ref.read(advertiserCampaignsTabProvider.notifier).state = v;
+          ref.read(advertiserCampaignsPageIndexProvider.notifier).state = 1;
+        },
+        onSearchChanged: _scheduleSearchDebounce,
+        onClearSearch: () {
+          _debounce?.cancel();
+          _searchCtrl.clear();
+          ref.read(advertiserCampaignsPageIndexProvider.notifier).state = 1;
+          ref.read(advertiserCampaignsSearchQueryProvider.notifier).state = '';
+        },
+        onRefresh: refresh,
+        onPagePrevious: pageIdx > 1
+            ? () {
+                HapticFeedback.selectionClick();
+                ref.read(advertiserCampaignsPageIndexProvider.notifier).state =
+                    pageIdx - 1;
+              }
+            : null,
+        onPageNext: pageIdx < totalPages
+            ? () {
+                HapticFeedback.selectionClick();
+                ref.read(advertiserCampaignsPageIndexProvider.notifier).state =
+                    pageIdx + 1;
+              }
+            : null,
+      );
     }
 
     return Scaffold(
@@ -170,75 +213,25 @@ class _AdvertiserCampaignsScreenState
         decoration: _campaignsPageBackground(context),
         child: SafeArea(
           bottom: false,
-          child: pageAsync.when(
-            data: (pageResult) {
-              final counts =
-                  countsAsync.valueOrNull ??
-                  (active: 0, draft: 0, paused: 0, completed: 0);
-              return _Body(
-                campaigns: pageResult.campaigns,
-                totalPages: pageResult.totalPages,
-                currentPage: pageIdx,
-                counts: counts,
-                tab: tab,
-                searchCtrl: _searchCtrl,
-                searchQ: searchQ,
-                moneyLocale: moneyLocale,
-                onTab: (v) {
-                  ref.read(advertiserCampaignsTabProvider.notifier).state = v;
-                  ref
-                          .read(advertiserCampaignsPageIndexProvider.notifier)
-                          .state =
-                      1;
-                },
-                onSearchChanged: _scheduleSearchDebounce,
-                onClearSearch: () {
-                  _debounce?.cancel();
-                  _searchCtrl.clear();
-                  ref
-                          .read(advertiserCampaignsPageIndexProvider.notifier)
-                          .state =
-                      1;
-                  ref
-                          .read(advertiserCampaignsSearchQueryProvider.notifier)
-                          .state =
-                      '';
-                },
-                onRefresh: refresh,
-                onPagePrevious: pageIdx > 1
-                    ? () {
-                        HapticFeedback.selectionClick();
-                        ref
-                                .read(
-                                  advertiserCampaignsPageIndexProvider.notifier,
-                                )
-                                .state =
-                            pageIdx - 1;
-                      }
-                    : null,
-                onPageNext: pageIdx < pageResult.totalPages
-                    ? () {
-                        HapticFeedback.selectionClick();
-                        ref
-                                .read(
-                                  advertiserCampaignsPageIndexProvider.notifier,
-                                )
-                                .state =
-                            pageIdx + 1;
-                      }
-                    : null,
-              );
-            },
-            loading: () => _LoadingShell(t: t),
-            error: (e, _) => _ErrorShell(
-              t: t,
-              message: _errorMessage(context, e),
-              onRetry: () {
-                ref.invalidate(advertiserCampaignsPagedProvider);
-                ref.invalidate(advertiserCampaignsCountsProvider);
-              },
-            ),
-          ),
+          child: cachedPage != null
+              ? buildBody(
+                  campaigns: cachedPage.campaigns,
+                  totalPages: cachedPage.totalPages,
+                )
+              : pageAsync.when(
+                  data: (pageResult) => buildBody(
+                    campaigns: pageResult.campaigns,
+                    totalPages: pageResult.totalPages,
+                  ),
+                  loading: () => _LoadingShell(t: t),
+                  error: (e, _) => _ErrorShell(
+                    t: t,
+                    message: _errorMessage(context, e),
+                    onRetry: () {
+                      ref.invalidate(advertiserCampaignsPagedProvider);
+                    },
+                  ),
+                ),
         ),
       ),
     );
@@ -392,7 +385,7 @@ class _Body extends ConsumerWidget {
       _sanitizeAdvertiserExplorerFilters(ref, campaigns);
     }
 
-    final countText = campaigns.isEmpty
+    final countText = filtered.isEmpty && campaigns.isEmpty
         ? '…'
         : (filtered.length == 1
               ? t.campaigns_explorer.results_one

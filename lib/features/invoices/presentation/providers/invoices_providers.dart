@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../auth/domain/wayo_ads_account_role.dart';
 import '../../../auth/presentation/providers/current_account_providers.dart';
+import '../../../wallet/presentation/providers/advertiser_deposit_sync.dart';
 import '../../data/invoices_repository.dart';
 import '../../domain/invoice.dart';
 import '../../domain/invoices_page.dart';
@@ -186,6 +187,7 @@ class InvoicesController extends AsyncNotifier<InvoicesState> {
     if (role == WayoAdsAccountRole.unknown) {
       return;
     }
+    syncAdvertiserPendingDepositFromInvoices(ref);
     final previous = state.valueOrNull ?? InvoicesState.empty;
     state = AsyncValue<InvoicesState>.data(
       previous.copyWith(isLoadingMore: false),

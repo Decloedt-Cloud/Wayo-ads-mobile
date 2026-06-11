@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/layout/wayo_black_bottom_bar.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/creator_colors.dart';
@@ -23,11 +24,8 @@ Future<bool?> showCreatorApplySheet(
   return showModalBottomSheet<bool>(
     context: context,
     isScrollControlled: true,
-    useSafeArea: true,
-    backgroundColor: AppColors.surfaceOf(context),
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-    ),
+    useSafeArea: false,
+    backgroundColor: Colors.transparent,
     builder: (_) =>
         _ApplySheet(campaignId: campaignId, campaignTitle: campaignTitle),
   );
@@ -95,21 +93,21 @@ class _ApplySheetState extends ConsumerState<_ApplySheet> {
   @override
   Widget build(BuildContext context) {
     final t = context.t;
-    final mq = MediaQuery.of(context);
-    final bottomInset = mq.viewInsets.bottom;
-    // Extra bottom margin so "Send application" sits a bit higher (sheet also uses SafeArea).
-    final bottomPadding = 36.0 + bottomInset;
-    return Padding(
-      padding: EdgeInsets.only(
-        left: 20,
-        right: 20,
-        top: 12,
-        bottom: bottomPadding,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
+    final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Container(
+          decoration: BoxDecoration(
+            color: AppColors.surfaceOf(context),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          padding: EdgeInsets.fromLTRB(20, 12, 20, 20 + bottomInset),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
           Center(
             child: Container(
               width: 40,
@@ -215,8 +213,11 @@ class _ApplySheetState extends ConsumerState<_ApplySheet> {
               ),
             ),
           ),
-        ],
-      ),
+            ],
+          ),
+        ),
+        const WayoBlackBottomBar(),
+      ],
     );
   }
 }

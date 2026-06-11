@@ -1,16 +1,15 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/network/wayo_ads_dio.dart';
-import '../../../../core/observability/app_log.dart';
+import '../../../../core/observability/app_log.dart' show kWayoShowPushDebugUi;
 import '../../../../core/providers/app_providers.dart';
 import '../../../../core/push/push_registration_debug.dart';
 import '../../../../core/push/user_push_notifications_preference.dart';
 
-/// Temporary FCM registration diagnostics (debug / verbose release builds).
+/// FCM registration diagnostics — visible in debug builds only ([kWayoShowPushDebugUi]).
 class PushRegistrationDebugPanel extends ConsumerStatefulWidget {
   const PushRegistrationDebugPanel({super.key});
 
@@ -25,7 +24,7 @@ class _PushRegistrationDebugPanelState
   bool _loading = false;
   bool? _lastEnableOk;
 
-  bool get _visible => kDebugMode || kWayoVerboseLogs;
+  bool get _visible => kWayoShowPushDebugUi;
 
   @override
   void initState() {

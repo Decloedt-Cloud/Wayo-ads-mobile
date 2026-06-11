@@ -84,6 +84,35 @@ final class WalletTransactionRow extends Equatable {
   ];
 }
 
+/// In-progress deposit from [GET /api/wallet/deposit-intent](Wayo-ads).
+final class AdvertiserPendingDeposit extends Equatable {
+  const AdvertiserPendingDeposit({
+    required this.intentId,
+    required this.clientSecret,
+    required this.walletAmountCents,
+    required this.bankFeeCents,
+    required this.totalAmountCents,
+    required this.currency,
+  });
+
+  final String intentId;
+  final String clientSecret;
+  final int walletAmountCents;
+  final int bankFeeCents;
+  final int totalAmountCents;
+  final String currency;
+
+  @override
+  List<Object?> get props => [
+    intentId,
+    clientSecret,
+    walletAmountCents,
+    bankFeeCents,
+    totalAmountCents,
+    currency,
+  ];
+}
+
 /// [GET /api/wallet] — balance, history, simulation flag.
 final class AdvertiserWalletPageData extends Equatable {
   const AdvertiserWalletPageData({

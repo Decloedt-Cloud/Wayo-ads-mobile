@@ -431,7 +431,7 @@ final class AdvertiserCampaignsRemoteDatasource
           m['coverUrl'] as String? ??
           m['coverImageUrl'] as String?,
       brandLogoUrl: parseCampaignBrandLogoFromJson(m),
-      currency: (m['currency'] as String?)?.toUpperCase() ?? 'EUR',
+      currency: (m['currency'] as String?)?.toUpperCase() ?? 'USD',
       niche: normalizeCampaignNicheApiValue(trimOrNull(m['niche'])),
       location: campaignLocationFromCampaignJson(
         m,

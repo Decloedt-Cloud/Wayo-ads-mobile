@@ -114,7 +114,7 @@ final class ChatRepository {
     final path = AuthRuntimeConfig.instance.wayoAdsRequestPath(
       ApiEndpoints.chatToken,
     );
-    const maxAttempts = 3;
+    const maxAttempts = 5;
     for (var attempt = 0; attempt < maxAttempts; attempt++) {
       try {
         final res = await _wayoAdsDio.get<Map<String, dynamic>>(path);

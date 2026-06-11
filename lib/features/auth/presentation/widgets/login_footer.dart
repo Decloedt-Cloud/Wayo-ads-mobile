@@ -14,12 +14,18 @@ class LoginFooter extends StatefulWidget {
 }
 
 class _LoginFooterState extends State<LoginFooter> {
+  late final TapGestureRecognizer _termsTap;
   late final TapGestureRecognizer _privacyTap;
 
   @override
   void initState() {
     super.initState();
+    _termsTap = TapGestureRecognizer()..onTap = _openTerms;
     _privacyTap = TapGestureRecognizer()..onTap = _openPrivacy;
+  }
+
+  void _openTerms() {
+    context.push('/terms');
   }
 
   void _openPrivacy() {
@@ -28,6 +34,7 @@ class _LoginFooterState extends State<LoginFooter> {
 
   @override
   void dispose() {
+    _termsTap.dispose();
     _privacyTap.dispose();
     super.dispose();
   }
@@ -61,6 +68,7 @@ class _LoginFooterState extends State<LoginFooter> {
                   color: AppColors.primary,
                   fontWeight: FontWeight.w600,
                 ),
+                recognizer: _termsTap,
               ),
               TextSpan(text: t.login.and),
               TextSpan(

@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/campaigns/campaign_explorer_layout.dart';
+import '../../../../core/format/campaign_finance_display.dart';
 import '../../../../core/campaigns/campaigns_explorer_toolbar_expanded_provider.dart';
 import '../../../../core/providers/app_providers.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -23,11 +24,7 @@ import '../widgets/creator_browse_campaign_grid_tile.dart';
 import '../widgets/creator_browse_explorer_filters.dart';
 import '../theme/creator_campaigns_chrome.dart';
 
-String _moneyLocale(AppLocale l) => switch (l) {
-  AppLocale.en => 'en_US',
-  AppLocale.fr => 'fr_FR',
-  AppLocale.ar => 'ar_SA',
-};
+String _moneyLocale(AppLocale l) => wayoPublicMoneyLocale(l);
 
 List<CreatorBrowseCampaign> _filterCreatorBrowsePage(
   List<CreatorBrowseCampaign> raw,
@@ -163,11 +160,12 @@ class _CreatorCampaignsTabScreenState
       );
     });
 
-    final browsePageForExplorerFilters = browseAsync.maybeWhen(
-      data: (CreatorBrowsePageResult p) =>
-          !_creatorPageHasExplorerFilters(p.campaigns) ? null : p,
-      orElse: () => null,
-    );
+    final cachedBrowsePage = browseAsync.valueOrNull;
+    final browsePageForExplorerFilters =
+        cachedBrowsePage != null &&
+            _creatorPageHasExplorerFilters(cachedBrowsePage.campaigns)
+        ? cachedBrowsePage
+        : null;
 
     return Scaffold(
       backgroundColor: CreatorCampaignsChrome.bg(context),
@@ -536,21 +534,17 @@ class _CreatorCampaignsTabScreenState
     String? locationFilter,
     Translations t,
   ) {
-    if (browseAsync.isLoading) return '…';
-    return browseAsync.maybeWhen(
-      data: (pageResult) {
-        final n = _filterCreatorBrowsePage(
-          pageResult.campaigns,
-          typeFilter,
-          nicheFilter,
-          locationFilter,
-        ).length;
-        return n == 1
-            ? t.campaigns_explorer.results_one
-            : t.campaigns_explorer.results_many(n: n);
-      },
-      orElse: () => '…',
-    );
+    final pageResult = browseAsync.valueOrNull;
+    if (pageResult == null) return '…';
+    final n = _filterCreatorBrowsePage(
+      pageResult.campaigns,
+      typeFilter,
+      nicheFilter,
+      locationFilter,
+    ).length;
+    return n == 1
+        ? t.campaigns_explorer.results_one
+        : t.campaigns_explorer.results_many(n: n);
   }
 }
 

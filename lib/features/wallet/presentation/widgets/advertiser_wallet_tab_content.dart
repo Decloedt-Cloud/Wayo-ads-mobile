@@ -18,10 +18,10 @@ import '../../../auth/presentation/providers/current_account_providers.dart';
 import '../../../creator_wallet/domain/creator_business_profile.dart';
 import '../../../creator_wallet/presentation/providers/creator_wallet_providers.dart';
 import '../../../creator_wallet/presentation/screens/business_info_screen.dart';
-import '../../../dashboard/presentation/providers/dashboard_state_providers.dart';
 import '../../data/advertiser_wallet_repository.dart';
 import '../../domain/advertiser_deposit_charge.dart';
 import '../../domain/wallet_models.dart';
+import '../../presentation/providers/advertiser_deposit_sync.dart';
 import '../../presentation/providers/advertiser_wallet_providers.dart';
 import '../../stripe/advertiser_stripe_deposit.dart';
 
@@ -45,6 +45,7 @@ class _AdvertiserWalletTabContentState
   final _amountCtrl = TextEditingController();
   _PayMethod? _busyMethod;
   int _txPage = 0;
+  String? _dismissedPendingIntentId;
 
   @override
   void initState() {
@@ -78,9 +79,30 @@ class _AdvertiserWalletTabContentState
   }
 
   Future<void> _refresh() async {
-    ref.invalidate(advertiserWalletPageProvider);
-    ref.invalidate(dashboardStreamProvider);
+    invalidateAdvertiserWalletDepositSync(ref);
     await ref.read(advertiserWalletPageProvider.future);
+  }
+
+  /// Clears amount input and hides pending checkout after a completed/cancelled flow.
+  void _clearDepositCheckout({String? dismissIntentId}) {
+    _amountCtrl.clear();
+    _dismissedPendingIntentId = dismissIntentId;
+    invalidateAdvertiserWalletDepositSync(ref);
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  Future<void> _onDepositSucceeded({String? completedIntentId}) async {
+    _clearDepositCheckout(dismissIntentId: completedIntentId);
+    await _refresh();
+    if (!mounted) {
+      return;
+    }
+    final pending = ref.read(advertiserPendingDepositProvider).valueOrNull;
+    if (pending == null) {
+      setState(() => _dismissedPendingIntentId = null);
+    }
   }
 
   void _toast(String msg) {
@@ -116,6 +138,119 @@ class _AdvertiserWalletTabContentState
     return cfg;
   }
 
+  Future<void> _confirmStripePayment({
+    required DepositIntentResult intent,
+    required _PayMethod method,
+  }) async {
+    switch (method) {
+      case _PayMethod.card:
+        await AdvertiserStripeDeposit.presentCardPaymentSheet(
+          clientSecret: intent.clientSecret,
+          currency: intent.currency,
+        );
+        break;
+      case _PayMethod.applePay:
+        await AdvertiserStripeDeposit.confirmWithApplePay(
+          clientSecret: intent.clientSecret,
+          currency: intent.currency,
+          amountCents: intent.amountCents,
+        );
+        break;
+      case _PayMethod.googlePay:
+        await AdvertiserStripeDeposit.confirmWithGooglePay(
+          clientSecret: intent.clientSecret,
+          currency: intent.currency,
+        );
+        break;
+    }
+  }
+
+  DepositIntentResult _intentFromPending(AdvertiserPendingDeposit pending) {
+    return DepositIntentResult(
+      intentId: pending.intentId,
+      clientSecret: pending.clientSecret,
+      amountCents: pending.totalAmountCents,
+      currency: pending.currency,
+      canSimulate: false,
+      walletAmountCents: pending.walletAmountCents,
+      bankFeeCents: pending.bankFeeCents,
+    );
+  }
+
+  /// Resume an in-progress deposit (GET /api/wallet/deposit-intent).
+  Future<void> _completePendingDeposit({
+    required AdvertiserPendingDeposit pending,
+    required _PayMethod method,
+    required bool canSimulate,
+  }) async {
+    if (_busyMethod != null) {
+      return;
+    }
+    final t = context.t;
+    setState(() => _busyMethod = method);
+    final repo = ref.read(advertiserWalletRepositoryProvider);
+    final intent = _intentFromPending(pending);
+    try {
+      if (canSimulate) {
+        await repo.simulatePspSuccess(intent.intentId);
+        if (!mounted) {
+          return;
+        }
+        _toast(t.advertiser_wallet.success);
+        await _onDepositSucceeded(completedIntentId: intent.intentId);
+        return;
+      }
+
+      final cfg = await _ensureStripeReady();
+      if (cfg == null) {
+        return;
+      }
+
+      try {
+        await _confirmStripePayment(intent: intent, method: method);
+      } on StripeException catch (e) {
+        if (AdvertiserStripeDeposit.isUserCancelled(e)) {
+          invalidateAdvertiserWalletDepositSync(ref);
+          return;
+        }
+        final msg = AdvertiserStripeDeposit.describeError(e);
+        _toast(msg);
+        return;
+      }
+
+      await repo.confirmDeposit(intent.intentId);
+      if (!mounted) {
+        return;
+      }
+      _toast(t.advertiser_wallet.success);
+      await _onDepositSucceeded(completedIntentId: intent.intentId);
+    } on ServerException catch (e) {
+      _toast(e.message.isNotEmpty ? e.message : t.advertiser_wallet.failed);
+    } catch (e) {
+      final msg = AdvertiserStripeDeposit.describeError(e);
+      _toast(msg.isNotEmpty ? msg : t.advertiser_wallet.failed);
+    } finally {
+      if (mounted) {
+        setState(() => _busyMethod = null);
+      }
+    }
+  }
+
+  Future<void> _cancelPendingDeposit(AdvertiserPendingDeposit pending) async {
+    _clearDepositCheckout(dismissIntentId: pending.intentId);
+    try {
+      await ref
+          .read(advertiserWalletRepositoryProvider)
+          .cancelDepositIntent(pending.intentId);
+    } catch (_) {
+      // UI already closed — server may have cleared the intent earlier.
+    }
+    invalidateAdvertiserWalletDepositSync(ref);
+    if (mounted) {
+      setState(() => _dismissedPendingIntentId = null);
+    }
+  }
+
   /// Create PI + confirm with either Payment Sheet (card) or native Apple/Google Pay.
   Future<void> _submit({
     required _PayMethod method,
@@ -137,6 +272,7 @@ class _AdvertiserWalletTabContentState
         amountCents: cents,
         currency: currency,
       );
+      invalidateAdvertiserWalletDepositSync(ref);
 
       // Dev / mock PSP path — no Stripe SDK at all.
       if (intent.canSimulate) {
@@ -145,7 +281,7 @@ class _AdvertiserWalletTabContentState
           return;
         }
         _toast(t.advertiser_wallet.success);
-        await _refresh();
+        await _onDepositSucceeded(completedIntentId: intent.intentId);
         return;
       }
 
@@ -155,29 +291,10 @@ class _AdvertiserWalletTabContentState
       }
 
       try {
-        switch (method) {
-          case _PayMethod.card:
-            await AdvertiserStripeDeposit.presentCardPaymentSheet(
-              clientSecret: intent.clientSecret,
-              currency: intent.currency,
-            );
-            break;
-          case _PayMethod.applePay:
-            await AdvertiserStripeDeposit.confirmWithApplePay(
-              clientSecret: intent.clientSecret,
-              currency: intent.currency,
-              amountCents: intent.amountCents,
-            );
-            break;
-          case _PayMethod.googlePay:
-            await AdvertiserStripeDeposit.confirmWithGooglePay(
-              clientSecret: intent.clientSecret,
-              currency: intent.currency,
-            );
-            break;
-        }
+        await _confirmStripePayment(intent: intent, method: method);
       } on StripeException catch (e) {
         if (AdvertiserStripeDeposit.isUserCancelled(e)) {
+          invalidateAdvertiserWalletDepositSync(ref);
           return;
         }
         final msg = AdvertiserStripeDeposit.describeError(e);
@@ -193,8 +310,7 @@ class _AdvertiserWalletTabContentState
         return;
       }
       _toast(t.advertiser_wallet.success);
-
-      await _refresh();
+      await _onDepositSucceeded(completedIntentId: intent.intentId);
     } on ServerException catch (e) {
       _toast(e.message.isNotEmpty ? e.message : t.advertiser_wallet.failed);
     } catch (e) {
@@ -340,6 +456,15 @@ class _AdvertiserWalletTabContentState
           data: (profile) {
             final businessReady = profile.businessInfoComplete;
             final c = data.balance.currency;
+            final pendingAsync = businessReady
+                ? ref.watch(advertiserPendingDepositProvider)
+                : const AsyncValue<AdvertiserPendingDeposit?>.data(null);
+            final AdvertiserPendingDeposit? activePending =
+                pendingAsync.valueOrNull != null &&
+                    pendingAsync.valueOrNull!.intentId !=
+                        _dismissedPendingIntentId
+                ? pendingAsync.valueOrNull
+                : null;
             final nTx = data.transactions.length;
             final maxTxPage = nTx == 0 ? 0 : (nTx - 1) ~/ _kWalletTxPageSize;
             if (_txPage > maxTxPage) {
@@ -377,112 +502,144 @@ class _AdvertiserWalletTabContentState
                           ),
                           const SizedBox(height: 20),
                         ],
-                        Text(
-                          t.advertiser_wallet.amount_label,
-                          style: AppTextStyles.caption(
-                            context,
-                          ).copyWith(color: AppColors.textSecondaryOf(context)),
-                        ),
-                        const SizedBox(height: 8),
-                        TextField(
-                          controller: _amountCtrl,
-                          readOnly: !businessReady,
-                          onTap: !businessReady ? () => _openBusinessProfileEditor() : null,
-                          keyboardType: const TextInputType.numberWithOptions(
-                            decimal: true,
-                          ),
-                          inputFormatters: [
-                            FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
-                          ],
-                          decoration: InputDecoration(
-                            prefixText: '$c ',
-                            filled: true,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            hintText: '0.00',
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: [
-                            _QuickChip(
-                              label: t.advertiser_wallet.quick_50,
-                              onTap: businessReady
-                                  ? () => _amountCtrl.text = '50'
-                                  : () {
-                                      _openBusinessProfileEditor();
-                                    },
-                            ),
-                            _QuickChip(
-                              label: t.advertiser_wallet.quick_100,
-                              onTap: businessReady
-                                  ? () => _amountCtrl.text = '100'
-                                  : () {
-                                      _openBusinessProfileEditor();
-                                    },
-                            ),
-                            _QuickChip(
-                              label: t.advertiser_wallet.quick_250,
-                              onTap: businessReady
-                                  ? () => _amountCtrl.text = '250'
-                                  : () {
-                                      _openBusinessProfileEditor();
-                                    },
-                            ),
-                          ],
-                        ),
-                        if (data.canSimulate) ...[
-                          const SizedBox(height: 8),
-                          Text(
-                            t.advertiser_wallet.test_hint,
-                            style: AppTextStyles.caption(
-                              context,
-                            ).copyWith(color: AppColors.textMutedOf(context)),
-                          ),
-                        ],
-                        if (businessReady) ...[
-                          Builder(
-                            builder: (context) {
-                              final walletCents = _amountToCents(_amountCtrl.text);
-                              if (walletCents == null ||
-                                  walletCents < _kMinDepositCents) {
-                                return const SizedBox.shrink();
-                              }
-                              final charge = estimateAdvertiserDepositCharge(
-                                walletAmountCents: walletCents,
-                              );
-                              return Padding(
-                                padding: const EdgeInsets.only(top: 20),
-                                child: _DepositPaymentSummary(
-                                  charge: charge,
-                                  currency: c,
-                                  moneyLocale: moneyLocale,
-                                  t: t,
-                                  isDark: isDark,
-                                ),
-                              );
-                            },
-                          ),
-                        ],
-                        if (businessReady) ...[
-                          const SizedBox(height: 24),
-                          _WalletPayStrip(
-                            data: data,
+                        if (activePending != null && businessReady) ...[
+                          _PendingDepositCheckout(
+                            pending: activePending,
+                            moneyLocale: moneyLocale,
+                            isDark: isDark,
                             t: t,
+                            data: data,
                             busyMethod: _busyMethod,
-                            onCard: () =>
-                                _submit(method: _PayMethod.card, currency: c),
-                            onApplePay: () =>
-                                _submit(method: _PayMethod.applePay, currency: c),
-                            onGooglePay: () =>
-                                _submit(method: _PayMethod.googlePay, currency: c),
+                            onCard: () => _completePendingDeposit(
+                              pending: activePending,
+                              method: _PayMethod.card,
+                              canSimulate: data.canSimulate,
+                            ),
+                            onApplePay: () => _completePendingDeposit(
+                              pending: activePending,
+                              method: _PayMethod.applePay,
+                              canSimulate: data.canSimulate,
+                            ),
+                            onGooglePay: () => _completePendingDeposit(
+                              pending: activePending,
+                              method: _PayMethod.googlePay,
+                              canSimulate: data.canSimulate,
+                            ),
+                            onCancel: () => _cancelPendingDeposit(activePending),
                           ),
                         ] else ...[
-                          const SizedBox(height: 24),
-                          _WalletPayStripPlaceholder(t: t),
+                          Text(
+                            t.advertiser_wallet.amount_label,
+                            style: AppTextStyles.caption(
+                              context,
+                            ).copyWith(
+                              color: AppColors.textSecondaryOf(context),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          TextField(
+                            controller: _amountCtrl,
+                            readOnly: !businessReady,
+                            onTap: !businessReady
+                                ? () => _openBusinessProfileEditor()
+                                : null,
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
+                            inputFormatters: [
+                              FilteringTextInputFormatter.allow(
+                                RegExp(r'[0-9.,]'),
+                              ),
+                            ],
+                            decoration: InputDecoration(
+                              prefixText: '$c ',
+                              filled: true,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              hintText: '0.00',
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: [
+                              _QuickChip(
+                                label: t.advertiser_wallet.quick_50,
+                                onTap: businessReady
+                                    ? () => _amountCtrl.text = '50'
+                                    : _openBusinessProfileEditor,
+                              ),
+                              _QuickChip(
+                                label: t.advertiser_wallet.quick_100,
+                                onTap: businessReady
+                                    ? () => _amountCtrl.text = '100'
+                                    : _openBusinessProfileEditor,
+                              ),
+                              _QuickChip(
+                                label: t.advertiser_wallet.quick_250,
+                                onTap: businessReady
+                                    ? () => _amountCtrl.text = '250'
+                                    : _openBusinessProfileEditor,
+                              ),
+                            ],
+                          ),
+                          if (data.canSimulate) ...[
+                            const SizedBox(height: 8),
+                            Text(
+                              t.advertiser_wallet.test_hint,
+                              style: AppTextStyles.caption(
+                                context,
+                              ).copyWith(color: AppColors.textMutedOf(context)),
+                            ),
+                          ],
+                          if (businessReady) ...[
+                            Builder(
+                              builder: (context) {
+                                final walletCents =
+                                    _amountToCents(_amountCtrl.text);
+                                if (walletCents == null ||
+                                    walletCents < _kMinDepositCents) {
+                                  return const SizedBox.shrink();
+                                }
+                                final charge = estimateAdvertiserDepositCharge(
+                                  walletAmountCents: walletCents,
+                                );
+                                return Padding(
+                                  padding: const EdgeInsets.only(top: 20),
+                                  child: _DepositPaymentSummary(
+                                    charge: charge,
+                                    currency: c,
+                                    moneyLocale: moneyLocale,
+                                    t: t,
+                                    isDark: isDark,
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
+                          if (businessReady) ...[
+                            const SizedBox(height: 24),
+                            _WalletPayStrip(
+                              data: data,
+                              t: t,
+                              busyMethod: _busyMethod,
+                              onCard: () =>
+                                  _submit(method: _PayMethod.card, currency: c),
+                              onApplePay: () => _submit(
+                                method: _PayMethod.applePay,
+                                currency: c,
+                              ),
+                              onGooglePay: () => _submit(
+                                method: _PayMethod.googlePay,
+                                currency: c,
+                              ),
+                            ),
+                          ] else ...[
+                            const SizedBox(height: 24),
+                            _WalletPayStripPlaceholder(t: t),
+                          ],
                         ],
                         const SizedBox(height: 28),
                         Text(
@@ -509,6 +666,143 @@ class _AdvertiserWalletTabContentState
           },
         );
       },
+    );
+  }
+}
+
+/// Resume UI when [GET /api/wallet/deposit-intent] returns an open Stripe PI.
+class _PendingDepositCheckout extends StatelessWidget {
+  static String _amountLabel(
+    int walletAmountCents,
+    String currency,
+    String moneyLocale,
+  ) {
+    final locale = currency.toUpperCase() == 'USD' ? 'en_US' : moneyLocale;
+    return MoneyFormatter.format(
+      walletAmountCents / 100.0,
+      currency: currency,
+      locale: locale,
+    );
+  }
+  const _PendingDepositCheckout({
+    required this.pending,
+    required this.moneyLocale,
+    required this.isDark,
+    required this.t,
+    required this.data,
+    required this.busyMethod,
+    required this.onCard,
+    required this.onApplePay,
+    required this.onGooglePay,
+    required this.onCancel,
+  });
+
+  final AdvertiserPendingDeposit pending;
+  final String moneyLocale;
+  final bool isDark;
+  final Translations t;
+  final AdvertiserWalletPageData data;
+  final _PayMethod? busyMethod;
+  final VoidCallback onCard;
+  final VoidCallback onApplePay;
+  final VoidCallback onGooglePay;
+  final VoidCallback onCancel;
+
+  @override
+  Widget build(BuildContext context) {
+    final walletLabel = _amountLabel(
+      pending.walletAmountCents,
+      pending.currency,
+      moneyLocale,
+    );
+    final charge = AdvertiserDepositCharge(
+      walletAmountCents: pending.walletAmountCents,
+      bankFeeCents: pending.bankFeeCents > 0
+          ? pending.bankFeeCents
+          : advertiserWalletDepositBankFeeCents(pending.walletAmountCents),
+      totalChargedCents: pending.totalAmountCents,
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Container(
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            color: const Color(0xFFF4A237).withValues(alpha: isDark ? 0.12 : 0.14),
+            border: Border.all(
+              color: const Color(0xFFF4A237).withValues(alpha: 0.45),
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    Icons.schedule_rounded,
+                    size: 20,
+                    color: const Color(0xFFF4A237),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    t.advertiser_wallet.deposit_pending,
+                    style: AppTextStyles.headlineMedium(context).copyWith(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                t.advertiser_wallet.deposit_resume_hint.replaceAll(
+                  '{amount}',
+                  walletLabel,
+                ),
+                style: AppTextStyles.bodyLarge(context).copyWith(
+                  fontSize: 13,
+                  height: 1.4,
+                  color: AppColors.textSecondaryOf(context),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 20),
+        _DepositPaymentSummary(
+          charge: charge,
+          currency: pending.currency,
+          moneyLocale: moneyLocale,
+          t: t,
+          isDark: isDark,
+        ),
+        const SizedBox(height: 24),
+        _WalletPayStrip(
+          data: data,
+          t: t,
+          busyMethod: busyMethod,
+          onCard: onCard,
+          onApplePay: onApplePay,
+          onGooglePay: onGooglePay,
+        ),
+        const SizedBox(height: 12),
+        Center(
+          child: TextButton(
+            onPressed: busyMethod != null ? null : onCancel,
+            child: Text(
+              t.advertiser_wallet.deposit_cancel,
+              style: TextStyle(
+                color: AppColors.textSecondaryOf(context),
+                fontWeight: FontWeight.w600,
+                decoration: TextDecoration.underline,
+                decorationColor: AppColors.textSecondaryOf(context),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

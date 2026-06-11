@@ -216,11 +216,12 @@ class AuthNotifier extends _$AuthNotifier {
     await resetPushDeliveryForAccountSwitch();
     await dismissAllWayoLocalPushNotifications();
     await DashboardHiveStore.clearAll();
-    invalidateChatProviders(ref); // Clear stale chat from previous session.
+    ref.read(chatPostLoginGateProvider.notifier).state = DateTime.now();
+    invalidateChatProvidersSync(ref); // Clear stale chat from previous session.
     invalidateCreatorWalletProviders(ref);
     await _persistAuth(ref.read(secureStorageProvider), data);
-    // Brief delay to ensure token is visible to all interceptor instances.
-    await Future<void>.delayed(const Duration(milliseconds: 100));
+    // Brief delay so secure storage + Dio interceptors see the new access token.
+    await Future<void>.delayed(const Duration(milliseconds: 250));
     // Mark profile as just refreshed so subsequent calls respect cooldown.
     _lastProfileRefreshUtc = DateTime.now().toUtc();
     _lastAuthUserFetchStartUtc = DateTime.now().toUtc();
@@ -243,8 +244,27 @@ class AuthNotifier extends _$AuthNotifier {
   }
 
   Future<void> _bootstrapChatAfterLogin() async {
-    await Future<void>.delayed(const Duration(milliseconds: 450));
-    await ref.read(chatBootstrapProvider.future);
+    await Future<void>.delayed(const Duration(milliseconds: 300));
+    for (var round = 0; round < 2; round++) {
+      try {
+        await ref.read(chatBootstrapProvider.future);
+        await ref.read(chatConversationsProvider.future);
+        ref.read(chatPostLoginGateProvider.notifier).state = null;
+        return;
+      } catch (e) {
+        if (kDebugMode) {
+          debugPrint(
+            '[Chat] post-login warmup failed (round ${round + 1}): $e',
+          );
+        }
+        ref.invalidate(chatBootstrapProvider);
+        ref.invalidate(chatConversationsProvider);
+        if (round == 0) {
+          await Future<void>.delayed(const Duration(seconds: 2));
+        }
+      }
+    }
+    ref.read(chatPostLoginGateProvider.notifier).state = null;
   }
 
   /// Clears a failed login state (e.g. after rate-limit cooldown ends).

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../account_deletion/presentation/providers/account_deletion_providers.dart';
 import '../../advertiser_campaigns/presentation/providers/advertiser_campaigns_providers.dart';
+import '../../advertiser_video_reviews/presentation/providers/advertiser_video_reviews_providers.dart';
 import '../../auth/domain/auth_notifier.dart';
 import '../../auth/domain/wayo_ads_account_role.dart';
 import '../../creator_campaigns/presentation/providers/creator_campaigns_providers.dart';
@@ -142,6 +143,8 @@ class _RealtimeDashboardWireState extends ConsumerState<RealtimeDashboardWire>
       ref.invalidate(creatorBusinessProfileProvider);
       ref.invalidate(advertiserCampaignsPagedProvider);
       ref.invalidate(advertiserCampaignsCountsProvider);
+      ref.invalidate(advertiserCampaignDetailProvider);
+      invalidateAdvertiserVideoReviews(ref);
     }
   }
 

@@ -123,4 +123,12 @@ abstract final class ApiEndpoints {
   /// Streams a generated `application/pdf` (Bearer or session) —
   /// [GET /api/invoices/:id/pdf](Wayo-ads).
   static String invoicePdf(String id) => 'api/invoices/$id/pdf';
+
+  /// Advertiser video submissions — [GET /api/advertiser/videos](Wayo-ads).
+  static const String advertiserVideos = 'api/advertiser/videos';
+
+  /// Approve or reject a pending submission —
+  /// [PATCH /api/advertiser/videos/:id](Wayo-ads).
+  static String advertiserVideoReview(String videoId) =>
+      'api/advertiser/videos/$videoId';
 }

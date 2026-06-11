@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:equatable/equatable.dart';
 
 import '../../../../core/errors/auth_exceptions.dart';
+import '../../../../core/maintenance/maintenance_service.dart';
 import '../../../../core/network/request_deduplicator.dart';
 import '../../../../core/network/rate_limiter.dart';
 import '../../../../core/storage/secure_storage.dart';
@@ -494,6 +495,7 @@ final class DashboardRepositoryImpl implements DashboardRepository {
       return e;
     }
     if (e is DioException) {
+      MaintenanceServiceHolder.instance.reportFromDio(e);
       if (e.type == DioExceptionType.connectionTimeout ||
           e.type == DioExceptionType.receiveTimeout ||
           e.type == DioExceptionType.connectionError) {

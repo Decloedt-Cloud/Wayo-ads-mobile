@@ -461,6 +461,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               baseDelay: 660.ms,
                               slideFrom: 0.18,
                             ),
+                            const SizedBox(height: 8),
+                            _wrapEntrance(
+                              reduce,
+                              Text(
+                                t.login.apple_hide_my_email_hint,
+                                textAlign: TextAlign.center,
+                                style: AppTextStyles.bodyLarge(context).copyWith(
+                                  fontSize: 13,
+                                  color: AppColors.textSecondaryOf(context),
+                                  height: 1.35,
+                                ),
+                              ),
+                              baseDelay: 680.ms,
+                              slideFrom: 0.16,
+                            ),
                           ],
                           const SizedBox(height: 14),
                           _wrapEntrance(

@@ -5,6 +5,8 @@ import 'package:sentry_dio/sentry_dio.dart';
 
 import '../config/auth_runtime_config.dart';
 import '../connectivity/connectivity_providers.dart';
+import '../maintenance/maintenance_interceptor.dart';
+import '../maintenance/maintenance_service.dart';
 import '../observability/app_log.dart';
 import '../connectivity/connectivity_reporter_interceptor.dart';
 import '../storage/secure_storage.dart';
@@ -60,6 +62,10 @@ Dio wayoAdsDio(WayoAdsDioRef ref) {
   if (kWayoDiagnosticsLogging) {
     client.interceptors.add(WayoLoggingInterceptor());
   }
+  // Last = runs first on errors/responses — flags maintenance before other handlers.
+  client.interceptors.add(
+    MaintenanceInterceptor(MaintenanceServiceHolder.instance),
+  );
 
   // SECURITY: Always attach certificate pinning in release builds.
   // Pins are shared across all API hosts (Auth + Wayo-ads).

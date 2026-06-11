@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -13,6 +15,33 @@ import '../../../dashboard/presentation/theme/campaign_detail_premium_palette.da
 import '../../data/advertiser_campaigns_repository.dart';
 import '../../domain/campaign_application.dart';
 import '../providers/advertiser_campaigns_providers.dart';
+
+int _applicationSortKey(CampaignApplicationStatus status) {
+  return switch (status) {
+    CampaignApplicationStatus.pending => 0,
+    CampaignApplicationStatus.approved => 1,
+    CampaignApplicationStatus.rejected => 2,
+    CampaignApplicationStatus.withdrawn => 3,
+    _ => 4,
+  };
+}
+
+List<CampaignApplication> _sortedApplications(List<CampaignApplication> list) {
+  final copy = [...list];
+  copy.sort(
+    (a, b) => _applicationSortKey(a.status).compareTo(_applicationSortKey(b.status)),
+  );
+  return copy;
+}
+
+String _approvedCreatorsNamesLine(List<CampaignApplication> approved) {
+  if (approved.isEmpty) return '';
+  if (approved.length == 1) return approved.first.creatorName;
+  if (approved.length == 2) {
+    return '${approved[0].creatorName}, ${approved[1].creatorName}';
+  }
+  return '${approved.first.creatorName} +${approved.length - 1}';
+}
 
 /// Creator applications strip for advertiser campaign detail (`GET …/applications`).
 class CampaignApplicationsSection extends ConsumerWidget {
@@ -97,7 +126,7 @@ class _ClassicDataBody extends StatelessWidget {
             else
               _ApplicationsList(
                 campaignId: campaignId,
-                applications: list,
+                applications: _sortedApplications(list),
                 isDark: isDark,
               ),
           ],
@@ -114,12 +143,20 @@ class _PremiumDataBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = context.t;
+    final sorted = _sortedApplications(list);
+    final approved = sorted
+        .where((a) => a.status == CampaignApplicationStatus.approved)
+        .toList();
     final pendingCount =
-        list.where((a) => a.status == CampaignApplicationStatus.pending).length;
+        sorted.where((a) => a.status == CampaignApplicationStatus.pending).length;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        if (approved.isNotEmpty) ...[
+          _ApprovedCreatorsStrip(approved: approved, t: t),
+          const SizedBox(height: 16),
+        ],
         Row(
           children: [
             Expanded(
@@ -166,19 +203,19 @@ class _PremiumDataBody extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 16),
-        if (list.isEmpty)
+        if (sorted.isEmpty)
           _PremiumEmpty(t: t)
         else
           ListView.separated(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             padding: EdgeInsets.zero,
-            itemCount: list.length,
+            itemCount: sorted.length,
             separatorBuilder: (BuildContext context, int index) =>
                 const SizedBox(height: 12),
             itemBuilder: (context, index) => _PremiumApplicationCard(
               campaignId: campaignId,
-              app: list[index],
+              app: sorted[index],
             ),
           ),
       ],
@@ -334,7 +371,171 @@ class _PremiumEmpty extends StatelessWidget {
   }
 }
 
-class _PremiumApplicationCard extends ConsumerWidget {
+class _ApprovedCreatorsStrip extends StatelessWidget {
+  const _ApprovedCreatorsStrip({required this.approved, required this.t});
+
+  final List<CampaignApplication> approved;
+  final Translations t;
+
+  static const double _avatarSize = 44;
+  static const double _overlap = 12;
+
+  @override
+  Widget build(BuildContext context) {
+    final showOverflow = approved.length > 4;
+    final faces = showOverflow ? 3 : math.min(4, approved.length);
+    final stackCount = showOverflow ? 4 : faces;
+    final bandWidth = stackCount == 0
+        ? 0.0
+        : _avatarSize + (stackCount - 1) * (_avatarSize - _overlap);
+    final namesLine = _approvedCreatorsNamesLine(approved);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: CampaignDetailPremiumPalette.surface1(context),
+        borderRadius:
+            BorderRadius.circular(CampaignDetailPremiumPalette.kCardRadius),
+        border: Border.all(color: CampaignDetailPremiumPalette.divider(context)),
+        boxShadow: CampaignDetailPremiumPalette.cardShadow(context, 0.1),
+      ),
+      child: Row(
+        children: [
+          SizedBox(
+            width: math.max(_avatarSize + 12, bandWidth + 12),
+            height: _avatarSize + 6,
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                for (var i = 0; i < faces; i++)
+                  Positioned(
+                    left: i * (_avatarSize - _overlap),
+                    top: 3,
+                    child: _ApprovedStackAvatar(app: approved[i], size: _avatarSize),
+                  ),
+                if (showOverflow)
+                  Positioned(
+                    left: 3 * (_avatarSize - _overlap),
+                    top: 3,
+                    child: _ApprovedOverflowAvatar(
+                      extra: approved.length - 3,
+                      size: _avatarSize,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  t.advertiser_campaigns.detail.approved_creators,
+                  style: CampaignDetailPremiumPalette.bodyLabel(context)
+                      .copyWith(fontSize: 13),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  namesLine,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: CampaignDetailPremiumPalette.bodyValue(context)
+                      .copyWith(fontSize: 14, fontWeight: FontWeight.w700),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
+            decoration: BoxDecoration(
+              color: CampaignDetailPremiumPalette.amber,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: CampaignDetailPremiumPalette.amber.withValues(alpha: 0.45),
+              ),
+            ),
+            child: Text(
+              '${approved.length}',
+              style: GoogleFonts.dmSans(
+                fontWeight: FontWeight.w900,
+                fontSize: 15,
+                color: const Color(0xFF0A0A0F),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ApprovedStackAvatar extends StatelessWidget {
+  const _ApprovedStackAvatar({required this.app, required this.size});
+
+  final CampaignApplication app;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: CampaignDetailPremiumPalette.bg(context),
+          width: 2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.18),
+            blurRadius: 5,
+          ),
+        ],
+      ),
+      child: _PremiumAvatar(
+        name: app.creatorName,
+        avatarUrl: app.creatorAvatar,
+        size: size,
+      ),
+    );
+  }
+}
+
+class _ApprovedOverflowAvatar extends StatelessWidget {
+  const _ApprovedOverflowAvatar({required this.extra, required this.size});
+
+  final int extra;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: CampaignDetailPremiumPalette.surfaceGlass(context),
+        border: Border.all(
+          color: CampaignDetailPremiumPalette.bg(context),
+          width: 2,
+        ),
+      ),
+      child: Text(
+        '+$extra',
+        style: GoogleFonts.dmSans(
+          fontWeight: FontWeight.w800,
+          fontSize: 13,
+          color: CampaignDetailPremiumPalette.value(context),
+        ),
+      ),
+    );
+  }
+}
+
+class _PremiumApplicationCard extends ConsumerStatefulWidget {
   const _PremiumApplicationCard({
     required this.campaignId,
     required this.app,
@@ -343,42 +544,118 @@ class _PremiumApplicationCard extends ConsumerWidget {
   final String campaignId;
   final CampaignApplication app;
 
-  void _openSheet(BuildContext context) {
+  @override
+  ConsumerState<_PremiumApplicationCard> createState() =>
+      _PremiumApplicationCardState();
+}
+
+class _PremiumApplicationCardState extends ConsumerState<_PremiumApplicationCard> {
+  bool _busy = false;
+
+  void _openSheet() {
     HapticFeedback.lightImpact();
     showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (ctx) => _ApplicationDetailSheet(campaignId: campaignId, app: app),
+      builder: (ctx) => _ApplicationDetailSheet(
+        campaignId: widget.campaignId,
+        app: widget.app,
+      ),
     );
   }
 
+  Future<void> _onApprove() async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    HapticFeedback.mediumImpact();
+    try {
+      final repo = ref.read(advertiserCampaignsRepositoryProvider);
+      await repo.approveApplication(widget.campaignId, widget.app.id);
+      ref.invalidate(campaignApplicationsProvider(widget.campaignId));
+      ref.invalidate(advertiserCampaignDetailProvider(widget.campaignId));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(context.t.dashboard.application_approved),
+            backgroundColor: Colors.green.shade600,
+          ),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(context.t.dashboard.application_action_failed),
+            backgroundColor: Colors.red.shade600,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _onReject() async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    HapticFeedback.mediumImpact();
+    try {
+      final repo = ref.read(advertiserCampaignsRepositoryProvider);
+      await repo.rejectApplication(widget.campaignId, widget.app.id);
+      ref.invalidate(campaignApplicationsProvider(widget.campaignId));
+      ref.invalidate(advertiserCampaignDetailProvider(widget.campaignId));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(context.t.dashboard.application_rejected),
+            backgroundColor: Colors.orange.shade600,
+          ),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(context.t.dashboard.application_action_failed),
+            backgroundColor: Colors.red.shade600,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final t = context.t;
+    final app = widget.app;
     final handle = _creatorHandle(app.creatorName);
+    final isPending = app.status == CampaignApplicationStatus.pending;
 
     return Material(
       color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(CampaignDetailPremiumPalette.kCardRadius),
-        onTap: () => _openSheet(context),
-        child: Ink(
-          width: double.infinity,
-          padding: const EdgeInsets.all(CampaignDetailPremiumPalette.kCardPadding),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(CampaignDetailPremiumPalette.kCardRadius),
-            color: CampaignDetailPremiumPalette.surface1(context),
-            border: Border.all(color: CampaignDetailPremiumPalette.divider(context)),
-            boxShadow: CampaignDetailPremiumPalette.cardShadow(
-              context,
-              0.08,
-            ),
+      child: Ink(
+        width: double.infinity,
+        padding: const EdgeInsets.all(CampaignDetailPremiumPalette.kCardPadding),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(CampaignDetailPremiumPalette.kCardRadius),
+          color: CampaignDetailPremiumPalette.surface1(context),
+          border: Border.all(color: CampaignDetailPremiumPalette.divider(context)),
+          boxShadow: CampaignDetailPremiumPalette.cardShadow(
+            context,
+            0.08,
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            InkWell(
+              borderRadius:
+                  BorderRadius.circular(CampaignDetailPremiumPalette.kCardRadius),
+              onTap: _openSheet,
+              child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _PremiumAvatar(name: app.creatorName, avatarUrl: app.creatorAvatar),
@@ -410,31 +687,84 @@ class _PremiumApplicationCard extends ConsumerWidget {
                           ),
                         ),
                         const SizedBox(width: 10),
-                        _PremiumStatusChip(status: app.status, t: t),
+                        if (!isPending)
+                          _PremiumStatusChip(status: app.status, t: t),
                       ],
                     ),
                   ),
                 ],
               ),
+            ),
+            const SizedBox(height: 14),
+            Divider(
+              height: 1,
+              thickness: 1,
+              color: CampaignDetailPremiumPalette.rowSeparator(context),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              _premiumApplicationStatLine(context, t, app),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: CampaignDetailPremiumPalette.bodyLabel(context).copyWith(
+                fontSize: 13,
+                color: CampaignDetailPremiumPalette.muted(context),
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            if (isPending) ...[
               const SizedBox(height: 14),
-              Divider(
-                height: 1,
-                thickness: 1,
-                color: CampaignDetailPremiumPalette.rowSeparator(context),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                _premiumApplicationStatLine(context, t, app),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: CampaignDetailPremiumPalette.bodyLabel(context).copyWith(
-                  fontSize: 13,
-                  color: CampaignDetailPremiumPalette.muted(context),
-                  fontWeight: FontWeight.w500,
+              if (_busy)
+                const Center(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: 4),
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                )
+              else
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: _onReject,
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.red.shade300,
+                          side: BorderSide(
+                            color: Colors.red.withValues(alpha: 0.45),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: Text(
+                          t.advertiser_campaigns.applications.reject_button,
+                          style: GoogleFonts.dmSans(fontWeight: FontWeight.w700),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: FilledButton(
+                        onPressed: _onApprove,
+                        style: FilledButton.styleFrom(
+                          backgroundColor: CampaignDetailPremiumPalette.amber,
+                          foregroundColor: Colors.black,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: Text(
+                          t.advertiser_campaigns.applications.approve_button,
+                          style: GoogleFonts.dmSans(fontWeight: FontWeight.w800),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
             ],
-          ),
+          ],
         ),
       ),
     );
@@ -471,10 +801,11 @@ String _creatorHandle(String name) {
 }
 
 class _PremiumAvatar extends StatelessWidget {
-  const _PremiumAvatar({required this.name, this.avatarUrl});
+  const _PremiumAvatar({required this.name, this.avatarUrl, this.size = 48});
 
   final String name;
   final String? avatarUrl;
+  final double size;
 
   @override
   Widget build(BuildContext context) {
@@ -483,27 +814,29 @@ class _PremiumAvatar extends StatelessWidget {
       return ClipOval(
         child: CachedNetworkImage(
           imageUrl: avatarUrl!,
-          width: 48,
-          height: 48,
+          width: size,
+          height: size,
           fit: BoxFit.cover,
-          errorWidget: (context, url, error) => _PremiumAvatarPlaceholder(letter: letter),
+          errorWidget: (context, url, error) =>
+              _PremiumAvatarPlaceholder(letter: letter, size: size),
         ),
       );
     }
-    return _PremiumAvatarPlaceholder(letter: letter);
+    return _PremiumAvatarPlaceholder(letter: letter, size: size);
   }
 }
 
 class _PremiumAvatarPlaceholder extends StatelessWidget {
-  const _PremiumAvatarPlaceholder({required this.letter});
+  const _PremiumAvatarPlaceholder({required this.letter, this.size = 48});
 
   final String letter;
+  final double size;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 48,
-      height: 48,
+      width: size,
+      height: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         gradient: CampaignDetailPremiumPalette.accentGradient,
@@ -639,6 +972,7 @@ class _ApplicationDetailSheetState extends ConsumerState<_ApplicationDetailSheet
       final repo = ref.read(advertiserCampaignsRepositoryProvider);
       await repo.rejectApplication(widget.campaignId, widget.app.id);
       ref.invalidate(campaignApplicationsProvider(widget.campaignId));
+      ref.invalidate(advertiserCampaignDetailProvider(widget.campaignId));
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(

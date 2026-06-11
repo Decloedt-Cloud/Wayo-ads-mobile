@@ -36,6 +36,7 @@ class TranslationsAr extends Translations {
 
 	// Translations
 	@override late final _TranslationsForceUpdateAr force_update = _TranslationsForceUpdateAr._(_root);
+	@override late final _TranslationsMaintenanceAr maintenance = _TranslationsMaintenanceAr._(_root);
 	@override late final _TranslationsConnectivityAr connectivity = _TranslationsConnectivityAr._(_root);
 	@override late final _TranslationsCampaignsExplorerAr campaigns_explorer = _TranslationsCampaignsExplorerAr._(_root);
 	@override late final _TranslationsLoginAr login = _TranslationsLoginAr._(_root);
@@ -47,6 +48,7 @@ class TranslationsAr extends Translations {
 	@override late final _TranslationsHomeAr home = _TranslationsHomeAr._(_root);
 	@override late final _TranslationsDashboardAr dashboard = _TranslationsDashboardAr._(_root);
 	@override late final _TranslationsAdvertiserCampaignsAr advertiser_campaigns = _TranslationsAdvertiserCampaignsAr._(_root);
+	@override late final _TranslationsAdvertiserVideoReviewsAr advertiser_video_reviews = _TranslationsAdvertiserVideoReviewsAr._(_root);
 	@override late final _TranslationsNavAr nav = _TranslationsNavAr._(_root);
 	@override late final _TranslationsInvoicesAr invoices = _TranslationsInvoicesAr._(_root);
 	@override late final _TranslationsPushAr push = _TranslationsPushAr._(_root);
@@ -72,6 +74,21 @@ class _TranslationsForceUpdateAr extends TranslationsForceUpdateEn {
 	@override String get subtitle => 'يتوفر إصدار جديد من Wayo Ads. يرجى التحديث من المتجر للمتابعة.';
 	@override String get action_update => 'تحديث الآن';
 	@override String get checking => 'جاري التحقق من التحديثات…';
+}
+
+// Path: maintenance
+class _TranslationsMaintenanceAr extends TranslationsMaintenanceEn {
+	_TranslationsMaintenanceAr._(TranslationsAr root) : this._root = root, super.internal(root);
+
+	final TranslationsAr _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'سنعود قريباً';
+	@override String get subtitle => 'نقوم بترقية الخدمة بميزات جديدة. سنعود قريباً.';
+	@override String get apology => 'نعتذر عن الإزعاج ونقدّر صبركم.';
+	@override String get copyright => '© 2026 Wayo Ads. جميع الحقوق محفوظة.';
+	@override String get support_email => 'support@wayo.cloud';
+	@override String get action_retry => 'إعادة المحاولة';
 }
 
 // Path: connectivity
@@ -159,6 +176,7 @@ class _TranslationsLoginAr extends TranslationsLoginEn {
 	@override String get apple_failed => 'فشل تسجيل الدخول عبر Apple. حاول مرة أخرى.';
 	@override String get apple_server_not_configured => 'تسجيل الدخول عبر Apple غير مفعّل على خادم Wayo ID بعد. اطلب من المسؤول إعداد Apple على Auth_Wayo (الإنتاج)، ثم أعد المحاولة.';
 	@override String get apple_canceled => 'تم إلغاء تسجيل الدخول عبر Apple.';
+	@override String get apple_hide_my_email_hint => 'لاستلام رمز التحقق، اختر مشاركة بريدي الإلكتروني — وليس إخفاء بريدي الإلكتروني عند تسجيل الدخول عبر Apple.';
 	@override String get google_not_configured => 'لم يُضبط تسجيل الدخول عبر Google. أضف AUTH_GOOGLE_SERVER_CLIENT_ID في dart_defines.json (معرّف عميل الويب من Google ينتهي بـ .apps.googleusercontent.com) ثم أعد تشغيل التطبيق بالكامل.';
 	@override String get google_wrong_client_id => 'يجب أن يكون AUTH_GOOGLE_SERVER_CLIENT_ID هو معرّف عميل الويب في Google Cloud (…apps.googleusercontent.com) وليس UUID عميل OAuth في Passport.';
 	@override String get google_failed => 'فشل تسجيل الدخول عبر Google. حاول مرة أخرى.';
@@ -337,6 +355,39 @@ class _TranslationsAdvertiserCampaignsAr extends TranslationsAdvertiserCampaigns
 	@override late final _TranslationsAdvertiserCampaignsDetailAr detail = _TranslationsAdvertiserCampaignsDetailAr._(_root);
 	@override late final _TranslationsAdvertiserCampaignsCreateAr create = _TranslationsAdvertiserCampaignsCreateAr._(_root);
 	@override late final _TranslationsAdvertiserCampaignsApplicationsAr applications = _TranslationsAdvertiserCampaignsApplicationsAr._(_root);
+}
+
+// Path: advertiser_video_reviews
+class _TranslationsAdvertiserVideoReviewsAr extends TranslationsAdvertiserVideoReviewsEn {
+	_TranslationsAdvertiserVideoReviewsAr._(TranslationsAr root) : this._root = root, super.internal(root);
+
+	final TranslationsAr _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'مراجعة الفيديوهات';
+	@override String get subtitle => 'اعتمد أو ارفض فيديوهات المنشئين المقدّمة لحملاتك.';
+	@override String get pending => 'قيد الانتظار';
+	@override String get approved => 'معتمدة';
+	@override String get rejected => 'مرفوضة';
+	@override String get flagged => 'مُبلّغ عنها';
+	@override String get empty => 'لا توجد فيديوهات في هذه الفئة.';
+	@override String get load_error => 'تعذّر تحميل الفيديوهات المقدّمة';
+	@override String get approve_button => 'اعتماد';
+	@override String get reject_button => 'رفض';
+	@override String get approve_success => 'تم اعتماد الفيديو';
+	@override String get reject_success => 'تم رفض الفيديو';
+	@override String get reject_reason_required => 'يرجى إدخال سبب الرفض';
+	@override String get reject_reason_hint => 'سبب الرفض';
+	@override String get reject_dialog_title => 'رفض الفيديو';
+	@override String get action_failed => 'تعذّر تحديث الفيديو. حاول مرة أخرى.';
+	@override String get submitted_at => 'تاريخ التقديم';
+	@override String get shorts_badge => 'Short';
+	@override String get flag_reason => 'سبب الإبلاغ';
+	@override String get rejection_reason => 'سبب الرفض';
+	@override String get status_pending => 'قيد الانتظار';
+	@override String get status_approved => 'معتمدة';
+	@override String get status_rejected => 'مرفوضة';
+	@override String get status_flagged => 'مُبلّغ عنها';
 }
 
 // Path: nav
@@ -528,6 +579,9 @@ class _TranslationsAdvertiserWalletAr extends TranslationsAdvertiserWalletEn {
 	@override String get payment_total => 'الإجمالي';
 	@override String get payment_deposit_amount => 'مبلغ الإيداع';
 	@override String get payment_bank_fee => 'رسوم المعاملة البنكية (3.69%)';
+	@override String get deposit_pending => 'إيداع قيد الانتظار';
+	@override String get deposit_resume_hint => 'استئناف إيداعك بقيمة {amount} — أكمل الدفع أو اضغط إلغاء للتخلي عنه.';
+	@override String get deposit_cancel => 'إلغاء';
 }
 
 // Path: chat
@@ -657,12 +711,6 @@ class _TranslationsPrivacyPolicyAr extends TranslationsPrivacyPolicyEn {
 	// Translations
 	@override String get title => 'سياسة الخصوصية';
 	@override String get last_updated => 'آخر تحديث: 7 أكتوبر 2025';
-	@override String get legal_entity_operator => 'يتم تشغيل هذا التطبيق ومنصة Wayo Ads بواسطة:';
-	@override String get legal_entity_name => 'AL BOUHOUTI SOFTWARE DESIGN COMPANY L.L.C';
-	@override String get legal_entity_address => 'Al Barshaa 1, Dubai, Dubai, United Arab Emirates';
-	@override String get legal_entity_support => 'دعم العملاء';
-	@override String get legal_entity_email => 'support@wayo.cloud';
-	@override String get legal_entity_phone => '+971 542396643';
 	@override String get intro_title => '1. مقدمة';
 	@override String get intro_body => 'في Wayo Ads نلتزم بجمع بياناتك واستخدامها بمسؤولية، وفقًا للقوانين المعمول بها لحماية البيانات، بما في ذلك القانون المغربي رقم 09-08 وعند الاقتضاء اللائحة العامة لحماية البيانات (GDPR) (الاتحاد الأوروبي 2016/679). باستخدامك منصتنا، فإنك توافق على جمع بياناتك ومعالجتها واستخدامها كما هو موضح في سياسة الخصوصية هذه.';
 	@override String get data_title => '2. البيانات التي نجمعها';
@@ -686,7 +734,7 @@ class _TranslationsPrivacyPolicyAr extends TranslationsPrivacyPolicyEn {
 	@override String get changes_title => '11. تغييرات هذه السياسة';
 	@override String get changes_body => 'قد نحدّث سياسة الخصوصية من وقت لآخر. سنُعلمك بأي تغييرات جوهرية بنشر السياسة الجديدة على هذه الصفحة وتحديث تاريخ «آخر تحديث».';
 	@override String get contact_title => '12. معلومات الاتصال';
-	@override String get contact_body => 'مسؤول المعالجة: AL BOUHOUTI SOFTWARE DESIGN COMPANY L.L.C\nAl Barshaa 1, Dubai, Dubai, United Arab Emirates\nالبريد الإلكتروني: support@wayo.cloud\nالهاتف: +971 542396643';
+	@override String get contact_body => 'مسؤول المعالجة: Wayo، دبي، الإمارات العربية المتحدة.\nالبريد الإلكتروني: info@wayo.cloud\nالعنوان: R320 أم هرير 2، دبي، الإمارات العربية المتحدة.';
 }
 
 // Path: app_settings
@@ -823,6 +871,12 @@ class _TranslationsOnboardingAr extends TranslationsOnboardingEn {
 	@override String get role_advertiser_desc => 'أطلق الحملات وأدر المبدعين من لوحة التحكم.';
 	@override String get email_code_title => 'تأكيد البريد';
 	@override String email_code_subtitle({required Object email}) => 'أدخل الرمز المكوّن من 6 أرقام الذي أرسلناه إلى ${email}.';
+	@override String get email_code_subtitle_prefix => 'أدخل الرمز المكوّن من 6 أرقام الذي أرسلناه إلى ';
+	@override String get email_code_subtitle_suffix => '.';
+	@override String get email_code_hide_my_email_warning => 'سجّلت الدخول بخيار إخفاء بريدي الإلكتروني من Apple. غالبًا لا تصل رموز التحقق إلى عناوين التوجيه. سجّل الخروج، ثم سجّل الدخول مجددًا عبر Apple واختر مشاركة بريدي الإلكتروني، أو استخدم بريد iCloud الحقيقي مع كلمة المرور.';
+	@override String get email_code_otp_label => 'أدخل رمز التحقق';
+	@override String get email_code_sending => 'جارٍ إرسال الرمز...';
+	@override String get email_code_verifying => 'جارٍ التحقق...';
 	@override String get skip => 'تخطي';
 	@override String get next => 'التالي';
 	@override String get done => 'حسنًا';
@@ -911,6 +965,7 @@ class _TranslationsAdvertiserCampaignsCardAr extends TranslationsAdvertiserCampa
 	@override String get locked => 'محجوز';
 	@override String get spent => 'المنفق';
 	@override String get cpc => 'CPC';
+	@override String get cpm => 'CPM';
 	@override String get valid_engagements => '{count} مشاهدة مُصدّقة';
 	@override String get list_row_views => '{count} مشاهدة';
 	@override String get list_row_clicks => '{count} نقرات';
@@ -965,6 +1020,7 @@ class _TranslationsAdvertiserCampaignsDetailAr extends TranslationsAdvertiserCam
 	@override String get objective_traffic => 'الزيارات';
 	@override String get objective_conversion => 'التحويل';
 	@override String get cpm_metric => 'CPM (لكل 1000 مشاهدة)';
+	@override String get cpm_consumed => 'CPM المستهلك (لكل 1000 مشاهدة)';
 	@override String get cpc_metric => 'CPC (لكل نقرة)';
 	@override String get description_title => 'الوصف';
 	@override String get show_more => 'عرض المزيد';
@@ -1153,6 +1209,14 @@ class _TranslationsCreatorCampaignsAr extends TranslationsCreatorCampaignsEn {
 	@override String reward_per_view({required Object amount}) => '${amount} / مشاهدة';
 	@override String reward_per_click({required Object amount}) => '${amount} / نقرة';
 	@override String get budget_remaining_label => 'الميزانية المتبقية';
+	@override String get earnings_card_title => 'أرباحي من هذه الحملة';
+	@override String get earnings_card_subtitle => 'أداؤك وتفاصيل المدفوعات';
+	@override String get earnings_net => 'صافي الأرباح';
+	@override String get earnings_views => 'مشاهدات مدفوعة';
+	@override String get earnings_platform_views => 'مشاهدات المنصة';
+	@override String get earnings_valid_clicks => 'نقرات مدفوعة';
+	@override String get earnings_recorded_clicks => 'نقرات مسجّلة';
+	@override String get earnings_available_balance => 'الرصيد المتاح';
 	@override String requirement_platform({required Object platform}) => 'انشر على ${platform} فقط';
 	@override String requirement_min_duration({required Object minutes}) => 'أدنى مدة: ${minutes} دقيقة';
 	@override String requirement_shorts_max({required Object seconds}) => 'Shorts حتى ${seconds} ثانية';
@@ -1314,6 +1378,12 @@ extension on TranslationsAr {
 			case 'force_update.subtitle': return 'يتوفر إصدار جديد من Wayo Ads. يرجى التحديث من المتجر للمتابعة.';
 			case 'force_update.action_update': return 'تحديث الآن';
 			case 'force_update.checking': return 'جاري التحقق من التحديثات…';
+			case 'maintenance.title': return 'سنعود قريباً';
+			case 'maintenance.subtitle': return 'نقوم بترقية الخدمة بميزات جديدة. سنعود قريباً.';
+			case 'maintenance.apology': return 'نعتذر عن الإزعاج ونقدّر صبركم.';
+			case 'maintenance.copyright': return '© 2026 Wayo Ads. جميع الحقوق محفوظة.';
+			case 'maintenance.support_email': return 'support@wayo.cloud';
+			case 'maintenance.action_retry': return 'إعادة المحاولة';
 			case 'connectivity.offline_title': return 'لا يوجد اتصال بالإنترنت';
 			case 'connectivity.offline_subtitle': return 'يرجى التحقق من الشبكة ثم المحاولة مرة أخرى.';
 			case 'connectivity.reconnecting_title': return 'إعادة الاتصال…';
@@ -1374,6 +1444,7 @@ extension on TranslationsAr {
 			case 'login.apple_failed': return 'فشل تسجيل الدخول عبر Apple. حاول مرة أخرى.';
 			case 'login.apple_server_not_configured': return 'تسجيل الدخول عبر Apple غير مفعّل على خادم Wayo ID بعد. اطلب من المسؤول إعداد Apple على Auth_Wayo (الإنتاج)، ثم أعد المحاولة.';
 			case 'login.apple_canceled': return 'تم إلغاء تسجيل الدخول عبر Apple.';
+			case 'login.apple_hide_my_email_hint': return 'لاستلام رمز التحقق، اختر مشاركة بريدي الإلكتروني — وليس إخفاء بريدي الإلكتروني عند تسجيل الدخول عبر Apple.';
 			case 'login.google_not_configured': return 'لم يُضبط تسجيل الدخول عبر Google. أضف AUTH_GOOGLE_SERVER_CLIENT_ID في dart_defines.json (معرّف عميل الويب من Google ينتهي بـ .apps.googleusercontent.com) ثم أعد تشغيل التطبيق بالكامل.';
 			case 'login.google_wrong_client_id': return 'يجب أن يكون AUTH_GOOGLE_SERVER_CLIENT_ID هو معرّف عميل الويب في Google Cloud (…apps.googleusercontent.com) وليس UUID عميل OAuth في Passport.';
 			case 'login.google_failed': return 'فشل تسجيل الدخول عبر Google. حاول مرة أخرى.';
@@ -1498,6 +1569,7 @@ extension on TranslationsAr {
 			case 'advertiser_campaigns.card.locked': return 'محجوز';
 			case 'advertiser_campaigns.card.spent': return 'المنفق';
 			case 'advertiser_campaigns.card.cpc': return 'CPC';
+			case 'advertiser_campaigns.card.cpm': return 'CPM';
 			case 'advertiser_campaigns.card.valid_engagements': return '{count} مشاهدة مُصدّقة';
 			case 'advertiser_campaigns.card.list_row_views': return '{count} مشاهدة';
 			case 'advertiser_campaigns.card.list_row_clicks': return '{count} نقرات';
@@ -1525,6 +1597,7 @@ extension on TranslationsAr {
 			case 'advertiser_campaigns.detail.objective_traffic': return 'الزيارات';
 			case 'advertiser_campaigns.detail.objective_conversion': return 'التحويل';
 			case 'advertiser_campaigns.detail.cpm_metric': return 'CPM (لكل 1000 مشاهدة)';
+			case 'advertiser_campaigns.detail.cpm_consumed': return 'CPM المستهلك (لكل 1000 مشاهدة)';
 			case 'advertiser_campaigns.detail.cpc_metric': return 'CPC (لكل نقرة)';
 			case 'advertiser_campaigns.detail.description_title': return 'الوصف';
 			case 'advertiser_campaigns.detail.show_more': return 'عرض المزيد';
@@ -1565,6 +1638,30 @@ extension on TranslationsAr {
 			case 'advertiser_campaigns.applications.reject_button': return 'رفض';
 			case 'advertiser_campaigns.applications.approved_status': return 'معتمد';
 			case 'advertiser_campaigns.applications.rejected_status': return 'مرفوض';
+			case 'advertiser_video_reviews.title': return 'مراجعة الفيديوهات';
+			case 'advertiser_video_reviews.subtitle': return 'اعتمد أو ارفض فيديوهات المنشئين المقدّمة لحملاتك.';
+			case 'advertiser_video_reviews.pending': return 'قيد الانتظار';
+			case 'advertiser_video_reviews.approved': return 'معتمدة';
+			case 'advertiser_video_reviews.rejected': return 'مرفوضة';
+			case 'advertiser_video_reviews.flagged': return 'مُبلّغ عنها';
+			case 'advertiser_video_reviews.empty': return 'لا توجد فيديوهات في هذه الفئة.';
+			case 'advertiser_video_reviews.load_error': return 'تعذّر تحميل الفيديوهات المقدّمة';
+			case 'advertiser_video_reviews.approve_button': return 'اعتماد';
+			case 'advertiser_video_reviews.reject_button': return 'رفض';
+			case 'advertiser_video_reviews.approve_success': return 'تم اعتماد الفيديو';
+			case 'advertiser_video_reviews.reject_success': return 'تم رفض الفيديو';
+			case 'advertiser_video_reviews.reject_reason_required': return 'يرجى إدخال سبب الرفض';
+			case 'advertiser_video_reviews.reject_reason_hint': return 'سبب الرفض';
+			case 'advertiser_video_reviews.reject_dialog_title': return 'رفض الفيديو';
+			case 'advertiser_video_reviews.action_failed': return 'تعذّر تحديث الفيديو. حاول مرة أخرى.';
+			case 'advertiser_video_reviews.submitted_at': return 'تاريخ التقديم';
+			case 'advertiser_video_reviews.shorts_badge': return 'Short';
+			case 'advertiser_video_reviews.flag_reason': return 'سبب الإبلاغ';
+			case 'advertiser_video_reviews.rejection_reason': return 'سبب الرفض';
+			case 'advertiser_video_reviews.status_pending': return 'قيد الانتظار';
+			case 'advertiser_video_reviews.status_approved': return 'معتمدة';
+			case 'advertiser_video_reviews.status_rejected': return 'مرفوضة';
+			case 'advertiser_video_reviews.status_flagged': return 'مُبلّغ عنها';
 			case 'nav.dashboard': return 'لوحة التحكم';
 			case 'nav.campaigns': return 'الحملات';
 			case 'nav.analytics': return 'التحليلات';
@@ -1769,6 +1866,14 @@ extension on TranslationsAr {
 			case 'creator.campaigns.reward_per_view': return ({required Object amount}) => '${amount} / مشاهدة';
 			case 'creator.campaigns.reward_per_click': return ({required Object amount}) => '${amount} / نقرة';
 			case 'creator.campaigns.budget_remaining_label': return 'الميزانية المتبقية';
+			case 'creator.campaigns.earnings_card_title': return 'أرباحي من هذه الحملة';
+			case 'creator.campaigns.earnings_card_subtitle': return 'أداؤك وتفاصيل المدفوعات';
+			case 'creator.campaigns.earnings_net': return 'صافي الأرباح';
+			case 'creator.campaigns.earnings_views': return 'مشاهدات مدفوعة';
+			case 'creator.campaigns.earnings_platform_views': return 'مشاهدات المنصة';
+			case 'creator.campaigns.earnings_valid_clicks': return 'نقرات مدفوعة';
+			case 'creator.campaigns.earnings_recorded_clicks': return 'نقرات مسجّلة';
+			case 'creator.campaigns.earnings_available_balance': return 'الرصيد المتاح';
 			case 'creator.campaigns.requirement_platform': return ({required Object platform}) => 'انشر على ${platform} فقط';
 			case 'creator.campaigns.requirement_min_duration': return ({required Object minutes}) => 'أدنى مدة: ${minutes} دقيقة';
 			case 'creator.campaigns.requirement_shorts_max': return ({required Object seconds}) => 'Shorts حتى ${seconds} ثانية';
@@ -1893,6 +1998,9 @@ extension on TranslationsAr {
 			case 'advertiser_wallet.payment_total': return 'الإجمالي';
 			case 'advertiser_wallet.payment_deposit_amount': return 'مبلغ الإيداع';
 			case 'advertiser_wallet.payment_bank_fee': return 'رسوم المعاملة البنكية (3.69%)';
+			case 'advertiser_wallet.deposit_pending': return 'إيداع قيد الانتظار';
+			case 'advertiser_wallet.deposit_resume_hint': return 'استئناف إيداعك بقيمة {amount} — أكمل الدفع أو اضغط إلغاء للتخلي عنه.';
+			case 'advertiser_wallet.deposit_cancel': return 'إلغاء';
 			case 'chat.inbox_title': return 'الرسائل';
 			case 'chat.inbox_subtitle': return 'محادثات آمنة لحملاتك';
 			case 'chat.conversation_unknown': return 'محادثة';
@@ -1986,12 +2094,6 @@ extension on TranslationsAr {
 			case 'errors.email_not_found': return 'لا يوجد حساب بهذا البريد.';
 			case 'privacy_policy.title': return 'سياسة الخصوصية';
 			case 'privacy_policy.last_updated': return 'آخر تحديث: 7 أكتوبر 2025';
-			case 'privacy_policy.legal_entity_operator': return 'يتم تشغيل هذا التطبيق ومنصة Wayo Ads بواسطة:';
-			case 'privacy_policy.legal_entity_name': return 'AL BOUHOUTI SOFTWARE DESIGN COMPANY L.L.C';
-			case 'privacy_policy.legal_entity_address': return 'Al Barshaa 1, Dubai, Dubai, United Arab Emirates';
-			case 'privacy_policy.legal_entity_support': return 'دعم العملاء';
-			case 'privacy_policy.legal_entity_email': return 'support@wayo.cloud';
-			case 'privacy_policy.legal_entity_phone': return '+971 542396643';
 			case 'privacy_policy.intro_title': return '1. مقدمة';
 			case 'privacy_policy.intro_body': return 'في Wayo Ads نلتزم بجمع بياناتك واستخدامها بمسؤولية، وفقًا للقوانين المعمول بها لحماية البيانات، بما في ذلك القانون المغربي رقم 09-08 وعند الاقتضاء اللائحة العامة لحماية البيانات (GDPR) (الاتحاد الأوروبي 2016/679). باستخدامك منصتنا، فإنك توافق على جمع بياناتك ومعالجتها واستخدامها كما هو موضح في سياسة الخصوصية هذه.';
 			case 'privacy_policy.data_title': return '2. البيانات التي نجمعها';
@@ -2015,7 +2117,7 @@ extension on TranslationsAr {
 			case 'privacy_policy.changes_title': return '11. تغييرات هذه السياسة';
 			case 'privacy_policy.changes_body': return 'قد نحدّث سياسة الخصوصية من وقت لآخر. سنُعلمك بأي تغييرات جوهرية بنشر السياسة الجديدة على هذه الصفحة وتحديث تاريخ «آخر تحديث».';
 			case 'privacy_policy.contact_title': return '12. معلومات الاتصال';
-			case 'privacy_policy.contact_body': return 'مسؤول المعالجة: AL BOUHOUTI SOFTWARE DESIGN COMPANY L.L.C\nAl Barshaa 1, Dubai, Dubai, United Arab Emirates\nالبريد الإلكتروني: support@wayo.cloud\nالهاتف: +971 542396643';
+			case 'privacy_policy.contact_body': return 'مسؤول المعالجة: Wayo، دبي، الإمارات العربية المتحدة.\nالبريد الإلكتروني: info@wayo.cloud\nالعنوان: R320 أم هرير 2، دبي، الإمارات العربية المتحدة.';
 			case 'app_settings.title': return 'التفضيلات';
 			case 'app_settings.subtitle': return 'المظهر واللغة';
 			case 'app_settings.section_appearance': return 'المظهر';
@@ -2125,6 +2227,12 @@ extension on TranslationsAr {
 			case 'onboarding.role_advertiser_desc': return 'أطلق الحملات وأدر المبدعين من لوحة التحكم.';
 			case 'onboarding.email_code_title': return 'تأكيد البريد';
 			case 'onboarding.email_code_subtitle': return ({required Object email}) => 'أدخل الرمز المكوّن من 6 أرقام الذي أرسلناه إلى ${email}.';
+			case 'onboarding.email_code_subtitle_prefix': return 'أدخل الرمز المكوّن من 6 أرقام الذي أرسلناه إلى ';
+			case 'onboarding.email_code_subtitle_suffix': return '.';
+			case 'onboarding.email_code_hide_my_email_warning': return 'سجّلت الدخول بخيار إخفاء بريدي الإلكتروني من Apple. غالبًا لا تصل رموز التحقق إلى عناوين التوجيه. سجّل الخروج، ثم سجّل الدخول مجددًا عبر Apple واختر مشاركة بريدي الإلكتروني، أو استخدم بريد iCloud الحقيقي مع كلمة المرور.';
+			case 'onboarding.email_code_otp_label': return 'أدخل رمز التحقق';
+			case 'onboarding.email_code_sending': return 'جارٍ إرسال الرمز...';
+			case 'onboarding.email_code_verifying': return 'جارٍ التحقق...';
 			case 'onboarding.skip': return 'تخطي';
 			case 'onboarding.next': return 'التالي';
 			case 'onboarding.done': return 'حسنًا';

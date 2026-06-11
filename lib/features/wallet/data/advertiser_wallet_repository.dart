@@ -107,6 +107,85 @@ final class AdvertiserWalletRepository {
     return null;
   }
 
+  /// [GET /api/wallet/deposit-intent] — resume an abandoned Stripe checkout.
+  Future<AdvertiserPendingDeposit?> fetchPendingDeposit() async {
+    try {
+      final res = await _dio.get<Map<String, dynamic>>(
+        _path(ApiEndpoints.walletDepositIntent),
+      );
+      final data = res.data;
+      if (data == null) {
+        return null;
+      }
+      return _parsePendingDeposit(data);
+    } on DioException catch (e) {
+      final code = e.response?.statusCode ?? 0;
+      if (code == 403 || code == 404) {
+        return null;
+      }
+      throw ServerException(_depositErrorMessage(e), code);
+    }
+  }
+
+  /// [DELETE /api/wallet/deposit-intent] — discard an abandoned deposit.
+  Future<void> cancelDepositIntent(String intentId) async {
+    try {
+      final res = await _dio.delete<Map<String, dynamic>>(
+        _path(ApiEndpoints.walletDepositIntent),
+        data: <String, dynamic>{'intentId': intentId},
+      );
+      final data = res.data;
+      if (data == null) {
+        return;
+      }
+      final err = _err(data);
+      if (err != null) {
+        throw ServerException(err);
+      }
+    } on DioException catch (e) {
+      final code = e.response?.statusCode ?? 0;
+      if (code == 404) {
+        return;
+      }
+      throw ServerException(_depositErrorMessage(e), code);
+    }
+  }
+
+  static AdvertiserPendingDeposit? _parsePendingDeposit(
+    Map<String, dynamic> data,
+  ) {
+    final pending = _asMap(data['pending']);
+    if (pending == null) {
+      return null;
+    }
+    final intent = _asMap(pending['intent']);
+    if (intent == null) {
+      return null;
+    }
+    final intentId = '${intent['intentId'] ?? ''}'.trim();
+    final clientSecret = intent['clientSecret'] as String? ?? '';
+    if (intentId.isEmpty || clientSecret.isEmpty) {
+      return null;
+    }
+    final walletAmountCents =
+        (pending['walletAmountCents'] as num?)?.toInt() ??
+        (intent['amountCents'] as num?)?.toInt() ??
+        0;
+    final bankFeeCents = (pending['bankFeeCents'] as num?)?.toInt() ?? 0;
+    final totalAmountCents =
+        (pending['totalAmountCents'] as num?)?.toInt() ??
+        (intent['amountCents'] as num?)?.toInt() ??
+        walletAmountCents + bankFeeCents;
+    return AdvertiserPendingDeposit(
+      intentId: intentId,
+      clientSecret: clientSecret,
+      walletAmountCents: walletAmountCents,
+      bankFeeCents: bankFeeCents,
+      totalAmountCents: totalAmountCents,
+      currency: (intent['currency'] as String?)?.toUpperCase() ?? 'USD',
+    );
+  }
+
   Future<DepositIntentResult> createDepositIntent({
     required int amountCents,
     String? currency,

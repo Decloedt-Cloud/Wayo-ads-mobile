@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/layout/wayo_black_bottom_bar.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/creator_colors.dart';
 import '../../../../i18n/strings.g.dart';
 import '../../data/creator_wallet_remote_datasource.dart';
@@ -217,7 +219,6 @@ class _BusinessInfoScreenState extends ConsumerState<BusinessInfoScreen> {
   @override
   Widget build(BuildContext context) {
     final t = context.t;
-    final mq = MediaQuery.of(context);
 
     final formBody = Form(
       key: _formKey,
@@ -424,12 +425,21 @@ class _BusinessInfoScreenState extends ConsumerState<BusinessInfoScreen> {
       ),
     );
 
-    final bottomSafe = mq.padding.bottom;
-
     return Scaffold(
       resizeToAvoidBottomInset: true,
+      bottomNavigationBar: const WayoBlackBottomBar(),
       appBar: AppBar(
-        title: Text(t.creator.business.dialog_title),
+        title: Text(
+          t.creator.business.dialog_title,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: AppTextStyles.headlineMedium(context).copyWith(
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+            letterSpacing: -0.3,
+            color: AppColors.textPrimaryOf(context),
+          ),
+        ),
         leading: IconButton(
           icon: const Icon(Icons.close_rounded),
           onPressed: () => Navigator.of(context).pop(false),
@@ -440,7 +450,7 @@ class _BusinessInfoScreenState extends ConsumerState<BusinessInfoScreen> {
         physics: const BouncingScrollPhysics(
           parent: AlwaysScrollableScrollPhysics(),
         ),
-        padding: EdgeInsets.fromLTRB(20, 8, 20, 16 + bottomSafe),
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
         child: formBody,
       ),
     );

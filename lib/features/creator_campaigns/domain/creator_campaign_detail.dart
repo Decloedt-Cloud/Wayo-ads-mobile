@@ -45,8 +45,13 @@ final class CreatorCampaignDetail extends Equatable {
     this.allowMultiplePosts,
     this.shortsMaxDurationSeconds,
     this.shortsRequireVertical,
-    this.currency = 'EUR',
+    this.currency = 'USD',
     this.earningsCents = 0,
+    this.netEarningsCents = 0,
+    this.availableBalanceCents = 0,
+    this.paidViews = 0,
+    this.validatedClicks = 0,
+    this.recordedClicks = 0,
   });
 
   final String id;
@@ -101,6 +106,17 @@ final class CreatorCampaignDetail extends Equatable {
 
   final String currency;
   final int earningsCents;
+  final int netEarningsCents;
+  final int availableBalanceCents;
+  final int paidViews;
+  final int validatedClicks;
+  final int recordedClicks;
+
+  int get earningsViews =>
+      myVideos.fold<int>(0, (sum, v) => sum + v.totalValidatedViews);
+
+  int get platformViews =>
+      myVideos.fold<int>(0, (sum, v) => sum + v.currentViews);
 
   bool get isApproved =>
       myApplicationStatus == CreatorApplicationStatus.approved;
@@ -156,6 +172,13 @@ final class CreatorCampaignDetail extends Equatable {
       return s;
     }
 
+    final earningsCampaign = earningsMap?['campaign'] is Map
+        ? Map<String, dynamic>.from(earningsMap!['campaign'] as Map)
+        : null;
+    final totalBalance = earningsMap?['totalBalance'] is Map
+        ? Map<String, dynamic>.from(earningsMap!['totalBalance'] as Map)
+        : null;
+
     return CreatorCampaignDetail(
       id: (m['id'] as String?) ?? '${m['id']}',
       title: (m['title'] as String?) ?? 'Campaign',
@@ -205,11 +228,19 @@ final class CreatorCampaignDetail extends Equatable {
       shortsMaxDurationSeconds: (m['shortsMaxDurationSeconds'] as num?)
           ?.toInt(),
       shortsRequireVertical: m['shortsRequireVertical'] as bool?,
-      currency: (m['currency'] as String?)?.toUpperCase() ?? 'EUR',
+      currency: (m['currency'] as String?)?.toUpperCase() ?? 'USD',
       earningsCents: parseCents(
-        (earningsMap?['campaign'] as Map?)?['totalEarningsCents'] ??
-            earningsMap?['totalBalance'],
+        earningsCampaign?['netEarnings'] ??
+            earningsCampaign?['totalEarningsCents'] ??
+            totalBalance?['totalEarnedCents'],
       ),
+      netEarningsCents: parseCents(earningsCampaign?['netEarnings']),
+      availableBalanceCents: parseCents(totalBalance?['availableCents']),
+      paidViews: (earningsCampaign?['paidViews'] as num?)?.toInt() ?? 0,
+      validatedClicks:
+          (earningsCampaign?['validatedClicks'] as num?)?.toInt() ?? 0,
+      recordedClicks:
+          (earningsCampaign?['recordedClicks'] as num?)?.toInt() ?? 0,
     );
   }
 
@@ -248,6 +279,11 @@ final class CreatorCampaignDetail extends Equatable {
       shortsRequireVertical: shortsRequireVertical,
       currency: currency,
       earningsCents: earningsCents,
+      netEarningsCents: netEarningsCents,
+      availableBalanceCents: availableBalanceCents,
+      paidViews: paidViews,
+      validatedClicks: validatedClicks,
+      recordedClicks: recordedClicks,
     );
   }
 
@@ -285,5 +321,10 @@ final class CreatorCampaignDetail extends Equatable {
     shortsRequireVertical,
     currency,
     earningsCents,
+    netEarningsCents,
+    availableBalanceCents,
+    paidViews,
+    validatedClicks,
+    recordedClicks,
   ];
 }

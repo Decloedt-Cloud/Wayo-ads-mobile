@@ -17,6 +17,8 @@ import '../../domain/entities/notification_item.dart';
 import '../../domain/entities/notifications_page_result.dart';
 import '../../../account_deletion/presentation/providers/account_deletion_providers.dart';
 import '../../../advertiser_campaigns/presentation/providers/advertiser_campaigns_providers.dart';
+import '../../../advertiser_video_reviews/presentation/providers/advertiser_video_reviews_providers.dart';
+import '../../../advertiser_video_reviews/presentation/providers/advertiser_video_reviews_realtime.dart';
 import '../../../creator_campaigns/presentation/providers/creator_campaigns_providers.dart';
 import '../../../creator_dashboard/presentation/providers/creator_dashboard_providers.dart';
 import '../../../creator_wallet/presentation/providers/creator_wallet_providers.dart';
@@ -129,6 +131,8 @@ final realtimeInvalidationProvider = Provider<void>((ref) {
     final lower = name.toLowerCase();
     final channelLower = sig.channelName?.toLowerCase() ?? '';
     final fromCreatorChannel = channelLower.contains('creator');
+    final fromAdvertiserChannel = channelLower.contains('advertiser');
+    final videoReviewEvent = shouldRefreshAdvertiserVideoReviews(sig);
     if (kDebugMode) {
       debugPrint(
         '[WayoReverb] event=${sig.name} channel=${sig.channelName ?? '(none)'}',
@@ -173,15 +177,19 @@ final realtimeInvalidationProvider = Provider<void>((ref) {
     if (balanceEvent || payoutEvent) {
       ref.invalidate(invoicesControllerProvider);
     }
-    if (campaignEvent) {
+    if (campaignEvent || statsEvent) {
       ref.invalidate(advertiserCampaignsPagedProvider);
       ref.invalidate(advertiserCampaignsCountsProvider);
       ref.invalidate(advertiserDashboardCampaignsPageFetchProvider);
+      ref.invalidate(advertiserCampaignDetailProvider);
       final authCampaign = ref.read(authNotifierProvider).valueOrNull;
       if (authCampaign is AuthAuthenticated &&
           authCampaign.user.wayoAdsRole == WayoAdsAccountRole.superAdmin) {
         invalidateSuperadminBrowseCampaigns(ref);
       }
+    }
+    if (videoReviewEvent || (fromAdvertiserChannel && submissionEvent)) {
+      invalidateAdvertiserVideoReviewsProviders(ref);
     }
     if (notif) {
       ref.invalidate(notificationsListProvider);

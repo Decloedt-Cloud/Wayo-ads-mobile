@@ -6,6 +6,8 @@ import 'package:sentry_dio/sentry_dio.dart';
 import '../config/auth_runtime_config.dart';
 import '../constants/app_constants.dart' as ac;
 import '../connectivity/connectivity_providers.dart';
+import '../maintenance/maintenance_interceptor.dart';
+import '../maintenance/maintenance_service.dart';
 import '../observability/app_log.dart';
 import '../connectivity/connectivity_reporter_interceptor.dart';
 import '../storage/secure_storage.dart';
@@ -63,6 +65,9 @@ Dio dio(DioRef ref) {
   if (kWayoDiagnosticsLogging) {
     client.interceptors.add(WayoLoggingInterceptor());
   }
+  client.interceptors.add(
+    MaintenanceInterceptor(MaintenanceServiceHolder.instance),
+  );
 
   CertificatePinning.attach(
     client,

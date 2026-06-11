@@ -11,6 +11,32 @@ import '../../domain/chat_conversation.dart';
 import '../../domain/chat_credentials.dart';
 import '../../domain/chat_message.dart';
 
+/// Set when a fresh login completes — chat HTTP must wait briefly so secure
+/// storage + Dio interceptors see the new Wayo-ads access token.
+final chatPostLoginGateProvider = StateProvider<DateTime?>(
+  (ref) => null,
+  name: 'chatPostLoginGateProvider',
+);
+
+const Duration _kChatPostLoginMinDelay = Duration(milliseconds: 550);
+
+Future<void> awaitChatPostLoginGate(Ref ref) async {
+  final at = ref.read(chatPostLoginGateProvider);
+  if (at == null) return;
+  final elapsed = DateTime.now().difference(at);
+  if (elapsed < _kChatPostLoginMinDelay) {
+    await Future<void>.delayed(_kChatPostLoginMinDelay - elapsed);
+  }
+}
+
+/// Unread badge for shell — never throws; errors while chat warms up read as 0.
+final chatUnreadCountProvider = Provider<int>((ref) {
+  return ref.watch(chatConversationsProvider).maybeWhen(
+    data: (list) => list.fold<int>(0, (sum, c) => sum + c.unreadCount),
+    orElse: () => 0,
+  );
+});
+
 final chatRealtimeServiceProvider = Provider.autoDispose<ChatRealtimeService>((
   ref,
 ) {
@@ -39,6 +65,7 @@ final Provider<ChatRepository> chatRepositoryProvider =
 final FutureProvider<ChatCredentials> chatBootstrapProvider =
     FutureProvider<ChatCredentials>((ref) async {
       ref.keepAlive();
+      await awaitChatPostLoginGate(ref);
       final repo = ref.watch(chatRepositoryProvider);
       return repo.fetchBootstrap();
     });
@@ -52,32 +79,41 @@ final chatConversationsProvider = FutureProvider<List<ChatConversation>>((
   final rt = ref.read(chatRealtimeServiceProvider);
   final repo = ref.read(chatRepositoryProvider);
 
+  await awaitChatPostLoginGate(ref);
+
   Object? lastError;
-  for (var attempt = 0; attempt < 3; attempt++) {
+  const maxAttempts = 5;
+  for (var attempt = 0; attempt < maxAttempts; attempt++) {
     // Always fetch fresh credentials on each attempt (handles expired tokens).
     final creds = await ref.read(chatBootstrapProvider.future);
     try {
       return await repo.fetchConversations(creds, socketId: () => rt.socketId);
     } on DioException catch (e) {
       lastError = e;
-      final is401 = e.response?.statusCode == 401;
-      if (is401) {
-        // Force re-bootstrap on next attempt.
+      final code = e.response?.statusCode;
+      final is401 = code == 401;
+      final isTransientServer =
+          code == 500 || code == 502 || code == 503 || code == 504;
+      if (is401 || isTransientServer) {
         ref.invalidate(chatBootstrapProvider);
         if (kDebugMode) {
           debugPrint(
-            '[Chat] 401 on conversations (attempt ${attempt + 1}); '
-            'invalidated bootstrap, will retry with fresh token.',
+            '[Chat] $code on conversations (attempt ${attempt + 1}); '
+            'invalidated bootstrap, will retry.',
           );
         }
       }
-      if (attempt < 2) {
-        await Future<void>.delayed(Duration(milliseconds: 400 * (attempt + 1)));
+      if (attempt < maxAttempts - 1) {
+        await Future<void>.delayed(
+          Duration(milliseconds: 450 * (attempt + 1)),
+        );
       }
     } catch (e) {
       lastError = e;
-      if (attempt < 2) {
-        await Future<void>.delayed(Duration(milliseconds: 320 * (attempt + 1)));
+      if (attempt < maxAttempts - 1) {
+        await Future<void>.delayed(
+          Duration(milliseconds: 400 * (attempt + 1)),
+        );
       }
     }
   }
@@ -160,17 +196,25 @@ final chatMessagesFamilyProvider = FutureProvider.autoDispose
       throw lastError!;
     });
 
+void _invalidateChatProvidersNow(Ref ref) {
+  ref.read(chatPostLoginGateProvider.notifier).state = null;
+  ref.invalidate(chatBootstrapProvider);
+  ref.invalidate(chatConversationsProvider);
+  invalidateChatRealtimeBindingImmediate(
+    () => ref.invalidate(chatRealtimeBindingProvider),
+  );
+  ref.invalidate(chatRealtimeServiceProvider);
+}
+
+/// Immediate invalidation — use at login before setting [AuthAuthenticated].
+void invalidateChatProvidersSync(Ref ref) {
+  _invalidateChatProvidersNow(ref);
+}
+
 /// Call on logout so chat tokens and sockets are dropped.
 ///
 /// Uses microtask scheduling to avoid [CircularDependencyError] when called
 /// from within [AuthNotifier] (since chat providers may depend on auth state).
 void invalidateChatProviders(Ref ref) {
-  Future.microtask(() {
-    ref.invalidate(chatBootstrapProvider);
-    ref.invalidate(chatConversationsProvider);
-    invalidateChatRealtimeBindingImmediate(
-      () => ref.invalidate(chatRealtimeBindingProvider),
-    );
-    ref.invalidate(chatRealtimeServiceProvider);
-  });
+  Future.microtask(() => _invalidateChatProvidersNow(ref));
 }

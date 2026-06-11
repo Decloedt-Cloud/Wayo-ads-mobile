@@ -1,4 +1,3 @@
-import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -10,6 +9,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:shimmer/shimmer.dart';
 
 import '../../../../core/errors/auth_exceptions.dart';
+import '../../../../core/format/campaign_finance_display.dart';
 import '../../../../core/format/money_formatter.dart';
 import '../../../../core/layout/wayo_black_bottom_bar.dart';
 import '../../../../core/providers/app_providers.dart';
@@ -25,11 +25,7 @@ import '../../domain/entities/campaign_status.dart';
 import '../theme/campaign_detail_premium_palette.dart';
 import '../widgets/error_banner.dart';
 
-String _moneyLocale(AppLocale l) => switch (l) {
-      AppLocale.en => 'en_US',
-      AppLocale.fr => 'fr_FR',
-      AppLocale.ar => 'ar_SA',
-    };
+String _moneyLocale(AppLocale l) => wayoPublicMoneyLocale(l);
 
 String _campaignDetailPlatformKey(Map<String, dynamic> json) {
   final shorts = json['shortsPlatform'] as String?;
@@ -99,6 +95,7 @@ final class _ParsedCampaignDetail {
     required this.validViews,
     required this.validClicks,
     required this.approved,
+    required this.campaignKind,
     required this.showCpmMetric,
   });
 
@@ -120,6 +117,7 @@ final class _ParsedCampaignDetail {
   final int validViews;
   final int validClicks;
   final int approved;
+  final CreatorCampaignType campaignKind;
   final bool showCpmMetric;
 
   factory _ParsedCampaignDetail.fromJson(
@@ -179,7 +177,7 @@ final class _ParsedCampaignDetail {
     }
     final locked = f != null ? cents('lockedBudgetCents') : rootLocked();
 
-    final currency = (json['currency'] as String?)?.toUpperCase() ?? 'EUR';
+    final currency = (json['currency'] as String?)?.toUpperCase() ?? 'USD';
 
     int readCpc() {
       if (f != null) {
@@ -229,6 +227,7 @@ final class _ParsedCampaignDetail {
       validViews: validViews,
       validClicks: validClicks,
       approved: (json['approvedCreators'] as num?)?.toInt() ?? 0,
+      campaignKind: campaignKind,
       showCpmMetric: showCpmMetric,
     );
   }
@@ -497,13 +496,23 @@ class _CampaignPremiumScrollBodyState extends ConsumerState<_CampaignPremiumScro
     final showBlackBottomBar =
         isSuperadmin || role == WayoAdsAccountRole.advertiser;
 
-    final currency = parsed.currency;
-
     String moneyStr(int cents) => MoneyFormatter.format(
           cents / 100.0,
-          currency: currency,
+          currency: kWayoPublicCurrency,
           locale: widget.moneyLocale,
         );
+
+    final primaryRate = resolveCampaignPayoutMetric(
+      type: parsed.campaignKind,
+      cpcCents: parsed.cpcCents,
+      cpmCents: parsed.cpmCents,
+      spentBudgetCents: parsed.spentCents,
+      validViews: parsed.validViews,
+    );
+    final rateIcon = switch (primaryRate.kind) {
+      CampaignPayoutMetricKind.cpc => Icons.toll_outlined,
+      _ => Icons.movie_filter_outlined,
+    };
 
     final total = parsed.totalCents;
     final rem = parsed.remainingCents;
@@ -555,18 +564,11 @@ class _CampaignPremiumScrollBodyState extends ConsumerState<_CampaignPremiumScro
         spent > 0,
       ),
       (
-        Icons.toll_outlined,
-        t.advertiser_campaigns.card.cpc,
-        moneyStr(parsed.cpcCents),
-        parsed.cpcCents > 0 ? _MetricDot.green : _MetricDot.gray,
-        parsed.cpcCents > 0,
-      ),
-      (
-        Icons.movie_filter_outlined,
-        t.advertiser_campaigns.detail.cpm_metric,
-        moneyStr(parsed.cpmCents),
-        parsed.cpmCents > 0 ? _MetricDot.green : _MetricDot.gray,
-        parsed.cpmCents > 0,
+        rateIcon,
+        campaignPayoutMetricLabel(t, primaryRate.kind),
+        primaryRate.hasValue ? moneyStr(primaryRate.cents) : '—',
+        primaryRate.hasValue ? _MetricDot.green : _MetricDot.gray,
+        primaryRate.hasValue,
       ),
       (
         Icons.visibility_outlined,
@@ -584,7 +586,6 @@ class _CampaignPremiumScrollBodyState extends ConsumerState<_CampaignPremiumScro
       ),
     ];
 
-    final showCpm = parsed.showCpmMetric;
     final toolbarOnLightCollapsed =
         Theme.of(context).brightness == Brightness.light && _showCollapsedTitle;
     final toolbarFg = toolbarOnLightCollapsed
@@ -598,9 +599,8 @@ class _CampaignPremiumScrollBodyState extends ConsumerState<_CampaignPremiumScro
       metricsRecords[2],
       metricsRecords[3],
       metricsRecords[4],
-      if (showCpm) metricsRecords[5],
+      metricsRecords[5],
       metricsRecords[6],
-      metricsRecords[7],
     ];
 
     return RefreshIndicator.adaptive(
@@ -761,35 +761,20 @@ class _CampaignPremiumScrollBodyState extends ConsumerState<_CampaignPremiumScro
               ),
             ),
           ),
-          if (!isSuperadmin) ...[
+          if (!isSuperadmin)
             SliverPadding(
               padding: CampaignDetailPremiumPalette.kScreenPadding
-                  .copyWith(top: 12, bottom: 0),
+                  .copyWith(top: 12, bottom: 40),
               sliver: SliverToBoxAdapter(
-                child: _ApprovedCreatorsRow(
-                  count: parsed.approved,
-                  titleHint: parsed.title,
-                  t: t,
+                child: CampaignApplicationsSection(
+                  campaignId: widget.id,
+                  premiumChrome: true,
                 )
                     .animate()
                     .fadeIn(duration: 400.ms, curve: Curves.easeOutCubic)
                     .slideY(begin: 0.06, curve: Curves.easeOutCubic),
               ),
             ),
-            SliverToBoxAdapter(
-              child: SizedBox(height: CampaignDetailPremiumPalette.kSectionGap),
-            ),
-            SliverPadding(
-              padding: CampaignDetailPremiumPalette.kScreenPadding
-                  .copyWith(bottom: 40),
-              sliver: SliverToBoxAdapter(
-                child: CampaignApplicationsSection(
-                  campaignId: widget.id,
-                  premiumChrome: true,
-                ).animate().fadeIn(duration: 400.ms),
-              ),
-            ),
-          ],
           if (showBlackBottomBar)
             const SliverToBoxAdapter(
               child: SizedBox(height: 16),
@@ -1324,171 +1309,3 @@ class _PremiumMetricTile extends StatelessWidget {
   }
 }
 
-class _ApprovedCreatorsRow extends StatelessWidget {
-  const _ApprovedCreatorsRow({
-    required this.count,
-    required this.titleHint,
-    required this.t,
-  });
-
-  final int count;
-  final String titleHint;
-  final Translations t;
-
-  static const double _avatarSize = 44;
-  static const double _overlap = 12;
-
-  List<String> _lettersForStack() {
-    if (count <= 0) return const ['—'];
-    final words =
-        titleHint.trim().split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toList();
-    final faces = math.min(4, count);
-    final out = <String>[];
-    for (var i = 0; i < faces; i++) {
-      if (i == 3 && count > 4) {
-        out.add('+');
-        break;
-      }
-      if (i < words.length && words[i].isNotEmpty) {
-        out.add(words[i][0].toUpperCase());
-      } else {
-        out.add('C');
-      }
-    }
-    return out;
-  }
-
-  List<String> _seedKeys(List<String> letters) {
-    return List.generate(letters.length, (i) => '$titleHint|$i|${letters[i]}');
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final letters = _lettersForStack();
-    final seeds = _seedKeys(letters);
-    final bandWidth =
-        letters.isEmpty ? 0 : _avatarSize + (letters.length - 1) * (_avatarSize - _overlap);
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: CampaignDetailPremiumPalette.surface1(context),
-        borderRadius: BorderRadius.circular(CampaignDetailPremiumPalette.kCardRadius),
-        border: Border.all(color: CampaignDetailPremiumPalette.divider(context)),
-        boxShadow: CampaignDetailPremiumPalette.cardShadow(context, 0.1),
-      ),
-      child: Row(
-        children: [
-          SizedBox(
-            width: math.max(_avatarSize + 12, bandWidth + 12),
-            height: _avatarSize + 6,
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                for (var i = 0; i < letters.length; i++)
-                  Positioned(
-                    left: i * (_avatarSize - _overlap),
-                    top: 3,
-                    child: _ApprovedInitialAvatar(
-                      letter: letters[i],
-                      seed: seeds[i],
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  t.advertiser_campaigns.detail.approved_creators,
-                  style: CampaignDetailPremiumPalette.bodyLabel(context).copyWith(fontSize: 13),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  '$count',
-                  style: CampaignDetailPremiumPalette.metricMono(context).copyWith(fontSize: 20),
-                ),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
-            decoration: BoxDecoration(
-              color: CampaignDetailPremiumPalette.amber,
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: CampaignDetailPremiumPalette.amber.withValues(alpha: 0.45)),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.12),
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Text(
-              '$count',
-              style: GoogleFonts.dmSans(
-                fontWeight: FontWeight.w900,
-                fontSize: 15,
-                color: const Color(0xFF0A0A0F),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-Color _approvedAvatarTint(String seed) {
-  var h = 5381;
-  for (final c in seed.codeUnits) {
-    h = ((h << 5) + h) + c;
-  }
-  final hue = (h.abs() % 360).toDouble();
-  return HSLColor.fromAHSL(1, hue, 0.5, 0.38).toColor();
-}
-
-class _ApprovedInitialAvatar extends StatelessWidget {
-  const _ApprovedInitialAvatar({
-    required this.letter,
-    required this.seed,
-  });
-
-  final String letter;
-  final String seed;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: _ApprovedCreatorsRow._avatarSize,
-      height: _ApprovedCreatorsRow._avatarSize,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: _approvedAvatarTint(seed),
-        border: Border.all(
-          color: CampaignDetailPremiumPalette.bg(context),
-          width: 2,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.18),
-            blurRadius: 5,
-          ),
-        ],
-      ),
-      alignment: Alignment.center,
-      child: Text(
-        letter,
-        style: GoogleFonts.dmSans(
-          fontSize: 18,
-          fontWeight: FontWeight.w800,
-          color: Colors.white,
-        ),
-      ),
-    );
-  }
-}

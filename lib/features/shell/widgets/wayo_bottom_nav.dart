@@ -14,12 +14,26 @@ const double kWayoBottomNavBarHeight = 72;
 /// Gap between nav bottom and safe-area inset.
 const double kWayoBottomNavOuterBottomGap = 0;
 
+/// Coach-mark hole matches each tab column (not label-dependent pill width).
+const double kWayoNavCoachMarkRadius = 14;
+
 /// Bottom inset so tab bodies clear the nav bar.
 double wayoFloatingBottomNavReserve(BuildContext context, {double extraGap = 12}) {
   return MediaQuery.viewPaddingOf(context).bottom +
       kWayoBottomNavOuterBottomGap +
       kWayoBottomNavBarHeight +
       extraGap;
+}
+
+/// Shell body padding — drops nav reserve while the keyboard is open so a
+/// dark gap does not appear between content and the keyboard.
+double wayoShellBodyBottomPadding(BuildContext context, {double extraGap = 12}) {
+  if (MediaQuery.viewInsetsOf(context).bottom > 0) return 0;
+  return wayoFloatingBottomNavReserve(context, extraGap: extraGap);
+}
+
+bool wayoShellKeyboardOpen(BuildContext context) {
+  return MediaQuery.viewInsetsOf(context).bottom > 0;
 }
 
 /// Professional bottom nav 2026 — clean, minimal, with badges and onboarding support.
@@ -181,32 +195,30 @@ class _ProNavItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    // GlobalKey must sit on a tight [RenderBox] (here [SizedBox.expand]), not on
-    // [GestureDetector], so `tutorial_coach_mark` always gets a non-zero size for
-    // the coach-mark hole on the first tab.
+    // Coach-mark key spans the full tab column so long labels (e.g. FR dashboard)
+    // do not skew the highlight width vs other tabs.
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: SizedBox.expand(
         key: tabKey,
-        child: Align(
-          alignment: Alignment.center,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              curve: Curves.easeOutCubic,
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? AppColors.primary.withOpacity(isDark ? 0.15 : 0.1)
-                    : Colors.transparent,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeOutCubic,
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+            decoration: BoxDecoration(
+              color: isSelected
+                  ? AppColors.primary.withOpacity(isDark ? 0.15 : 0.1)
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(kWayoNavCoachMarkRadius + 2),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
                   Stack(
                     clipBehavior: Clip.none,
                     alignment: Alignment.center,
@@ -309,8 +321,7 @@ class _ProNavItem extends StatelessWidget {
                       ),
                     ),
                   ),
-                ],
-              ),
+              ],
             ),
           ),
         ),

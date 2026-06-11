@@ -10,6 +10,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/creator_colors.dart';
 import '../../../i18n/strings.g.dart';
 import '../../auth/domain/wayo_ads_account_role.dart';
+import '../../shell/widgets/wayo_bottom_nav.dart';
 
 /// Identifier of each bottom-nav tab that can receive a coach-mark.
 enum ShellTutorialTarget { dashboard, campaigns, wallet, invoices, chat }
@@ -116,10 +117,11 @@ class ShellTutorialController {
       targets: targets,
       colorShadow: Colors.black,
       opacityShadow: 0.85,
-      paddingFocus: 6,
+      paddingFocus: 2,
       focusAnimationDuration: const Duration(milliseconds: 420),
       unFocusAnimationDuration: const Duration(milliseconds: 220),
-      pulseEnable: true,
+      // Pulse shrinks the RRect hole slightly — keep framing stable at 100%.
+      pulseEnable: false,
       textSkip: t.onboarding.skip,
       textStyleSkip: GoogleFonts.inter(
         color: accent,
@@ -203,6 +205,10 @@ class ShellTutorialController {
     }
 
     final total = steps.length;
+    final coachCardBottomGap =
+        MediaQuery.viewPaddingOf(context).bottom +
+        kWayoBottomNavBarHeight +
+        12;
     final out = <TargetFocus>[];
     for (var i = 0; i < total; i++) {
       final (id, title, subtitle) = steps[i];
@@ -211,23 +217,26 @@ class ShellTutorialController {
       // Skip silently if the widget isn't laid out yet — coach_mark will
       // throw otherwise. The caller re-runs this after the first frame, so
       // missing keys are the exception, not the rule.
-      if (key.currentContext == null) continue;
+      if (!_coachTargetBoxReady(key)) continue;
 
       out.add(
         TargetFocus(
           identify: id.name,
           keyTarget: key,
           shape: ShapeLightFocus.RRect,
-          radius: 22,
+          radius: kWayoNavCoachMarkRadius,
           paddingFocus: 4,
           enableOverlayTab: true,
           enableTargetTab: true,
           contents: [
             TargetContent(
-              align: ContentAlign.top,
-              padding: const EdgeInsets.symmetric(
-                horizontal: 24,
-              ).copyWith(bottom: 24),
+              align: ContentAlign.custom,
+              customPosition: CustomTargetContentPosition(
+                left: 16,
+                right: 16,
+                bottom: coachCardBottomGap,
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 8),
               builder: (ctx, ctrl) => _CoachCard(
                 accent: accent,
                 title: title,

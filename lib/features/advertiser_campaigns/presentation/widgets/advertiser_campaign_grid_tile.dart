@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../../core/format/campaign_finance_display.dart';
 import '../../../../core/format/money_formatter.dart';
 import '../../../../core/network/wayo_ads_public_url.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -97,7 +98,7 @@ class _GridCampaignCardBodyState extends State<_GridCampaignCardBody> {
 
     final budgetFmt = MoneyFormatter.format(
       c.totalBudgetCents / 100.0,
-      currency: c.currency,
+      currency: kWayoPublicCurrency,
       locale: widget.moneyLocale,
     );
 

@@ -125,10 +125,17 @@ Future<bool> enableUserPushNotifications({
   final token = readCachedFcmToken(prefs);
   PushRegistrationDebug.recordToken(token);
   if (token == null || token.isEmpty) {
+    final isApple = !kIsWeb &&
+        (defaultTargetPlatform == TargetPlatform.iOS ||
+            defaultTargetPlatform == TargetPlatform.macOS);
     final msg = granted
-        ? 'FirebaseMessaging.getToken() returned empty — add debug+release SHA-1/SHA-256 '
-            'for ma.wayo.wayoadsgo in Firebase Console (wayo-ads-27cbf). '
-            'Run: cd android && ./gradlew signingReport'
+        ? isApple
+            ? 'FirebaseMessaging.getToken() returned empty — iOS: enable Push Notifications '
+                'in Xcode (aps-environment), upload APNs key in Firebase Console '
+                '(wayo-ads-27cbf), test on a physical device'
+            : 'FirebaseMessaging.getToken() returned empty — add debug+release SHA-1/SHA-256 '
+                'for ma.wayo.wayoadsgo in Firebase Console (wayo-ads-27cbf). '
+                'Run: cd android && ./gradlew signingReport'
         : 'No FCM token — grant POST_NOTIFICATIONS (Android 13+) or fix Firebase SHA fingerprints';
     PushRegistrationDebug.recordFailure(PushEnableStep.getToken, msg);
     logPushLifecycle('enable: FAILED — $msg');

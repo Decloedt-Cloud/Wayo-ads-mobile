@@ -443,6 +443,17 @@ Future<void> _ensureLocalNotificationsInitialized() async {
     onDidReceiveBackgroundNotificationResponse: wayoNotificationTapBackground,
   );
 
+  if (Platform.isIOS) {
+    final iosPlugin = _localNotifications
+        .resolvePlatformSpecificImplementation<
+            IOSFlutterLocalNotificationsPlugin>();
+    await iosPlugin?.requestPermissions(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
+  }
+
   await _drainAndroidNotificationLaunchIntentIfNeeded();
 
   final androidPlugin = _localNotifications
@@ -700,6 +711,10 @@ Future<bool> initializeFirebaseForPush() async {
     );
     await Firebase.initializeApp(options: options);
     FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+    if (defaultTargetPlatform == TargetPlatform.iOS ||
+        defaultTargetPlatform == TargetPlatform.macOS) {
+      await FirebaseMessaging.instance.setAutoInitEnabled(true);
+    }
     _firebaseCoreReady = true;
     final platformLabel = Platform.isAndroid
         ? 'android'
@@ -961,6 +976,15 @@ Future<void> refreshAndCacheFcmToken(AppPrefs prefs) async {
     return;
   }
   try {
+    if (defaultTargetPlatform == TargetPlatform.iOS ||
+        defaultTargetPlatform == TargetPlatform.macOS) {
+      final settings =
+          await FirebaseMessaging.instance.getNotificationSettings();
+      if (settings.authorizationStatus == AuthorizationStatus.notDetermined) {
+        await requestSystemPushPermission();
+      }
+      await FirebaseMessaging.instance.setAutoInitEnabled(true);
+    }
     await _waitForApnsTokenIfNeeded();
     String? token;
     const maxAttempts = 10;

@@ -1,0 +1,2 @@
+// Default iOS provisioning profile (Distribution). Override locally via Signing.local.xcconfig.
+PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*] = WayoAds AppStore

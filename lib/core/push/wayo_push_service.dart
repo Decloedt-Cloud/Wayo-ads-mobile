@@ -916,12 +916,52 @@ Future<bool> requestSystemPushPermission() async {
   return ok;
 }
 
+/// iOS/macOS: FCM [getToken] requires a valid APNs device token first.
+Future<bool> _waitForApnsTokenIfNeeded() async {
+  if (defaultTargetPlatform != TargetPlatform.iOS &&
+      defaultTargetPlatform != TargetPlatform.macOS) {
+    return true;
+  }
+  const maxAttempts = 12;
+  for (var attempt = 0; attempt < maxAttempts; attempt++) {
+    try {
+      final apns = await FirebaseMessaging.instance.getAPNSToken();
+      if (apns != null && apns.isNotEmpty) {
+        logPushLifecycle(
+          'getToken: APNs token ready (attempt ${attempt + 1}/$maxAttempts, '
+          '${apns.length} chars)',
+        );
+        return true;
+      }
+      logPushLifecycle(
+        'getToken: APNs token null (attempt ${attempt + 1}/$maxAttempts)',
+      );
+    } catch (e) {
+      logPushLifecycle(
+        'getToken: getAPNSToken failed (attempt ${attempt + 1}/$maxAttempts): $e',
+      );
+    }
+    if (attempt >= maxAttempts - 1) {
+      break;
+    }
+    await Future<void>.delayed(Duration(milliseconds: 500 * (attempt + 1)));
+  }
+  _logPush(
+    'FCM iOS: no APNs token — verify Runner.entitlements has aps-environment, '
+    'Xcode Push Notifications capability, APNs key (.p8) uploaded in Firebase Console '
+    '(Project Settings → Cloud Messaging → Apple app ma.wayo.wayoadsgo), and that the '
+    'provisioning profile includes Push Notifications.',
+  );
+  return false;
+}
+
 Future<void> refreshAndCacheFcmToken(AppPrefs prefs) async {
   if (!_firebaseCoreReady) {
     logPushLifecycle('getToken: skipped — Firebase not ready');
     return;
   }
   try {
+    await _waitForApnsTokenIfNeeded();
     String? token;
     const maxAttempts = 10;
     for (var attempt = 0; attempt < maxAttempts; attempt++) {
@@ -951,13 +991,21 @@ Future<void> refreshAndCacheFcmToken(AppPrefs prefs) async {
       await Future<void>.delayed(Duration(milliseconds: delayMs));
     }
     if (token == null || token.isEmpty) {
+      final isApple = defaultTargetPlatform == TargetPlatform.iOS ||
+          defaultTargetPlatform == TargetPlatform.macOS;
       _logPush(
-        'FCM getToken: no token after $maxAttempts retries — Android: add debug AND '
-        'release SHA-1 + SHA-256 in Firebase Console (wayo-ads-27cbf); ensure Google Play '
-        'services; package ma.wayo.wayoadsgo. Run: cd android && ./gradlew signingReport',
+        isApple
+            ? 'FCM getToken: no token after $maxAttempts retries — iOS: enable Push '
+                'Notifications in Xcode (aps-environment), upload APNs auth key in Firebase '
+                'Console (wayo-ads-27cbf), rebuild on a physical device (simulator has no APNs).'
+            : 'FCM getToken: no token after $maxAttempts retries — Android: add debug AND '
+                'release SHA-1 + SHA-256 in Firebase Console (wayo-ads-27cbf); ensure Google Play '
+                'services; package ma.wayo.wayoadsgo. Run: cd android && ./gradlew signingReport',
       );
       wayoConfigDiagPrint(
-        'Push: getToken() failed after retries. Add matching keystore SHA-1/SHA-256 in Firebase.',
+        isApple
+            ? 'Push: getToken() failed — check iOS Push capability + Firebase APNs key.'
+            : 'Push: getToken() failed after retries. Add matching keystore SHA-1/SHA-256 in Firebase.',
         name: 'wayo.push',
       );
       return;

@@ -20,7 +20,10 @@ import flutter_local_notifications
     }
     // Firebase is initialized from Dart (`initializeFirebaseForPush` in lib/main.dart)
     // with `DefaultFirebaseOptions` — do not call FirebaseApp.configure() here.
-    return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+    let ok = super.application(application, didFinishLaunchingWithOptions: launchOptions)
+    // APNs device token registration (FCM getToken/getAPNSToken on iOS depends on this).
+    application.registerForRemoteNotifications()
+    return ok
   }
 
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {

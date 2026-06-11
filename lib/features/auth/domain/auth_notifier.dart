@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io' show Platform;
 
 import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -463,7 +464,11 @@ class AuthNotifier extends _$AuthNotifier {
         logPushLifecycle('sync: skipped — user disabled push');
         return;
       }
-      if (!await areSystemPushNotificationsGranted()) {
+      var osGranted = await areSystemPushNotificationsGranted();
+      if (!osGranted && Platform.isIOS && wayoFirebaseCoreReady) {
+        osGranted = await requestSystemPushPermission();
+      }
+      if (!osGranted) {
         logPushLifecycle('sync: skipped — OS notification permission not granted');
         return;
       }

@@ -547,10 +547,10 @@ class _TranslationsAdvertiserWalletFr extends TranslationsAdvertiserWalletEn {
 	@override String get pending => 'En attente';
 	@override String get add_funds => 'Ajouter des fonds';
 	@override String get amount_label => 'Montant';
-	@override String get quick_50 => '50 €';
-	@override String get quick_100 => '100 €';
-	@override String get quick_250 => '250 €';
-	@override String get min_deposit => 'Dépôt minimum : 50,00 dans la devise affichée.';
+	@override String get quick_50 => '50 USD';
+	@override String get quick_100 => '100 USD';
+	@override String get quick_250 => '500 USD';
+	@override String get min_deposit => 'Dépôt minimum : 50,00 USD.';
 	@override String get test_pay => 'Simuler le paiement (dev)';
 	@override String get test_hint => 'Mode test : pas de vraie carte. Crédit portefeuille de dev pour QA.';
 	@override String get pay_secure => 'Carte, Apple Pay ou Google Pay';
@@ -752,8 +752,8 @@ class _TranslationsAppSettingsFr extends TranslationsAppSettingsEn {
 	@override String get theme_light => 'Clair';
 	@override String get theme_dark => 'Sombre';
 	@override String get theme_system => 'Système';
-	@override String get theme_hint => 'Choisissez l’apparence de Wayo Ads. Système suit le réglage du téléphone.';
-	@override String get language_hint => 'Langue de l’interface. Dates et formats suivent la locale.';
+	@override String get theme_hint => 'Choisissez l’apparence de Wayo Ads. Le thème suit les paramètres de votre téléphone.';
+	@override String get language_hint => 'Définit la langue de l’interface. Les dates et formats s’adaptent à la langue choisie.';
 	@override String get design_variant => 'Style du panneau';
 	@override String get design_glass => 'Verre doux';
 	@override String get design_corporate => 'Corporate';
@@ -778,8 +778,8 @@ class _TranslationsAppSettingsFr extends TranslationsAppSettingsEn {
 	@override String get delete_account_entry => 'Supprimer le compte';
 	@override String get delete_account_entry_sub => 'Délai de 30 jours — suppression dans l’app';
 	@override String get section_about => 'À propos';
-	@override String get rate_app => 'Noter Wayo Ads';
-	@override String get rate_app_sub => 'Ouvre l’App Store ou Google Play';
+	@override String get rate_app => 'Notez Wayo Ads';
+	@override String get rate_app_sub => 'Ouvrez l’App Store ou Google Play';
 }
 
 // Path: account_deletion
@@ -1967,10 +1967,10 @@ extension on TranslationsFr {
 			case 'advertiser_wallet.pending': return 'En attente';
 			case 'advertiser_wallet.add_funds': return 'Ajouter des fonds';
 			case 'advertiser_wallet.amount_label': return 'Montant';
-			case 'advertiser_wallet.quick_50': return '50 €';
-			case 'advertiser_wallet.quick_100': return '100 €';
-			case 'advertiser_wallet.quick_250': return '250 €';
-			case 'advertiser_wallet.min_deposit': return 'Dépôt minimum : 50,00 dans la devise affichée.';
+			case 'advertiser_wallet.quick_50': return '50 USD';
+			case 'advertiser_wallet.quick_100': return '100 USD';
+			case 'advertiser_wallet.quick_250': return '500 USD';
+			case 'advertiser_wallet.min_deposit': return 'Dépôt minimum : 50,00 USD.';
 			case 'advertiser_wallet.test_pay': return 'Simuler le paiement (dev)';
 			case 'advertiser_wallet.test_hint': return 'Mode test : pas de vraie carte. Crédit portefeuille de dev pour QA.';
 			case 'advertiser_wallet.pay_secure': return 'Carte, Apple Pay ou Google Pay';
@@ -2127,8 +2127,8 @@ extension on TranslationsFr {
 			case 'app_settings.theme_light': return 'Clair';
 			case 'app_settings.theme_dark': return 'Sombre';
 			case 'app_settings.theme_system': return 'Système';
-			case 'app_settings.theme_hint': return 'Choisissez l’apparence de Wayo Ads. Système suit le réglage du téléphone.';
-			case 'app_settings.language_hint': return 'Langue de l’interface. Dates et formats suivent la locale.';
+			case 'app_settings.theme_hint': return 'Choisissez l’apparence de Wayo Ads. Le thème suit les paramètres de votre téléphone.';
+			case 'app_settings.language_hint': return 'Définit la langue de l’interface. Les dates et formats s’adaptent à la langue choisie.';
 			case 'app_settings.design_variant': return 'Style du panneau';
 			case 'app_settings.design_glass': return 'Verre doux';
 			case 'app_settings.design_corporate': return 'Corporate';
@@ -2153,8 +2153,8 @@ extension on TranslationsFr {
 			case 'app_settings.delete_account_entry': return 'Supprimer le compte';
 			case 'app_settings.delete_account_entry_sub': return 'Délai de 30 jours — suppression dans l’app';
 			case 'app_settings.section_about': return 'À propos';
-			case 'app_settings.rate_app': return 'Noter Wayo Ads';
-			case 'app_settings.rate_app_sub': return 'Ouvre l’App Store ou Google Play';
+			case 'app_settings.rate_app': return 'Notez Wayo Ads';
+			case 'app_settings.rate_app_sub': return 'Ouvrez l’App Store ou Google Play';
 			case 'account_deletion.nav_title': return 'Suppression de compte';
 			case 'account_deletion.title': return 'Supprimer mon compte Wayo Ads';
 			case 'account_deletion.danger_zone_chip': return 'Zone de danger';

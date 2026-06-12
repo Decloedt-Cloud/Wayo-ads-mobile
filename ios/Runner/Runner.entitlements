@@ -10,7 +10,7 @@
 		Use "development" for iOS Development profiles, "production" for App Store / Ad Hoc.
 	-->
 	<key>aps-environment</key>
-	<string>production</string>
+	<string>development</string>
 	<key>com.apple.developer.in-app-payments</key>
 	<array>
 		<string>merchant.ma.wayo.wayoadsgo</string>

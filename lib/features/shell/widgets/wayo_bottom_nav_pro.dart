@@ -369,12 +369,6 @@ class _ProTabItemState extends State<_ProTabItem> with SingleTickerProviderState
                   AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
                     padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: widget.isSelected 
-                          ? selectedColor.withOpacity(widget.isDark ? 0.2 : 0.12)
-                          : Colors.transparent,
-                      borderRadius: BorderRadius.circular(14),
-                    ),
                     child: Icon(
                       widget.isSelected ? widget.icon : widget.iconOutlined,
                       size: 22,

@@ -73,7 +73,7 @@ final class AdvertiserWalletRepository {
       available: fromCents(w['availableCents']),
       locked: fromCents(w['pendingCents']),
       spent: 0,
-      currency: (w['currency'] as String?)?.toUpperCase() ?? 'EUR',
+      currency: (w['currency'] as String?)?.toUpperCase() ?? 'USD',
     );
     final rawTx = data['transactions'];
     final list = rawTx is List<dynamic> ? rawTx : const [];
@@ -87,7 +87,7 @@ final class AdvertiserWalletRepository {
           id: '${e['id'] ?? ''}',
           type: e['type'] as String? ?? '',
           amountCents: (e['amountCents'] as num?)?.toInt() ?? 0,
-          currency: (e['currency'] as String?)?.toUpperCase() ?? 'EUR',
+          currency: (e['currency'] as String?)?.toUpperCase() ?? 'USD',
           description: e['description'] as String? ?? '',
           createdAt: _parseDate(e['createdAt'] ?? e['created_at']),
         ),
@@ -218,7 +218,7 @@ final class AdvertiserWalletRepository {
         intentId: '${intent['intentId'] ?? ''}',
         clientSecret: intent['clientSecret'] as String? ?? '',
         amountCents: totalCents,
-        currency: (intent['currency'] as String?)?.toUpperCase() ?? 'EUR',
+        currency: (intent['currency'] as String?)?.toUpperCase() ?? 'USD',
         canSimulate: data['canSimulate'] == true,
         walletAmountCents: (data['walletAmountCents'] as num?)?.toInt(),
         bankFeeCents: (data['bankFeeCents'] as num?)?.toInt(),

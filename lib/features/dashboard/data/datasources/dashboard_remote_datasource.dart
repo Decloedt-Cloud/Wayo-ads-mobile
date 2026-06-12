@@ -97,7 +97,7 @@ final class DashboardRemoteDatasource implements DashboardRemote {
       available: fromCents(w['availableCents']),
       locked: fromCents(w['pendingCents']),
       spent: 0,
-      currency: (w['currency'] as String?)?.toUpperCase() ?? 'EUR',
+      currency: (w['currency'] as String?)?.toUpperCase() ?? 'USD',
     );
   }
 

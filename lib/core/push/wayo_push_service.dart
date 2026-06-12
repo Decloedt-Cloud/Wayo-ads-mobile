@@ -8,12 +8,14 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:go_router/go_router.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../firebase_options.dart';
+import '../../features/chat/data/chat_active_conversation.dart';
 import '../../router/app_router.dart';
 import '../observability/app_log.dart';
 import '../storage/app_prefs.dart';
@@ -67,8 +69,19 @@ void setFcmTokenBackendRegistrationCallback(
 int wayoAndroidChatNotificationId(String conversationId) =>
     conversationId.hashCode & 0x7fffffff;
 
+/// Stable local-notification id per conversation (Android + iOS).
+int wayoChatNotificationId(String conversationId) =>
+    wayoAndroidChatNotificationId(conversationId);
+
 String wayoAndroidChatNotificationTag(String conversationId) =>
     'wayo_chat_$conversationId';
+
+/// iOS Notification Center thread — groups + dismiss by conversation.
+String wayoChatThreadIdentifier(String conversationId) =>
+    wayoAndroidChatNotificationTag(conversationId);
+
+const MethodChannel _wayoPushDismissChannel =
+    MethodChannel('ma.wayo.wayoadsgo/push_dismiss');
 
 /// Android MessagingStyle requires a real user [Person]; a null/empty name can break the notif builder.
 const Person _wayoChatMessagingStyleUser = Person(name: 'You', key: 'wayo_local_user');
@@ -296,7 +309,7 @@ Future<void> _handleNotificationResponse(
         conversationId: chatPayload.conversationId,
       );
       try {
-        await dismissWayoChatAndroidNotification(chatPayload.conversationId);
+        await dismissWayoChatNotification(chatPayload.conversationId);
       } catch (_) {}
       _pingDeferredPushConsume();
       return;
@@ -313,7 +326,7 @@ Future<void> _handleNotificationResponse(
         );
         if (sent) {
           try {
-            await dismissWayoChatAndroidNotification(chatPayload.conversationId);
+            await dismissWayoChatNotification(chatPayload.conversationId);
           } catch (_) {}
           _pingDeferredPushConsume();
           return;
@@ -325,11 +338,15 @@ Future<void> _handleNotificationResponse(
         text: replyText,
       );
       try {
-        await dismissWayoChatAndroidNotification(chatPayload.conversationId);
+        await dismissWayoChatNotification(chatPayload.conversationId);
       } catch (_) {}
       _pingDeferredPushConsume();
       return;
     }
+
+    try {
+      await dismissWayoChatNotification(chatPayload.conversationId);
+    } catch (_) {}
 
     await _navigateOrDeferPushRoute(
       chatPayload.route(forReply: forReply),
@@ -470,6 +487,12 @@ Future<void> _presentIncomingChatTray({
   required String messageBody,
   required bool mergeWithExisting,
 }) async {
+  if (await isViewingChatConversation(chat.conversationId)) {
+    _logPush(
+      'Skipped chat tray — user viewing conversation ${chat.conversationId}',
+    );
+    return;
+  }
   if (await shouldSuppressChatTrayEcho(chat, messageBody)) {
     _logPush(
       'Skipped chat tray — matches recent notification inline reply (server echo)',
@@ -588,6 +611,7 @@ Future<void> _showLocalPush({
   required String payload,
   bool isAndroidChat = false,
   bool isIosChat = false,
+  String? iosThreadIdentifier,
 }) async {
   await _ensureLocalNotificationsInitialized();
 
@@ -614,6 +638,7 @@ Future<void> _showLocalPush({
         presentSound: true,
         categoryIdentifier:
             isIosChat ? kWayoIosChatNotificationCategoryId : null,
+        threadIdentifier: iosThreadIdentifier,
       ),
     ),
     payload: payload,
@@ -645,6 +670,12 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   );
 
   if (chat != null) {
+    if (await isViewingChatConversation(chat.conversationId)) {
+      _logPush(
+        'FCM background chat ignored — user viewing conversation ${chat.conversationId}',
+      );
+      return;
+    }
     if (Platform.isAndroid) {
       try {
         await _presentIncomingChatTray(
@@ -664,11 +695,12 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
     }
     try {
       await _showLocalPush(
-        id: message.hashCode,
+        id: wayoChatNotificationId(chat.conversationId),
         title: title,
         body: body.isEmpty ? ' ' : body,
         payload: chat.toLocalNotificationPayload(),
         isIosChat: true,
+        iosThreadIdentifier: wayoChatThreadIdentifier(chat.conversationId),
       );
     } catch (e, st) {
       _logPush(
@@ -774,6 +806,14 @@ Future<void> attachForegroundFcmHandlers() async {
       'dataKeys=${m.data.keys.join(',')}',
     );
     final chat = WayoChatPushPayload.fromMessageData(m.data);
+    if (chat != null) {
+      if (await isViewingChatConversation(chat.conversationId)) {
+        _logPush(
+          'FCM foreground chat ignored — user viewing conversation ${chat.conversationId}',
+        );
+        return;
+      }
+    }
     if (chat != null && Platform.isAndroid) {
       await _presentIncomingChatTray(
         chat: chat,
@@ -791,12 +831,12 @@ Future<void> attachForegroundFcmHandlers() async {
         return;
       }
       await _showLocalPush(
-        id: m.hashCode,
+        id: wayoChatNotificationId(chat.conversationId),
         title: title,
         body: body.isEmpty ? ' ' : body,
         payload: chat.toLocalNotificationPayload(),
-        isAndroidChat: false,
         isIosChat: Platform.isIOS,
+        iosThreadIdentifier: wayoChatThreadIdentifier(chat.conversationId),
       );
       return;
     }
@@ -833,6 +873,10 @@ Future<void> attachForegroundFcmHandlers() async {
       return;
     }
     _logPush('FCM opened app from tray: ${m.messageId}');
+    final chat = WayoChatPushPayload.fromMessageData(m.data);
+    if (chat != null) {
+      unawaited(dismissWayoChatNotification(chat.conversationId));
+    }
     unawaited(_persistOpenFromFcmData(m.data));
   });
 
@@ -840,6 +884,10 @@ Future<void> attachForegroundFcmHandlers() async {
   if (initial != null) {
     if (await shouldDeliverFcmData(initial.data)) {
       _logPush('FCM app launched from quit state: ${initial.messageId}');
+      final chat = WayoChatPushPayload.fromMessageData(initial.data);
+      if (chat != null) {
+        unawaited(dismissWayoChatNotification(chat.conversationId));
+      }
       await _persistOpenFromFcmData(initial.data);
     } else {
       _logPush('FCM cold-start open ignored — wrong/missing recipient');
@@ -1073,16 +1121,44 @@ Future<void> refreshAndCacheFcmToken(AppPrefs prefs) async {
   }
 }
 
-/// Clears the grouped chat tray notification for this conversation (e.g. after inline reply).
-Future<void> dismissWayoChatAndroidNotification(String conversationId) async {
-  if (conversationId.isEmpty || !Platform.isAndroid) return;
-  await _ensureLocalNotificationsInitialized();
-  final android = _localNotifications.resolvePlatformSpecificImplementation<
-      AndroidFlutterLocalNotificationsPlugin>();
-  final id = wayoAndroidChatNotificationId(conversationId);
-  final tag = wayoAndroidChatNotificationTag(conversationId);
-  await android?.cancel(id, tag: tag);
+/// Clears chat tray notifications for this conversation (Android tray + iOS local/APNs).
+Future<void> dismissWayoChatNotification(String conversationId) async {
+  if (conversationId.isEmpty) return;
+  try {
+    await _ensureLocalNotificationsInitialized();
+    final id = wayoChatNotificationId(conversationId);
+    if (Platform.isAndroid) {
+      final android = _localNotifications.resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>();
+      final tag = wayoAndroidChatNotificationTag(conversationId);
+      await android?.cancel(id, tag: tag);
+    } else if (Platform.isIOS) {
+      await _localNotifications.cancel(id);
+      try {
+        await _wayoPushDismissChannel.invokeMethod<void>(
+          'dismissChatNotification',
+          conversationId,
+        );
+      } catch (e, st) {
+        _logPush(
+          'iOS delivered chat notification dismiss failed: $e',
+          error: e,
+          stackTrace: st,
+        );
+      }
+    }
+  } catch (e, st) {
+    _logPush(
+      'dismissWayoChatNotification failed conv=$conversationId: $e',
+      error: e,
+      stackTrace: st,
+    );
+  }
 }
+
+/// @deprecated Use [dismissWayoChatNotification].
+Future<void> dismissWayoChatAndroidNotification(String conversationId) =>
+    dismissWayoChatNotification(conversationId);
 
 /// Sends a message typed in the Android notification inline reply, once the app is foregrounded + authed.
 Future<void> consumeDeferredChatQuickReply({

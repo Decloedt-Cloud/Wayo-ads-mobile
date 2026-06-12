@@ -1,5 +1,4 @@
 // Copy to Signing.local.xcconfig (gitignored) to override the provisioning profile locally.
 // Required after enabling Push Notifications on the App ID and regenerating profiles.
 //
-// PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*] = WayoAds Preprod
-PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*] = WayoAds AppStore
+PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*] = WayoAds Preprod

@@ -9,6 +9,7 @@ import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/errors/auth_exceptions.dart';
+import '../../../../core/format/campaign_finance_display.dart';
 import '../../../../core/format/money_formatter.dart';
 import '../../../../core/providers/app_providers.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -30,6 +31,27 @@ enum _PayMethod { card, applePay, googlePay }
 const int _kWalletTxPageSize = 7;
 /// Minimum top-up amount in minor units (e.g. cents): 50.00 in wallet currency.
 const int _kMinDepositCents = 5000;
+
+const List<double> _kQuickDepositAmounts = [50, 100, 500];
+
+String _advertiserWalletMoneyLocale(String currency, String appMoneyLocale) {
+  if (currency.toUpperCase() == kWayoPublicCurrency) {
+    return wayoPublicMoneyLocale(AppLocale.en);
+  }
+  return appMoneyLocale;
+}
+
+String _formatAdvertiserWalletAmount(
+  double amount,
+  String currency,
+  String appMoneyLocale,
+) {
+  return MoneyFormatter.format(
+    amount,
+    currency: currency,
+    locale: _advertiserWalletMoneyLocale(currency, appMoneyLocale),
+  );
+}
 
 /// Advertiser-only wallet: balance, transactions, Stripe card + Apple Pay / Google Pay.
 class AdvertiserWalletTabContent extends ConsumerStatefulWidget {
@@ -552,7 +574,8 @@ class _AdvertiserWalletTabContentState
                               ),
                             ],
                             decoration: InputDecoration(
-                              prefixText: '$c ',
+                              prefixText:
+                                  '${MoneyFormatter.currencySymbol(c)} ',
                               filled: true,
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(16),
@@ -565,24 +588,20 @@ class _AdvertiserWalletTabContentState
                             spacing: 8,
                             runSpacing: 8,
                             children: [
-                              _QuickChip(
-                                label: t.advertiser_wallet.quick_50,
-                                onTap: businessReady
-                                    ? () => _amountCtrl.text = '50'
-                                    : _openBusinessProfileEditor,
-                              ),
-                              _QuickChip(
-                                label: t.advertiser_wallet.quick_100,
-                                onTap: businessReady
-                                    ? () => _amountCtrl.text = '100'
-                                    : _openBusinessProfileEditor,
-                              ),
-                              _QuickChip(
-                                label: t.advertiser_wallet.quick_250,
-                                onTap: businessReady
-                                    ? () => _amountCtrl.text = '250'
-                                    : _openBusinessProfileEditor,
-                              ),
+                              for (final amount in _kQuickDepositAmounts)
+                                _QuickChip(
+                                  label: _formatAdvertiserWalletAmount(
+                                    amount,
+                                    c,
+                                    moneyLocale,
+                                  ),
+                                  onTap: businessReady
+                                      ? () => _amountCtrl.text =
+                                          amount.truncateToDouble() == amount
+                                          ? amount.toInt().toString()
+                                          : amount.toString()
+                                      : _openBusinessProfileEditor,
+                                ),
                             ],
                           ),
                           if (data.canSimulate) ...[
@@ -677,11 +696,10 @@ class _PendingDepositCheckout extends StatelessWidget {
     String currency,
     String moneyLocale,
   ) {
-    final locale = currency.toUpperCase() == 'USD' ? 'en_US' : moneyLocale;
-    return MoneyFormatter.format(
+    return _formatAdvertiserWalletAmount(
       walletAmountCents / 100.0,
-      currency: currency,
-      locale: locale,
+      currency,
+      moneyLocale,
     );
   }
   const _PendingDepositCheckout({
@@ -1400,10 +1418,10 @@ class _DepositPaymentSummary extends StatelessWidget {
   final bool isDark;
 
   String _money(int cents) {
-    return MoneyFormatter.format(
+    return _formatAdvertiserWalletAmount(
       cents / 100.0,
-      currency: currency,
-      locale: moneyLocale,
+      currency,
+      moneyLocale,
     );
   }
 
@@ -1643,7 +1661,7 @@ class _HeroHeader extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            MoneyFormatter.format(a, currency: c, locale: moneyLocale),
+            _formatAdvertiserWalletAmount(a, c, moneyLocale),
             style: AppTextStyles.displayLarge(
               context,
             ).copyWith(fontSize: 34, fontWeight: FontWeight.w800),
@@ -1657,7 +1675,7 @@ class _HeroHeader extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            MoneyFormatter.format(p, currency: c, locale: moneyLocale),
+            _formatAdvertiserWalletAmount(p, c, moneyLocale),
             style: AppTextStyles.headlineMedium(context).copyWith(fontSize: 20),
           ),
         ],
@@ -1682,10 +1700,10 @@ class _TxRow extends StatelessWidget {
     final c = row.currency;
     final signed = row.amountCents;
     final major = signed / 100.0;
-    final s = MoneyFormatter.format(
+    final s = _formatAdvertiserWalletAmount(
       major.abs(),
-      currency: c,
-      locale: moneyLocale,
+      c,
+      moneyLocale,
     );
     final prefix = signed < 0 ? '−' : '+';
     final dateStr = row.createdAt != null

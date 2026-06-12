@@ -10,10 +10,9 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/creator_colors.dart';
 import '../../../i18n/strings.g.dart';
 import '../../auth/domain/wayo_ads_account_role.dart';
-import '../../shell/widgets/wayo_bottom_nav.dart';
+import 'shell_tutorial_highlight.dart';
 
-/// Identifier of each bottom-nav tab that can receive a coach-mark.
-enum ShellTutorialTarget { dashboard, campaigns, wallet, invoices, chat }
+export 'shell_tutorial_highlight.dart';
 
 bool _coachTargetBoxReady(GlobalKey key) {
   final ctx = key.currentContext;
@@ -30,6 +29,14 @@ bool shellCoachNavTabsReady(Map<ShellTutorialTarget, GlobalKey> keys) {
   }
   return true;
 }
+
+/// Invisible hole anchor — the real tab spotlight is painted by the bottom nav
+/// via [shellTutorialHighlightTab] while this overlay only dims the shell body.
+final TargetPosition _shellTutorialBodyAnchor =
+    TargetPosition(const Size(1, 1), const Offset(1, 1));
+
+/// Coach card sits at the bottom of the body overlay (nav is outside the overlay).
+const double _shellTutorialCoachCardBottomGap = 12;
 
 /// Orchestrates the first-login, role-aware **coach-mark tour** around the
 /// bottom navigation bar.
@@ -97,6 +104,9 @@ class ShellTutorialController {
   }
 
   /// Forces the tour to run (used by "Replay tutorial" buttons).
+  ///
+  /// [context] must be the shell body overlay host (see [AppShell]) so the
+  /// dimmed layer does not cover the bottom navigation bar.
   /// Returns `true` if the overlay was shown (at least one valid target).
   Future<bool> show({
     required BuildContext context,
@@ -113,15 +123,22 @@ class ShellTutorialController {
         : AppColors.primary;
     final t = context.t;
 
+    shellTutorialHighlightTab.value =
+        shellTutorialTargetFromIdentify(targets.first.identify);
+
     TutorialCoachMark(
       targets: targets,
       colorShadow: Colors.black,
-      opacityShadow: 0.85,
-      paddingFocus: 2,
-      focusAnimationDuration: const Duration(milliseconds: 420),
-      unFocusAnimationDuration: const Duration(milliseconds: 220),
+      opacityShadow: 0.92,
+      paddingFocus: 0,
+      focusAnimationDuration: const Duration(milliseconds: 320),
+      unFocusAnimationDuration: const Duration(milliseconds: 200),
       // Pulse shrinks the RRect hole slightly — keep framing stable at 100%.
       pulseEnable: false,
+      beforeFocus: (target) async {
+        shellTutorialHighlightTab.value =
+            shellTutorialTargetFromIdentify(target.identify);
+      },
       textSkip: t.onboarding.skip,
       textStyleSkip: GoogleFonts.inter(
         color: accent,
@@ -133,16 +150,18 @@ class ShellTutorialController {
       useSafeArea: true,
       onSkip: () {
         HapticFeedback.lightImpact();
+        clearShellTutorialHighlight();
         unawaited(_markSeen(prefs: prefs, userId: userId, role: role));
         return true;
       },
       onFinish: () {
         HapticFeedback.mediumImpact();
+        clearShellTutorialHighlight();
         unawaited(_markSeen(prefs: prefs, userId: userId, role: role));
       },
       onClickTarget: (_) => HapticFeedback.selectionClick(),
       onClickOverlay: (_) => HapticFeedback.selectionClick(),
-    ).show(context: context, rootOverlay: true);
+    ).show(context: context, rootOverlay: false);
     return true;
   }
 
@@ -205,36 +224,32 @@ class ShellTutorialController {
     }
 
     final total = steps.length;
-    final coachCardBottomGap =
-        MediaQuery.viewPaddingOf(context).bottom +
-        kWayoBottomNavBarHeight +
-        12;
     final out = <TargetFocus>[];
     for (var i = 0; i < total; i++) {
       final (id, title, subtitle) = steps[i];
       final key = keys[id];
       if (key == null) continue;
-      // Skip silently if the widget isn't laid out yet — coach_mark will
-      // throw otherwise. The caller re-runs this after the first frame, so
-      // missing keys are the exception, not the rule.
+      // Skip silently if the widget isn't laid out yet — the caller re-runs
+      // after the first frame so nav keys are ready for [shellTutorialHighlightTab].
       if (!_coachTargetBoxReady(key)) continue;
 
       out.add(
         TargetFocus(
           identify: id.name,
-          keyTarget: key,
+          targetPosition: _shellTutorialBodyAnchor,
           shape: ShapeLightFocus.RRect,
-          radius: kWayoNavCoachMarkRadius,
-          paddingFocus: 4,
+          radius: 0,
+          paddingFocus: 0,
           enableOverlayTab: true,
-          enableTargetTab: true,
+          enableTargetTab: false,
+          focusAnimationDuration: const Duration(milliseconds: 320),
           contents: [
             TargetContent(
               align: ContentAlign.custom,
               customPosition: CustomTargetContentPosition(
                 left: 16,
                 right: 16,
-                bottom: coachCardBottomGap,
+                bottom: _shellTutorialCoachCardBottomGap,
               ),
               padding: const EdgeInsets.symmetric(horizontal: 8),
               builder: (ctx, ctrl) => _CoachCard(

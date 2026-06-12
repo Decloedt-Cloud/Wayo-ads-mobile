@@ -9,6 +9,7 @@ import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
+import '../../../../core/format/campaign_finance_display.dart';
 import '../../../../core/format/money_formatter.dart';
 import '../../../../core/network/wayo_ads_public_url.dart';
 import '../../../../core/providers/app_providers.dart';
@@ -113,6 +114,7 @@ class DashboardScreen extends ConsumerWidget {
                       _BalanceSection(
                         snapshot: snap,
                         moneyLocale: _moneyLocale(locale),
+                        appLocale: locale,
                       ),
                       const AdvertiserVideoReviewsSummaryCard(),
                       _CampaignsSection(
@@ -228,7 +230,7 @@ class _HeaderState extends ConsumerState<_Header> {
                       ),
                       padding: const EdgeInsets.all(10),
                       child: Icon(
-                        Icons.replay_rounded,
+                        Icons.help_outline_rounded,
                         color: AppColors.primary,
                       ),
                     ),
@@ -418,10 +420,20 @@ class _AdvertiserRolePill extends StatelessWidget {
 }
 
 class _BalanceSection extends StatelessWidget {
-  const _BalanceSection({required this.snapshot, required this.moneyLocale});
+  const _BalanceSection({
+    required this.snapshot,
+    required this.moneyLocale,
+    required this.appLocale,
+  });
 
   final DashboardSnapshot snapshot;
   final String moneyLocale;
+  final AppLocale appLocale;
+
+  String get _walletMoneyLocale => wayoPublicMoneyLocale(appLocale);
+
+  String get _walletCurrency =>
+      snapshot.balance?.currency ?? kWayoPublicCurrency;
 
   @override
   Widget build(BuildContext context) {
@@ -448,7 +460,8 @@ class _BalanceSection extends StatelessWidget {
               children: [
                 _AdvertiserWalletHero(
                   snapshot: snapshot,
-                  moneyLocale: moneyLocale,
+                  currency: _walletCurrency,
+                  moneyLocale: _walletMoneyLocale,
                 ),
                 const SizedBox(height: 12),
                 Row(
@@ -459,8 +472,8 @@ class _BalanceSection extends StatelessWidget {
                         label: t.dashboard.balance.locked,
                         value: MoneyFormatter.format(
                           b?.locked ?? 0,
-                          currency: b?.currency ?? 'EUR',
-                          locale: moneyLocale,
+                          currency: _walletCurrency,
+                          locale: _walletMoneyLocale,
                         ),
                         accent: AppColors.primaryDeep,
                         icon: Icons.lock_outline_rounded,
@@ -472,8 +485,8 @@ class _BalanceSection extends StatelessWidget {
                         label: t.dashboard.balance.spent,
                         value: MoneyFormatter.format(
                           b?.spent ?? 0,
-                          currency: b?.currency ?? 'EUR',
-                          locale: moneyLocale,
+                          currency: _walletCurrency,
+                          locale: _walletMoneyLocale,
                         ),
                         accent: AppColors.primarySoft,
                         icon: Icons.trending_down_rounded,
@@ -501,10 +514,12 @@ class _BalanceSection extends StatelessWidget {
 class _AdvertiserWalletHero extends StatelessWidget {
   const _AdvertiserWalletHero({
     required this.snapshot,
+    required this.currency,
     required this.moneyLocale,
   });
 
   final DashboardSnapshot snapshot;
+  final String currency;
   final String moneyLocale;
 
   @override
@@ -551,7 +566,7 @@ class _AdvertiserWalletHero extends StatelessWidget {
                 Text(
                   MoneyFormatter.format(
                     b.available,
-                    currency: b.currency,
+                    currency: currency,
                     locale: moneyLocale,
                   ),
                   style: const TextStyle(

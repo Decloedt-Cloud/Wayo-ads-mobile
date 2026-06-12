@@ -241,6 +241,7 @@ class _ChatInboxScreenState extends ConsumerState<ChatInboxScreen> {
     final ln = LiquidNeuralTheme.of(context);
     final p = PremiumChatTokens.of(context);
     final async = ref.watch(chatConversationsProvider);
+    final readOverrides = ref.watch(chatReadConversationOverridesProvider);
     // Use valueOrNull to avoid throwing on error state (e.g. 404 from backend)
     final myChatUserId = ref
         .watch(chatBootstrapProvider)
@@ -445,7 +446,10 @@ class _ChatInboxScreenState extends ConsumerState<ChatInboxScreen> {
                                           time: time,
                                           initial: letter,
                                           avatarUrl: rowAvatarUrl,
-                                          unreadCount: c.unreadCount,
+                                          unreadCount: chatEffectiveUnreadCount(
+                                            c,
+                                            readOverrides,
+                                          ),
                                           online: partnerOnline,
                                           typing: isTyping,
                                           typingName: typingName,

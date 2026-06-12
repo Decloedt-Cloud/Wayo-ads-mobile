@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/theme/app_colors.dart';
+import '../../core/theme/creator_colors.dart';
 import '../../core/providers/app_providers.dart';
 import '../../core/storage/app_prefs.dart';
 import '../../i18n/strings.g.dart';
@@ -42,7 +44,15 @@ class _AppShellState extends ConsumerState<AppShell>
   final GlobalKey _invoicesKey = GlobalKey(debugLabel: 'shell.tab.invoices');
   final GlobalKey _chatKey = GlobalKey(debugLabel: 'shell.tab.chat');
 
+  /// Host for the coach-mark overlay — scoped to the shell body so the bottom
+  /// nav stays outside the dimmed layer (width-independent tab highlighting).
+  final GlobalKey _shellTutorialOverlayHostKey =
+      GlobalKey(debugLabel: 'shell.tutorial.overlay');
+
   bool _tutorialTriggered = false;
+
+  BuildContext get _shellTutorialOverlayContext =>
+      _shellTutorialOverlayHostKey.currentContext ?? context;
   Future<void>? _tutorialLaunch;
 
   Future<void> _waitForCoachNavLayouts(
@@ -73,7 +83,7 @@ class _AppShellState extends ConsumerState<AppShell>
 
     Future<bool> tryShow() {
       return ShellTutorialController.instance.maybeShow(
-        context: context,
+        context: _shellTutorialOverlayContext,
         prefs: prefs,
         userId: userId,
         role: role,
@@ -202,7 +212,7 @@ class _AppShellState extends ConsumerState<AppShell>
     if (!mounted) return;
 
     var ok = await ShellTutorialController.instance.show(
-      context: context,
+      context: _shellTutorialOverlayContext,
       prefs: prefs,
       userId: auth.user.id,
       role: role,
@@ -212,7 +222,7 @@ class _AppShellState extends ConsumerState<AppShell>
       await _waitForCoachNavLayouts(keys, 8);
       if (!mounted) return;
       await ShellTutorialController.instance.show(
-        context: context,
+        context: _shellTutorialOverlayContext,
         prefs: prefs,
         userId: auth.user.id,
         role: role,
@@ -274,25 +284,34 @@ class _AppShellState extends ConsumerState<AppShell>
     );
 
     final keyboardOpen = wayoShellKeyboardOpen(context);
+    final shellCoachAccent = authState is AuthAuthenticated &&
+            authState.user.wayoAdsRole == WayoAdsAccountRole.creator
+        ? CreatorColors.primaryOf(context)
+        : AppColors.primary;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: systemNav,
       child: Scaffold(
-        extendBody: true,
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         body: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const PendingAccountDeletionBanner(),
             Expanded(
-              child: Padding(
-                padding: EdgeInsets.only(
-                  bottom: wayoShellBodyBottomPadding(context),
-                ),
-                child: ShellTutorialReplayScope(
-                  replay: _replayShellTutorial,
-                  child: widget.navigationShell,
-                ),
+              child: Overlay(
+                initialEntries: [
+                  OverlayEntry(
+                    builder: (_) {
+                      return KeyedSubtree(
+                        key: _shellTutorialOverlayHostKey,
+                        child: ShellTutorialReplayScope(
+                          replay: _replayShellTutorial,
+                          child: widget.navigationShell,
+                        ),
+                      );
+                    },
+                  ),
+                ],
               ),
             ),
           ],
@@ -311,6 +330,7 @@ class _AppShellState extends ConsumerState<AppShell>
                   campaignsAttentionCount: campaignsAttentionCount,
                   showInvoicesTab: showInvoicesTab,
                   invoicesNavLabel: invoicesNavLabel,
+                  coachAccentColor: shellCoachAccent,
                   dashboardTabKey: _dashboardKey,
                   campaignsTabKey: _campaignsKey,
                   walletTabKey: _walletKey,

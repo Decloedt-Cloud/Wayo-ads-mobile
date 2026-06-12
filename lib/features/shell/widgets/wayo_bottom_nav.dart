@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../i18n/strings.g.dart';
+import '../../onboarding/presentation/shell_tutorial_highlight.dart';
 
 /// Number of shell branches (dashboard, campaigns, wallet, invoices, chat).
 const int kWayoShellTabCount = 5;
@@ -51,7 +52,11 @@ class WayoBottomNav extends StatefulWidget {
     this.walletTabKey,
     this.invoicesTabKey,
     this.chatTabKey,
+    this.coachAccentColor = AppColors.primary,
   });
+
+  /// Role accent (amber advertiser / teal creator) — selected tab + coach lift.
+  final Color coachAccentColor;
 
   final StatefulNavigationShell navigationShell;
   final int notificationUnread;
@@ -91,6 +96,7 @@ class _WayoBottomNavState extends State<WayoBottomNav> {
     final t = context.t;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final idx = widget.navigationShell.currentIndex;
+    final coachAccent = widget.coachAccentColor;
 
     return Container(
       decoration: BoxDecoration(
@@ -114,6 +120,8 @@ class _WayoBottomNavState extends State<WayoBottomNav> {
               Expanded(
                 child: _ProNavItem(
                   tabKey: widget.dashboardTabKey,
+                  coachTarget: ShellTutorialTarget.dashboard,
+                  coachAccent: coachAccent,
                   icon: Icons.space_dashboard_rounded,
                   label: t.nav.dashboard,
                   isSelected: idx == 0,
@@ -126,6 +134,8 @@ class _WayoBottomNavState extends State<WayoBottomNav> {
               Expanded(
                 child: _ProNavItem(
                   tabKey: widget.campaignsTabKey,
+                  coachTarget: ShellTutorialTarget.campaigns,
+                  coachAccent: coachAccent,
                   icon: Icons.work_rounded,
                   label: t.nav.campaigns,
                   isSelected: idx == 1,
@@ -136,6 +146,8 @@ class _WayoBottomNavState extends State<WayoBottomNav> {
               Expanded(
                 child: _ProNavItem(
                   tabKey: widget.walletTabKey,
+                  coachTarget: ShellTutorialTarget.wallet,
+                  coachAccent: coachAccent,
                   icon: Icons.account_balance_wallet_rounded,
                   label: t.nav.wallet,
                   isSelected: idx == 2,
@@ -146,6 +158,8 @@ class _WayoBottomNavState extends State<WayoBottomNav> {
                 Expanded(
                   child: _ProNavItem(
                     tabKey: widget.invoicesTabKey,
+                    coachTarget: ShellTutorialTarget.invoices,
+                    coachAccent: coachAccent,
                     icon: Icons.receipt_long_rounded,
                     label: widget.invoicesNavLabel,
                     isSelected: idx == 3,
@@ -155,6 +169,8 @@ class _WayoBottomNavState extends State<WayoBottomNav> {
               Expanded(
                 child: _ProNavItem(
                   tabKey: widget.chatTabKey,
+                  coachTarget: ShellTutorialTarget.chat,
+                  coachAccent: coachAccent,
                   icon: Icons.forum_rounded,
                   label: t.nav.chat,
                   isSelected: idx == 4,
@@ -181,6 +197,8 @@ class _ProNavItem extends StatelessWidget {
     this.badge,
     this.showDot = false,
     this.tabKey,
+    this.coachTarget,
+    this.coachAccent = AppColors.primary,
   });
 
   final IconData icon;
@@ -190,142 +208,161 @@ class _ProNavItem extends StatelessWidget {
   final int? badge;
   final bool showDot;
   final GlobalKey? tabKey;
+  final ShellTutorialTarget? coachTarget;
+  final Color coachAccent;
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final accent = coachAccent;
 
-    // Coach-mark key spans the full tab column so long labels (e.g. FR dashboard)
-    // do not skew the highlight width vs other tabs.
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: SizedBox.expand(
-        key: tabKey,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            curve: Curves.easeOutCubic,
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
-            decoration: BoxDecoration(
-              color: isSelected
-                  ? AppColors.primary.withOpacity(isDark ? 0.15 : 0.1)
-                  : Colors.transparent,
-              borderRadius: BorderRadius.circular(kWayoNavCoachMarkRadius + 2),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                  Stack(
-                    clipBehavior: Clip.none,
-                    alignment: Alignment.center,
-                    children: [
-                      AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        padding: const EdgeInsets.all(6),
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? AppColors.primary.withOpacity(0.2)
-                              : Colors.transparent,
-                          borderRadius: BorderRadius.circular(12),
+    return ValueListenableBuilder<ShellTutorialTarget?>(
+      valueListenable: shellTutorialHighlightTab,
+      builder: (context, coachFocused, _) {
+        final isCoachFocused =
+            coachTarget != null && coachFocused == coachTarget;
+
+        return GestureDetector(
+          onTap: onTap,
+          behavior: HitTestBehavior.opaque,
+          child: SizedBox.expand(
+            key: tabKey,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeOutCubic,
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+                decoration: BoxDecoration(
+                  color: isCoachFocused
+                      ? (isDark
+                            ? Colors.white.withValues(alpha: 0.14)
+                            : Colors.white.withValues(alpha: 0.96))
+                      : Colors.transparent,
+                  borderRadius:
+                      BorderRadius.circular(kWayoNavCoachMarkRadius + 2),
+                  border: isCoachFocused
+                      ? Border.all(color: accent, width: 2)
+                      : null,
+                  boxShadow: isCoachFocused
+                      ? [
+                          BoxShadow(
+                            color: accent.withValues(alpha: 0.4),
+                            blurRadius: 14,
+                            spreadRadius: 0,
+                          ),
+                        ]
+                      : null,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Stack(
+                      clipBehavior: Clip.none,
+                      alignment: Alignment.center,
+                      children: [
+                        AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          padding: const EdgeInsets.all(6),
+                          child: Icon(
+                            icon,
+                            size: 22,
+                            color: isCoachFocused || isSelected
+                                ? accent
+                                : (isDark
+                                      ? Colors.white.withOpacity(0.5)
+                                      : Colors.black.withOpacity(0.4)),
+                          ),
                         ),
-                        child: Icon(
-                          icon,
-                          size: 22,
-                          color: isSelected
-                              ? AppColors.primary
-                              : (isDark
+                        if (badge != null && badge! > 0)
+                          Positioned(
+                            right: -4,
+                            top: -4,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 5,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.error,
+                                borderRadius: BorderRadius.circular(8),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppColors.error.withOpacity(0.4),
+                                    blurRadius: 6,
+                                  ),
+                                ],
+                              ),
+                              child: Text(
+                                badge! > 99 ? '99+' : '$badge',
+                                style: const TextStyle(
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                        if (showDot && !isSelected)
+                          Positioned(
+                            right: 0,
+                            top: 0,
+                            child: Container(
+                              width: 8,
+                              height: 8,
+                              decoration: BoxDecoration(
+                                color: AppColors.error,
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: isDark
+                                      ? const Color(0xFF0D0D0D)
+                                      : Colors.white,
+                                  width: 1.5,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppColors.error.withOpacity(0.4),
+                                    blurRadius: 4,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+                    AnimatedDefaultTextStyle(
+                      duration: const Duration(milliseconds: 200),
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: isCoachFocused || isSelected
+                            ? FontWeight.w700
+                            : FontWeight.w500,
+                        color: isCoachFocused || isSelected
+                            ? accent
+                            : (isDark
                                   ? Colors.white.withOpacity(0.5)
                                   : Colors.black.withOpacity(0.4)),
+                        letterSpacing: isCoachFocused || isSelected ? 0.3 : 0,
+                      ),
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          label,
+                          maxLines: 1,
+                          textAlign: TextAlign.center,
                         ),
                       ),
-                      if (badge != null && badge! > 0)
-                        Positioned(
-                          right: -4,
-                          top: -4,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 5,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppColors.error,
-                              borderRadius: BorderRadius.circular(8),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppColors.error.withOpacity(0.4),
-                                  blurRadius: 6,
-                                ),
-                              ],
-                            ),
-                            child: Text(
-                              badge! > 99 ? '99+' : '$badge',
-                              style: const TextStyle(
-                                fontSize: 9,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ),
-                      if (showDot && !isSelected)
-                        Positioned(
-                          right: 0,
-                          top: 0,
-                          child: Container(
-                            width: 8,
-                            height: 8,
-                            decoration: BoxDecoration(
-                              color: AppColors.error,
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: isDark
-                                    ? const Color(0xFF0D0D0D)
-                                    : Colors.white,
-                                width: 1.5,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppColors.error.withOpacity(0.4),
-                                  blurRadius: 4,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 2),
-                  AnimatedDefaultTextStyle(
-                    duration: const Duration(milliseconds: 200),
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight:
-                          isSelected ? FontWeight.w700 : FontWeight.w500,
-                      color: isSelected
-                          ? AppColors.primary
-                          : (isDark
-                              ? Colors.white.withOpacity(0.5)
-                              : Colors.black.withOpacity(0.4)),
-                      letterSpacing: isSelected ? 0.3 : 0,
                     ),
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text(
-                        label,
-                        maxLines: 1,
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ),
-              ],
+                  ],
+                ),
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

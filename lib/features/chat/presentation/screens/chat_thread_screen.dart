@@ -14,6 +14,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/push/wayo_push_intent.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../i18n/strings.g.dart';
+import '../../data/chat_active_conversation.dart';
 import '../../data/chat_media_utils.dart';
 import '../../data/chat_message_media.dart';
 import '../../data/chat_share_intent.dart';
@@ -93,7 +94,7 @@ class ChatThreadScreen extends ConsumerStatefulWidget {
 class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
   final _scroll = ScrollController();
   final _draft = TextEditingController();
-  final _fabVisible = ValueNotifier<bool>(false);
+  bool _showScrollFab = false;
   final GlobalKey<CinematicSendBurstState> _burstKey =
       GlobalKey<CinematicSendBurstState>();
   StreamSubscription<ChatRealtimeEvent>? _sub;
@@ -126,11 +127,8 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
   bool _loadingOlderMessages = false;
   bool _olderMessagesFetchInFlight = false;
 
-  /// Show scroll-to-end FAB when farther than this from the list bottom.
-  static const double _fabGapThreshold = 200;
-
-  /// "At bottom" tolerance: at or below this gap we clear the off-screen counter.
-  static const double _scrollBottomSlack = 80;
+  /// Show scroll-to-end FAB when not pinned to the latest messages.
+  static const double _scrollBottomSlack = 96;
 
   /// Peer messages received while scrolled up (shown on the scroll-down FAB).
   int _offscreenPeerMessageCount = 0;
@@ -185,11 +183,15 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
   /// Back from push deep-link uses [GoRouter.go] (no stack) — [pop] would throw.
   void _onThreadBack() {
     if (!mounted) return;
-    if (context.canPop()) {
-      context.pop();
-    } else {
-      context.go('/chat');
-    }
+    unawaited(() async {
+      await markChatConversationRead(ref, widget.conversationId);
+      if (!mounted) return;
+      if (context.canPop()) {
+        context.pop();
+      } else {
+        context.go('/chat');
+      }
+    }());
   }
 
   @override
@@ -201,7 +203,7 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
     _pinThreadToLatestExpiry?.cancel();
     _scroll.dispose();
     _draft.dispose();
-    _fabVisible.dispose();
+    unawaited(setActiveChatConversationId(null));
     super.dispose();
   }
 
@@ -224,6 +226,7 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
   @override
   void initState() {
     super.initState();
+    unawaited(setActiveChatConversationId(widget.conversationId));
     WidgetsBinding.instance.addPostFrameCallback((_) => _bootstrap());
   }
 
@@ -291,12 +294,7 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
     }
 
     try {
-      await repo.markRead(
-        validCreds,
-        widget.conversationId,
-        socketId: () => rt.socketId,
-      );
-      ref.invalidate(chatConversationsProvider);
+      await markChatConversationRead(ref, widget.conversationId);
     } catch (_) {
       // Mark-read failure is non-fatal.
     }
@@ -522,8 +520,13 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
         });
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!mounted) return;
-          _syncScrollFabVisibility();
+          if (!scrolledUp) {
+            _scrollToEnd(animated: true);
+          } else {
+            _updateScrollFabVisibility();
+          }
         });
+        unawaited(markChatConversationRead(ref, widget.conversationId));
         return;
       }
       if (event is ChatTypingEvent &&
@@ -573,7 +576,7 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
     });
   }
 
-  void _syncScrollFabVisibility() {
+  void _updateScrollFabVisibility() {
     if (!_scroll.hasClients) {
       return;
     }
@@ -582,11 +585,16 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
       return;
     }
     final gap = m.maxScrollExtent - m.pixels;
-    final show = gap > _fabGapThreshold || _offscreenPeerMessageCount > 0;
-    if (_fabVisible.value != show) {
-      _fabVisible.value = show;
+    final show = gap > _scrollBottomSlack || _offscreenPeerMessageCount > 0;
+    if (_showScrollFab != show) {
+      setState(() => _showScrollFab = show);
+    } else if (show && _offscreenPeerMessageCount > 0) {
+      // Counter changed while FAB already visible — rebuild badge.
+      setState(() {});
     }
   }
+
+  void _syncScrollFabVisibility() => _updateScrollFabVisibility();
 
   /// After [_loading] becomes false the [CustomScrollView] often still reports
   /// `hasContentDimensions: false` for a frame — a single [_scrollToEnd] then
@@ -721,9 +729,9 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
         _offscreenPeerMessageCount > 0) {
       setState(() => _offscreenPeerMessageCount = 0);
     }
-    final show = gap > _fabGapThreshold || _offscreenPeerMessageCount > 0;
-    if (_fabVisible.value != show) {
-      _fabVisible.value = show;
+    final show = gap > _scrollBottomSlack || _offscreenPeerMessageCount > 0;
+    if (_showScrollFab != show) {
+      setState(() => _showScrollFab = show);
     }
     return false;
   }
@@ -1668,7 +1676,13 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
     final threadUi = _threadSystemUi(context);
     final chatTheme = CinematicChatTheme.of(context);
 
-    return credsAsync.when(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        _onThreadBack();
+      },
+      child: credsAsync.when(
       loading: () => AnnotatedRegion<SystemUiOverlayStyle>(
         value: threadUi,
         child: Scaffold(
@@ -1883,54 +1897,70 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
                                   ],
                                 ),
                               ),
-                              ValueListenableBuilder<bool>(
-                                valueListenable: _fabVisible,
-                                builder: (context, show, _) {
-                                  if (!show || _loading || _error != null) {
-                                    return const SizedBox.shrink();
-                                  }
-                                  return Positioned(
-                                    right: 18,
-                                    bottom: 18,
-                                    child: FloatingActionButton.small(
-                                      tooltip: t.chat.scroll_to_latest,
-                                      backgroundColor: chatTheme.amber,
-                                      foregroundColor: Colors.black,
-                                      elevation: 8,
-                                      onPressed: () =>
-                                          _scrollToEnd(animated: true),
+                              if (_showScrollFab && !_loading && _error == null)
+                                Positioned(
+                                  right: 16,
+                                  bottom: 14,
+                                  child: Tooltip(
+                                    message: t.chat.scroll_to_latest,
+                                    child: Material(
+                                    color: Colors.transparent,
+                                    child: InkWell(
+                                      onTap: () => _scrollToEnd(animated: true),
+                                      borderRadius: BorderRadius.circular(28),
                                       child: Stack(
                                         clipBehavior: Clip.none,
-                                        alignment: Alignment.center,
                                         children: [
-                                          const Icon(
-                                            Icons.keyboard_arrow_down_rounded,
+                                          Container(
+                                            width: 44,
+                                            height: 44,
+                                            decoration: BoxDecoration(
+                                              color: chatTheme.amber,
+                                              shape: BoxShape.circle,
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: chatTheme.amber
+                                                      .withValues(alpha: 0.35),
+                                                  blurRadius: 12,
+                                                  offset: const Offset(0, 4),
+                                                ),
+                                              ],
+                                            ),
+                                            alignment: Alignment.center,
+                                            child: const Icon(
+                                              Icons.keyboard_arrow_down_rounded,
+                                              color: Colors.black,
+                                              size: 28,
+                                            ),
                                           ),
                                           if (_offscreenPeerMessageCount > 0)
                                             Positioned(
-                                              right: -6,
+                                              right: -4,
                                               top: -6,
                                               child: Container(
-                                                constraints:
-                                                    const BoxConstraints(
-                                                      minWidth: 18,
-                                                      minHeight: 18,
-                                                    ),
+                                                constraints: const BoxConstraints(
+                                                  minWidth: 20,
+                                                  minHeight: 20,
+                                                ),
                                                 padding:
                                                     const EdgeInsets.symmetric(
-                                                      horizontal: 4,
-                                                    ),
+                                                  horizontal: 5,
+                                                ),
                                                 decoration: BoxDecoration(
                                                   color: AppColors.error,
                                                   borderRadius:
                                                       BorderRadius.circular(99),
+                                                  border: Border.all(
+                                                    color: chatTheme.bg,
+                                                    width: 2,
+                                                  ),
                                                   boxShadow: [
                                                     BoxShadow(
                                                       color: AppColors.error
                                                           .withValues(
-                                                            alpha: 0.35,
-                                                          ),
-                                                      blurRadius: 6,
+                                                        alpha: 0.35,
+                                                      ),
+                                                      blurRadius: 8,
                                                     ),
                                                   ],
                                                 ),
@@ -1941,7 +1971,7 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
                                                   ),
                                                   style: const TextStyle(
                                                     color: Colors.white,
-                                                    fontSize: 9,
+                                                    fontSize: 11,
                                                     fontWeight: FontWeight.w800,
                                                     height: 1.0,
                                                   ),
@@ -1951,9 +1981,9 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
                                         ],
                                       ),
                                     ),
-                                  );
-                                },
-                              ),
+                                  ),
+                                  ),
+                                ),
                             ],
                           ),
                         ),
@@ -2041,6 +2071,7 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
           },
         );
       },
+    ),
     );
   }
 

@@ -549,10 +549,10 @@ class TranslationsAdvertiserWalletEn {
 	String get pending => 'Pending';
 	String get add_funds => 'Add funds';
 	String get amount_label => 'Amount';
-	String get quick_50 => '€50';
-	String get quick_100 => '€100';
-	String get quick_250 => '€250';
-	String get min_deposit => 'Minimum deposit is 50.00 in your currency.';
+	String get quick_50 => '50 USD';
+	String get quick_100 => '100 USD';
+	String get quick_250 => '500 USD';
+	String get min_deposit => 'Minimum deposit is 50.00 USD.';
 	String get test_pay => 'Simulate payment (dev)';
 	String get test_hint => 'Test mode: no real card. Tops up your dev wallet for QA.';
 	String get pay_secure => 'Pay with card, Apple Pay or Google Pay';
@@ -754,8 +754,8 @@ class TranslationsAppSettingsEn {
 	String get theme_light => 'Light';
 	String get theme_dark => 'Dark';
 	String get theme_system => 'System';
-	String get theme_hint => 'Choose how Wayo Ads looks. System follows your device setting.';
-	String get language_hint => 'Interface language. Dates and formats follow the locale.';
+	String get theme_hint => 'Choose how Wayo Ads looks. The theme follows your phone’s settings.';
+	String get language_hint => 'Sets the interface language. Dates and formats adapt to your chosen language.';
 	String get design_variant => 'Panel style';
 	String get design_glass => 'Soft glass';
 	String get design_corporate => 'Corporate';
@@ -781,7 +781,7 @@ class TranslationsAppSettingsEn {
 	String get delete_account_entry_sub => '30-day grace — manage deletion in the app';
 	String get section_about => 'About';
 	String get rate_app => 'Rate Wayo Ads';
-	String get rate_app_sub => 'Opens the App Store or Google Play';
+	String get rate_app_sub => 'Open the App Store or Google Play';
 }
 
 // Path: account_deletion
@@ -1969,10 +1969,10 @@ extension on Translations {
 			case 'advertiser_wallet.pending': return 'Pending';
 			case 'advertiser_wallet.add_funds': return 'Add funds';
 			case 'advertiser_wallet.amount_label': return 'Amount';
-			case 'advertiser_wallet.quick_50': return '€50';
-			case 'advertiser_wallet.quick_100': return '€100';
-			case 'advertiser_wallet.quick_250': return '€250';
-			case 'advertiser_wallet.min_deposit': return 'Minimum deposit is 50.00 in your currency.';
+			case 'advertiser_wallet.quick_50': return '50 USD';
+			case 'advertiser_wallet.quick_100': return '100 USD';
+			case 'advertiser_wallet.quick_250': return '500 USD';
+			case 'advertiser_wallet.min_deposit': return 'Minimum deposit is 50.00 USD.';
 			case 'advertiser_wallet.test_pay': return 'Simulate payment (dev)';
 			case 'advertiser_wallet.test_hint': return 'Test mode: no real card. Tops up your dev wallet for QA.';
 			case 'advertiser_wallet.pay_secure': return 'Pay with card, Apple Pay or Google Pay';
@@ -2129,8 +2129,8 @@ extension on Translations {
 			case 'app_settings.theme_light': return 'Light';
 			case 'app_settings.theme_dark': return 'Dark';
 			case 'app_settings.theme_system': return 'System';
-			case 'app_settings.theme_hint': return 'Choose how Wayo Ads looks. System follows your device setting.';
-			case 'app_settings.language_hint': return 'Interface language. Dates and formats follow the locale.';
+			case 'app_settings.theme_hint': return 'Choose how Wayo Ads looks. The theme follows your phone’s settings.';
+			case 'app_settings.language_hint': return 'Sets the interface language. Dates and formats adapt to your chosen language.';
 			case 'app_settings.design_variant': return 'Panel style';
 			case 'app_settings.design_glass': return 'Soft glass';
 			case 'app_settings.design_corporate': return 'Corporate';
@@ -2156,7 +2156,7 @@ extension on Translations {
 			case 'app_settings.delete_account_entry_sub': return '30-day grace — manage deletion in the app';
 			case 'app_settings.section_about': return 'About';
 			case 'app_settings.rate_app': return 'Rate Wayo Ads';
-			case 'app_settings.rate_app_sub': return 'Opens the App Store or Google Play';
+			case 'app_settings.rate_app_sub': return 'Open the App Store or Google Play';
 			case 'account_deletion.nav_title': return 'Delete account';
 			case 'account_deletion.title': return 'Delete my Wayo Ads account';
 			case 'account_deletion.danger_zone_chip': return 'Danger Zone';

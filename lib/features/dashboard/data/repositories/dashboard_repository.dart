@@ -360,7 +360,7 @@ final class DashboardRepositoryImpl implements DashboardRepository {
         available: (b['available'] as num).toDouble(),
         locked: (b['locked'] as num).toDouble(),
         spent: (b['spent'] as num).toDouble(),
-        currency: b['currency'] as String? ?? 'EUR',
+        currency: b['currency'] as String? ?? 'USD',
       );
     }
     final list = (m['campaigns'] as List<dynamic>? ?? const [])

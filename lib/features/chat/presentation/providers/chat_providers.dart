@@ -5,6 +5,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/network/wayo_ads_dio.dart';
+import '../../../../core/push/wayo_push_service.dart';
+import '../../data/chat_active_conversation.dart';
 import '../../data/chat_repository.dart';
 import '../../data/chat_realtime_service.dart';
 import '../../domain/chat_conversation.dart';
@@ -29,10 +31,74 @@ Future<void> awaitChatPostLoginGate(Ref ref) async {
   }
 }
 
+/// Conversation ids treated as read locally until the server list confirms [unreadCount] is 0.
+final chatReadConversationOverridesProvider = StateProvider<Set<int>>(
+  (ref) => {},
+  name: 'chatReadConversationOverridesProvider',
+);
+
+int chatEffectiveUnreadCount(ChatConversation c, Set<int> readOverrides) {
+  if (readOverrides.contains(c.id)) return 0;
+  return c.unreadCount;
+}
+
+/// Marks a thread read on chat-service and refreshes the inbox list.
+Future<void> markChatConversationRead(
+  WidgetRef ref,
+  int conversationId, {
+  bool optimistic = true,
+}) async {
+  unawaited(dismissWayoChatNotification('$conversationId'));
+
+  if (optimistic) {
+    ref.read(chatReadConversationOverridesProvider.notifier).update(
+      (s) => {...s, conversationId},
+    );
+  }
+
+  final rt = ref.read(chatRealtimeServiceProvider);
+  final repo = ref.read(chatRepositoryProvider);
+  try {
+    final creds = await ref.read(chatBootstrapProvider.future);
+    await repo.markRead(
+      creds,
+      conversationId,
+      socketId: () => rt.socketId,
+    );
+  } catch (e) {
+    if (optimistic) {
+      ref.read(chatReadConversationOverridesProvider.notifier).update(
+        (s) => {...s}..remove(conversationId),
+      );
+    }
+    if (kDebugMode) {
+      debugPrint('[Chat] markRead failed conv=$conversationId: $e');
+    }
+    return;
+  }
+
+  ref.invalidate(chatConversationsProvider);
+  try {
+    final list = await ref.read(chatConversationsProvider.future);
+    for (final c in list) {
+      if (c.id == conversationId && c.unreadCount == 0) {
+        ref.read(chatReadConversationOverridesProvider.notifier).update(
+          (s) => {...s}..remove(conversationId),
+        );
+        break;
+      }
+    }
+  } catch (_) {}
+}
+
 /// Unread badge for shell — never throws; errors while chat warms up read as 0.
 final chatUnreadCountProvider = Provider<int>((ref) {
+  final overrides = ref.watch(chatReadConversationOverridesProvider);
   return ref.watch(chatConversationsProvider).maybeWhen(
-    data: (list) => list.fold<int>(0, (sum, c) => sum + c.unreadCount),
+    data: (list) => list.fold<int>(
+      0,
+      (sum, c) => sum + chatEffectiveUnreadCount(c, overrides),
+    ),
     orElse: () => 0,
   );
 });
@@ -198,6 +264,8 @@ final chatMessagesFamilyProvider = FutureProvider.autoDispose
 
 void _invalidateChatProvidersNow(Ref ref) {
   ref.read(chatPostLoginGateProvider.notifier).state = null;
+  ref.read(chatReadConversationOverridesProvider.notifier).state = {};
+  unawaited(setActiveChatConversationId(null));
   ref.invalidate(chatBootstrapProvider);
   ref.invalidate(chatConversationsProvider);
   invalidateChatRealtimeBindingImmediate(

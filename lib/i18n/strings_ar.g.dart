@@ -546,10 +546,10 @@ class _TranslationsAdvertiserWalletAr extends TranslationsAdvertiserWalletEn {
 	@override String get pending => 'قيد الانتظار';
 	@override String get add_funds => 'إضافة رصيد';
 	@override String get amount_label => 'المبلغ';
-	@override String get quick_50 => '50€';
-	@override String get quick_100 => '100€';
-	@override String get quick_250 => '250€';
-	@override String get min_deposit => 'الحد الأدنى للإيداع 50,00 حسب العملة.';
+	@override String get quick_50 => '50 USD';
+	@override String get quick_100 => '100 USD';
+	@override String get quick_250 => '500 USD';
+	@override String get min_deposit => 'الحد الأدنى للإيداع 50.00 USD.';
 	@override String get test_pay => 'محاكاة الدفع (تطوير)';
 	@override String get test_hint => 'وضع اختباري: بدون بطاقة حقيقية.';
 	@override String get pay_secure => 'بطاقة أو Apple Pay أو Google Pay';
@@ -751,8 +751,8 @@ class _TranslationsAppSettingsAr extends TranslationsAppSettingsEn {
 	@override String get theme_light => 'فاتح';
 	@override String get theme_dark => 'داكن';
 	@override String get theme_system => 'النظام';
-	@override String get theme_hint => 'اختر مظهر وايو أدز. «النظام» يتبع إعداد جهازك.';
-	@override String get language_hint => 'لغة الواجهة. التواريخ والتنسيقات تتبع اللغة.';
+	@override String get theme_hint => 'اختر مظهر Wayo Ads. يتبع المظهر إعدادات هاتفك.';
+	@override String get language_hint => 'يحدّد لغة الواجهة. تتكيّف التواريخ والتنسيقات مع اللغة المختارة.';
 	@override String get design_variant => 'أسلوب اللوحة';
 	@override String get design_glass => 'زجاج ناعم';
 	@override String get design_corporate => 'احترافي بسيط';
@@ -778,7 +778,7 @@ class _TranslationsAppSettingsAr extends TranslationsAppSettingsEn {
 	@override String get delete_account_entry_sub => 'فترة سماح 30 يومًا — من داخل التطبيق';
 	@override String get section_about => 'حول التطبيق';
 	@override String get rate_app => 'قيّم Wayo Ads';
-	@override String get rate_app_sub => 'يفتح App Store أو Google Play';
+	@override String get rate_app_sub => 'افتح App Store أو Google Play';
 }
 
 // Path: account_deletion
@@ -1965,10 +1965,10 @@ extension on TranslationsAr {
 			case 'advertiser_wallet.pending': return 'قيد الانتظار';
 			case 'advertiser_wallet.add_funds': return 'إضافة رصيد';
 			case 'advertiser_wallet.amount_label': return 'المبلغ';
-			case 'advertiser_wallet.quick_50': return '50€';
-			case 'advertiser_wallet.quick_100': return '100€';
-			case 'advertiser_wallet.quick_250': return '250€';
-			case 'advertiser_wallet.min_deposit': return 'الحد الأدنى للإيداع 50,00 حسب العملة.';
+			case 'advertiser_wallet.quick_50': return '50 USD';
+			case 'advertiser_wallet.quick_100': return '100 USD';
+			case 'advertiser_wallet.quick_250': return '500 USD';
+			case 'advertiser_wallet.min_deposit': return 'الحد الأدنى للإيداع 50.00 USD.';
 			case 'advertiser_wallet.test_pay': return 'محاكاة الدفع (تطوير)';
 			case 'advertiser_wallet.test_hint': return 'وضع اختباري: بدون بطاقة حقيقية.';
 			case 'advertiser_wallet.pay_secure': return 'بطاقة أو Apple Pay أو Google Pay';
@@ -2125,8 +2125,8 @@ extension on TranslationsAr {
 			case 'app_settings.theme_light': return 'فاتح';
 			case 'app_settings.theme_dark': return 'داكن';
 			case 'app_settings.theme_system': return 'النظام';
-			case 'app_settings.theme_hint': return 'اختر مظهر وايو أدز. «النظام» يتبع إعداد جهازك.';
-			case 'app_settings.language_hint': return 'لغة الواجهة. التواريخ والتنسيقات تتبع اللغة.';
+			case 'app_settings.theme_hint': return 'اختر مظهر Wayo Ads. يتبع المظهر إعدادات هاتفك.';
+			case 'app_settings.language_hint': return 'يحدّد لغة الواجهة. تتكيّف التواريخ والتنسيقات مع اللغة المختارة.';
 			case 'app_settings.design_variant': return 'أسلوب اللوحة';
 			case 'app_settings.design_glass': return 'زجاج ناعم';
 			case 'app_settings.design_corporate': return 'احترافي بسيط';
@@ -2152,7 +2152,7 @@ extension on TranslationsAr {
 			case 'app_settings.delete_account_entry_sub': return 'فترة سماح 30 يومًا — من داخل التطبيق';
 			case 'app_settings.section_about': return 'حول التطبيق';
 			case 'app_settings.rate_app': return 'قيّم Wayo Ads';
-			case 'app_settings.rate_app_sub': return 'يفتح App Store أو Google Play';
+			case 'app_settings.rate_app_sub': return 'افتح App Store أو Google Play';
 			case 'account_deletion.nav_title': return 'حذف الحساب';
 			case 'account_deletion.title': return 'حذف حساب Wayo Ads';
 			case 'account_deletion.danger_zone_chip': return 'منطقة الخطر';

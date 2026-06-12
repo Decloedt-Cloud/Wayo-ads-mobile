@@ -105,11 +105,8 @@ class _PushPermissionPromptHostState
         isAuthenticated: true,
         processDeferredMarkRead:
             ({required notificationId, conversationId}) async {
-          if (!kIsWeb &&
-              defaultTargetPlatform == TargetPlatform.android &&
-              conversationId != null &&
-              conversationId.isNotEmpty) {
-            await dismissWayoChatAndroidNotification(conversationId);
+          if (conversationId != null && conversationId.isNotEmpty) {
+            await dismissWayoChatNotification(conversationId);
           }
           try {
             await ref.read(notificationsRepositoryProvider).markRead(

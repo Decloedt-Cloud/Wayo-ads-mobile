@@ -226,7 +226,6 @@ class _CreatorDashboardScreenState extends ConsumerState<CreatorDashboardScreen>
                 );
               },
             ),
-            const SliverPadding(padding: EdgeInsets.only(bottom: 142)),
           ],
         ),
       ),
@@ -310,7 +309,7 @@ class _CreatorHeader extends ConsumerWidget {
                       ),
                       padding: const EdgeInsets.all(10),
                       child: Icon(
-                        Icons.replay_rounded,
+                        Icons.help_outline_rounded,
                         color: accent,
                       ),
                     ),

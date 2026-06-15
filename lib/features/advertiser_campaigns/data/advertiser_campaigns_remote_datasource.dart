@@ -141,37 +141,49 @@ final class AdvertiserCampaignsRemoteDatasource
   Future<List<CampaignApplication>> fetchCampaignApplications(
     String campaignId,
   ) async {
-    try {
-      final res = await _dio.get<Map<String, dynamic>>(
-        _path(ApiEndpoints.campaignApplications(campaignId)),
-      );
-      final data = res.data;
-      if (data == null) {
-        return const [];
+    Object? lastError;
+    for (var attempt = 0; attempt < 4; attempt++) {
+      if (attempt > 0) {
+        await Future<void>.delayed(Duration(milliseconds: 380 * attempt));
       }
-      if (data['error'] is String) {
-        throw ServerException(data['error'] as String);
-      }
-      dynamic list = data['applications'];
-      if (list is! List<dynamic>) {
-        list = data['data'] is List<dynamic>
-            ? data['data'] as List<dynamic>
-            : const [];
-      }
-      return list
-          .whereType<Map<String, dynamic>>()
-          .map(CampaignApplication.fromJson)
-          .toList();
-    } on DioException catch (e) {
-      // 404 means the endpoint doesn't exist yet — return empty list gracefully.
-      if (e.response?.statusCode == 404) {
-        if (kDebugMode) {
-          debugPrint('[CampaignApplications] 404 — returning empty list');
+      try {
+        final res = await _dio.get<Map<String, dynamic>>(
+          _path(ApiEndpoints.campaignApplications(campaignId)),
+        );
+        final data = res.data;
+        if (data == null) {
+          return const [];
         }
-        return const [];
+        if (data['error'] is String) {
+          throw ServerException(data['error'] as String);
+        }
+        dynamic list = data['applications'];
+        if (list is! List<dynamic>) {
+          list = data['data'] is List<dynamic>
+              ? data['data'] as List<dynamic>
+              : const [];
+        }
+        return list
+            .whereType<Map<String, dynamic>>()
+            .map(CampaignApplication.fromJson)
+            .toList();
+      } on DioException catch (e) {
+        // 404 means the endpoint doesn't exist yet — return empty list gracefully.
+        if (e.response?.statusCode == 404) {
+          if (kDebugMode) {
+            debugPrint('[CampaignApplications] 404 — returning empty list');
+          }
+          return const [];
+        }
+        final code = e.response?.statusCode;
+        if (code == 401 && attempt < 3) {
+          lastError = e;
+          continue;
+        }
+        rethrow;
       }
-      rethrow;
     }
+    throw lastError ?? const ServerException('Unauthorized');
   }
 
   @override

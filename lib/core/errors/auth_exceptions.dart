@@ -50,3 +50,16 @@ final class EmailNotRegisteredException extends AuthException {
   @override
   String toString() => message;
 }
+
+/// HTTP 409 — active Wayo Ads web session blocks mobile login until web logout.
+final class WebSessionActiveException extends AuthException {
+  const WebSessionActiveException({
+    this.message =
+        'You are already signed in on the Wayo Ads website. Sign out from the web before signing in on the app.',
+    this.logoutUrl,
+  });
+  final String message;
+  final String? logoutUrl;
+  @override
+  String toString() => message;
+}

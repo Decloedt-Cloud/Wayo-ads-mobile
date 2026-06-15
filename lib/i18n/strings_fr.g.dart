@@ -183,6 +183,11 @@ class _TranslationsLoginFr extends TranslationsLoginEn {
 	@override String get google_channel_restart => 'Connexion Google interrompue avec Android (souvent après un hot restart). Arrêtez complètement l’app puis Relancer — évitez le hot restart.';
 	@override String get google_android_oauth_misconfigured => 'Google n’a pas pu vérifier l’app (code 10). Dans Google Cloud Console, même projet que l’ID client Web : ajoutez un client OAuth de type Android avec le package ma.wayo.wayoadsgo et l’empreinte SHA-1 du keystore (debug ou release), attendez quelques minutes puis réessayez.';
 	@override String get session_expired_snack => 'Votre session a expiré. Veuillez vous reconnecter.';
+	@override String get web_session_title => 'Déjà connecté sur le web';
+	@override String get web_session_body => 'Ce compte est encore connecté sur le site Wayo Ads. Déconnectez-vous du web avant de vous connecter sur l\'application.';
+	@override String get web_session_disconnect => 'Se déconnecter du web et continuer';
+	@override String get web_session_open_browser => 'Ouvrir le site pour se déconnecter';
+	@override String get web_session_cancel => 'Annuler';
 }
 
 // Path: verify_email
@@ -1452,6 +1457,11 @@ extension on TranslationsFr {
 			case 'login.google_channel_restart': return 'Connexion Google interrompue avec Android (souvent après un hot restart). Arrêtez complètement l’app puis Relancer — évitez le hot restart.';
 			case 'login.google_android_oauth_misconfigured': return 'Google n’a pas pu vérifier l’app (code 10). Dans Google Cloud Console, même projet que l’ID client Web : ajoutez un client OAuth de type Android avec le package ma.wayo.wayoadsgo et l’empreinte SHA-1 du keystore (debug ou release), attendez quelques minutes puis réessayez.';
 			case 'login.session_expired_snack': return 'Votre session a expiré. Veuillez vous reconnecter.';
+			case 'login.web_session_title': return 'Déjà connecté sur le web';
+			case 'login.web_session_body': return 'Ce compte est encore connecté sur le site Wayo Ads. Déconnectez-vous du web avant de vous connecter sur l\'application.';
+			case 'login.web_session_disconnect': return 'Se déconnecter du web et continuer';
+			case 'login.web_session_open_browser': return 'Ouvrir le site pour se déconnecter';
+			case 'login.web_session_cancel': return 'Annuler';
 			case 'verify_email.title': return 'Confirmez votre email';
 			case 'verify_email.subtitle': return 'Wayo ID exige une adresse vérifiée (comme sur le site). Ouvrez le lien envoyé à :';
 			case 'verify_email.check_again': return 'C’est fait — continuer';

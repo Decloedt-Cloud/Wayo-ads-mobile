@@ -115,7 +115,7 @@ class _SuperadminBrowseCampaignsScreenState
   void _openCampaign(CreatorBrowseCampaign c) {
     FocusManager.instance.primaryFocus?.unfocus();
     context.push(
-      '/campaigns/${c.id}',
+      '/superadmin/campaigns/${c.id}',
       extra: <String, Object?>{'title': c.title},
     );
   }

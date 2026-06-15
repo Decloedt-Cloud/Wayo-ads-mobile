@@ -84,7 +84,12 @@
     "google_failed": "فشل تسجيل الدخول عبر Google. حاول مرة أخرى.",
     "google_channel_restart": "انقطع اتصال Google مع أندرويد (غالبًا بعد hot restart). أوقف التطبيق بالكامل ثم شغّله من جديد — لا تستخدم hot restart.",
     "google_android_oauth_misconfigured": "تعذّر على Google التحقق من التطبيق (رمز 10). في Google Cloud Console ونفس مشروع معرّف العميل للويب: أنشئ عميل OAuth من نوع Android باسم الحزمة ma.wayo.wayoadsgo وبصمة SHA-1 لبيانات الاعتماد (تطوير أو إصدار)، انتظر بضع دقائق ثم أعِد المحاولة.",
-    "session_expired_snack": "انتهت جلستك. يُرجى تسجيل الدخول مرة أخرى."
+    "session_expired_snack": "انتهت جلستك. يُرجى تسجيل الدخول مرة أخرى.",
+    "web_session_title": "مسجّل الدخول بالفعل على الويب",
+    "web_session_body": "هذا الحساب ما زال متصلاً على موقع Wayo Ads. سجّل الخروج من الويب قبل تسجيل الدخول في التطبيق.",
+    "web_session_disconnect": "تسجيل الخروج من الويب والمتابعة",
+    "web_session_open_browser": "فتح الموقع لتسجيل الخروج",
+    "web_session_cancel": "إلغاء"
   },
   "verify_email": {
     "title": "أكّد بريدك الإلكتروني",

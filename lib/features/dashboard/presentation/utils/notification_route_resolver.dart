@@ -7,12 +7,72 @@ String? resolveNotificationMobileRoute(
   NotificationItem item,
   WayoAdsAccountRole role,
 ) {
-  final fromUrl = normalizeMobilePushRoute(item.actionUrl);
-  if (fromUrl != null) return fromUrl;
-
-  final campId = item.metadataCampaignId;
-  final appId = item.metadataApplicationId;
   final type = (item.type ?? '').toUpperCase();
+  final campId = item.metadataCampaignId;
+
+  // Wayo-ads `CAMPAIGN_ACTIVATED` broadcast ("New Campaign Available") targets creators.
+  if (isCreatorCampaignBrowseNotification(item)) {
+    if (role == WayoAdsAccountRole.creator &&
+        campId != null &&
+        campId.isNotEmpty) {
+      return '/creator/campaigns/$campId';
+    }
+    return role == WayoAdsAccountRole.creator ? '/dashboard' : '/campaigns';
+  }
+
+  final fromUrl = normalizeMobilePushRoute(item.actionUrl);
+  var route = fromUrl;
+
+  if (route == null) {
+    route = _routeFromMetadata(item, role, type, campId);
+  }
+
+  if (route == null) return null;
+
+  return remapCampaignRouteForRole(route, role, item);
+}
+
+/// Re-maps web `/campaigns/:id` links to the correct mobile screen for [role].
+String remapCampaignRouteForRole(
+  String route,
+  WayoAdsAccountRole role,
+  NotificationItem item,
+) {
+  final base = route.split('?').first;
+
+  if (role == WayoAdsAccountRole.creator) {
+    final advMatch = RegExp(r'^/campaigns/([^/?#]+)$').firstMatch(base);
+    if (advMatch != null) {
+      final id = advMatch.group(1)!;
+      if (base.contains('application') ||
+          (item.metadataApplicationId?.isNotEmpty ?? false)) {
+        return '/creator/campaigns/$id/application';
+      }
+      return '/creator/campaigns/$id';
+    }
+    return route;
+  }
+
+  if (role == WayoAdsAccountRole.advertiser) {
+    if (isCreatorCampaignBrowseNotification(item)) {
+      return '/campaigns';
+    }
+    final creMatch = RegExp(r'^/creator/campaigns/([^/?#]+)').firstMatch(base);
+    if (creMatch != null && item.isCreatorAppliedNotification) {
+      return '/campaigns/${creMatch.group(1)}';
+    }
+  }
+
+  return route;
+}
+
+String? _routeFromMetadata(
+  NotificationItem item,
+  WayoAdsAccountRole role,
+  String type,
+  String? campId,
+) {
+  final appId = item.metadataApplicationId;
 
   if (campId != null &&
       campId.isNotEmpty &&
@@ -68,6 +128,18 @@ String? resolveNotificationMobileRoute(
   }
 
   return null;
+}
+
+/// Creator marketplace alerts (e.g. `CAMPAIGN_ACTIVATED` role broadcast).
+bool isCreatorCampaignBrowseNotification(NotificationItem item) {
+  final type = (item.type ?? '').toUpperCase();
+  if (type.contains('CAMPAIGN_ACTIVATED')) return true;
+  if (type.contains('NEW_CAMPAIGN')) return true;
+
+  final title = item.title.trim().toLowerCase();
+  if (title == 'new campaign available') return true;
+
+  return false;
 }
 
 bool notificationCanNavigate(NotificationItem item, WayoAdsAccountRole role) {

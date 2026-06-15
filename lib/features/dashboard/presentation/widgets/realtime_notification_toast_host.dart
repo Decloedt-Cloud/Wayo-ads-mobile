@@ -43,6 +43,10 @@ class _RealtimeNotificationToastHostState
   void _onSignal(RealtimeSignal sig) {
     if (!mounted) return;
     final role = ref.read(currentWayoAdsAccountRoleProvider);
+    if (role == WayoAdsAccountRole.creator &&
+        isCreatorYoutubeConnectFcmPayload(_signalPayloadMap(sig.raw))) {
+      return;
+    }
     final isWithdrawalEvent = _isWithdrawalRealtimeEventName(sig.name);
     final isNotificationEvent = _isIncomingNotificationEvent(sig.name);
     final isSuperadminWithdrawal =
@@ -141,6 +145,20 @@ bool _isIncomingNotificationEvent(String name) {
   if (n.contains('notification') && n.contains('created')) return true;
   if (n.contains('notification') && n.contains('new')) return true;
   return false;
+}
+
+Map<String, dynamic> _signalPayloadMap(Object? raw) {
+  if (raw == null) return const {};
+  if (raw is Map<String, dynamic>) return raw;
+  if (raw is String) {
+    final s = raw.trim();
+    if (s.isEmpty) return const {};
+    try {
+      final decoded = jsonDecode(s);
+      if (decoded is Map<String, dynamic>) return decoded;
+    } catch (_) {}
+  }
+  return const {};
 }
 
 /// Returns (title, message) if present in broadcast payload.

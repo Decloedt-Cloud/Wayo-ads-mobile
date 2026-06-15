@@ -67,6 +67,22 @@ final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>(
   debugLabel: 'root',
 );
 
+Page<void> _advertiserCampaignDetailPage(GoRouterState state) {
+  final id = state.pathParameters['id']!;
+  String? title;
+  final extra = state.extra;
+  if (extra is Map) {
+    title = extra['title'] as String?;
+  }
+  return MaterialPage<void>(
+    key: ValueKey('advertiser-campaign-$id'),
+    child: CampaignDetailScreen(
+      id: id,
+      title: title,
+    ),
+  );
+}
+
 bool _isAuthOnboardingPath(String loc) {
   return loc == '/onboarding/wayo-ads-role' ||
       loc == '/onboarding/verify-email-otp';
@@ -90,6 +106,7 @@ bool _superadminAllowedPath(String loc) {
   if (loc.startsWith('/superadmin')) return true;
   if (loc == '/notifications') return true;
   if (loc.startsWith('/campaigns/')) return true;
+  if (loc.startsWith('/superadmin/campaigns/')) return true;
   if (loc.startsWith('/creator/campaigns/')) return true;
   if (loc.startsWith('/chat/thread/')) return true;
   if (loc.startsWith('/invoices/')) return true;
@@ -279,6 +296,13 @@ GoRouter goRouter(GoRouterRef ref) {
               GoRoute(
                 path: '/campaigns',
                 builder: (context, state) => const CampaignsTabScreen(),
+                routes: [
+                  GoRoute(
+                    path: ':id',
+                    pageBuilder: (context, state) =>
+                        _advertiserCampaignDetailPage(state),
+                  ),
+                ],
               ),
             ],
           ),
@@ -331,22 +355,8 @@ GoRouter goRouter(GoRouterRef ref) {
       ),
       GoRoute(
         parentNavigatorKey: rootNavigatorKey,
-        path: '/campaigns/:id',
-        pageBuilder: (context, state) {
-          final id = state.pathParameters['id']!;
-          String? title;
-          final extra = state.extra;
-          if (extra is Map) {
-            title = extra['title'] as String?;
-          }
-          return MaterialPage<void>(
-            key: ValueKey('advertiser-campaign-$id'),
-            child: CampaignDetailScreen(
-              id: id,
-              title: title,
-            ),
-          );
-        },
+        path: '/superadmin/campaigns/:id',
+        pageBuilder: (context, state) => _advertiserCampaignDetailPage(state),
       ),
       GoRoute(
         parentNavigatorKey: rootNavigatorKey,

@@ -183,6 +183,11 @@ class _TranslationsLoginAr extends TranslationsLoginEn {
 	@override String get google_channel_restart => 'انقطع اتصال Google مع أندرويد (غالبًا بعد hot restart). أوقف التطبيق بالكامل ثم شغّله من جديد — لا تستخدم hot restart.';
 	@override String get google_android_oauth_misconfigured => 'تعذّر على Google التحقق من التطبيق (رمز 10). في Google Cloud Console ونفس مشروع معرّف العميل للويب: أنشئ عميل OAuth من نوع Android باسم الحزمة ma.wayo.wayoadsgo وبصمة SHA-1 لبيانات الاعتماد (تطوير أو إصدار)، انتظر بضع دقائق ثم أعِد المحاولة.';
 	@override String get session_expired_snack => 'انتهت جلستك. يُرجى تسجيل الدخول مرة أخرى.';
+	@override String get web_session_title => 'مسجّل الدخول بالفعل على الويب';
+	@override String get web_session_body => 'هذا الحساب ما زال متصلاً على موقع Wayo Ads. سجّل الخروج من الويب قبل تسجيل الدخول في التطبيق.';
+	@override String get web_session_disconnect => 'تسجيل الخروج من الويب والمتابعة';
+	@override String get web_session_open_browser => 'فتح الموقع لتسجيل الخروج';
+	@override String get web_session_cancel => 'إلغاء';
 }
 
 // Path: verify_email
@@ -1451,6 +1456,11 @@ extension on TranslationsAr {
 			case 'login.google_channel_restart': return 'انقطع اتصال Google مع أندرويد (غالبًا بعد hot restart). أوقف التطبيق بالكامل ثم شغّله من جديد — لا تستخدم hot restart.';
 			case 'login.google_android_oauth_misconfigured': return 'تعذّر على Google التحقق من التطبيق (رمز 10). في Google Cloud Console ونفس مشروع معرّف العميل للويب: أنشئ عميل OAuth من نوع Android باسم الحزمة ma.wayo.wayoadsgo وبصمة SHA-1 لبيانات الاعتماد (تطوير أو إصدار)، انتظر بضع دقائق ثم أعِد المحاولة.';
 			case 'login.session_expired_snack': return 'انتهت جلستك. يُرجى تسجيل الدخول مرة أخرى.';
+			case 'login.web_session_title': return 'مسجّل الدخول بالفعل على الويب';
+			case 'login.web_session_body': return 'هذا الحساب ما زال متصلاً على موقع Wayo Ads. سجّل الخروج من الويب قبل تسجيل الدخول في التطبيق.';
+			case 'login.web_session_disconnect': return 'تسجيل الخروج من الويب والمتابعة';
+			case 'login.web_session_open_browser': return 'فتح الموقع لتسجيل الخروج';
+			case 'login.web_session_cancel': return 'إلغاء';
 			case 'verify_email.title': return 'أكّد بريدك الإلكتروني';
 			case 'verify_email.subtitle': return 'يتطلب Wayo ID عنوانًا مُؤكدًا (كما على الموقع). افتح الرابط الذي أرسلناه إلى:';
 			case 'verify_email.check_again': return 'تم التأكيد — متابعة';

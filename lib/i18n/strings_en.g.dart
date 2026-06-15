@@ -185,6 +185,11 @@ class TranslationsLoginEn {
 	String get google_channel_restart => 'Google Sign-In lost connection to Android (often after hot restart). Stop the app completely, then Run again — do not use hot restart.';
 	String get google_android_oauth_misconfigured => 'Google could not verify this app (code 10). In Google Cloud Console, open the same project as your Web client, create an Android OAuth client with package ma.wayo.wayoadsgo and your debug (or release) keystore SHA-1, then wait a few minutes and try again.';
 	String get session_expired_snack => 'Your session has expired. Please sign in again.';
+	String get web_session_title => 'Already signed in on the web';
+	String get web_session_body => 'This account is still connected on the Wayo Ads website. Sign out from the web before signing in on the app.';
+	String get web_session_disconnect => 'Sign out from web and continue';
+	String get web_session_open_browser => 'Open website to sign out';
+	String get web_session_cancel => 'Cancel';
 }
 
 // Path: verify_email
@@ -1454,6 +1459,11 @@ extension on Translations {
 			case 'login.google_channel_restart': return 'Google Sign-In lost connection to Android (often after hot restart). Stop the app completely, then Run again — do not use hot restart.';
 			case 'login.google_android_oauth_misconfigured': return 'Google could not verify this app (code 10). In Google Cloud Console, open the same project as your Web client, create an Android OAuth client with package ma.wayo.wayoadsgo and your debug (or release) keystore SHA-1, then wait a few minutes and try again.';
 			case 'login.session_expired_snack': return 'Your session has expired. Please sign in again.';
+			case 'login.web_session_title': return 'Already signed in on the web';
+			case 'login.web_session_body': return 'This account is still connected on the Wayo Ads website. Sign out from the web before signing in on the app.';
+			case 'login.web_session_disconnect': return 'Sign out from web and continue';
+			case 'login.web_session_open_browser': return 'Open website to sign out';
+			case 'login.web_session_cancel': return 'Cancel';
 			case 'verify_email.title': return 'Confirm your email';
 			case 'verify_email.subtitle': return 'Wayo ID needs a verified address (same step as on the website). Open the link we sent to:';
 			case 'verify_email.check_again': return 'I\'ve confirmed — continue';

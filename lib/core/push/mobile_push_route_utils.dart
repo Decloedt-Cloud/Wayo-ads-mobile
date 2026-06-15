@@ -1,3 +1,7 @@
+import 'package:flutter/scheduler.dart';
+import 'package:flutter/widgets.dart';
+import 'package:go_router/go_router.dart';
+
 /// Shell tab routes — use [GoRouter.go], not push.
 const Set<String> kNotificationShellTabRoutes = {
   '/dashboard',
@@ -6,6 +10,66 @@ const Set<String> kNotificationShellTabRoutes = {
   '/invoices',
   '/chat',
 };
+
+/// Shell tab to activate before pushing a full-screen deep link (detail, thread, …).
+String? shellTabParentForPushRoute(String route) {
+  final base = route.split('?').first;
+  if (kNotificationShellTabRoutes.contains(base)) return null;
+
+  if (RegExp(r'^/campaigns/[^/]+').hasMatch(base)) return '/campaigns';
+  if (RegExp(r'^/creator/campaigns/').hasMatch(base)) return '/dashboard';
+  if (base.startsWith('/chat/thread/')) return '/chat';
+  if (RegExp(r'^/invoices/[^/]+').hasMatch(base)) return '/invoices';
+  if (base == '/notifications') return '/dashboard';
+  if (base.startsWith('/advertiser/')) return '/campaigns';
+  return null;
+}
+
+/// Routes that live inside a shell tab (keep bottom nav visible).
+bool isShellEmbeddedPushRoute(String route) {
+  final base = route.split('?').first;
+  return RegExp(r'^/campaigns/[^/]+$').hasMatch(base);
+}
+
+/// Opens push / notification deep links without replacing the authenticated shell.
+void navigateWayoPushRoute(GoRouter router, String route) {
+  final base = route.split('?').first;
+  if (kNotificationShellTabRoutes.contains(base)) {
+    router.go(route);
+    return;
+  }
+  if (base.startsWith('/superadmin')) {
+    router.go(route);
+    return;
+  }
+
+  // Advertiser campaign detail is nested under `/campaigns` in [AppShell].
+  if (isShellEmbeddedPushRoute(route)) {
+    router.go(route);
+    return;
+  }
+
+  final parent = shellTabParentForPushRoute(route);
+  if (parent != null) {
+    router.go(parent);
+    SchedulerBinding.instance.scheduleFrameCallback((_) {
+      router.push(route);
+    });
+    return;
+  }
+
+  router.push(route);
+}
+
+/// Pops a pushed detail route, or returns to the shell tab when opened via [go].
+void popOrGoShellParent(BuildContext context, String route) {
+  if (context.canPop()) {
+    context.pop();
+    return;
+  }
+  final parent = shellTabParentForPushRoute(route);
+  context.go(parent ?? '/dashboard');
+}
 
 String? _stripLocalePrefix(String path) {
   var p = path.trim();

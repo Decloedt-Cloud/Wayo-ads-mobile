@@ -97,8 +97,19 @@ final advertiserCampaignDetailProvider = FutureProvider.family
     });
 
 /// Applications for a specific campaign (pending, approved, rejected).
+///
+/// Reuses `applications` from [advertiserCampaignDetailProvider] when present
+/// (Wayo-ads `GET /api/campaigns/:id` already embeds them for owners).
 final campaignApplicationsProvider = FutureProvider.family
     .autoDispose<List<CampaignApplication>, String>((ref, campaignId) async {
+      final detail = await ref.watch(
+        advertiserCampaignDetailProvider(campaignId).future,
+      );
+      final embedded = campaignApplicationsFromCampaignDetail(detail);
+      if (embedded != null) {
+        return embedded;
+      }
+
       final repo = ref.watch(advertiserCampaignsRepositoryProvider);
       try {
         return await repo.loadCampaignApplications(campaignId);

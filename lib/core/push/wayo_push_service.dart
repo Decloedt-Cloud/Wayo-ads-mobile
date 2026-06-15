@@ -171,6 +171,10 @@ Future<bool> shouldDeliverFcmData(Map<String, dynamic> data) async {
     _logPush('FCM ignored — creator YouTube connect notification suppressed');
     return false;
   }
+  if (isSelfInitiatedWalletFcmPayload(data)) {
+    _logPush('FCM ignored — self-initiated wallet action (deposit/withdraw) suppressed');
+    return false;
+  }
   // Legacy / not-yet-deployed server: no recipient field — trust token registration only.
   return true;
 }
@@ -394,7 +398,7 @@ Future<void> _presentWithdrawalOrAdminTray({
   final trayBody = routePayload?.body ?? body;
 
   await _showLocalPush(
-    id: message.hashCode,
+    id: wayoFcmTrayNotificationId(message.data),
     title: trayTitle,
     body: trayBody.isEmpty ? ' ' : trayBody,
     payload: route,
@@ -681,6 +685,14 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
       );
       return;
     }
+    if (shouldSkipDuplicateFcmLocalTray(
+      hasDisplayNotificationPayload: message.notification != null,
+    )) {
+      _logPush(
+        'FCM background chat skipped local tray — system notification already shown',
+      );
+      return;
+    }
     if (Platform.isAndroid) {
       try {
         await _presentIncomingChatTray(
@@ -714,6 +726,15 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
         stackTrace: st,
       );
     }
+    return;
+  }
+
+  if (shouldSkipDuplicateFcmLocalTray(
+    hasDisplayNotificationPayload: message.notification != null,
+  )) {
+    _logPush(
+      'FCM background skipped local tray — system notification already shown',
+    );
     return;
   }
 
@@ -792,9 +813,9 @@ Future<void> attachForegroundFcmHandlers() async {
   await _ensureLocalNotificationsInitialized();
 
   await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
-    alert: true,
+    alert: false,
     badge: true,
-    sound: true,
+    sound: false,
   );
 
   FirebaseMessaging.onMessage.listen((RemoteMessage m) async {
@@ -835,6 +856,15 @@ Future<void> attachForegroundFcmHandlers() async {
         );
         return;
       }
+      if (shouldSkipDuplicateFcmLocalTray(
+        hasDisplayNotificationPayload: m.notification != null,
+        foreground: true,
+      )) {
+        _logPush(
+          'FCM foreground chat skipped local tray — system notification already shown',
+        );
+        return;
+      }
       await _showLocalPush(
         id: wayoChatNotificationId(chat.conversationId),
         title: title,
@@ -842,6 +872,16 @@ Future<void> attachForegroundFcmHandlers() async {
         payload: chat.toLocalNotificationPayload(),
         isIosChat: Platform.isIOS,
         iosThreadIdentifier: wayoChatThreadIdentifier(chat.conversationId),
+      );
+      return;
+    }
+
+    if (shouldSkipDuplicateFcmLocalTray(
+      hasDisplayNotificationPayload: m.notification != null,
+      foreground: true,
+    )) {
+      _logPush(
+        'FCM foreground skipped local tray — system notification already shown',
       );
       return;
     }
@@ -854,7 +894,7 @@ Future<void> attachForegroundFcmHandlers() async {
     if (route == null) {
       if (titleText.isEmpty && bodyText.isEmpty) return;
       await _showLocalPush(
-        id: m.hashCode,
+        id: wayoFcmTrayNotificationId(m.data),
         title: titleText.isNotEmpty ? titleText : 'Wayo Ads',
         body: bodyText.isEmpty ? ' ' : bodyText,
         payload: '/notifications',
@@ -864,7 +904,7 @@ Future<void> attachForegroundFcmHandlers() async {
     }
 
     await _showLocalPush(
-      id: m.hashCode,
+      id: wayoFcmTrayNotificationId(m.data),
       title: titleText,
       body: bodyText.isEmpty ? ' ' : bodyText,
       payload: route,

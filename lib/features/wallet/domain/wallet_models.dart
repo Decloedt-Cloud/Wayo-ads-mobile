@@ -9,15 +9,19 @@ final class WalletPspConfig extends Equatable {
     required this.isStripe,
     required this.publishableKey,
     required this.isTestMode,
+    this.keysMismatch = false,
   });
 
   final String pspMode;
   final bool isStripe;
   final String? publishableKey;
   final bool isTestMode;
+  /// Server `pk_*` and `sk_*` prefixes disagree (Apple Pay / cards may fail oddly).
+  final bool keysMismatch;
 
   @override
-  List<Object?> get props => [pspMode, isStripe, publishableKey, isTestMode];
+  List<Object?> get props =>
+      [pspMode, isStripe, publishableKey, isTestMode, keysMismatch];
 }
 
 /// Deposit intent from [POST /api/wallet/deposit-intent].

@@ -678,6 +678,8 @@
     "pay_with_google": "الدفع عبر Google Pay",
     "or": "أو",
     "stripe_unavailable": "الشحن غير متاح: لم يُضبط الدفع في الخادم.",
+    "stripe_keys_mismatch": "الدفع مُعدّ بشكل خاطئ على الخادم (خلط مفاتيح Stripe للاختبار/الإنتاج). تواصل مع الدعم.",
+    "apple_pay_test_hint": "وضع اختبار Stripe: Apple Pay يستخدم بطاقة المحفظة دون خصم حقيقي.",
     "tx_title": "آخر الحركات",
     "tx_empty": "لا معاملات بعد",
     "tx_deposit": "إيداع",

@@ -566,6 +566,8 @@ class TranslationsAdvertiserWalletEn {
 	String get pay_with_google => 'Pay with Google Pay';
 	String get or => 'or';
 	String get stripe_unavailable => 'Top-ups are not available: payment is not configured on the server.';
+	String get stripe_keys_mismatch => 'Payment is misconfigured on the server (Stripe test/live keys mixed). Contact support.';
+	String get apple_pay_test_hint => 'Stripe test mode: Apple Pay uses your Wallet card but no real charge is made.';
 	String get tx_title => 'Recent activity';
 	String get tx_empty => 'No transactions yet';
 	String get tx_deposit => 'Deposit';
@@ -1991,6 +1993,8 @@ extension on Translations {
 			case 'advertiser_wallet.pay_with_google': return 'Pay with Google Pay';
 			case 'advertiser_wallet.or': return 'or';
 			case 'advertiser_wallet.stripe_unavailable': return 'Top-ups are not available: payment is not configured on the server.';
+			case 'advertiser_wallet.stripe_keys_mismatch': return 'Payment is misconfigured on the server (Stripe test/live keys mixed). Contact support.';
+			case 'advertiser_wallet.apple_pay_test_hint': return 'Stripe test mode: Apple Pay uses your Wallet card but no real charge is made.';
 			case 'advertiser_wallet.tx_title': return 'Recent activity';
 			case 'advertiser_wallet.tx_empty': return 'No transactions yet';
 			case 'advertiser_wallet.tx_deposit': return 'Deposit';

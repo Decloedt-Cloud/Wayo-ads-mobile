@@ -52,6 +52,7 @@ final class AdvertiserWalletRepository {
       isStripe: data['isStripe'] == true,
       publishableKey: data['publishableKey'] as String?,
       isTestMode: data['isTestMode'] == true,
+      keysMismatch: data['keysMismatch'] == true,
     );
   }
 

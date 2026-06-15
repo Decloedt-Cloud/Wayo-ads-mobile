@@ -394,6 +394,57 @@ String? _trimmedPayloadField(dynamic v) {
   return s.isEmpty ? null : s;
 }
 
+/// Stable tray id from Wayo-ads `notificationId` in FCM data (replaces same alert).
+int wayoFcmTrayNotificationId(Map<String, dynamic> data) {
+  final nid = _trimmedPayloadField(data['notificationId']) ??
+      _trimmedPayloadField(data['notification_id']);
+  if (nid != null && nid.isNotEmpty) {
+    return nid.hashCode & 0x7fffffff;
+  }
+  return data.hashCode & 0x7fffffff;
+}
+
+/// When FCM includes a display [notification] payload, the OS may already show the tray.
+/// Skip a second local notification in background/killed. In foreground the app owns display.
+bool shouldSkipDuplicateFcmLocalTray({
+  required bool hasDisplayNotificationPayload,
+  bool foreground = false,
+}) {
+  if (!hasDisplayNotificationPayload) return false;
+  if (foreground) return false;
+  return true;
+}
+
+/// Self-initiated wallet actions (creator withdraw request, advertiser deposit).
+bool isSelfInitiatedWalletFcmPayload(Map<String, dynamic> data) {
+  final flat = _flattenFcmPayloadMap(data);
+
+  final type = (_trimmedPayloadField(flat['type']) ??
+          _trimmedPayloadField(flat['notificationType']) ??
+          _trimmedPayloadField(flat['notification_type']) ??
+          '')
+      .toUpperCase();
+
+  if (type == 'WALLET_CREDITED') return true;
+
+  if (type == 'WITHDRAWAL_REQUESTED') {
+    final route =
+        (_trimmedPayloadField(flat['route']) ?? '').toLowerCase();
+    final actionUrl = (_trimmedPayloadField(flat['actionUrl']) ??
+            _trimmedPayloadField(flat['action_url']) ??
+            '')
+        .toLowerCase();
+    if (route.contains('superadmin') ||
+        actionUrl.contains('superadmin') ||
+        actionUrl.contains('/admin/withdraw')) {
+      return false;
+    }
+    return true;
+  }
+
+  return false;
+}
+
 /// Creator YouTube OAuth / connect alerts (`YOUTUBE_DISCONNECTED`, etc.) — no mobile FCM tray.
 bool isCreatorYoutubeConnectFcmPayload(Map<String, dynamic> data) {
   final flat = _flattenFcmPayloadMap(data);

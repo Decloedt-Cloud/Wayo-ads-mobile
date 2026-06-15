@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import '../../../../core/config/auth_runtime_config.dart';
+import '../../../../core/auth/wayo_web_logout_urls.dart';
 import '../../../../core/errors/auth_error_localizer.dart';
 import '../../../../core/errors/auth_exceptions.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -26,6 +27,7 @@ import '../login/widgets/premium_apple_sign_in_button.dart';
 import '../login/widgets/premium_google_button.dart';
 import '../widgets/login_footer.dart';
 import '../widgets/rate_limit_cooldown_banner.dart';
+import '../widgets/web_session_active_dialog.dart';
 import '../widgets/noise_overlay.dart';
 import '../widgets/wayo_logo.dart';
 import '../widgets/wayo_login_button.dart';
@@ -109,10 +111,26 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       if (!context.mounted) {
         return;
       }
+      if (await _handleWebSessionConflict(
+        t,
+        ({forceWebLogout = false}) => ref
+            .read(authNotifierProvider.notifier)
+            .login(
+              _email.text.trim(),
+              _password.text,
+              forceWebLogout: forceWebLogout,
+            ),
+      )) {
+        if (!context.mounted) return;
+        if (ref.read(authNotifierProvider).hasError) return;
+        _goAfterLogin(ref);
+        return;
+      }
       if (ref.read(authNotifierProvider).hasError) {
         return;
       }
-      _goAfterLogin(context, ref);
+      if (!context.mounted) return;
+      _goAfterLogin(ref);
     } finally {
       if (mounted) {
         _submitInProgress = false;
@@ -153,8 +171,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       }
       await ref.read(authNotifierProvider.notifier).loginWithGoogle(idToken);
       if (!context.mounted) return;
+      if (await _handleWebSessionConflict(
+        t,
+        ({forceWebLogout = false}) => ref
+            .read(authNotifierProvider.notifier)
+            .loginWithGoogle(idToken, forceWebLogout: forceWebLogout),
+      )) {
+        if (!context.mounted) return;
+        if (ref.read(authNotifierProvider).hasError) return;
+        _goAfterLogin(ref);
+        return;
+      }
       if (ref.read(authNotifierProvider).hasError) return;
-      _goAfterLogin(context, ref);
+      if (!context.mounted) return;
+      _goAfterLogin(ref);
     } on PlatformException catch (e) {
       if (!mounted) return;
       final msg = GoogleSignInFacade.looksLikeStaleChannel(e)
@@ -201,8 +231,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             appleUserId: cred.userIdentifier,
           );
       if (!context.mounted) return;
+      if (await _handleWebSessionConflict(
+        t,
+        ({forceWebLogout = false}) => ref.read(authNotifierProvider.notifier).loginWithApple(
+              identityToken: cred.identityToken,
+              rawNonce: cred.rawNonce,
+              authorizationCode: cred.authorizationCode,
+              appleUserId: cred.userIdentifier,
+              forceWebLogout: forceWebLogout,
+            ),
+      )) {
+        if (!context.mounted) return;
+        if (ref.read(authNotifierProvider).hasError) return;
+        _goAfterLogin(ref);
+        return;
+      }
       if (ref.read(authNotifierProvider).hasError) return;
-      _goAfterLogin(context, ref);
+      if (!context.mounted) return;
+      _goAfterLogin(ref);
     } on SignInWithAppleNotSupportedException {
       if (!mounted) return;
       ScaffoldMessenger.of(
@@ -224,12 +270,45 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
-  void _goAfterLogin(BuildContext context, WidgetRef ref) {
-    if (!context.mounted) return;
+  void _goAfterLogin(WidgetRef ref) {
+    if (!mounted) return;
     final s = ref.read(authNotifierProvider).valueOrNull;
     if (s is! AuthAuthenticated) return;
     final next = onboardingRedirectPath(s.user);
     context.go(next ?? '/dashboard');
+  }
+
+  /// Returns true when a web-session dialog was shown (caller should stop normal flow).
+  Future<bool> _handleWebSessionConflict(
+    Translations t,
+    Future<void> Function({bool forceWebLogout}) retryLogin,
+  ) async {
+    final err = ref.read(authNotifierProvider).error;
+    if (err is! WebSessionActiveException) {
+      return false;
+    }
+
+    ref.read(authNotifierProvider.notifier).clearLoginError();
+
+    if (!mounted) {
+      return true;
+    }
+
+    final result = await showWebSessionActiveDialog(
+      context: context,
+      t: t,
+      logoutUrl: WayoWebLogoutUrls.federatedLogoutUrl(
+        serverProvided: err.logoutUrl,
+      ),
+    );
+    if (!mounted) {
+      return true;
+    }
+
+    if (result == WebSessionActiveDialogResult.disconnectAndContinue) {
+      await retryLogin(forceWebLogout: true);
+    }
+    return true;
   }
 
   SystemUiOverlayStyle _overlayFor(Brightness b) {
@@ -266,7 +345,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     );
     final apiError = rateLimit == null
         ? auth.maybeWhen(
-            error: (e, _) => localizeAuthError(e, t),
+            error: (e, _) =>
+                e is WebSessionActiveException ? null : localizeAuthError(e, t),
             orElse: () => null,
           )
         : null;

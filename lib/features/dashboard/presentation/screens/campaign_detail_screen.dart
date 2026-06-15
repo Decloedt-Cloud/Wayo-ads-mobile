@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shimmer/shimmer.dart';
 
@@ -13,7 +12,9 @@ import '../../../../core/format/campaign_finance_display.dart';
 import '../../../../core/format/money_formatter.dart';
 import '../../../../core/layout/wayo_black_bottom_bar.dart';
 import '../../../../core/providers/app_providers.dart';
+import '../../../../core/push/mobile_push_route_utils.dart';
 import '../../../../i18n/strings.g.dart';
+import '../../../shell/widgets/wayo_bottom_nav.dart';
 import '../../../advertiser_campaigns/domain/campaign_niche_catalog.dart';
 import '../../../advertiser_campaigns/presentation/providers/advertiser_campaigns_providers.dart';
 import '../../../advertiser_campaigns/presentation/widgets/campaign_applications_section.dart';
@@ -95,6 +96,7 @@ final class _ParsedCampaignDetail {
     required this.validViews,
     required this.validClicks,
     required this.approved,
+    required this.isOwner,
     required this.campaignKind,
     required this.showCpmMetric,
   });
@@ -117,6 +119,7 @@ final class _ParsedCampaignDetail {
   final int validViews;
   final int validClicks;
   final int approved;
+  final bool isOwner;
   final CreatorCampaignType campaignKind;
   final bool showCpmMetric;
 
@@ -227,6 +230,7 @@ final class _ParsedCampaignDetail {
       validViews: validViews,
       validClicks: validClicks,
       approved: (json['approvedCreators'] as num?)?.toInt() ?? 0,
+      isOwner: json['isOwner'] == true,
       campaignKind: campaignKind,
       showCpmMetric: showCpmMetric,
     );
@@ -260,9 +264,7 @@ class CampaignDetailScreen extends ConsumerWidget {
     final async = ref.watch(advertiserCampaignDetailProvider(id));
     final auth = ref.watch(authNotifierProvider).valueOrNull;
     final role = auth is AuthAuthenticated ? auth.user.wayoAdsRole : null;
-    final showBlackBottomBar =
-        role == WayoAdsAccountRole.superAdmin ||
-        role == WayoAdsAccountRole.advertiser;
+    final showBlackBottomBar = role == WayoAdsAccountRole.superAdmin;
 
     return Scaffold(
       backgroundColor: CampaignDetailPremiumPalette.bg(context),
@@ -280,6 +282,7 @@ class CampaignDetailScreen extends ConsumerWidget {
         },
         loading: () => _CampaignDetailLoadingSkeleton(t: t),
         error: (e, _) => _CampaignDetailError(
+          campaignId: id,
           message: _msg(t, e),
           retryLabel: t.dashboard.errors.retry,
           onRetry: () => ref.invalidate(advertiserCampaignDetailProvider(id)),
@@ -291,11 +294,13 @@ class CampaignDetailScreen extends ConsumerWidget {
 
 class _CampaignDetailError extends StatelessWidget {
   const _CampaignDetailError({
+    required this.campaignId,
     required this.message,
     required this.retryLabel,
     required this.onRetry,
   });
 
+  final String campaignId;
   final String message;
   final String retryLabel;
   final VoidCallback onRetry;
@@ -312,7 +317,7 @@ class _CampaignDetailError extends StatelessWidget {
             IconButton(
               onPressed: () {
                 HapticFeedback.lightImpact();
-                context.pop();
+                popOrGoShellParent(context, '/campaigns/$campaignId');
               },
               icon: Icon(
                 Icons.arrow_back_rounded,
@@ -493,8 +498,7 @@ class _CampaignPremiumScrollBodyState extends ConsumerState<_CampaignPremiumScro
     final auth = ref.watch(authNotifierProvider).valueOrNull;
     final role = auth is AuthAuthenticated ? auth.user.wayoAdsRole : null;
     final isSuperadmin = role == WayoAdsAccountRole.superAdmin;
-    final showBlackBottomBar =
-        isSuperadmin || role == WayoAdsAccountRole.advertiser;
+    final showBlackBottomBar = isSuperadmin;
 
     String moneyStr(int cents) => MoneyFormatter.format(
           cents / 100.0,
@@ -630,7 +634,7 @@ class _CampaignPremiumScrollBodyState extends ConsumerState<_CampaignPremiumScro
             leading: IconButton(
               onPressed: () {
                 HapticFeedback.lightImpact();
-                context.pop();
+                popOrGoShellParent(context, '/campaigns/${widget.id}');
               },
               icon: Icon(
                 Icons.arrow_back_rounded,
@@ -761,10 +765,13 @@ class _CampaignPremiumScrollBodyState extends ConsumerState<_CampaignPremiumScro
               ),
             ),
           ),
-          if (!isSuperadmin)
+          if (!isSuperadmin && parsed.isOwner)
             SliverPadding(
               padding: CampaignDetailPremiumPalette.kScreenPadding
-                  .copyWith(top: 12, bottom: 40),
+                  .copyWith(
+                    top: 12,
+                    bottom: 40 + wayoShellBodyBottomPadding(context),
+                  ),
               sliver: SliverToBoxAdapter(
                 child: CampaignApplicationsSection(
                   campaignId: widget.id,

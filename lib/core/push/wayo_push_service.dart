@@ -23,6 +23,7 @@ import 'wayo_background_chat_quick_reply.dart';
 import 'push_registration_debug.dart';
 import 'user_push_notifications_preference.dart';
 import 'wayo_push_intent.dart';
+import 'mobile_push_route_utils.dart';
 
 void _logPush(String message, {Object? error, StackTrace? stackTrace}) {
   if (error != null) {
@@ -164,7 +165,11 @@ Future<bool> shouldDeliverFcmData(Map<String, dynamic> data) async {
   }
   final recipient = data['recipientUserId']?.toString().trim();
   if (recipient != null && recipient.isNotEmpty) {
-    return recipient == registered;
+    if (recipient != registered) return false;
+  }
+  if (isCreatorYoutubeConnectFcmPayload(data)) {
+    _logPush('FCM ignored — creator YouTube connect notification suppressed');
+    return false;
   }
   // Legacy / not-yet-deployed server: no recipient field — trust token registration only.
   return true;
@@ -289,7 +294,7 @@ Future<void> _navigateOrDeferPushRoute(
   if (!fromBackgroundIsolate) {
     final ctx = rootNavigatorKey.currentContext;
     if (ctx != null && ctx.mounted) {
-      GoRouter.of(ctx).go(route);
+      navigateWayoPushRoute(GoRouter.of(ctx), route);
       return;
     }
   }
@@ -876,8 +881,22 @@ Future<void> attachForegroundFcmHandlers() async {
     final chat = WayoChatPushPayload.fromMessageData(m.data);
     if (chat != null) {
       unawaited(dismissWayoChatNotification(chat.conversationId));
+      await _navigateOrDeferPushRoute(
+        chat.route(forReply: false),
+        fromBackgroundIsolate: false,
+      );
+      return;
     }
-    unawaited(_persistOpenFromFcmData(m.data));
+    final route = resolveWayoPushRoute(data: m.data);
+    if (route != null) {
+      await _navigateOrDeferPushRoute(
+        route,
+        fromBackgroundIsolate: false,
+      );
+      return;
+    }
+    await _persistOpenFromFcmData(m.data);
+    _pingDeferredPushConsume();
   });
 
   final initial = await FirebaseMessaging.instance.getInitialMessage();
@@ -889,6 +908,7 @@ Future<void> attachForegroundFcmHandlers() async {
         unawaited(dismissWayoChatNotification(chat.conversationId));
       }
       await _persistOpenFromFcmData(initial.data);
+      _pingDeferredPushConsume();
     } else {
       _logPush('FCM cold-start open ignored — wrong/missing recipient');
     }
@@ -1244,8 +1264,10 @@ Future<void> consumeDeferredWayoPushIntents({
 
   if (routePending.isNotEmpty) {
     await p.remove(kWayoPushPendingRouteKey);
+    // Cold resume: auth + FlutterSecureStorage can lag the first Wayo-ads request.
+    await Future<void>.delayed(const Duration(milliseconds: 200));
     if (context.mounted) {
-      GoRouter.of(context).go(routePending);
+      navigateWayoPushRoute(GoRouter.of(context), routePending);
     }
   }
 }

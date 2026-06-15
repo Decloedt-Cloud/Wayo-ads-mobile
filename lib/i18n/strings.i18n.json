@@ -84,7 +84,12 @@
     "google_failed": "Google sign-in failed. Try again.",
     "google_channel_restart": "Google Sign-In lost connection to Android (often after hot restart). Stop the app completely, then Run again — do not use hot restart.",
     "google_android_oauth_misconfigured": "Google could not verify this app (code 10). In Google Cloud Console, open the same project as your Web client, create an Android OAuth client with package ma.wayo.wayoadsgo and your debug (or release) keystore SHA-1, then wait a few minutes and try again.",
-    "session_expired_snack": "Your session has expired. Please sign in again."
+    "session_expired_snack": "Your session has expired. Please sign in again.",
+    "web_session_title": "Already signed in on the web",
+    "web_session_body": "This account is still connected on the Wayo Ads website. Sign out from the web before signing in on the app.",
+    "web_session_disconnect": "Sign out from web and continue",
+    "web_session_open_browser": "Open website to sign out",
+    "web_session_cancel": "Cancel"
   },
   "verify_email": {
     "title": "Confirm your email",

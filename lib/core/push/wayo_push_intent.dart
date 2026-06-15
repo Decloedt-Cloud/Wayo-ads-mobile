@@ -240,6 +240,15 @@ final class WayoRoutePushPayload {
     } else if (nested is Map) {
       m.addAll(Map<String, dynamic>.from(nested));
     }
+    final meta = m['metadata'];
+    if (meta is String && meta.trim().isNotEmpty) {
+      try {
+        final d = jsonDecode(meta);
+        if (d is Map) m.addAll(Map<String, dynamic>.from(d));
+      } catch (_) {}
+    } else if (meta is Map) {
+      m.addAll(Map<String, dynamic>.from(meta));
+    }
     return m;
   }
 
@@ -270,6 +279,35 @@ final class WayoRoutePushPayload {
       );
       if (normalized != null) return normalized;
     }
+
+    final campId =
+        _trimmed(m['campaignId']) ?? _trimmed(m['campaign_id']);
+    if (campId != null && campId.isNotEmpty) {
+      if (type.contains('campaign_activated') || type.contains('new_campaign')) {
+        return '/creator/campaigns/$campId';
+      }
+      if (type.contains('application') || type.contains('creator_applied')) {
+        final appId =
+            _trimmed(m['applicationId']) ?? _trimmed(m['application_id']);
+        if (appId != null && appId.isNotEmpty) {
+          return '/creator/campaigns/$campId/application';
+        }
+      }
+      if (type.contains('creator')) {
+        return '/creator/campaigns/$campId';
+      }
+      return '/campaigns/$campId';
+    }
+
+    if (type.contains('wallet') ||
+        type.contains('deposit') ||
+        type.contains('credit')) {
+      return '/wallet';
+    }
+    if (type.contains('invoice')) return '/invoices';
+    if (type.contains('chat') || type.contains('message')) return '/chat';
+    if (type.contains('campaign')) return '/campaigns';
+
     return null;
   }
 
@@ -325,6 +363,79 @@ String? resolveWayoPushRoute({
   final p = payload?.trim();
   if (p != null && p.startsWith('/')) return p;
   return null;
+}
+
+Map<String, dynamic> _flattenFcmPayloadMap(Map<String, dynamic> data) {
+  final m = Map<String, dynamic>.from(data);
+  final nested = m['data'];
+  if (nested is String) {
+    try {
+      final d = jsonDecode(nested);
+      if (d is Map) m.addAll(Map<String, dynamic>.from(d));
+    } catch (_) {}
+  } else if (nested is Map) {
+    m.addAll(Map<String, dynamic>.from(nested));
+  }
+  final meta = m['metadata'];
+  if (meta is String && meta.trim().isNotEmpty) {
+    try {
+      final d = jsonDecode(meta);
+      if (d is Map) m.addAll(Map<String, dynamic>.from(d));
+    } catch (_) {}
+  } else if (meta is Map) {
+    m.addAll(Map<String, dynamic>.from(meta));
+  }
+  return m;
+}
+
+String? _trimmedPayloadField(dynamic v) {
+  if (v == null) return null;
+  final s = v.toString().trim();
+  return s.isEmpty ? null : s;
+}
+
+/// Creator YouTube OAuth / connect alerts (`YOUTUBE_DISCONNECTED`, etc.) — no mobile FCM tray.
+bool isCreatorYoutubeConnectFcmPayload(Map<String, dynamic> data) {
+  final flat = _flattenFcmPayloadMap(data);
+
+  final type = (_trimmedPayloadField(flat['type']) ??
+          _trimmedPayloadField(flat['notificationType']) ??
+          _trimmedPayloadField(flat['notification_type']) ??
+          '')
+      .toUpperCase();
+  if (type == 'YOUTUBE_DISCONNECTED' || type.contains('YOUTUBE')) {
+    return true;
+  }
+
+  final actionUrl = (_trimmedPayloadField(flat['actionUrl']) ??
+          _trimmedPayloadField(flat['action_url']) ??
+          '')
+      .toLowerCase();
+  if (actionUrl.contains('youtube') || actionUrl.contains('connect-youtube')) {
+    return true;
+  }
+
+  final route =
+      (_trimmedPayloadField(flat['route']) ?? '').toLowerCase();
+  if (route.contains('youtube') || route.contains('connect-youtube')) {
+    return true;
+  }
+
+  final platform =
+      (_trimmedPayloadField(flat['platform']) ?? '').toUpperCase();
+  if (platform == 'YOUTUBE' && type.contains('CREDENTIAL')) {
+    return true;
+  }
+
+  final title = (_trimmedPayloadField(flat['title']) ?? '').toLowerCase();
+  if (title.contains('youtube') &&
+      (title.contains('disconnect') ||
+          title.contains('connect') ||
+          title.contains('channel'))) {
+    return true;
+  }
+
+  return false;
 }
 
 /// Whether a Reverb / notification payload refers to a creator withdrawal.

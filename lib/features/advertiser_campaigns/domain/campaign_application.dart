@@ -84,6 +84,19 @@ final class CampaignApplication extends Equatable {
   ];
 }
 
+/// Parses `applications` embedded in `GET /api/campaigns/:id` (`{ campaign: … }`).
+List<CampaignApplication>? campaignApplicationsFromCampaignDetail(
+  Map<String, dynamic> json,
+) {
+  if (!json.containsKey('applications')) return null;
+  final list = json['applications'];
+  if (list is! List) return const [];
+  return list
+      .whereType<Map>()
+      .map((e) => CampaignApplication.fromJson(Map<String, dynamic>.from(e)))
+      .toList();
+}
+
 enum CampaignApplicationStatus {
   pending,
   approved,

@@ -10,12 +10,7 @@ import '../providers/dashboard_state_providers.dart';
 import '../providers/notifications_feed_providers.dart';
 
 void navigateNotificationRoute(GoRouter router, String route) {
-  final base = route.split('?').first;
-  if (kNotificationShellTabRoutes.contains(base)) {
-    router.go(base);
-  } else {
-    router.push(route);
-  }
+  navigateWayoPushRoute(router, route);
 }
 
 Future<void> openNotificationItem(WidgetRef ref, NotificationItem item) async {

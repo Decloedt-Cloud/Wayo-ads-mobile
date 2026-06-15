@@ -129,7 +129,11 @@ class AuthNotifier extends _$AuthNotifier {
     return AuthAuthenticated(existingUser);
   }
 
-  Future<void> login(String email, String password) async {
+  Future<void> login(
+    String email,
+    String password, {
+    bool forceWebLogout = false,
+  }) async {
     if (_credentialLoginInFlight) {
       return;
     }
@@ -137,7 +141,11 @@ class AuthNotifier extends _$AuthNotifier {
     try {
       state = const AsyncValue.data(AuthLoading());
       final repo = ref.read(authRepositoryProvider);
-      final result = await repo.login(email: email, password: password);
+      final result = await repo.login(
+        email: email,
+        password: password,
+        forceWebLogout: forceWebLogout,
+      );
       switch (result) {
         case Success(:final data):
           await _finalizeSuccessfulLogin(data);
@@ -149,7 +157,10 @@ class AuthNotifier extends _$AuthNotifier {
     }
   }
 
-  Future<void> loginWithGoogle(String idToken) async {
+  Future<void> loginWithGoogle(
+    String idToken, {
+    bool forceWebLogout = false,
+  }) async {
     if (_credentialLoginInFlight) {
       return;
     }
@@ -157,7 +168,10 @@ class AuthNotifier extends _$AuthNotifier {
     try {
       state = const AsyncValue.data(AuthLoading());
       final repo = ref.read(authRepositoryProvider);
-      final result = await repo.loginWithGoogle(idToken: idToken);
+      final result = await repo.loginWithGoogle(
+        idToken: idToken,
+        forceWebLogout: forceWebLogout,
+      );
       switch (result) {
         case Success(:final data):
           await _finalizeSuccessfulLogin(data);
@@ -174,6 +188,7 @@ class AuthNotifier extends _$AuthNotifier {
     required String rawNonce,
     String? authorizationCode,
     String? appleUserId,
+    bool forceWebLogout = false,
   }) async {
     if (_credentialLoginInFlight) {
       return;
@@ -187,6 +202,7 @@ class AuthNotifier extends _$AuthNotifier {
         rawNonce: rawNonce,
         authorizationCode: authorizationCode,
         appleUserId: appleUserId,
+        forceWebLogout: forceWebLogout,
       );
       switch (result) {
         case Success(:final data):

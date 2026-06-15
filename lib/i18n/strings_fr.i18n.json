@@ -679,6 +679,8 @@
     "pay_with_google": "Payer avec Google Pay",
     "or": "ou",
     "stripe_unavailable": "Rechargement indisponible : le paiement n’est pas configuré côté serveur.",
+    "stripe_keys_mismatch": "Paiement mal configuré côté serveur (clés Stripe test/live mélangées). Contactez le support.",
+    "apple_pay_test_hint": "Mode test Stripe : Apple Pay utilise votre carte Wallet sans débit réel.",
     "tx_title": "Activité récente",
     "tx_empty": "Aucune transaction",
     "tx_deposit": "Dépôt",

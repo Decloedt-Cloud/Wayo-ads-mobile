@@ -47,6 +47,11 @@ class _RealtimeNotificationToastHostState
         isCreatorYoutubeConnectFcmPayload(_signalPayloadMap(sig.raw))) {
       return;
     }
+    if ((role == WayoAdsAccountRole.creator ||
+            role == WayoAdsAccountRole.advertiser) &&
+        isSelfInitiatedWalletFcmPayload(_signalPayloadMap(sig.raw))) {
+      return;
+    }
     final isWithdrawalEvent = _isWithdrawalRealtimeEventName(sig.name);
     final isNotificationEvent = _isIncomingNotificationEvent(sig.name);
     final isSuperadminWithdrawal =

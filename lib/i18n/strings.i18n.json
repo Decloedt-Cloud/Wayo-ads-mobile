@@ -679,6 +679,8 @@
     "pay_with_google": "Pay with Google Pay",
     "or": "or",
     "stripe_unavailable": "Top-ups are not available: payment is not configured on the server.",
+    "stripe_keys_mismatch": "Payment is misconfigured on the server (Stripe test/live keys mixed). Contact support.",
+    "apple_pay_test_hint": "Stripe test mode: Apple Pay uses your Wallet card but no real charge is made.",
     "tx_title": "Recent activity",
     "tx_empty": "No transactions yet",
     "tx_deposit": "Deposit",

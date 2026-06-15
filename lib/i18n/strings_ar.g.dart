@@ -563,6 +563,8 @@ class _TranslationsAdvertiserWalletAr extends TranslationsAdvertiserWalletEn {
 	@override String get pay_with_google => 'الدفع عبر Google Pay';
 	@override String get or => 'أو';
 	@override String get stripe_unavailable => 'الشحن غير متاح: لم يُضبط الدفع في الخادم.';
+	@override String get stripe_keys_mismatch => 'الدفع مُعدّ بشكل خاطئ على الخادم (خلط مفاتيح Stripe للاختبار/الإنتاج). تواصل مع الدعم.';
+	@override String get apple_pay_test_hint => 'وضع اختبار Stripe: Apple Pay يستخدم بطاقة المحفظة دون خصم حقيقي.';
 	@override String get tx_title => 'آخر الحركات';
 	@override String get tx_empty => 'لا معاملات بعد';
 	@override String get tx_deposit => 'إيداع';
@@ -1987,6 +1989,8 @@ extension on TranslationsAr {
 			case 'advertiser_wallet.pay_with_google': return 'الدفع عبر Google Pay';
 			case 'advertiser_wallet.or': return 'أو';
 			case 'advertiser_wallet.stripe_unavailable': return 'الشحن غير متاح: لم يُضبط الدفع في الخادم.';
+			case 'advertiser_wallet.stripe_keys_mismatch': return 'الدفع مُعدّ بشكل خاطئ على الخادم (خلط مفاتيح Stripe للاختبار/الإنتاج). تواصل مع الدعم.';
+			case 'advertiser_wallet.apple_pay_test_hint': return 'وضع اختبار Stripe: Apple Pay يستخدم بطاقة المحفظة دون خصم حقيقي.';
 			case 'advertiser_wallet.tx_title': return 'آخر الحركات';
 			case 'advertiser_wallet.tx_empty': return 'لا معاملات بعد';
 			case 'advertiser_wallet.tx_deposit': return 'إيداع';

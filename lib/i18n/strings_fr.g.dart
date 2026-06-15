@@ -564,6 +564,8 @@ class _TranslationsAdvertiserWalletFr extends TranslationsAdvertiserWalletEn {
 	@override String get pay_with_google => 'Payer avec Google Pay';
 	@override String get or => 'ou';
 	@override String get stripe_unavailable => 'Rechargement indisponible : le paiement n’est pas configuré côté serveur.';
+	@override String get stripe_keys_mismatch => 'Paiement mal configuré côté serveur (clés Stripe test/live mélangées). Contactez le support.';
+	@override String get apple_pay_test_hint => 'Mode test Stripe : Apple Pay utilise votre carte Wallet sans débit réel.';
 	@override String get tx_title => 'Activité récente';
 	@override String get tx_empty => 'Aucune transaction';
 	@override String get tx_deposit => 'Dépôt';
@@ -1989,6 +1991,8 @@ extension on TranslationsFr {
 			case 'advertiser_wallet.pay_with_google': return 'Payer avec Google Pay';
 			case 'advertiser_wallet.or': return 'ou';
 			case 'advertiser_wallet.stripe_unavailable': return 'Rechargement indisponible : le paiement n’est pas configuré côté serveur.';
+			case 'advertiser_wallet.stripe_keys_mismatch': return 'Paiement mal configuré côté serveur (clés Stripe test/live mélangées). Contactez le support.';
+			case 'advertiser_wallet.apple_pay_test_hint': return 'Mode test Stripe : Apple Pay utilise votre carte Wallet sans débit réel.';
 			case 'advertiser_wallet.tx_title': return 'Activité récente';
 			case 'advertiser_wallet.tx_empty': return 'Aucune transaction';
 			case 'advertiser_wallet.tx_deposit': return 'Dépôt';

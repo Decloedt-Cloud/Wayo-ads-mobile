@@ -154,6 +154,10 @@ class _AdvertiserWalletTabContentState
       _toast(t.advertiser_wallet.stripe_unavailable);
       return null;
     }
+    if (cfg.keysMismatch) {
+      _toast(t.advertiser_wallet.stripe_keys_mismatch);
+      return null;
+    }
     await AdvertiserStripeDeposit.ensureSdkReady(
       publishableKey: cfg.publishableKey!,
     );
@@ -1047,7 +1051,7 @@ class _WalletPayStripPlaceholder extends StatelessWidget {
 }
 
 /// Primary card CTA, optional native wallet, modern glass + gradient.
-class _WalletPayStrip extends StatelessWidget {
+class _WalletPayStrip extends ConsumerWidget {
   const _WalletPayStrip({
     required this.data,
     required this.t,
@@ -1065,7 +1069,7 @@ class _WalletPayStrip extends StatelessWidget {
   final VoidCallback onGooglePay;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isSim = data.canSimulate;
     final cardBusy = busyMethod == _PayMethod.card;
     final appleBusy = busyMethod == _PayMethod.applePay;
@@ -1077,6 +1081,8 @@ class _WalletPayStrip extends StatelessWidget {
     final showApple = !isSim && Platform.isIOS;
     final showGoogle = !isSim && Platform.isAndroid;
     final showWallet = showApple || showGoogle;
+    final stripeTestMode =
+        ref.watch(walletPspConfigProvider).valueOrNull?.isTestMode ?? false;
 
     const cardRadius = 22.0;
 
@@ -1198,6 +1204,18 @@ class _WalletPayStrip extends StatelessWidget {
             label: t.advertiser_wallet.pay_with_apple,
             isApple: true,
           ),
+        if (showApple && stripeTestMode) ...[
+          const SizedBox(height: 8),
+          Text(
+            t.advertiser_wallet.apple_pay_test_hint,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 12,
+              height: 1.35,
+              color: AppColors.textSecondaryOf(context),
+            ),
+          ),
+        ],
         if (showGoogle)
           _NativeWalletCta(
             busy: googleBusy,

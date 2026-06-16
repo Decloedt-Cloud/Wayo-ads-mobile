@@ -604,6 +604,8 @@ class _TranslationsChatFr extends TranslationsChatEn {
 	@override String get inbox_subtitle => 'Conversations sécurisées pour vos campagnes';
 	@override String get conversation_unknown => 'Conversation';
 	@override String get thread_fallback_title => 'Chat';
+	@override String get role_creator => 'Créateur';
+	@override String get role_advertiser => 'Annonceur';
 	@override String get composer_hint => 'Écrire un message…';
 	@override String get typing => 'En train d’écrire…';
 	@override String get error_load_threads => 'Impossible de charger vos conversations. Réessayez.';
@@ -1110,6 +1112,12 @@ class _TranslationsAdvertiserCampaignsDetailFr extends TranslationsAdvertiserCam
 	@override String get description_title => 'Description';
 	@override String get show_more => 'Voir plus';
 	@override String get show_less => 'Voir moins';
+	@override String get top_creators_title => 'Meilleurs créateurs';
+	@override String get top_creators_subtitle => 'Vos meilleurs créateurs, classés par vues validées.';
+	@override String top_creators_views({required Object count}) => '${count} vues validées';
+	@override String get top_creators_earned => 'gagné';
+	@override String get top_creators_empty_title => 'Pas encore de performances';
+	@override String get top_creators_empty_subtitle => 'Les statistiques apparaîtront ici dès que vos créateurs approuvés généreront des vues.';
 }
 
 // Path: advertiser_campaigns.create
@@ -1194,7 +1202,10 @@ class _TranslationsCreatorWalletFr extends TranslationsCreatorWalletEn {
 	@override String get withdraw_subtitle => 'Retirez votre solde disponible vers votre compte Stripe connecté.';
 	@override String get available_balance => 'Disponible';
 	@override String get pending_balance => 'En attente';
+	@override String get pending_withdrawals => 'Retraits en cours';
+	@override String get in_transit => 'En transit';
 	@override String get total_earned => 'Total gagné';
+	@override String get lifetime_earnings => 'Gains cumulés';
 	@override String get load_error => 'Impossible de charger votre portefeuille';
 	@override String get withdraw_button => 'Retirer';
 	@override String get withdraw_sheet_title => 'Demander un retrait';
@@ -1345,6 +1356,13 @@ class _TranslationsCreatorCampaignsFr extends TranslationsCreatorCampaignsEn {
 	@override String get submission_status_rejected => 'Refusé';
 	@override String get submission_status_flagged => 'Signalé';
 	@override String submission_views({required Object views}) => '${views} vues validées';
+	@override String get tracking_link_title => 'Votre lien de suivi';
+	@override String get tracking_link_subtitle => 'Partagez ce lien court dans votre bio, posts ou stories. Les clics sont comptabilisés automatiquement.';
+	@override String get tracking_link_copy => 'Copier le lien';
+	@override String get tracking_link_copied => 'Copié !';
+	@override String get tracking_link_preparing => 'Votre lien unique est en cours de préparation… Tirez pour actualiser dans un instant.';
+	@override String get tracking_link_error => 'Impossible de charger votre lien de suivi.';
+	@override String tracking_link_stats({required Object validated, required Object recorded}) => '${validated} clics validés · ${recorded} clics enregistrés';
 }
 
 // Path: creator.stats
@@ -1692,6 +1710,12 @@ extension on TranslationsFr {
 			case 'advertiser_campaigns.detail.description_title': return 'Description';
 			case 'advertiser_campaigns.detail.show_more': return 'Voir plus';
 			case 'advertiser_campaigns.detail.show_less': return 'Voir moins';
+			case 'advertiser_campaigns.detail.top_creators_title': return 'Meilleurs créateurs';
+			case 'advertiser_campaigns.detail.top_creators_subtitle': return 'Vos meilleurs créateurs, classés par vues validées.';
+			case 'advertiser_campaigns.detail.top_creators_views': return ({required Object count}) => '${count} vues validées';
+			case 'advertiser_campaigns.detail.top_creators_earned': return 'gagné';
+			case 'advertiser_campaigns.detail.top_creators_empty_title': return 'Pas encore de performances';
+			case 'advertiser_campaigns.detail.top_creators_empty_subtitle': return 'Les statistiques apparaîtront ici dès que vos créateurs approuvés généreront des vues.';
 			case 'advertiser_campaigns.create.title': return 'Nouvelle campagne';
 			case 'advertiser_campaigns.create.section_basics': return 'Informations';
 			case 'advertiser_campaigns.create.section_budget': return 'Budget et enchères';
@@ -1866,7 +1890,10 @@ extension on TranslationsFr {
 			case 'creator.wallet.withdraw_subtitle': return 'Retirez votre solde disponible vers votre compte Stripe connecté.';
 			case 'creator.wallet.available_balance': return 'Disponible';
 			case 'creator.wallet.pending_balance': return 'En attente';
+			case 'creator.wallet.pending_withdrawals': return 'Retraits en cours';
+			case 'creator.wallet.in_transit': return 'En transit';
 			case 'creator.wallet.total_earned': return 'Total gagné';
+			case 'creator.wallet.lifetime_earnings': return 'Gains cumulés';
 			case 'creator.wallet.load_error': return 'Impossible de charger votre portefeuille';
 			case 'creator.wallet.withdraw_button': return 'Retirer';
 			case 'creator.wallet.withdraw_sheet_title': return 'Demander un retrait';
@@ -2008,6 +2035,13 @@ extension on TranslationsFr {
 			case 'creator.campaigns.submission_status_rejected': return 'Refusé';
 			case 'creator.campaigns.submission_status_flagged': return 'Signalé';
 			case 'creator.campaigns.submission_views': return ({required Object views}) => '${views} vues validées';
+			case 'creator.campaigns.tracking_link_title': return 'Votre lien de suivi';
+			case 'creator.campaigns.tracking_link_subtitle': return 'Partagez ce lien court dans votre bio, posts ou stories. Les clics sont comptabilisés automatiquement.';
+			case 'creator.campaigns.tracking_link_copy': return 'Copier le lien';
+			case 'creator.campaigns.tracking_link_copied': return 'Copié !';
+			case 'creator.campaigns.tracking_link_preparing': return 'Votre lien unique est en cours de préparation… Tirez pour actualiser dans un instant.';
+			case 'creator.campaigns.tracking_link_error': return 'Impossible de charger votre lien de suivi.';
+			case 'creator.campaigns.tracking_link_stats': return ({required Object validated, required Object recorded}) => '${validated} clics validés · ${recorded} clics enregistrés';
 			case 'creator.stats.earnings_title': return 'Gains totaux';
 			case 'creator.stats.pending': return 'En attente';
 			case 'creator.stats.validated_views': return 'Vues validées';
@@ -2098,6 +2132,8 @@ extension on TranslationsFr {
 			case 'chat.inbox_subtitle': return 'Conversations sécurisées pour vos campagnes';
 			case 'chat.conversation_unknown': return 'Conversation';
 			case 'chat.thread_fallback_title': return 'Chat';
+			case 'chat.role_creator': return 'Créateur';
+			case 'chat.role_advertiser': return 'Annonceur';
 			case 'chat.composer_hint': return 'Écrire un message…';
 			case 'chat.typing': return 'En train d’écrire…';
 			case 'chat.error_load_threads': return 'Impossible de charger vos conversations. Réessayez.';

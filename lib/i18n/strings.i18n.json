@@ -273,7 +273,13 @@
       "cpc_metric": "CPC (per click)",
       "description_title": "Description",
       "show_more": "Show more",
-      "show_less": "Show less"
+      "show_less": "Show less",
+      "top_creators_title": "Top creators",
+      "top_creators_subtitle": "Your best performers, ranked by validated views.",
+      "top_creators_views": "$count validated views",
+      "top_creators_earned": "earned",
+      "top_creators_empty_title": "No performance yet",
+      "top_creators_empty_subtitle": "Creator stats will appear here once your approved creators start driving views."
     },
     "create": {
       "title": "New campaign",
@@ -466,7 +472,10 @@
       "withdraw_subtitle": "Withdraw your available balance to your connected Stripe account.",
       "available_balance": "Available",
       "pending_balance": "Pending",
+      "pending_withdrawals": "Pending withdrawals",
+      "in_transit": "In transit",
       "total_earned": "Total earned",
+      "lifetime_earnings": "Lifetime earnings",
       "load_error": "Couldn't load your wallet",
       "withdraw_button": "Withdraw",
       "withdraw_sheet_title": "Request a payout",
@@ -609,7 +618,14 @@
       "submission_status_approved": "Approved",
       "submission_status_rejected": "Rejected",
       "submission_status_flagged": "Flagged",
-      "submission_views": "$views validated views"
+      "submission_views": "$views validated views",
+      "tracking_link_title": "Your tracking link",
+      "tracking_link_subtitle": "Share this short link in your bio, posts or stories. Clicks are tracked automatically.",
+      "tracking_link_copy": "Copy link",
+      "tracking_link_copied": "Copied!",
+      "tracking_link_preparing": "Your unique link is being prepared… Pull to refresh in a moment.",
+      "tracking_link_error": "Couldn't load your tracking link.",
+      "tracking_link_stats": "$validated earnings clicks · $recorded recorded clicks"
     },
     "stats": {
       "earnings_title": "Total earnings",
@@ -711,6 +727,8 @@
     "inbox_subtitle": "Secure conversations for your campaigns",
     "conversation_unknown": "Conversation",
     "thread_fallback_title": "Chat",
+    "role_creator": "Creator",
+    "role_advertiser": "Advertiser",
     "composer_hint": "Write a message…",
     "typing": "Typing…",
     "error_load_threads": "Could not load your conversations. Try again.",

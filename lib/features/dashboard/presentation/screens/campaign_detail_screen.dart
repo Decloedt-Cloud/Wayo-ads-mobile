@@ -17,7 +17,9 @@ import '../../../../i18n/strings.g.dart';
 import '../../../shell/widgets/wayo_bottom_nav.dart';
 import '../../../advertiser_campaigns/domain/campaign_niche_catalog.dart';
 import '../../../advertiser_campaigns/presentation/providers/advertiser_campaigns_providers.dart';
+import '../../../advertiser_campaigns/domain/campaign_top_creator.dart';
 import '../../../advertiser_campaigns/presentation/widgets/campaign_applications_section.dart';
+import '../../../advertiser_campaigns/presentation/widgets/campaign_top_creators_section.dart';
 import '../../../auth/domain/auth_notifier.dart';
 import '../../../auth/domain/wayo_ads_account_role.dart';
 import '../../../creator_campaigns/domain/creator_browse_campaign.dart';
@@ -99,6 +101,7 @@ final class _ParsedCampaignDetail {
     required this.isOwner,
     required this.campaignKind,
     required this.showCpmMetric,
+    required this.topCreators,
   });
 
   final String title;
@@ -122,6 +125,7 @@ final class _ParsedCampaignDetail {
   final bool isOwner;
   final CreatorCampaignType campaignKind;
   final bool showCpmMetric;
+  final List<CampaignTopCreator> topCreators;
 
   factory _ParsedCampaignDetail.fromJson(
     Map<String, dynamic> json,
@@ -233,6 +237,7 @@ final class _ParsedCampaignDetail {
       isOwner: json['isOwner'] == true,
       campaignKind: campaignKind,
       showCpmMetric: showCpmMetric,
+      topCreators: campaignTopCreatorsFromCampaignDetail(json) ?? const [],
     );
   }
 }
@@ -767,9 +772,23 @@ class _CampaignPremiumScrollBodyState extends ConsumerState<_CampaignPremiumScro
           ),
           if (!isSuperadmin && parsed.isOwner)
             SliverPadding(
+              padding:
+                  CampaignDetailPremiumPalette.kScreenPadding.copyWith(top: 24),
+              sliver: SliverToBoxAdapter(
+                child: CampaignTopCreatorsSection(
+                  creators: parsed.topCreators,
+                  moneyLocale: widget.moneyLocale,
+                )
+                    .animate()
+                    .fadeIn(duration: 400.ms, curve: Curves.easeOutCubic)
+                    .slideY(begin: 0.06, curve: Curves.easeOutCubic),
+              ),
+            ),
+          if (!isSuperadmin && parsed.isOwner)
+            SliverPadding(
               padding: CampaignDetailPremiumPalette.kScreenPadding
                   .copyWith(
-                    top: 12,
+                    top: 24,
                     bottom: 40 + wayoShellBodyBottomPadding(context),
                   ),
               sliver: SliverToBoxAdapter(

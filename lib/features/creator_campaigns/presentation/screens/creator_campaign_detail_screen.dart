@@ -18,6 +18,7 @@ import '../../domain/creator_browse_campaign.dart';
 import '../../domain/creator_campaign_detail.dart';
 import '../providers/creator_campaigns_providers.dart';
 import '../widgets/creator_apply_sheet.dart';
+import '../widgets/creator_tracking_link_section.dart';
 import '../../../dashboard/presentation/theme/campaign_detail_premium_palette.dart';
 import '../theme/creator_campaigns_chrome.dart';
 
@@ -124,6 +125,7 @@ class CreatorCampaignDetailScreen extends ConsumerWidget {
           data: (c) => _Body(
             campaign: c,
             moneyLocale: moneyLocale,
+            campaignId: id,
           ),
         ),
       ),
@@ -135,15 +137,20 @@ class _Body extends ConsumerWidget {
   const _Body({
     required this.campaign,
     required this.moneyLocale,
+    required this.campaignId,
   });
 
   final CreatorCampaignDetail campaign;
   final String moneyLocale;
+  final String campaignId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final t = context.t;
     final c = campaign;
+    final linksAsync = c.type == CreatorCampaignType.link && c.isApproved
+        ? ref.watch(creatorTrackingLinksProvider(campaignId))
+        : null;
 
     return ListView(
       physics: const BouncingScrollPhysics(
@@ -242,6 +249,24 @@ class _Body extends ConsumerWidget {
         if (c.assetsUrl != null && c.assetsUrl!.isNotEmpty) ...[
           const SizedBox(height: 14),
           _AssetsLink(url: c.assetsUrl!),
+        ],
+        if (linksAsync != null) ...[
+          const SizedBox(height: 14),
+          _PremiumCard(
+            child: linksAsync.when(
+              loading: () => const CreatorTrackingLinkSection(
+                links: [],
+                loading: true,
+              ),
+              error: (e, _) => CreatorTrackingLinkSection(
+                links: const [],
+                error: e,
+                onRetry: () =>
+                    ref.invalidate(creatorTrackingLinksProvider(campaignId)),
+              ),
+              data: (links) => CreatorTrackingLinkSection(links: links),
+            ),
+          ),
         ],
         const SizedBox(height: 18),
         _ActionBar(campaign: c),
@@ -965,7 +990,7 @@ class _ActionBar extends ConsumerWidget {
             height: 52,
             child: ElevatedButton.icon(
               onPressed: () {
-                context.pushReplacement(
+                context.push(
                   '/creator/campaigns/${c.id}/application',
                   extra: <String, Object?>{'title': c.title},
                 );

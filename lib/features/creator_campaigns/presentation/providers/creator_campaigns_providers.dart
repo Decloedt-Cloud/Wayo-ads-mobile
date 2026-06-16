@@ -10,6 +10,7 @@ import '../../domain/creator_browse_campaign.dart';
 import '../../domain/creator_browse_page_result.dart';
 import '../../domain/creator_campaign_detail.dart';
 import '../../domain/creator_social_post.dart';
+import '../../domain/creator_tracking_link.dart';
 
 /// Rate limiter for the creator campaigns feature. Slightly tighter than the
 /// dashboard (5 s) because the browse list doesn't change very often, but it
@@ -94,4 +95,24 @@ final creatorMySubmissionsProvider =
       return ref
           .watch(creatorCampaignsRepositoryProvider)
           .fetchMySubmissions(id);
+    });
+
+/// Tracking short links for LINK campaigns — keyed by campaign id.
+/// Falls back to [GET /api/campaigns/:id/links] when the detail payload
+/// has not embedded links yet.
+final creatorTrackingLinksProvider =
+    FutureProvider.family<List<CreatorTrackingLink>, String>((ref, id) async {
+      ref.keepAlive();
+      final detail = ref.watch(creatorCampaignDetailProvider(id)).valueOrNull;
+      if (detail != null && detail.trackingLinks.isNotEmpty) {
+        return detail.trackingLinks;
+      }
+      if (detail != null &&
+          detail.type == CreatorCampaignType.link &&
+          detail.isApproved) {
+        return ref
+            .watch(creatorCampaignsRepositoryProvider)
+            .fetchTrackingLinks(id);
+      }
+      return detail?.trackingLinks ?? const [];
     });

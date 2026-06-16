@@ -70,74 +70,11 @@ class CreatorWalletHero extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 10),
-                Wrap(
-                  spacing: 16,
-                  runSpacing: 6,
-                  children: [
-                    _InlineBalance(
-                      icon: Icons.schedule_rounded,
-                      label: t.creator.wallet.pending_balance,
-                      value: MoneyFormatter.format(
-                        balance.pending,
-                        currency: balance.currency,
-                        locale: moneyLocale,
-                      ),
-                    ),
-                    _InlineBalance(
-                      icon: Icons.trending_up_rounded,
-                      label: t.creator.wallet.total_earned,
-                      value: MoneyFormatter.format(
-                        balance.totalEarned,
-                        currency: balance.currency,
-                        locale: moneyLocale,
-                      ),
-                    ),
-                  ],
-                ),
               ],
             ),
           ),
         ],
       ),
-    );
-  }
-}
-
-class _InlineBalance extends StatelessWidget {
-  const _InlineBalance({
-    required this.icon,
-    required this.label,
-    required this.value,
-  });
-
-  final IconData icon;
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 13, color: Colors.white.withValues(alpha: 0.9)),
-        const SizedBox(width: 6),
-        Text(
-          '$label: ',
-          style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.85),
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        Text(
-          value,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 12,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-      ],
     );
   }
 }

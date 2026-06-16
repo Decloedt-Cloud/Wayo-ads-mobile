@@ -6,6 +6,7 @@ import '../domain/creator_browse_campaign.dart';
 import '../domain/creator_browse_page_result.dart';
 import '../domain/creator_campaign_detail.dart';
 import '../domain/creator_social_post.dart';
+import '../domain/creator_tracking_link.dart';
 
 /// Raised when the backend returns a structured `{ error, errorCode? }`
 /// payload — we keep both so the UI can show the message directly or branch on
@@ -205,6 +206,30 @@ class CreatorCampaignsRemoteDatasource {
       );
     } on DioException catch (e) {
       throw _mapDioException(e, 'Failed to submit your video');
+    }
+  }
+
+  /// `GET /api/campaigns/:id/links` — ensures and returns the creator's
+  /// tracking short link for LINK campaigns (idempotent on the server).
+  Future<List<CreatorTrackingLink>> fetchTrackingLinks(String campaignId) async {
+    try {
+      final res = await _dio.get<Object?>(
+        AuthRuntimeConfig.instance.wayoAdsRequestPath(
+          ApiEndpoints.campaignTrackingLinks(campaignId),
+        ),
+      );
+      final body = res.data;
+      if (body is! Map) return const [];
+      final links = body['links'];
+      if (links is! List) return const [];
+      return links
+          .whereType<Map>()
+          .map(
+            (e) => CreatorTrackingLink.fromJson(Map<String, dynamic>.from(e)),
+          )
+          .toList(growable: false);
+    } on DioException catch (e) {
+      throw _mapDioException(e, 'Failed to load your tracking link');
     }
   }
 

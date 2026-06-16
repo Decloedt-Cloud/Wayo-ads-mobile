@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../core/push/mobile_push_route_utils.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../auth/domain/auth_notifier.dart';
 import '../../../auth/domain/wayo_ads_account_role.dart';
+import '../providers/superadmin_providers.dart';
+import '../../../shell/widgets/wayo_bottom_nav.dart';
 import 'announcements_screen.dart';
 import 'superadmin_dashboard_screen.dart';
 import 'superadmin_shell_screen.dart';
@@ -14,13 +19,15 @@ class SuperadminHomeScreen extends ConsumerStatefulWidget {
   const SuperadminHomeScreen({super.key});
 
   @override
-  ConsumerState<SuperadminHomeScreen> createState() => _SuperadminHomeScreenState();
+  ConsumerState<SuperadminHomeScreen> createState() =>
+      _SuperadminHomeScreenState();
 }
 
 class _SuperadminHomeScreenState extends ConsumerState<SuperadminHomeScreen> {
   int _currentIndex = 0;
+  String? _lastSyncedRouteTab;
 
-  final _screens = const [
+  static const _screens = [
     SuperadminDashboardScreen(),
     UsersScreen(),
     WithdrawalsScreen(),
@@ -29,29 +36,87 @@ class _SuperadminHomeScreenState extends ConsumerState<SuperadminHomeScreen> {
   ];
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _applyTabFromRouteIfNeeded();
+  }
+
+  /// Deep links (FCM / push) set `?tab=` on the route — sync local tab index.
+  void _applyTabFromRouteIfNeeded() {
+    final tab = GoRouterState.of(context).uri.queryParameters['tab'];
+    if (tab == null || tab.isEmpty) {
+      _lastSyncedRouteTab = null;
+      return;
+    }
+    if (tab == _lastSyncedRouteTab) return;
+    _lastSyncedRouteTab = tab;
+    final next = superadminTabIndexFromQuery(tab).clamp(0, _screens.length - 1);
+    if (next != _currentIndex) {
+      setState(() => _currentIndex = next);
+    }
+  }
+
+  void _selectTab(int index) {
+    final safeIndex = index.clamp(0, _screens.length - 1);
+    if (safeIndex == _currentIndex) {
+      if (safeIndex == 2) {
+        invalidateSuperadminWithdrawalData(ref);
+      }
+      return;
+    }
+
+    HapticFeedback.lightImpact();
+    setState(() => _currentIndex = safeIndex);
+
+    if (safeIndex == 2) {
+      invalidateSuperadminWithdrawalData(ref);
+    }
+
+    // Keep URL in sync for push deep links; local state drives the UI instantly.
+    final route = superadminShellRouteForTabIndex(safeIndex);
+    _lastSyncedRouteTab =
+        Uri.tryParse(route)?.queryParameters['tab'] ?? '';
+    final currentPath = GoRouterState.of(context).uri.toString();
+    if (currentPath != route) {
+      context.go(route);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authNotifierProvider).valueOrNull;
-    
-    // Security check - only allow superadmin access
+
     if (authState is! AuthAuthenticated ||
         authState.user.wayoAdsRole != WayoAdsAccountRole.superAdmin) {
-      return _AccessDeniedScreen();
+      return const _AccessDeniedScreen();
     }
+
+    final keyboardOpen = wayoShellKeyboardOpen(context);
 
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,
         children: _screens,
       ),
-      bottomNavigationBar: SuperadminBottomNav(
-        currentIndex: _currentIndex,
-        onTap: (index) => setState(() => _currentIndex = index),
-      ),
+      bottomNavigationBar: keyboardOpen
+          ? null
+          : Material(
+              color: Theme.of(context).scaffoldBackgroundColor,
+              elevation: 0,
+              shadowColor: Colors.transparent,
+              surfaceTintColor: Colors.transparent,
+              child: SuperadminBottomNav(
+                currentIndex: _currentIndex,
+                onTap: _selectTab,
+              ),
+            ),
     );
   }
 }
 
 class _AccessDeniedScreen extends StatelessWidget {
+  const _AccessDeniedScreen();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

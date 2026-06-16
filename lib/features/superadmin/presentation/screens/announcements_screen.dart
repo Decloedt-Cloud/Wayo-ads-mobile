@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/announcement.dart';
 import '../providers/superadmin_providers.dart';
+import '../widgets/superadmin_chrome_actions.dart';
 
 class AnnouncementsScreen extends ConsumerWidget {
   const AnnouncementsScreen({super.key});
@@ -19,6 +20,9 @@ class AnnouncementsScreen extends ConsumerWidget {
         title: const Text('Announcements'),
         backgroundColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
+        actions: const [
+          SuperadminChromeActions(trailingPadding: 12),
+        ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showAnnouncementForm(context, ref),

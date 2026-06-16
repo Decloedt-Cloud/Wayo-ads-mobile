@@ -29,10 +29,25 @@ class AuthInterceptor extends QueuedInterceptor {
   /// After a transient refresh failure, block further attempts briefly.
   static DateTime? _refreshCooldownUntil;
 
+  /// When the current session started (login). Used to avoid force-logout on a
+  /// transient 401 in the brief window right after sign-in.
+  static DateTime? _sessionStartedAt;
+
+  /// Grace window after login during which a no-refresh-token 401 does NOT
+  /// force logout (covers token-propagation races).
+  static const Duration _postLoginGrace = Duration(seconds: 4);
+
   /// Reset state after successful login (clears any stale cooldown).
   static void resetSessionState() {
     _refreshCooldownUntil = null;
     _refreshCompleter = null;
+    _sessionStartedAt = DateTime.now();
+  }
+
+  static bool get _pastPostLoginGrace {
+    final started = _sessionStartedAt;
+    return started == null ||
+        DateTime.now().difference(started) > _postLoginGrace;
   }
 
   bool get _inCooldown {
@@ -146,11 +161,26 @@ class AuthInterceptor extends QueuedInterceptor {
 
     final refreshTok = await storage.getRefreshToken();
     if (refreshTok == null || refreshTok.isEmpty) {
-      // No refresh token available — don't force logout immediately.
-      // This can happen during race conditions after login.
-      // Let the request fail; the UI will show an error and user can retry.
+      // Mobile uses Passport personal-access tokens (no refresh token). A genuine
+      // 401 here means the token was revoked server-side — e.g. the user tapped
+      // "Disconnect Other Device" on the web. Past the brief post-login grace
+      // window, end the session so the mobile reflects the remote logout.
+      if (_pastPostLoginGrace) {
+        if (kDebugMode) {
+          debugPrint('[auth] 401 on $path — token revoked (no refresh), forcing logout');
+        }
+        notifyAuthForceLogout();
+        return handler.reject(
+          DioException(
+            requestOptions: err.requestOptions,
+            error: const SessionExpiredException(),
+            type: DioExceptionType.unknown,
+          ),
+        );
+      }
+      // Within grace window — likely a token-propagation race; pass through.
       if (kDebugMode) {
-        debugPrint('[auth] 401 on $path — no refresh token, passing through');
+        debugPrint('[auth] 401 on $path — no refresh token (post-login grace), passing through');
       }
       return handler.next(err);
     }

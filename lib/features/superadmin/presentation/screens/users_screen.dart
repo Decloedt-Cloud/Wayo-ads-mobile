@@ -9,6 +9,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/admin_user.dart';
 import '../../domain/entities/banned_user.dart';
 import '../providers/superadmin_providers.dart';
+import '../widgets/superadmin_chrome_actions.dart';
 
 class UsersScreen extends ConsumerStatefulWidget {
   const UsersScreen({super.key});
@@ -263,6 +264,8 @@ class _UsersScreenState extends ConsumerState<UsersScreen>
                       )),
                     ]),
                   ),
+                const SizedBox(width: 8),
+                const SuperadminChromeActions(),
               ]),
               const SizedBox(height: 2),
               Row(children: [

@@ -11,6 +11,7 @@ import '../../../../i18n/strings.g.dart';
 import '../../../../router/app_router.dart';
 import '../../../auth/domain/wayo_ads_account_role.dart';
 import '../../../auth/presentation/providers/current_account_providers.dart';
+import '../../../superadmin/presentation/providers/superadmin_providers.dart';
 import '../providers/dashboard_state_providers.dart';
 
 /// Shows a floating snackbar when Reverb fires `notification.created` (Wayo-ads + mobile).
@@ -108,7 +109,8 @@ class _RealtimeNotificationToastHostState
               : t.dashboard.notification_view,
           onPressed: () {
             if (role == WayoAdsAccountRole.superAdmin && isSuperadminWithdrawal) {
-              ref.read(goRouterProvider).push(kSuperadminWithdrawalsRoute);
+              invalidateSuperadminWithdrawalData(ref);
+              ref.read(goRouterProvider).go(kSuperadminWithdrawalsRoute);
               return;
             }
             final r = switch (role) {

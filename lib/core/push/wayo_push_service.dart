@@ -24,6 +24,7 @@ import 'push_registration_debug.dart';
 import 'user_push_notifications_preference.dart';
 import 'wayo_push_intent.dart';
 import 'mobile_push_route_utils.dart';
+import 'superadmin_withdrawals_refresh_hub.dart';
 
 void _logPush(String message, {Object? error, StackTrace? stackTrace}) {
   if (error != null) {
@@ -394,6 +395,7 @@ Future<void> _presentWithdrawalOrAdminTray({
   final route = routePayload?.route ??
       resolveWayoPushRoute(data: message.data) ??
       kSuperadminWithdrawalsRoute;
+  _notifySuperadminWithdrawalsRefreshFromFcm(message.data, route);
   final trayTitle = routePayload?.title ?? title;
   final trayBody = routePayload?.body ?? body;
 
@@ -403,6 +405,16 @@ Future<void> _presentWithdrawalOrAdminTray({
     body: trayBody.isEmpty ? ' ' : trayBody,
     payload: route,
   );
+}
+
+void _notifySuperadminWithdrawalsRefreshFromFcm(
+  Map<String, dynamic> data,
+  String? route,
+) {
+  if (isWithdrawalNotificationPayload(data) ||
+      (route != null && isSuperadminWithdrawalsPushRoute(route))) {
+    notifySuperadminWithdrawalsRefresh();
+  }
 }
 
 List<AndroidNotificationAction>? _androidChatActions() => [
@@ -910,6 +922,7 @@ Future<void> attachForegroundFcmHandlers() async {
       payload: route,
       isAndroidChat: false,
     );
+    _notifySuperadminWithdrawalsRefreshFromFcm(m.data, route);
   });
 
   FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage m) async {

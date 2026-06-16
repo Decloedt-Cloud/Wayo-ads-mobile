@@ -8,7 +8,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import '../../../../core/config/auth_runtime_config.dart';
-import '../../../../core/auth/wayo_web_logout_urls.dart';
 import '../../../../core/errors/auth_error_localizer.dart';
 import '../../../../core/errors/auth_exceptions.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -120,6 +119,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               _password.text,
               forceWebLogout: forceWebLogout,
             ),
+        emailHint: _email.text.trim(),
       )) {
         if (!context.mounted) return;
         if (ref.read(authNotifierProvider).hasError) return;
@@ -278,11 +278,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     context.go(next ?? '/dashboard');
   }
 
-  /// Returns true when a web-session dialog was shown (caller should stop normal flow).
+  /// Returns true when the active-session dialog was shown (caller should stop normal flow).
   Future<bool> _handleWebSessionConflict(
     Translations t,
-    Future<void> Function({bool forceWebLogout}) retryLogin,
-  ) async {
+    Future<void> Function({bool forceWebLogout}) retryLogin, {
+    String? emailHint,
+  }) async {
     final err = ref.read(authNotifierProvider).error;
     if (err is! WebSessionActiveException) {
       return false;
@@ -294,21 +295,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       return true;
     }
 
+    final email = (err.email?.trim().isNotEmpty == true
+            ? err.email
+            : emailHint)
+        ?.trim();
+
     final result = await showWebSessionActiveDialog(
       context: context,
       t: t,
-      logoutUrl: WayoWebLogoutUrls.federatedLogoutUrl(
-        serverProvided: err.logoutUrl,
-      ),
+      email: email,
+      onDisconnect: () => retryLogin(forceWebLogout: true),
     );
     if (!mounted) {
       return true;
     }
 
-    if (result == WebSessionActiveDialogResult.disconnectAndContinue) {
-      await retryLogin(forceWebLogout: true);
-    }
-    return true;
+    return result == WebSessionActiveDialogResult.disconnectAndContinue ||
+        result == WebSessionActiveDialogResult.cancel ||
+        result == null;
   }
 
   SystemUiOverlayStyle _overlayFor(Brightness b) {

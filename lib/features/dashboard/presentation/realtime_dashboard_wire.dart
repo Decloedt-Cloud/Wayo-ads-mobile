@@ -12,19 +12,13 @@ import '../../creator_campaigns/presentation/providers/creator_campaigns_provide
 import '../../creator_dashboard/presentation/providers/creator_dashboard_providers.dart';
 import '../../creator_wallet/presentation/providers/creator_wallet_providers.dart';
 import '../../wallet/presentation/providers/advertiser_wallet_providers.dart';
+import '../../../../core/push/superadmin_withdrawals_refresh_hub.dart';
 import '../../superadmin/presentation/providers/superadmin_providers.dart';
 import 'providers/dashboard_state_providers.dart';
 import 'providers/notifications_feed_providers.dart';
 
-/// How often we refresh advertiser data while the app is foregrounded.
-///
-/// Reverb push updates remain the primary path; this timer is a pragmatic
-/// foreground fallback so screens stay fresh without the user tapping refresh
-/// (e.g. when the backend did not yet broadcast a specific event).
-///
-/// Also drives [accountDeletionScheduledAtProvider] sync so web ↔ mobile
-/// deletion state converges without an app reload.
-const Duration _kForegroundAdvertiserRefreshInterval = Duration(seconds: 20);
+/// How often we refresh superadmin panels while the app is foregrounded.
+const Duration _kForegroundSuperadminRefreshInterval = Duration(seconds: 8);
 
 /// Global Reverb: connects as soon as the user is signed in (any tab), not only on [DashboardScreen].
 class RealtimeDashboardWire extends ConsumerStatefulWidget {
@@ -56,6 +50,10 @@ class _RealtimeDashboardWireState extends ConsumerState<RealtimeDashboardWire>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    setSuperadminWithdrawalsRefreshHandler(() {
+      if (!mounted) return;
+      invalidateSuperadminWithdrawalData(ref);
+    });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       final s = ref.read(authNotifierProvider).valueOrNull;
@@ -68,6 +66,7 @@ class _RealtimeDashboardWireState extends ConsumerState<RealtimeDashboardWire>
 
   @override
   void dispose() {
+    clearSuperadminWithdrawalsRefreshHandler();
     _foregroundPollTimer?.cancel();
     _foregroundPollTimer = null;
     WidgetsBinding.instance.removeObserver(this);
@@ -95,8 +94,13 @@ class _RealtimeDashboardWireState extends ConsumerState<RealtimeDashboardWire>
 
   void _startForegroundPolling() {
     _foregroundPollTimer?.cancel();
+    final role = ref.read(authNotifierProvider).valueOrNull;
+    final interval = role is AuthAuthenticated &&
+            role.user.wayoAdsRole == WayoAdsAccountRole.superAdmin
+        ? _kForegroundSuperadminRefreshInterval
+        : const Duration(seconds: 20);
     _foregroundPollTimer = Timer.periodic(
-      _kForegroundAdvertiserRefreshInterval,
+      interval,
       (_) {
         if (!mounted) return;
         if (_lifecycle != AppLifecycleState.resumed) return;

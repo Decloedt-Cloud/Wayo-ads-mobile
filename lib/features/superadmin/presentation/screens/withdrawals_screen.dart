@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/withdrawal.dart';
 import '../providers/superadmin_providers.dart';
+import '../widgets/superadmin_chrome_actions.dart';
 import '../widgets/admin_stat_card.dart';
 
 class WithdrawalsScreen extends ConsumerStatefulWidget {
@@ -21,7 +22,7 @@ class _WithdrawalsScreenState extends ConsumerState<WithdrawalsScreen> {
   WithdrawalStatus? _statusFilter;
   Timer? _pollTimer;
 
-  static const _pollInterval = Duration(seconds: 12);
+  static const _pollInterval = Duration(seconds: 4);
 
   @override
   void initState() {
@@ -61,12 +62,6 @@ class _WithdrawalsScreenState extends ConsumerState<WithdrawalsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    ref.watch(superadminWithdrawalsLivePulseProvider);
-    ref.listen<int>(superadminWithdrawalsLivePulseProvider, (prev, next) {
-      if (prev == next) return;
-      ref.invalidate(withdrawalsNotifierProvider(status: _statusFilter));
-    });
-
     final withdrawalsAsync = ref.watch(
       withdrawalsNotifierProvider(status: _statusFilter),
     );
@@ -79,9 +74,10 @@ class _WithdrawalsScreenState extends ConsumerState<WithdrawalsScreen> {
         surfaceTintColor: Colors.transparent,
         actions: const [
           Padding(
-            padding: EdgeInsets.only(right: 12),
+            padding: EdgeInsets.only(right: 8),
             child: _LivePayoutsBadge(),
           ),
+          SuperadminChromeActions(trailingPadding: 12),
         ],
       ),
       body: Column(

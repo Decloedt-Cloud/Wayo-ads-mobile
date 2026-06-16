@@ -32,13 +32,11 @@ import '../features/account_deletion/presentation/screens/account_deletion_scree
 import '../features/superadmin/presentation/screens/superadmin_home_screen.dart';
 import '../features/superadmin/presentation/screens/ai_usage_screen.dart';
 import '../features/superadmin/presentation/screens/ledger_screen.dart';
-import '../features/superadmin/presentation/screens/withdrawals_screen.dart';
 import '../features/superadmin/presentation/screens/banned_users_screen.dart';
-import '../features/superadmin/presentation/screens/announcements_screen.dart';
 import '../features/superadmin/presentation/screens/superadmin_browse_campaigns_screen.dart';
 import '../features/superadmin/presentation/screens/tax_rates_screen.dart';
-import '../core/legal/wayo_legal_urls.dart';
-import '../screens/legal_web_page_screen.dart';
+import '../screens/privacy_policy_screen.dart';
+import '../screens/terms_and_conditions_screen.dart';
 import '../features/splash/splash_screen.dart';
 
 part 'app_router.g.dart';
@@ -228,15 +226,11 @@ GoRouter goRouter(GoRouterRef ref) {
       ),
       GoRoute(
         path: '/privacy',
-        builder: (context, state) => const LegalWebPageScreen(
-          document: WayoLegalDocument.privacy,
-        ),
+        builder: (context, state) => const PrivacyPolicyScreen(),
       ),
       GoRoute(
         path: '/terms',
-        builder: (context, state) => const LegalWebPageScreen(
-          document: WayoLegalDocument.terms,
-        ),
+        builder: (context, state) => const TermsAndConditionsScreen(),
       ),
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(
@@ -448,7 +442,12 @@ GoRouter goRouter(GoRouterRef ref) {
       GoRoute(
         parentNavigatorKey: rootNavigatorKey,
         path: '/superadmin/withdrawals',
-        builder: (context, state) => const WithdrawalsScreen(),
+        redirect: (context, state) => '/superadmin?tab=withdrawals',
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: '/admin/withdrawals',
+        redirect: (context, state) => '/superadmin?tab=withdrawals',
       ),
       GoRoute(
         parentNavigatorKey: rootNavigatorKey,
@@ -458,7 +457,7 @@ GoRouter goRouter(GoRouterRef ref) {
       GoRoute(
         parentNavigatorKey: rootNavigatorKey,
         path: '/superadmin/announcements',
-        builder: (context, state) => const AnnouncementsScreen(),
+        redirect: (context, state) => '/superadmin?tab=announcements',
       ),
       GoRoute(
         parentNavigatorKey: rootNavigatorKey,

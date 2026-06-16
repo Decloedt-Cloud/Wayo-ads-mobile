@@ -9,6 +9,7 @@ import '../../domain/entities/ai_usage.dart';
 import '../providers/superadmin_providers.dart';
 import '../widgets/admin_section_header.dart';
 import '../widgets/admin_stat_card.dart';
+import '../widgets/superadmin_chrome_actions.dart';
 
 /// Superadmin AI usage — aligns with web: metrics, model billing bar, daily
 /// cost chart, Overview / By feature / Top creators.
@@ -48,6 +49,9 @@ class _AiUsageScreenState extends ConsumerState<AiUsageScreen> {
         ),
         backgroundColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
+        actions: const [
+          SuperadminChromeActions(trailingPadding: 12),
+        ],
       ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,

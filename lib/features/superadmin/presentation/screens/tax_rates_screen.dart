@@ -6,6 +6,7 @@ import '../../../../core/layout/wayo_black_bottom_bar.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/country_tax_rate.dart';
 import '../providers/superadmin_providers.dart';
+import '../widgets/superadmin_chrome_actions.dart';
 
 /// Superadmin tax rates — mirrors web `/admin` tax panel (GET/POST/DELETE
 /// `/api/admin/tax-rates`).
@@ -145,6 +146,9 @@ class _TaxRatesScreenState extends ConsumerState<TaxRatesScreen> {
                 onPressed: () => context.pop(),
               )
             : null,
+        actions: const [
+          SuperadminChromeActions(trailingPadding: 12),
+        ],
       ),
       bottomNavigationBar: const WayoBlackBottomBar(),
       body: taxAsync.when(

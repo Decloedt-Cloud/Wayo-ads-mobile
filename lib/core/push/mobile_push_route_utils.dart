@@ -2,6 +2,8 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 
+import 'superadmin_withdrawals_refresh_hub.dart';
+
 /// Shell tab routes — use [GoRouter.go], not push.
 const Set<String> kNotificationShellTabRoutes = {
   '/dashboard',
@@ -10,6 +12,68 @@ const Set<String> kNotificationShellTabRoutes = {
   '/invoices',
   '/chat',
 };
+
+const String kSuperadminHomeRoute = '/superadmin';
+
+/// Superadmin tabs that live inside [SuperadminHomeScreen] (bottom nav visible).
+int superadminTabIndexFromQuery(String? tab) {
+  switch (tab?.trim().toLowerCase()) {
+    case 'users':
+      return 1;
+    case 'withdrawals':
+    case 'payouts':
+      return 2;
+    case 'announcements':
+      return 3;
+    case 'more':
+      return 4;
+    default:
+      return 0;
+  }
+}
+
+String superadminShellRouteForTabIndex(int index) {
+  const tabs = ['dashboard', 'users', 'withdrawals', 'announcements', 'more'];
+  if (index <= 0) return kSuperadminHomeRoute;
+  return '$kSuperadminHomeRoute?tab=${tabs[index]}';
+}
+
+/// True when a push/deep-link should open the superadmin Payouts tab.
+bool isSuperadminWithdrawalsPushRoute(String route) {
+  final uri = Uri.tryParse(route);
+  if (uri == null) return false;
+  switch (uri.path) {
+    case '/superadmin/withdrawals':
+    case '/admin/withdrawals':
+      return true;
+    case kSuperadminHomeRoute:
+      final tab = uri.queryParameters['tab']?.trim().toLowerCase();
+      return tab == 'withdrawals' || tab == 'payouts';
+    default:
+      return false;
+  }
+}
+
+/// Maps legacy `/superadmin/*` shell paths into `?tab=` routes on the home shell.
+String? resolveSuperadminShellTabRoute(String route) {
+  final uri = Uri.tryParse(route);
+  if (uri == null) return null;
+
+  final base = uri.path;
+  switch (base) {
+    case kSuperadminHomeRoute:
+      if (uri.queryParameters.containsKey('tab')) return route;
+      return route;
+    case '/superadmin/withdrawals':
+      return '$kSuperadminHomeRoute?tab=withdrawals';
+    case '/superadmin/announcements':
+      return '$kSuperadminHomeRoute?tab=announcements';
+    case '/admin/withdrawals':
+      return '$kSuperadminHomeRoute?tab=withdrawals';
+    default:
+      return null;
+  }
+}
 
 /// Shell tab to activate before pushing a full-screen deep link (detail, thread, …).
 String? shellTabParentForPushRoute(String route) {
@@ -31,34 +95,56 @@ bool isShellEmbeddedPushRoute(String route) {
   return RegExp(r'^/campaigns/[^/]+$').hasMatch(base);
 }
 
+/// Maps any push/deep-link route into the in-app navigation target.
+String normalizeWayoPushNavigationRoute(String route) {
+  final shell = resolveSuperadminShellTabRoute(route);
+  if (shell != null) return shell;
+
+  final fromAction = normalizeMobilePushRoute(route);
+  if (fromAction != null) return fromAction;
+
+  return route;
+}
+
 /// Opens push / notification deep links without replacing the authenticated shell.
 void navigateWayoPushRoute(GoRouter router, String route) {
-  final base = route.split('?').first;
+  final target = normalizeWayoPushNavigationRoute(route);
+  final base = target.split('?').first;
   if (kNotificationShellTabRoutes.contains(base)) {
-    router.go(route);
+    router.go(target);
+    _notifyWithdrawalsRefreshIfNeeded(target);
     return;
   }
   if (base.startsWith('/superadmin')) {
-    router.go(route);
+    router.go(target);
+    _notifyWithdrawalsRefreshIfNeeded(target);
     return;
   }
 
   // Advertiser campaign detail is nested under `/campaigns` in [AppShell].
-  if (isShellEmbeddedPushRoute(route)) {
-    router.go(route);
+  if (isShellEmbeddedPushRoute(target)) {
+    router.go(target);
     return;
   }
 
-  final parent = shellTabParentForPushRoute(route);
+  final parent = shellTabParentForPushRoute(target);
   if (parent != null) {
     router.go(parent);
     SchedulerBinding.instance.scheduleFrameCallback((_) {
-      router.push(route);
+      router.push(target);
+      _notifyWithdrawalsRefreshIfNeeded(target);
     });
     return;
   }
 
-  router.push(route);
+  router.push(target);
+  _notifyWithdrawalsRefreshIfNeeded(target);
+}
+
+void _notifyWithdrawalsRefreshIfNeeded(String route) {
+  if (isSuperadminWithdrawalsPushRoute(route)) {
+    notifySuperadminWithdrawalsRefresh();
+  }
 }
 
 /// Pops a pushed detail route, or returns to the shell tab when opened via [go].
@@ -126,13 +212,13 @@ String? normalizeMobilePushRoute(String? actionUrl) {
 
   if (lower.contains('/superadmin') &&
       (lower.contains('withdraw') || lower.contains('payout'))) {
-    return '/superadmin/withdrawals';
+    return '$kSuperadminHomeRoute?tab=withdrawals';
   }
   if (lower.contains('/admin') &&
       (lower.contains('withdraw') ||
           lower.contains('payout') ||
           lower.contains('payment'))) {
-    return '/superadmin/withdrawals';
+    return '$kSuperadminHomeRoute?tab=withdrawals';
   }
 
   final campaignMatch = RegExp(r'/campaigns/([^/?#]+)').firstMatch(lower);
@@ -167,7 +253,7 @@ String? normalizeMobilePushRoute(String? actionUrl) {
   }
 
   if (lower.contains('withdraw') || lower.contains('payout')) {
-    return '/superadmin/withdrawals';
+    return '$kSuperadminHomeRoute?tab=withdrawals';
   }
 
   return path.split('?').first;

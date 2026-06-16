@@ -215,6 +215,7 @@ class AdminUsersNotifier extends _$AdminUsersNotifier {
 class WithdrawalsNotifier extends _$WithdrawalsNotifier {
   @override
   Future<WithdrawalsPage> build({WithdrawalStatus? status}) async {
+    ref.watch(superadminWithdrawalsLivePulseProvider);
     final repo = ref.watch(superadminRepositoryProvider);
     final result = await repo.getWithdrawals(status: status);
     return result.when(

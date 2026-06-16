@@ -6,6 +6,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/ledger_entry.dart';
 import '../providers/superadmin_providers.dart';
 import '../widgets/admin_stat_card.dart';
+import '../widgets/superadmin_chrome_actions.dart';
 
 class LedgerScreen extends ConsumerStatefulWidget {
   const LedgerScreen({super.key});
@@ -85,6 +86,7 @@ class _LedgerScreenState extends ConsumerState<LedgerScreen> {
                 ),
             ],
           ),
+          const SuperadminChromeActions(trailingPadding: 12),
         ],
       ),
       body: Column(

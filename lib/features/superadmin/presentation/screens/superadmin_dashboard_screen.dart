@@ -7,9 +7,9 @@ import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/dashboard_stats.dart';
 import '../../../dashboard/presentation/providers/dashboard_state_providers.dart';
 import '../providers/superadmin_providers.dart';
-import '../../../dashboard/presentation/widgets/internal_notification_bell.dart';
 import '../widgets/admin_section_header.dart';
 import '../widgets/admin_stat_card.dart';
+import '../widgets/superadmin_chrome_actions.dart';
 
 class SuperadminDashboardScreen extends ConsumerWidget {
   const SuperadminDashboardScreen({super.key});
@@ -144,7 +144,7 @@ class SuperadminDashboardScreen extends ConsumerWidget {
                     ],
                   ),
                 ),
-                const InternalNotificationBell(),
+                const SuperadminChromeActions(showNotifications: true),
               ],
             ),
           ],

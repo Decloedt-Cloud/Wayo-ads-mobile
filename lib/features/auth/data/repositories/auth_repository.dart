@@ -744,6 +744,19 @@ class AuthRepositoryImpl implements IAuthRepository {
         retryAfterSeconds: _parseRetryAfterSeconds(e, message),
       );
     }
+    if (status == 409) {
+      if (body is Map<String, dynamic>) {
+        final conflict = _parseWebSessionConflict(body);
+        if (conflict != null) {
+          return conflict;
+        }
+      } else if (body is Map) {
+        final conflict = _parseWebSessionConflict(body.cast<String, dynamic>());
+        if (conflict != null) {
+          return conflict;
+        }
+      }
+    }
     if (status == 401 || status == 422) {
       return InvalidCredentialsException(message);
     }
@@ -760,11 +773,28 @@ class AuthRepositoryImpl implements IAuthRepository {
     }
     final message = data['message'] as String?;
     final logoutUrl = data['web_logout_url'] as String?;
+    final email = _parseConflictEmail(data);
     return WebSessionActiveException(
       message: message ??
-          'You are already signed in on the Wayo Ads website. Sign out from the web before signing in on the app.',
+          'This account is already active on another device. Disconnect the other session to sign in here.',
       logoutUrl: logoutUrl,
+      email: email,
     );
+  }
+
+  String? _parseConflictEmail(Map<String, dynamic> data) {
+    final direct = data['email'];
+    if (direct is String && direct.trim().isNotEmpty) {
+      return direct.trim();
+    }
+    final user = data['user'];
+    if (user is Map) {
+      final fromUser = user['email'];
+      if (fromUser is String && fromUser.trim().isNotEmpty) {
+        return fromUser.trim();
+      }
+    }
+    return null;
   }
 }
 

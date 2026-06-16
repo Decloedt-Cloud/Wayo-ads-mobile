@@ -96,7 +96,7 @@ String? _routeFromMetadata(
 
   if ((type.contains('WITHDRAW') || type.contains('STRIPE_PAYOUT')) &&
       role == WayoAdsAccountRole.superAdmin) {
-    return '/superadmin/withdrawals';
+    return '$kSuperadminHomeRoute?tab=withdrawals';
   }
 
   if (type.contains('WALLET') ||
@@ -123,7 +123,7 @@ String? _routeFromMetadata(
       type.contains('SUSPICIOUS') ||
       type.contains('FLAGGED')) {
     return role == WayoAdsAccountRole.superAdmin
-        ? '/superadmin/withdrawals'
+        ? '$kSuperadminHomeRoute?tab=withdrawals'
         : '/dashboard';
   }
 

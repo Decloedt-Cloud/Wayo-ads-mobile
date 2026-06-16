@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/banned_user.dart';
 import '../providers/superadmin_providers.dart';
+import '../widgets/superadmin_chrome_actions.dart';
 
 class BannedUsersScreen extends ConsumerStatefulWidget {
   const BannedUsersScreen({super.key});
@@ -62,6 +63,7 @@ class _BannedUsersScreenState extends ConsumerState<BannedUsersScreen> {
             icon: const Icon(Icons.person_add_disabled_rounded),
             tooltip: 'Ban User',
           ),
+          const SuperadminChromeActions(trailingPadding: 12),
         ],
       ),
       body: Column(

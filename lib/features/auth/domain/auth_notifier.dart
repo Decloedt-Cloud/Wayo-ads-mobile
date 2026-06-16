@@ -148,7 +148,7 @@ class AuthNotifier extends _$AuthNotifier {
       );
       switch (result) {
         case Success(:final data):
-          await _finalizeSuccessfulLogin(data);
+          await _finalizeSuccessfulLogin(data, forceWebLogout: forceWebLogout);
         case Failure(:final error):
           state = AsyncValue.error(error, StackTrace.current);
       }
@@ -174,7 +174,7 @@ class AuthNotifier extends _$AuthNotifier {
       );
       switch (result) {
         case Success(:final data):
-          await _finalizeSuccessfulLogin(data);
+          await _finalizeSuccessfulLogin(data, forceWebLogout: forceWebLogout);
         case Failure(:final error):
           state = AsyncValue.error(error, StackTrace.current);
       }
@@ -206,7 +206,7 @@ class AuthNotifier extends _$AuthNotifier {
       );
       switch (result) {
         case Success(:final data):
-          await _finalizeSuccessfulLogin(data);
+          await _finalizeSuccessfulLogin(data, forceWebLogout: forceWebLogout);
         case Failure(:final error):
           state = AsyncValue.error(error, StackTrace.current);
       }
@@ -227,7 +227,10 @@ class AuthNotifier extends _$AuthNotifier {
   /// 1. The login response already contains fresh user data
   /// 2. Calling it immediately risks 429 rate limits on `/api/auth/user`
   /// 3. The web version doesn't make this extra call either
-  Future<void> _finalizeSuccessfulLogin(AuthResponse data) async {
+  Future<void> _finalizeSuccessfulLogin(
+    AuthResponse data, {
+    bool forceWebLogout = false,
+  }) async {
     AuthInterceptor.resetSessionState();
     _resetDashboardNetworkSpacing();
     await resetPushDeliveryForAccountSwitch();
@@ -239,6 +242,9 @@ class AuthNotifier extends _$AuthNotifier {
     await _persistAuth(ref.read(secureStorageProvider), data);
     // Brief delay so secure storage + Dio interceptors see the new access token.
     await Future<void>.delayed(const Duration(milliseconds: 250));
+    if (forceWebLogout) {
+      unawaited(_invalidateRemoteWebSession());
+    }
     // Mark profile as just refreshed so subsequent calls respect cooldown.
     _lastProfileRefreshUtc = DateTime.now().toUtc();
     _lastAuthUserFetchStartUtc = DateTime.now().toUtc();
@@ -250,6 +256,26 @@ class AuthNotifier extends _$AuthNotifier {
       unawaited(_prefetchCreatorWalletAfterLogin());
     }
     unawaited(_syncPushTokenBestEffort());
+  }
+
+  /// Tells Wayo-ads to invalidate open browser sessions after mobile force-disconnect.
+  Future<void> _invalidateRemoteWebSession() async {
+    final dio = ref.read(wayoAdsDioProvider);
+    for (var attempt = 0; attempt < 3; attempt++) {
+      if (attempt > 0) {
+        await Future<void>.delayed(const Duration(milliseconds: 200));
+      }
+      try {
+        await dio.post<void>('/api/auth/invalidate-web-session');
+        return;
+      } catch (e, st) {
+        if (kDebugMode) {
+          debugPrint(
+            '[Auth] invalidate-web-session attempt ${attempt + 1} failed: $e\n$st',
+          );
+        }
+      }
+    }
   }
 
   /// Lets Auth / Wayo-ads persist the session before [GET /api/chat/token] to avoid

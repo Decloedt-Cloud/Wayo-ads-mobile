@@ -118,7 +118,7 @@ class _WayoBottomNavState extends State<WayoBottomNav> {
           child: Row(
             children: [
               Expanded(
-                child: _ProNavItem(
+                child: WayoProNavTabItem(
                   tabKey: widget.dashboardTabKey,
                   coachTarget: ShellTutorialTarget.dashboard,
                   coachAccent: coachAccent,
@@ -132,7 +132,7 @@ class _WayoBottomNavState extends State<WayoBottomNav> {
                 ),
               ),
               Expanded(
-                child: _ProNavItem(
+                child: WayoProNavTabItem(
                   tabKey: widget.campaignsTabKey,
                   coachTarget: ShellTutorialTarget.campaigns,
                   coachAccent: coachAccent,
@@ -144,7 +144,7 @@ class _WayoBottomNavState extends State<WayoBottomNav> {
                 ),
               ),
               Expanded(
-                child: _ProNavItem(
+                child: WayoProNavTabItem(
                   tabKey: widget.walletTabKey,
                   coachTarget: ShellTutorialTarget.wallet,
                   coachAccent: coachAccent,
@@ -156,7 +156,7 @@ class _WayoBottomNavState extends State<WayoBottomNav> {
               ),
               if (widget.showInvoicesTab)
                 Expanded(
-                  child: _ProNavItem(
+                  child: WayoProNavTabItem(
                     tabKey: widget.invoicesTabKey,
                     coachTarget: ShellTutorialTarget.invoices,
                     coachAccent: coachAccent,
@@ -167,7 +167,7 @@ class _WayoBottomNavState extends State<WayoBottomNav> {
                   ),
                 ),
               Expanded(
-                child: _ProNavItem(
+                child: WayoProNavTabItem(
                   tabKey: widget.chatTabKey,
                   coachTarget: ShellTutorialTarget.chat,
                   coachAccent: coachAccent,
@@ -188,8 +188,9 @@ class _WayoBottomNavState extends State<WayoBottomNav> {
   }
 }
 
-class _ProNavItem extends StatelessWidget {
-  const _ProNavItem({
+/// Shared tab cell for advertiser, creator, and superadmin bottom nav bars.
+class WayoProNavTabItem extends StatelessWidget {
+  const WayoProNavTabItem({
     required this.icon,
     required this.label,
     required this.isSelected,

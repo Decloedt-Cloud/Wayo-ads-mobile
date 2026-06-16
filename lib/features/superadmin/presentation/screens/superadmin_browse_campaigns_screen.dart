@@ -20,6 +20,7 @@ import '../../../creator_campaigns/presentation/theme/creator_campaigns_chrome.d
 import '../../../creator_campaigns/presentation/widgets/creator_browse_campaign_grid_tile.dart';
 import '../../../creator_campaigns/presentation/widgets/creator_browse_explorer_filters.dart';
 import '../providers/superadmin_providers.dart';
+import '../widgets/superadmin_chrome_actions.dart';
 
 String _moneyLocale(AppLocale l) => switch (l) {
       AppLocale.en => 'en_US',
@@ -139,6 +140,9 @@ class _SuperadminBrowseCampaignsScreenState
         title: const Text('Browse campaigns'),
         backgroundColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
+        actions: const [
+          SuperadminChromeActions(trailingPadding: 12),
+        ],
       ),
       bottomNavigationBar: const WayoBlackBottomBar(),
       body: SafeArea(

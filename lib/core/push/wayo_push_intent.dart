@@ -209,7 +209,7 @@ final class WayoChatPushPayload {
 }
 
 /// Superadmin payouts tab deep link (FCM + in-app navigation).
-const kSuperadminWithdrawalsRoute = '/superadmin/withdrawals';
+const kSuperadminWithdrawalsRoute = '/superadmin?tab=withdrawals';
 
 /// FCM / tray payloads with a deep-link [route] (withdrawals, admin alerts, etc.).
 final class WayoRoutePushPayload {
@@ -254,14 +254,15 @@ final class WayoRoutePushPayload {
 
   static String? _resolveRoute(Map<String, dynamic> m) {
     final direct = _trimmed(m['route']);
-    if (direct != null && direct.startsWith('/')) return direct;
+    if (direct != null && direct.startsWith('/')) {
+      return normalizeWayoPushNavigationRoute(direct);
+    }
 
     final type = (_trimmed(m['type']) ??
             _trimmed(m['notificationType']) ??
             _trimmed(m['notification_type']) ??
             '')
         .toLowerCase();
-    if (type.contains('withdraw')) return kSuperadminWithdrawalsRoute;
 
     final actionUrl =
         _trimmed(m['actionUrl']) ?? _trimmed(m['action_url']);
@@ -278,6 +279,10 @@ final class WayoRoutePushPayload {
               })(),
       );
       if (normalized != null) return normalized;
+    }
+
+    if (type.contains('withdraw') || type.contains('payout')) {
+      return kSuperadminWithdrawalsRoute;
     }
 
     final campId =
@@ -327,7 +332,9 @@ final class WayoRoutePushPayload {
     if (raw == null || raw.isEmpty) return null;
     final trimmed = raw.trim();
     if (trimmed.startsWith('/')) {
-      return WayoRoutePushPayload(route: trimmed);
+      return WayoRoutePushPayload(
+        route: normalizeWayoPushNavigationRoute(trimmed),
+      );
     }
     try {
       final decoded = jsonDecode(trimmed);
@@ -361,7 +368,9 @@ String? resolveWayoPushRoute({
   final fromPayload = WayoRoutePushPayload.tryParse(payload);
   if (fromPayload != null) return fromPayload.route;
   final p = payload?.trim();
-  if (p != null && p.startsWith('/')) return p;
+  if (p != null && p.startsWith('/')) {
+    return normalizeWayoPushNavigationRoute(p);
+  }
   return null;
 }
 

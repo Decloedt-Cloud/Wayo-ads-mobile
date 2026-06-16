@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../auth/domain/auth_notifier.dart';
 import '../../../auth/domain/wayo_ads_account_role.dart';
+import '../../../shell/widgets/wayo_bottom_nav.dart';
+import '../widgets/superadmin_chrome_actions.dart';
 
 class SuperadminShellScreen extends ConsumerWidget {
   const SuperadminShellScreen({super.key, required this.child});
@@ -71,12 +74,17 @@ class SuperadminBottomNav extends StatelessWidget {
   final ValueChanged<int> onTap;
 
   static const _items = [
-    _NavItemData(icon: Icons.grid_view_rounded, label: 'Dashboard'),
+    _NavItemData(icon: Icons.space_dashboard_rounded, label: 'Dashboard'),
     _NavItemData(icon: Icons.people_alt_rounded, label: 'Users'),
     _NavItemData(icon: Icons.payments_rounded, label: 'Payouts'),
     _NavItemData(icon: Icons.campaign_rounded, label: 'Announce'),
     _NavItemData(icon: Icons.more_horiz_rounded, label: 'More'),
   ];
+
+  void _select(int index) {
+    HapticFeedback.lightImpact();
+    onTap(index);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -97,20 +105,21 @@ class SuperadminBottomNav extends StatelessWidget {
       child: SafeArea(
         top: false,
         child: Container(
-          height: 72,
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          height: kWayoBottomNavBarHeight,
+          padding: const EdgeInsets.symmetric(horizontal: 4),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: List.generate(_items.length, (index) {
-              final item = _items[index];
-              final isSelected = currentIndex == index;
-              return _NavItem(
-                icon: item.icon,
-                label: item.label,
-                isSelected: isSelected,
-                onTap: () => onTap(index),
-              );
-            }),
+            children: [
+              for (var index = 0; index < _items.length; index++)
+                Expanded(
+                  child: WayoProNavTabItem(
+                    icon: _items[index].icon,
+                    label: _items[index].label,
+                    isSelected: currentIndex == index,
+                    onTap: () => _select(index),
+                    coachAccent: AppColors.primary,
+                  ),
+                ),
+            ],
           ),
         ),
       ),
@@ -122,82 +131,6 @@ class _NavItemData {
   const _NavItemData({required this.icon, required this.label});
   final IconData icon;
   final String label;
-}
-
-class _NavItem extends StatelessWidget {
-  const _NavItem({
-    required this.icon,
-    required this.label,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String label;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
-        curve: Curves.easeOutCubic,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? AppColors.primary.withValues(alpha: isDark ? 0.15 : 0.1)
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 250),
-              curve: Curves.easeOutCubic,
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? AppColors.primary.withValues(alpha: 0.2)
-                    : Colors.transparent,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                icon,
-                size: 22,
-                color: isSelected
-                    ? AppColors.primary
-                    : (isDark
-                        ? Colors.white.withValues(alpha: 0.5)
-                        : Colors.black.withValues(alpha: 0.4)),
-              ),
-            ),
-            const SizedBox(height: 4),
-            AnimatedDefaultTextStyle(
-              duration: const Duration(milliseconds: 200),
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                color: isSelected
-                    ? AppColors.primary
-                    : (isDark
-                        ? Colors.white.withValues(alpha: 0.5)
-                        : Colors.black.withValues(alpha: 0.4)),
-                letterSpacing: isSelected ? 0.3 : 0,
-              ),
-              child: Text(label),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }
 
 class SuperadminMoreScreen extends ConsumerWidget {
@@ -213,6 +146,9 @@ class SuperadminMoreScreen extends ConsumerWidget {
         title: const Text('More'),
         backgroundColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
+        actions: const [
+          SuperadminChromeActions(trailingPadding: 12),
+        ],
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),

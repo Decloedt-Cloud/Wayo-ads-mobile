@@ -15,12 +15,21 @@ enum CreatorSocialPostStatus {
     final s = (raw as String?)?.trim().toUpperCase() ?? '';
     return switch (s) {
       'PENDING' => CreatorSocialPostStatus.pending,
-      'APPROVED' || 'VALIDATED' => CreatorSocialPostStatus.approved,
+      'APPROVED' ||
+      'VALIDATED' ||
+      'ACTIVE' ||
+      'PAUSED' ||
+      'COMPLETED' =>
+        CreatorSocialPostStatus.approved,
       'REJECTED' => CreatorSocialPostStatus.rejected,
       'FLAGGED' => CreatorSocialPostStatus.flagged,
       _ => CreatorSocialPostStatus.unknown,
     };
   }
+
+  /// True when this post still occupies the single-submission slot.
+  bool get blocksResubmission =>
+      this != CreatorSocialPostStatus.rejected;
 }
 
 /// Creator-visible video submission. The advertiser reviews these in their

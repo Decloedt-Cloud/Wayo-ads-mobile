@@ -165,9 +165,20 @@ class _Body extends ConsumerWidget {
             ),
         ],
         const SizedBox(height: 20),
-        _ActionBar(campaign: c),
+        _ActionBar(campaign: _campaignForActions(ref, c)),
       ],
     );
+  }
+
+  CreatorCampaignDetail _campaignForActions(
+    WidgetRef ref,
+    CreatorCampaignDetail c,
+  ) {
+    if (!c.isApproved || !c.type.requiresVideoSubmission) return c;
+    final posts =
+        ref.watch(creatorMySubmissionsProvider(campaignId)).valueOrNull;
+    if (posts == null) return c;
+    return c.mergeSocialPosts(posts);
   }
 }
 
@@ -549,21 +560,6 @@ class _ActionBar extends ConsumerWidget {
 
   final CreatorCampaignDetail campaign;
 
-  bool get _canSubmitMore {
-    if (!campaign.isApproved) return false;
-    if (!campaign.type.requiresVideoSubmission) return false;
-    if (campaign.allowMultiplePosts == true) return true;
-    // If multiple posts aren't allowed, only permit a new submission when the
-    // previous one was rejected (same rule the backend enforces).
-    final hasActive = campaign.myVideos.any(
-      (p) =>
-          p.status == CreatorSocialPostStatus.pending ||
-          p.status == CreatorSocialPostStatus.approved ||
-          p.status == CreatorSocialPostStatus.flagged,
-    );
-    return !hasActive;
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final t = context.t;
@@ -575,7 +571,7 @@ class _ActionBar extends ConsumerWidget {
 
     return Column(
       children: [
-        if (_canSubmitMore)
+        if (c.canSubmitVideoPost)
           SizedBox(
             height: 52,
             child: ElevatedButton.icon(
@@ -614,7 +610,7 @@ class _ActionBar extends ConsumerWidget {
               ),
             ),
           )
-        else if (c.type.requiresVideoSubmission)
+        else if (c.shouldShowSubmitPendingNotice)
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(

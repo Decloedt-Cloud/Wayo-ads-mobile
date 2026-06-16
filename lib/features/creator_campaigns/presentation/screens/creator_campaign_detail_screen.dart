@@ -269,9 +269,17 @@ class _Body extends ConsumerWidget {
           ),
         ],
         const SizedBox(height: 18),
-        _ActionBar(campaign: c),
+        _ActionBar(campaign: _campaignForActions(ref, c)),
       ],
     );
+  }
+
+  /// Merges live submissions so the action bar hides "Submit" after upload.
+  CreatorCampaignDetail _campaignForActions(WidgetRef ref, CreatorCampaignDetail c) {
+    if (!c.isApproved || !c.type.requiresVideoSubmission) return c;
+    final posts = ref.watch(creatorMySubmissionsProvider(campaignId)).valueOrNull;
+    if (posts == null) return c;
+    return c.mergeSocialPosts(posts);
   }
 
   IconData _typeIcon(CreatorCampaignType t) => switch (t) {
@@ -984,38 +992,78 @@ class _ActionBar extends ConsumerWidget {
     }
 
     if (c.isApproved) {
+      final isVideoCampaign = c.type.requiresVideoSubmission;
+      final canSubmit = c.canSubmitVideoPost;
+
       return Column(
         children: [
-          SizedBox(
-            height: 52,
-            child: ElevatedButton.icon(
-              onPressed: () {
-                context.push(
-                  '/creator/campaigns/${c.id}/application',
-                  extra: <String, Object?>{'title': c.title},
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: CreatorCampaignsChrome.amber(context),
-                foregroundColor: const Color(0xFF0A0A0F),
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
+          if (!isVideoCampaign || canSubmit)
+            SizedBox(
+              height: 52,
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  context.push(
+                    '/creator/campaigns/${c.id}/application',
+                    extra: <String, Object?>{'title': c.title},
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: CreatorCampaignsChrome.amber(context),
+                  foregroundColor: const Color(0xFF0A0A0F),
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
                 ),
-              ),
-              icon: const Icon(Icons.upload_rounded),
-              label: Text(
-                c.type.requiresVideoSubmission
-                    ? t.creator.campaigns.submit_cta
-                    : t.creator.campaigns.open_application_cta,
-                style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.2,
+                icon: Icon(
+                  isVideoCampaign && canSubmit
+                      ? Icons.upload_rounded
+                      : Icons.folder_open_rounded,
+                ),
+                label: Text(
+                  isVideoCampaign && canSubmit
+                      ? t.creator.campaigns.submit_cta
+                      : t.creator.campaigns.open_application_cta,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.2,
+                  ),
                 ),
               ),
             ),
-          ),
+          if (isVideoCampaign && !canSubmit) ...[
+            SizedBox(
+              height: 52,
+              child: OutlinedButton.icon(
+                onPressed: () {
+                  context.push(
+                    '/creator/campaigns/${c.id}/application',
+                    extra: <String, Object?>{'title': c.title},
+                  );
+                },
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: CreatorCampaignsChrome.amber(context),
+                  side: BorderSide(
+                    color: CreatorCampaignsChrome.amber(context)
+                        .withValues(alpha: 0.5),
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+                icon: const Icon(Icons.folder_open_rounded),
+                label: Text(
+                  t.creator.campaigns.open_application_cta,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.2,
+                  ),
+                ),
+              ),
+            ),
+          ],
           const SizedBox(height: 10),
           SizedBox(
             height: 48,

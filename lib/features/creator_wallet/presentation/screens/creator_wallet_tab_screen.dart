@@ -21,6 +21,7 @@ import '../widgets/business_info_cta.dart';
 import 'business_info_screen.dart';
 import '../widgets/creator_stripe_connect_card.dart';
 import '../widgets/creator_wallet_hero.dart';
+import '../widgets/creator_wallet_stats_row.dart';
 import '../widgets/creator_withdraw_sheet.dart';
 import '../widgets/creator_withdrawals_list.dart';
 
@@ -320,6 +321,8 @@ class _BalanceBlock extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         CreatorWalletHero(balance: balance, moneyLocale: moneyLocale),
+        const SizedBox(height: 10),
+        CreatorWalletStatsRow(page: page, moneyLocale: moneyLocale),
         const SizedBox(height: 12),
         _WithdrawButton(
           enabled: canWithdraw,
@@ -477,6 +480,30 @@ class _HeroSkeleton extends StatelessWidget {
               color: AppColors.surfaceElevatedOf(context),
               borderRadius: BorderRadius.circular(24),
             ),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: Container(
+                  height: 118,
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceElevatedOf(context),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Container(
+                  height: 118,
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceElevatedOf(context),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 12),
           Container(

@@ -33,6 +33,7 @@ abstract interface class InvoicesRemote {
 
   Future<Uint8List> fetchInvoicePdf(
     String invoiceId, {
+    required String locale,
     void Function(int received, int total)? onProgress,
   });
 }
@@ -320,10 +321,12 @@ final class InvoicesRemoteDatasource implements InvoicesRemote {
   @override
   Future<Uint8List> fetchInvoicePdf(
     String invoiceId, {
+    required String locale,
     void Function(int received, int total)? onProgress,
   }) async {
     final res = await _dio.get<Object?>(
       AuthRuntimeConfig.instance.wayoAdsRequestPath(ApiEndpoints.invoicePdf(invoiceId)),
+      queryParameters: {'locale': locale},
       options: Options(responseType: ResponseType.bytes),
       onReceiveProgress: onProgress,
     );

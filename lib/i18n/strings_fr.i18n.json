@@ -273,7 +273,13 @@
       "cpc_metric": "CPC (par clic)",
       "description_title": "Description",
       "show_more": "Voir plus",
-      "show_less": "Voir moins"
+      "show_less": "Voir moins",
+      "top_creators_title": "Meilleurs créateurs",
+      "top_creators_subtitle": "Vos meilleurs créateurs, classés par vues validées.",
+      "top_creators_views": "$count vues validées",
+      "top_creators_earned": "gagné",
+      "top_creators_empty_title": "Pas encore de performances",
+      "top_creators_empty_subtitle": "Les statistiques apparaîtront ici dès que vos créateurs approuvés généreront des vues."
     },
     "create": {
       "title": "Nouvelle campagne",
@@ -466,7 +472,10 @@
       "withdraw_subtitle": "Retirez votre solde disponible vers votre compte Stripe connecté.",
       "available_balance": "Disponible",
       "pending_balance": "En attente",
+      "pending_withdrawals": "Retraits en cours",
+      "in_transit": "En transit",
       "total_earned": "Total gagné",
+      "lifetime_earnings": "Gains cumulés",
       "load_error": "Impossible de charger votre portefeuille",
       "withdraw_button": "Retirer",
       "withdraw_sheet_title": "Demander un retrait",
@@ -609,7 +618,14 @@
       "submission_status_approved": "Approuvé",
       "submission_status_rejected": "Refusé",
       "submission_status_flagged": "Signalé",
-      "submission_views": "$views vues validées"
+      "submission_views": "$views vues validées",
+      "tracking_link_title": "Votre lien de suivi",
+      "tracking_link_subtitle": "Partagez ce lien court dans votre bio, posts ou stories. Les clics sont comptabilisés automatiquement.",
+      "tracking_link_copy": "Copier le lien",
+      "tracking_link_copied": "Copié !",
+      "tracking_link_preparing": "Votre lien unique est en cours de préparation… Tirez pour actualiser dans un instant.",
+      "tracking_link_error": "Impossible de charger votre lien de suivi.",
+      "tracking_link_stats": "$validated clics validés · $recorded clics enregistrés"
     },
     "stats": {
       "earnings_title": "Gains totaux",
@@ -711,6 +727,8 @@
     "inbox_subtitle": "Conversations sécurisées pour vos campagnes",
     "conversation_unknown": "Conversation",
     "thread_fallback_title": "Chat",
+    "role_creator": "Créateur",
+    "role_advertiser": "Annonceur",
     "composer_hint": "Écrire un message…",
     "typing": "En train d’écrire…",
     "error_load_threads": "Impossible de charger vos conversations. Réessayez.",

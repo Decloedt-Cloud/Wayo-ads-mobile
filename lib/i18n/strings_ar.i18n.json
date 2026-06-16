@@ -273,7 +273,13 @@
       "cpc_metric": "CPC (لكل نقرة)",
       "description_title": "الوصف",
       "show_more": "عرض المزيد",
-      "show_less": "عرض أقل"
+      "show_less": "عرض أقل",
+      "top_creators_title": "أفضل المنشئين",
+      "top_creators_subtitle": "أفضل المنشئين لديك، مرتبين حسب المشاهدات المعتمدة.",
+      "top_creators_views": "$count مشاهدة معتمدة",
+      "top_creators_earned": "ربح",
+      "top_creators_empty_title": "لا توجد نتائج بعد",
+      "top_creators_empty_subtitle": "ستظهر إحصائيات المنشئين هنا بمجرد أن يبدأ المنشئون المعتمدون في تحقيق المشاهدات."
     },
     "create": {
       "title": "حملة جديدة",
@@ -465,7 +471,10 @@
       "withdraw_subtitle": "اسحب رصيدك المتاح إلى حساب Stripe المربوط.",
       "available_balance": "المتاح",
       "pending_balance": "قيد الانتظار",
+      "pending_withdrawals": "سحوبات قيد المعالجة",
+      "in_transit": "قيد التحويل",
       "total_earned": "إجمالي الأرباح",
+      "lifetime_earnings": "الأرباح التراكمية",
       "load_error": "تعذّر تحميل محفظتك",
       "withdraw_button": "سحب",
       "withdraw_sheet_title": "طلب سحب",
@@ -608,7 +617,14 @@
       "submission_status_approved": "مقبول",
       "submission_status_rejected": "مرفوض",
       "submission_status_flagged": "تم الإبلاغ",
-      "submission_views": "$views مشاهدة موثقة"
+      "submission_views": "$views مشاهدة موثقة",
+      "tracking_link_title": "رابط التتبع الخاص بك",
+      "tracking_link_subtitle": "شارك هذا الرابط القصير في السيرة أو المنشورات. يتم تتبع النقرات تلقائياً.",
+      "tracking_link_copy": "نسخ الرابط",
+      "tracking_link_copied": "تم النسخ!",
+      "tracking_link_preparing": "يتم إعداد رابطك الفريد… اسحب للتحديث بعد لحظات.",
+      "tracking_link_error": "تعذّر تحميل رابط التتبع.",
+      "tracking_link_stats": "$validated نقرة مؤهلة · $recorded نقرة مسجّلة"
     },
     "stats": {
       "earnings_title": "إجمالي الأرباح",
@@ -710,6 +726,8 @@
     "inbox_subtitle": "محادثات آمنة لحملاتك",
     "conversation_unknown": "محادثة",
     "thread_fallback_title": "محادثة",
+    "role_creator": "منشئ",
+    "role_advertiser": "معلن",
     "composer_hint": "اكتب رسالة…",
     "typing": "يكتب…",
     "error_load_threads": "تعذّر تحميل محادثاتك. أعد المحاولة.",

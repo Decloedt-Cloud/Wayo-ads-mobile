@@ -65,8 +65,10 @@ final class InvoicesRepository {
 
   Future<Uint8List> downloadPdf(
     String invoiceId, {
+    required String locale,
     void Function(int received, int total)? onProgress,
-  }) => _remote.fetchInvoicePdf(invoiceId, onProgress: onProgress);
+  }) =>
+      _remote.fetchInvoicePdf(invoiceId, locale: locale, onProgress: onProgress);
 
   /// Normalises low-level [DioException] / network glitches into the typed
   /// [AuthException] tree, so screens can render proper i18n error states.

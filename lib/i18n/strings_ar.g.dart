@@ -603,6 +603,8 @@ class _TranslationsChatAr extends TranslationsChatEn {
 	@override String get inbox_subtitle => 'محادثات آمنة لحملاتك';
 	@override String get conversation_unknown => 'محادثة';
 	@override String get thread_fallback_title => 'محادثة';
+	@override String get role_creator => 'منشئ';
+	@override String get role_advertiser => 'معلن';
 	@override String get composer_hint => 'اكتب رسالة…';
 	@override String get typing => 'يكتب…';
 	@override String get error_load_threads => 'تعذّر تحميل محادثاتك. أعد المحاولة.';
@@ -1109,6 +1111,12 @@ class _TranslationsAdvertiserCampaignsDetailAr extends TranslationsAdvertiserCam
 	@override String get description_title => 'الوصف';
 	@override String get show_more => 'عرض المزيد';
 	@override String get show_less => 'عرض أقل';
+	@override String get top_creators_title => 'أفضل المنشئين';
+	@override String get top_creators_subtitle => 'أفضل المنشئين لديك، مرتبين حسب المشاهدات المعتمدة.';
+	@override String top_creators_views({required Object count}) => '${count} مشاهدة معتمدة';
+	@override String get top_creators_earned => 'ربح';
+	@override String get top_creators_empty_title => 'لا توجد نتائج بعد';
+	@override String get top_creators_empty_subtitle => 'ستظهر إحصائيات المنشئين هنا بمجرد أن يبدأ المنشئون المعتمدون في تحقيق المشاهدات.';
 }
 
 // Path: advertiser_campaigns.create
@@ -1193,7 +1201,10 @@ class _TranslationsCreatorWalletAr extends TranslationsCreatorWalletEn {
 	@override String get withdraw_subtitle => 'اسحب رصيدك المتاح إلى حساب Stripe المربوط.';
 	@override String get available_balance => 'المتاح';
 	@override String get pending_balance => 'قيد الانتظار';
+	@override String get pending_withdrawals => 'سحوبات قيد المعالجة';
+	@override String get in_transit => 'قيد التحويل';
 	@override String get total_earned => 'إجمالي الأرباح';
+	@override String get lifetime_earnings => 'الأرباح التراكمية';
 	@override String get load_error => 'تعذّر تحميل محفظتك';
 	@override String get withdraw_button => 'سحب';
 	@override String get withdraw_sheet_title => 'طلب سحب';
@@ -1344,6 +1355,13 @@ class _TranslationsCreatorCampaignsAr extends TranslationsCreatorCampaignsEn {
 	@override String get submission_status_rejected => 'مرفوض';
 	@override String get submission_status_flagged => 'تم الإبلاغ';
 	@override String submission_views({required Object views}) => '${views} مشاهدة موثقة';
+	@override String get tracking_link_title => 'رابط التتبع الخاص بك';
+	@override String get tracking_link_subtitle => 'شارك هذا الرابط القصير في السيرة أو المنشورات. يتم تتبع النقرات تلقائياً.';
+	@override String get tracking_link_copy => 'نسخ الرابط';
+	@override String get tracking_link_copied => 'تم النسخ!';
+	@override String get tracking_link_preparing => 'يتم إعداد رابطك الفريد… اسحب للتحديث بعد لحظات.';
+	@override String get tracking_link_error => 'تعذّر تحميل رابط التتبع.';
+	@override String tracking_link_stats({required Object validated, required Object recorded}) => '${validated} نقرة مؤهلة · ${recorded} نقرة مسجّلة';
 }
 
 // Path: creator.stats
@@ -1691,6 +1709,12 @@ extension on TranslationsAr {
 			case 'advertiser_campaigns.detail.description_title': return 'الوصف';
 			case 'advertiser_campaigns.detail.show_more': return 'عرض المزيد';
 			case 'advertiser_campaigns.detail.show_less': return 'عرض أقل';
+			case 'advertiser_campaigns.detail.top_creators_title': return 'أفضل المنشئين';
+			case 'advertiser_campaigns.detail.top_creators_subtitle': return 'أفضل المنشئين لديك، مرتبين حسب المشاهدات المعتمدة.';
+			case 'advertiser_campaigns.detail.top_creators_views': return ({required Object count}) => '${count} مشاهدة معتمدة';
+			case 'advertiser_campaigns.detail.top_creators_earned': return 'ربح';
+			case 'advertiser_campaigns.detail.top_creators_empty_title': return 'لا توجد نتائج بعد';
+			case 'advertiser_campaigns.detail.top_creators_empty_subtitle': return 'ستظهر إحصائيات المنشئين هنا بمجرد أن يبدأ المنشئون المعتمدون في تحقيق المشاهدات.';
 			case 'advertiser_campaigns.create.title': return 'حملة جديدة';
 			case 'advertiser_campaigns.create.section_basics': return 'المعلومات الأساسية';
 			case 'advertiser_campaigns.create.section_budget': return 'الميزانية والتسعير';
@@ -1864,7 +1888,10 @@ extension on TranslationsAr {
 			case 'creator.wallet.withdraw_subtitle': return 'اسحب رصيدك المتاح إلى حساب Stripe المربوط.';
 			case 'creator.wallet.available_balance': return 'المتاح';
 			case 'creator.wallet.pending_balance': return 'قيد الانتظار';
+			case 'creator.wallet.pending_withdrawals': return 'سحوبات قيد المعالجة';
+			case 'creator.wallet.in_transit': return 'قيد التحويل';
 			case 'creator.wallet.total_earned': return 'إجمالي الأرباح';
+			case 'creator.wallet.lifetime_earnings': return 'الأرباح التراكمية';
 			case 'creator.wallet.load_error': return 'تعذّر تحميل محفظتك';
 			case 'creator.wallet.withdraw_button': return 'سحب';
 			case 'creator.wallet.withdraw_sheet_title': return 'طلب سحب';
@@ -2006,6 +2033,13 @@ extension on TranslationsAr {
 			case 'creator.campaigns.submission_status_rejected': return 'مرفوض';
 			case 'creator.campaigns.submission_status_flagged': return 'تم الإبلاغ';
 			case 'creator.campaigns.submission_views': return ({required Object views}) => '${views} مشاهدة موثقة';
+			case 'creator.campaigns.tracking_link_title': return 'رابط التتبع الخاص بك';
+			case 'creator.campaigns.tracking_link_subtitle': return 'شارك هذا الرابط القصير في السيرة أو المنشورات. يتم تتبع النقرات تلقائياً.';
+			case 'creator.campaigns.tracking_link_copy': return 'نسخ الرابط';
+			case 'creator.campaigns.tracking_link_copied': return 'تم النسخ!';
+			case 'creator.campaigns.tracking_link_preparing': return 'يتم إعداد رابطك الفريد… اسحب للتحديث بعد لحظات.';
+			case 'creator.campaigns.tracking_link_error': return 'تعذّر تحميل رابط التتبع.';
+			case 'creator.campaigns.tracking_link_stats': return ({required Object validated, required Object recorded}) => '${validated} نقرة مؤهلة · ${recorded} نقرة مسجّلة';
 			case 'creator.stats.earnings_title': return 'إجمالي الأرباح';
 			case 'creator.stats.pending': return 'قيد الانتظار';
 			case 'creator.stats.validated_views': return 'المشاهدات المعتمدة';
@@ -2096,6 +2130,8 @@ extension on TranslationsAr {
 			case 'chat.inbox_subtitle': return 'محادثات آمنة لحملاتك';
 			case 'chat.conversation_unknown': return 'محادثة';
 			case 'chat.thread_fallback_title': return 'محادثة';
+			case 'chat.role_creator': return 'منشئ';
+			case 'chat.role_advertiser': return 'معلن';
 			case 'chat.composer_hint': return 'اكتب رسالة…';
 			case 'chat.typing': return 'يكتب…';
 			case 'chat.error_load_threads': return 'تعذّر تحميل محادثاتك. أعد المحاولة.';

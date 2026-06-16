@@ -205,7 +205,10 @@ final class CreatorWithdrawal extends Equatable {
           (json['currency'] as String?)?.toUpperCase().trim().isNotEmpty == true
           ? (json['currency'] as String).toUpperCase()
           : 'EUR',
-      status: CreatorWithdrawalStatus.fromApi(json['status']),
+      status: CreatorWithdrawalStatus.fromApi(
+        json['status'],
+        processedAt: parseDate(json['processedAt']),
+      ),
       createdAt: parseDate(json['createdAt']) ?? DateTime.now(),
       platformFeeCents: json['platformFeeCents'] == null
           ? null
@@ -254,11 +257,15 @@ enum CreatorWithdrawalStatus {
   cancelled,
   unknown;
 
-  static CreatorWithdrawalStatus fromApi(dynamic raw) {
+  static CreatorWithdrawalStatus fromApi(
+    dynamic raw, {
+    DateTime? processedAt,
+  }) {
     final s = (raw as String?)?.trim().toUpperCase() ?? '';
-    return switch (s) {
+    final parsed = switch (s) {
       'PENDING' => CreatorWithdrawalStatus.pending,
       'PROCESSING' => CreatorWithdrawalStatus.processing,
+      'VALIDATED' => CreatorWithdrawalStatus.succeeded,
       'SUCCEEDED' ||
       'SUCCESS' ||
       'COMPLETED' => CreatorWithdrawalStatus.succeeded,
@@ -266,7 +273,13 @@ enum CreatorWithdrawalStatus {
       'CANCELLED' || 'CANCELED' => CreatorWithdrawalStatus.cancelled,
       _ => CreatorWithdrawalStatus.unknown,
     };
+    if (parsed == CreatorWithdrawalStatus.unknown && processedAt != null) {
+      return CreatorWithdrawalStatus.succeeded;
+    }
+    return parsed;
   }
+
+  bool get isValidated => this == CreatorWithdrawalStatus.succeeded;
 }
 
 /// Merged payload exposed to the UI — one provider call → one screen render.
@@ -297,6 +310,26 @@ final class CreatorWalletPage extends Equatable {
 
   @override
   List<Object?> get props => [balance, limits, withdrawals, canSimulate];
+}
+
+extension CreatorWalletPageStats on CreatorWalletPage {
+  /// Net amount of payout requests still [PENDING] or [PROCESSING] (web: in transit).
+  int get pendingWithdrawalsCents => withdrawals
+      .where(
+        (w) =>
+            w.status == CreatorWithdrawalStatus.pending ||
+            w.status == CreatorWithdrawalStatus.processing,
+      )
+      .fold(0, (sum, w) => sum + w.amountCents);
+
+  /// Lifetime earnings — prefers API [totalEarnedCents], else reconstructs from balance + paid outs.
+  int get calculatedTotalEarnedCents {
+    if (balance.totalEarnedCents > 0) return balance.totalEarnedCents;
+    final paidOut = withdrawals
+        .where((w) => w.status == CreatorWithdrawalStatus.succeeded)
+        .fold(0, (sum, w) => sum + w.amountCents);
+    return balance.availableCents + balance.pendingCents + paidOut;
+  }
 }
 
 /// `GET /api/creator/stripe-connect/status` — is the creator onboarded?

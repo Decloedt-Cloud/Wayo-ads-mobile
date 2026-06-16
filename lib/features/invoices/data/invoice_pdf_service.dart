@@ -7,6 +7,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../../core/errors/auth_exceptions.dart';
 import '../domain/invoice.dart';
+import '../domain/invoice_pdf_locale.dart';
 import 'invoices_repository.dart';
 
 /// Stateless service responsible for downloading, saving, opening and sharing
@@ -31,7 +32,11 @@ final class InvoicePdfService {
     void Function(int received, int total)? onProgress,
   }) async {
     try {
-      final bytes = await _repo.downloadPdf(invoice.id, onProgress: onProgress);
+      final bytes = await _repo.downloadPdf(
+        invoice.id,
+        locale: invoicePdfLocaleForApp(),
+        onProgress: onProgress,
+      );
       final dir = await getTemporaryDirectory();
       final file = File('${dir.path}/${_filenameFor(invoice)}');
       await file.writeAsBytes(bytes, flush: true);

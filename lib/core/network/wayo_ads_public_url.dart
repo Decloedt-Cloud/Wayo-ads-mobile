@@ -137,3 +137,18 @@ String? normalizeWayoAdsMediaUrl(String? urlOrPath) {
   }
   return resolveWayoAdsPublicUrl(raw);
 }
+
+/// Public short URL creators share for LINK campaigns (`https://…/t/{slug}`).
+String? buildPublicTrackingLinkUrl(String slug) {
+  final s = slug.trim();
+  if (s.isEmpty) return null;
+  var origin = AuthRuntimeConfig.instance.resolvedWayoAdsPublicAssetOrigin;
+  origin ??= AuthRuntimeConfig.instance.resolvedWayoAdsBaseUrl
+      .replaceAll(RegExp(r'/+$'), '');
+  if (origin.endsWith('/api')) {
+    origin = origin.substring(0, origin.length - 4);
+  }
+  origin = origin.replaceAll(RegExp(r'/+$'), '');
+  if (origin.isEmpty) return '/t/$s';
+  return _maybeRemapLoopbackHostForAndroidEmulator('$origin/t/$s');
+}

@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../i18n/strings.g.dart';
+import '../formatting/chat_partner_role.dart';
+import '../widgets/chat_role_badge.dart';
 import 'cinematic_chat_colors.dart';
 import 'cinematic_gradient_ring_painter.dart';
 
@@ -25,6 +27,7 @@ class CinematicChatHeaderDelegate extends SliverPersistentHeaderDelegate {
     required this.titleLetter,
     required this.topSafeInset,
     this.partnerAvatarUrl = '',
+    this.partnerRole,
   });
 
   final String headerTitle;
@@ -33,6 +36,9 @@ class CinematicChatHeaderDelegate extends SliverPersistentHeaderDelegate {
   final bool partnerOnline;
   final VoidCallback onBack;
   final String titleLetter;
+
+  /// Role badge (Creator / Advertiser) shown next to the title; null hides it.
+  final ChatPartnerRole? partnerRole;
 
   /// Resolved URL ([resolveChatMediaUrl]); empty = monogram in avatar.
   final String partnerAvatarUrl;
@@ -94,16 +100,27 @@ class CinematicChatHeaderDelegate extends SliverPersistentHeaderDelegate {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(
-                          headerTitle,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.outfit(
-                            fontSize: titleSize,
-                            fontWeight: FontWeight.w700,
-                            color: ct.textPrimary,
-                            height: 1.1,
-                          ),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Flexible(
+                              child: Text(
+                                headerTitle,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: GoogleFonts.outfit(
+                                  fontSize: titleSize,
+                                  fontWeight: FontWeight.w700,
+                                  color: ct.textPrimary,
+                                  height: 1.1,
+                                ),
+                              ),
+                            ),
+                            if (partnerRole != null) ...[
+                              const SizedBox(width: 8),
+                              ChatRoleBadge(role: partnerRole!),
+                            ],
+                          ],
                         ),
                         SizedBox(height: u > 0.92 ? 2 : 4),
                         _StatusPill(
@@ -132,7 +149,8 @@ class CinematicChatHeaderDelegate extends SliverPersistentHeaderDelegate {
       oldDelegate.topSafeInset != topSafeInset ||
       oldDelegate.titleLetter != titleLetter ||
       oldDelegate.onBack != onBack ||
-      oldDelegate.partnerAvatarUrl != partnerAvatarUrl;
+      oldDelegate.partnerAvatarUrl != partnerAvatarUrl ||
+      oldDelegate.partnerRole != partnerRole;
 }
 
 class _AvatarRing extends StatefulWidget {

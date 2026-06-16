@@ -4,6 +4,7 @@ import '../domain/creator_browse_campaign.dart';
 import '../domain/creator_browse_page_result.dart';
 import '../domain/creator_campaign_detail.dart';
 import '../domain/creator_social_post.dart';
+import '../domain/creator_tracking_link.dart';
 import 'creator_campaigns_remote_datasource.dart';
 
 /// Repository for the creator campaigns feature.
@@ -103,4 +104,7 @@ class CreatorCampaignsRepository {
     platform: platform,
     postUrl: postUrl,
   );
+
+  Future<List<CreatorTrackingLink>> fetchTrackingLinks(String campaignId) =>
+      _remote.fetchTrackingLinks(campaignId);
 }

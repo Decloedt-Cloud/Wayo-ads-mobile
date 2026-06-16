@@ -37,11 +37,58 @@ class AuthInterceptor extends QueuedInterceptor {
   /// force logout (covers token-propagation races).
   static const Duration _postLoginGrace = Duration(seconds: 4);
 
+  /// Last time Auth_Wayo confirmed the token is still valid. Lets parallel 401s
+  /// (balance + campaigns + notifications failing together) skip re-verifying.
+  static DateTime? _lastVerifiedValidAt;
+
+  /// How long a positive Auth_Wayo verification is trusted before re-checking.
+  static const Duration _verifyValidTtl = Duration(seconds: 20);
+
+  /// Coalesces concurrent token verifications into a single Auth_Wayo call.
+  static Future<TokenValidity>? _verifyInFlight;
+
+  /// Ensures force-logout fires only once even when many parallel requests 401
+  /// at the same time (otherwise the push-unregister/logout flow runs N times).
+  static bool _forcedLogout = false;
+
   /// Reset state after successful login (clears any stale cooldown).
   static void resetSessionState() {
     _refreshCooldownUntil = null;
     _refreshCompleter = null;
     _sessionStartedAt = DateTime.now();
+    _lastVerifiedValidAt = null;
+    _verifyInFlight = null;
+    _forcedLogout = false;
+  }
+
+  /// Triggers force logout exactly once per session.
+  void _forceLogoutOnce() {
+    if (_forcedLogout) return;
+    _forcedLogout = true;
+    notifyAuthForceLogout();
+  }
+
+  /// Authoritative check (with short positive cache + coalescing) asking
+  /// Auth_Wayo whether the current access token is still accepted.
+  Future<TokenValidity> _verifyTokenAuthoritative(String token) {
+    final last = _lastVerifiedValidAt;
+    if (last != null && DateTime.now().difference(last) < _verifyValidTtl) {
+      return Future.value(TokenValidity.valid);
+    }
+    final existing = _verifyInFlight;
+    if (existing != null) {
+      return existing;
+    }
+    final fut = AuthRemote.verifyAccessToken(token).then((v) {
+      if (v == TokenValidity.valid) {
+        _lastVerifiedValidAt = DateTime.now();
+      }
+      return v;
+    }).whenComplete(() {
+      _verifyInFlight = null;
+    });
+    _verifyInFlight = fut;
+    return fut;
   }
 
   static bool get _pastPostLoginGrace {
@@ -161,15 +208,41 @@ class AuthInterceptor extends QueuedInterceptor {
 
     final refreshTok = await storage.getRefreshToken();
     if (refreshTok == null || refreshTok.isEmpty) {
-      // Mobile uses Passport personal-access tokens (no refresh token). A genuine
-      // 401 here means the token was revoked server-side — e.g. the user tapped
-      // "Disconnect Other Device" on the web. Past the brief post-login grace
-      // window, end the session so the mobile reflects the remote logout.
-      if (_pastPostLoginGrace) {
+      // Mobile uses Passport personal-access tokens (no refresh token). A 401 on
+      // a downstream API (e.g. Wayo-ads) can mean either:
+      //   (a) the token was genuinely revoked (e.g. "Disconnect Other Device"), or
+      //   (b) Wayo-ads couldn't validate the Bearer because its Auth_Wayo
+      //       introspection had a transient blip (timeout/5xx/429) — the session
+      //       is actually still alive.
+      // Within the post-login grace window it's almost always token propagation,
+      // so just pass through.
+      if (!_pastPostLoginGrace) {
         if (kDebugMode) {
-          debugPrint('[auth] 401 on $path — token revoked (no refresh), forcing logout');
+          debugPrint('[auth] 401 on $path — no refresh token (post-login grace), passing through');
         }
-        notifyAuthForceLogout();
+        return handler.next(err);
+      }
+
+      // Past grace: ask Auth_Wayo (the session owner) before ending the session.
+      // Only an authoritative 401/403 from Auth_Wayo forces logout.
+      final token = await storage.getAccessToken();
+      if (token == null || token.isEmpty) {
+        // A momentarily empty/null read is almost always a secure-storage race
+        // (parallel reads right after login) — NOT a revoked session. Forcing
+        // logout here causes the "abrupt disconnect" right after sign-in. Pass
+        // the error through; the next read / proactive refresh recovers.
+        if (kDebugMode) {
+          debugPrint('[auth] 401 on $path — local token empty (storage race), not logging out');
+        }
+        return handler.next(err);
+      }
+
+      final validity = await _verifyTokenAuthoritative(token);
+      if (validity == TokenValidity.invalid) {
+        if (kDebugMode) {
+          debugPrint('[auth] 401 on $path — Auth confirms token revoked, forcing logout');
+        }
+        _forceLogoutOnce();
         return handler.reject(
           DioException(
             requestOptions: err.requestOptions,
@@ -178,9 +251,11 @@ class AuthInterceptor extends QueuedInterceptor {
           ),
         );
       }
-      // Within grace window — likely a token-propagation race; pass through.
+
+      // Token still valid (or undeterminable) → the 401 is a downstream blip.
+      // Keep the user signed in; surface the error so the screen can retry.
       if (kDebugMode) {
-        debugPrint('[auth] 401 on $path — no refresh token (post-login grace), passing through');
+        debugPrint('[auth] 401 on $path — session still valid ($validity), not logging out');
       }
       return handler.next(err);
     }
@@ -243,7 +318,7 @@ class AuthInterceptor extends QueuedInterceptor {
           return;
         case Failure(:final error):
           if (error is SessionInvalidException) {
-            notifyAuthForceLogout();
+            _forceLogoutOnce();
             if (kDebugMode) {
               debugPrint('[auth] Session invalidated — forcing logout');
             }

@@ -606,6 +606,8 @@ class TranslationsChatEn {
 	String get inbox_subtitle => 'Secure conversations for your campaigns';
 	String get conversation_unknown => 'Conversation';
 	String get thread_fallback_title => 'Chat';
+	String get role_creator => 'Creator';
+	String get role_advertiser => 'Advertiser';
 	String get composer_hint => 'Write a message…';
 	String get typing => 'Typing…';
 	String get error_load_threads => 'Could not load your conversations. Try again.';
@@ -1112,6 +1114,12 @@ class TranslationsAdvertiserCampaignsDetailEn {
 	String get description_title => 'Description';
 	String get show_more => 'Show more';
 	String get show_less => 'Show less';
+	String get top_creators_title => 'Top creators';
+	String get top_creators_subtitle => 'Your best performers, ranked by validated views.';
+	String top_creators_views({required Object count}) => '${count} validated views';
+	String get top_creators_earned => 'earned';
+	String get top_creators_empty_title => 'No performance yet';
+	String get top_creators_empty_subtitle => 'Creator stats will appear here once your approved creators start driving views.';
 }
 
 // Path: advertiser_campaigns.create
@@ -1196,7 +1204,10 @@ class TranslationsCreatorWalletEn {
 	String get withdraw_subtitle => 'Withdraw your available balance to your connected Stripe account.';
 	String get available_balance => 'Available';
 	String get pending_balance => 'Pending';
+	String get pending_withdrawals => 'Pending withdrawals';
+	String get in_transit => 'In transit';
 	String get total_earned => 'Total earned';
+	String get lifetime_earnings => 'Lifetime earnings';
 	String get load_error => 'Couldn\'t load your wallet';
 	String get withdraw_button => 'Withdraw';
 	String get withdraw_sheet_title => 'Request a payout';
@@ -1347,6 +1358,13 @@ class TranslationsCreatorCampaignsEn {
 	String get submission_status_rejected => 'Rejected';
 	String get submission_status_flagged => 'Flagged';
 	String submission_views({required Object views}) => '${views} validated views';
+	String get tracking_link_title => 'Your tracking link';
+	String get tracking_link_subtitle => 'Share this short link in your bio, posts or stories. Clicks are tracked automatically.';
+	String get tracking_link_copy => 'Copy link';
+	String get tracking_link_copied => 'Copied!';
+	String get tracking_link_preparing => 'Your unique link is being prepared… Pull to refresh in a moment.';
+	String get tracking_link_error => 'Couldn\'t load your tracking link.';
+	String tracking_link_stats({required Object validated, required Object recorded}) => '${validated} earnings clicks · ${recorded} recorded clicks';
 }
 
 // Path: creator.stats
@@ -1694,6 +1712,12 @@ extension on Translations {
 			case 'advertiser_campaigns.detail.description_title': return 'Description';
 			case 'advertiser_campaigns.detail.show_more': return 'Show more';
 			case 'advertiser_campaigns.detail.show_less': return 'Show less';
+			case 'advertiser_campaigns.detail.top_creators_title': return 'Top creators';
+			case 'advertiser_campaigns.detail.top_creators_subtitle': return 'Your best performers, ranked by validated views.';
+			case 'advertiser_campaigns.detail.top_creators_views': return ({required Object count}) => '${count} validated views';
+			case 'advertiser_campaigns.detail.top_creators_earned': return 'earned';
+			case 'advertiser_campaigns.detail.top_creators_empty_title': return 'No performance yet';
+			case 'advertiser_campaigns.detail.top_creators_empty_subtitle': return 'Creator stats will appear here once your approved creators start driving views.';
 			case 'advertiser_campaigns.create.title': return 'New campaign';
 			case 'advertiser_campaigns.create.section_basics': return 'Basics';
 			case 'advertiser_campaigns.create.section_budget': return 'Budget & rates';
@@ -1868,7 +1892,10 @@ extension on Translations {
 			case 'creator.wallet.withdraw_subtitle': return 'Withdraw your available balance to your connected Stripe account.';
 			case 'creator.wallet.available_balance': return 'Available';
 			case 'creator.wallet.pending_balance': return 'Pending';
+			case 'creator.wallet.pending_withdrawals': return 'Pending withdrawals';
+			case 'creator.wallet.in_transit': return 'In transit';
 			case 'creator.wallet.total_earned': return 'Total earned';
+			case 'creator.wallet.lifetime_earnings': return 'Lifetime earnings';
 			case 'creator.wallet.load_error': return 'Couldn\'t load your wallet';
 			case 'creator.wallet.withdraw_button': return 'Withdraw';
 			case 'creator.wallet.withdraw_sheet_title': return 'Request a payout';
@@ -2010,6 +2037,13 @@ extension on Translations {
 			case 'creator.campaigns.submission_status_rejected': return 'Rejected';
 			case 'creator.campaigns.submission_status_flagged': return 'Flagged';
 			case 'creator.campaigns.submission_views': return ({required Object views}) => '${views} validated views';
+			case 'creator.campaigns.tracking_link_title': return 'Your tracking link';
+			case 'creator.campaigns.tracking_link_subtitle': return 'Share this short link in your bio, posts or stories. Clicks are tracked automatically.';
+			case 'creator.campaigns.tracking_link_copy': return 'Copy link';
+			case 'creator.campaigns.tracking_link_copied': return 'Copied!';
+			case 'creator.campaigns.tracking_link_preparing': return 'Your unique link is being prepared… Pull to refresh in a moment.';
+			case 'creator.campaigns.tracking_link_error': return 'Couldn\'t load your tracking link.';
+			case 'creator.campaigns.tracking_link_stats': return ({required Object validated, required Object recorded}) => '${validated} earnings clicks · ${recorded} recorded clicks';
 			case 'creator.stats.earnings_title': return 'Total earnings';
 			case 'creator.stats.pending': return 'Pending';
 			case 'creator.stats.validated_views': return 'Validated views';
@@ -2100,6 +2134,8 @@ extension on Translations {
 			case 'chat.inbox_subtitle': return 'Secure conversations for your campaigns';
 			case 'chat.conversation_unknown': return 'Conversation';
 			case 'chat.thread_fallback_title': return 'Chat';
+			case 'chat.role_creator': return 'Creator';
+			case 'chat.role_advertiser': return 'Advertiser';
 			case 'chat.composer_hint': return 'Write a message…';
 			case 'chat.typing': return 'Typing…';
 			case 'chat.error_load_threads': return 'Could not load your conversations. Try again.';

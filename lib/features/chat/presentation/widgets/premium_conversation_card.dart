@@ -5,8 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../formatting/chat_partner_role.dart';
 import '../formatting/chat_unread_badge_label.dart';
 import '../theme/premium_chat_tokens.dart';
+import 'chat_role_badge.dart';
 import 'signal_typing_indicator.dart';
 
 /// ━━━ PREMIUM CONVERSATION CARD ━━━
@@ -40,6 +42,7 @@ class PremiumConversationCard extends StatefulWidget {
     this.onTap,
     this.onLongPress,
     this.verified = false,
+    this.partnerRole,
   });
 
   final String title;
@@ -56,6 +59,9 @@ class PremiumConversationCard extends StatefulWidget {
   final bool typing;
   final String? typingName;
   final bool verified;
+
+  /// Role badge (Creator / Advertiser) shown next to the title; null hides it.
+  final ChatPartnerRole? partnerRole;
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
 
@@ -222,6 +228,13 @@ class _PremiumConversationCardState extends State<PremiumConversationCard>
                                               Icons.verified_rounded,
                                               size: 13,
                                               color: p.accentWarm,
+                                            ),
+                                          ],
+                                          if (widget.partnerRole != null) ...[
+                                            const SizedBox(width: 6),
+                                            ChatRoleBadge(
+                                              role: widget.partnerRole!,
+                                              compact: true,
                                             ),
                                           ],
                                           if (widget.muted) ...[

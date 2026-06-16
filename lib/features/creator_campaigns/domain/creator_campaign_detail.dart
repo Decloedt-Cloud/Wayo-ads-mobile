@@ -5,6 +5,7 @@ import '../../advertiser_campaigns/domain/campaign_niche_catalog.dart';
 import '../../creator_dashboard/domain/creator_application.dart';
 import 'creator_browse_campaign.dart';
 import 'creator_social_post.dart';
+import 'creator_tracking_link.dart';
 
 /// Snapshot of a campaign as seen by a creator (`GET /api/campaigns/:id` +
 /// `GET /api/creator/campaigns/:id/submit-post` merged client-side when the
@@ -29,6 +30,7 @@ final class CreatorCampaignDetail extends Equatable {
     required this.approvedCreators,
     required this.myApplicationStatus,
     required this.myVideos,
+    this.trackingLinks = const [],
     this.myApplicationId,
     this.coverUrl,
     this.brandLogoUrl,
@@ -75,6 +77,7 @@ final class CreatorCampaignDetail extends Equatable {
 
   final CreatorApplicationStatus myApplicationStatus;
   final List<CreatorSocialPost> myVideos;
+  final List<CreatorTrackingLink> trackingLinks;
   final String? myApplicationId;
 
   final String? coverUrl;
@@ -161,6 +164,18 @@ final class CreatorCampaignDetail extends Equatable {
               .toList(growable: false)
         : const <CreatorSocialPost>[];
 
+    final trackingLinksRaw = m['trackingLinks'];
+    final trackingLinks = trackingLinksRaw is List
+        ? trackingLinksRaw
+              .whereType<Map>()
+              .map(
+                (e) => CreatorTrackingLink.fromJson(
+                  Map<String, dynamic>.from(e),
+                ),
+              )
+              .toList(growable: false)
+        : const <CreatorTrackingLink>[];
+
     final earnings = m['myEarnings'];
     final earningsMap = earnings is Map
         ? Map<String, dynamic>.from(earnings)
@@ -206,6 +221,7 @@ final class CreatorCampaignDetail extends Equatable {
       ),
       myApplicationId: myAppMap?['id'] as String?,
       myVideos: myVideos,
+      trackingLinks: trackingLinks,
       coverUrl: parseCampaignCoverUrlFromJson(m) ??
           (m['coverImageUrl'] as String?) ??
           (m['coverUrl'] as String?),
@@ -262,6 +278,7 @@ final class CreatorCampaignDetail extends Equatable {
       myApplicationStatus: myApplicationStatus,
       myApplicationId: myApplicationId,
       myVideos: posts,
+      trackingLinks: trackingLinks,
       coverUrl: coverUrl,
       brandLogoUrl: brandLogoUrl,
       description: description,
@@ -304,6 +321,7 @@ final class CreatorCampaignDetail extends Equatable {
     myApplicationStatus,
     myApplicationId,
     myVideos,
+    trackingLinks,
     coverUrl,
     brandLogoUrl,
     description,

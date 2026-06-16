@@ -18,6 +18,7 @@ import '../../data/chat_realtime_service.dart';
 import '../../domain/chat_conversation.dart';
 import '../../domain/chat_credentials.dart';
 import '../../domain/chat_directory_user.dart';
+import '../formatting/chat_partner_role.dart';
 import '../providers/chat_pending_share_provider.dart';
 import '../providers/chat_providers.dart';
 import '../theme/liquid_neural_palette.dart';
@@ -453,6 +454,8 @@ class _ChatInboxScreenState extends ConsumerState<ChatInboxScreen> {
                                           online: partnerOnline,
                                           typing: isTyping,
                                           typingName: typingName,
+                                          partnerRole:
+                                              chatPartnerRoleFor(role),
                                           onTap: () {
                                             FocusManager.instance.primaryFocus
                                                 ?.unfocus();

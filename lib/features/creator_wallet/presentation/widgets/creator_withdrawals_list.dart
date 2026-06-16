@@ -9,7 +9,6 @@ import 'package:intl/intl.dart';
 import '../../../../core/format/money_formatter.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../../../../core/theme/creator_colors.dart';
 import '../../../../i18n/strings.g.dart';
 import '../../data/creator_wallet_remote_datasource.dart';
 import '../../domain/creator_wallet_models.dart';
@@ -202,6 +201,7 @@ class _WithdrawalTileState extends ConsumerState<_WithdrawalTile> {
     final t = context.t;
     final w = widget.w;
     final (label, color, icon) = _statusStyle(context, w.status, t);
+    final isValidated = w.status.isValidated;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final amount = MoneyFormatter.format(
       w.payoutHistoryGross,
@@ -220,7 +220,11 @@ class _WithdrawalTileState extends ConsumerState<_WithdrawalTile> {
               alpha: 0.04,
             ),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.borderOf(context)),
+            border: Border.all(
+              color: isValidated
+                  ? AppColors.success.withValues(alpha: 0.35)
+                  : AppColors.error.withValues(alpha: 0.28),
+            ),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -344,37 +348,33 @@ class _WithdrawalTileState extends ConsumerState<_WithdrawalTile> {
     CreatorWithdrawalStatus status,
     Translations t,
   ) {
-    return switch (status) {
-      CreatorWithdrawalStatus.pending => (
-        t.creator.wallet.history_status_pending,
-        CreatorColors.primaryOf(context),
-        Icons.schedule_rounded,
-      ),
-      CreatorWithdrawalStatus.processing => (
-        t.creator.wallet.history_status_processing,
-        Colors.amber.shade700,
-        Icons.sync_rounded,
-      ),
-      CreatorWithdrawalStatus.succeeded => (
+    if (status.isValidated) {
+      return (
         t.creator.wallet.history_status_succeeded,
         AppColors.success,
-        Icons.check_circle_outline_rounded,
-      ),
-      CreatorWithdrawalStatus.failed => (
-        t.creator.wallet.history_status_failed,
-        AppColors.error,
-        Icons.error_outline_rounded,
-      ),
-      CreatorWithdrawalStatus.cancelled => (
+        Icons.verified_rounded,
+      );
+    }
+
+    final label = switch (status) {
+      CreatorWithdrawalStatus.pending => t.creator.wallet.history_status_pending,
+      CreatorWithdrawalStatus.processing =>
+        t.creator.wallet.history_status_processing,
+      CreatorWithdrawalStatus.failed => t.creator.wallet.history_status_failed,
+      CreatorWithdrawalStatus.cancelled =>
         t.creator.wallet.history_status_cancelled,
-        AppColors.textMutedOf(context),
-        Icons.block_rounded,
-      ),
-      CreatorWithdrawalStatus.unknown => (
-        '—',
-        AppColors.textMutedOf(context),
-        Icons.help_outline_rounded,
-      ),
+      CreatorWithdrawalStatus.unknown =>
+        t.creator.wallet.history_status_pending,
+      CreatorWithdrawalStatus.succeeded => t.creator.wallet.history_status_succeeded,
     };
+
+    final icon = switch (status) {
+      CreatorWithdrawalStatus.processing => Icons.sync_rounded,
+      CreatorWithdrawalStatus.failed => Icons.cancel_rounded,
+      CreatorWithdrawalStatus.cancelled => Icons.block_rounded,
+      _ => Icons.schedule_rounded,
+    };
+
+    return (label, AppColors.error, icon);
   }
 }

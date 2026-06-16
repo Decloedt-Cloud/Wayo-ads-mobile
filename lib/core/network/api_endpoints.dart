@@ -116,6 +116,11 @@ abstract final class ApiEndpoints {
   static String creatorCampaignSubmitPost(String campaignId) =>
       'api/creator/campaigns/$campaignId/submit-post';
 
+  /// Creator tracking links for a LINK campaign —
+  /// [GET|POST /api/campaigns/:id/links](Wayo-ads).
+  static String campaignTrackingLinks(String campaignId) =>
+      'api/campaigns/$campaignId/links';
+
   /// Creator applies to a campaign — [POST /api/campaigns/:id/apply](Wayo-ads).
   static String campaignApply(String campaignId) =>
       'api/campaigns/$campaignId/apply';

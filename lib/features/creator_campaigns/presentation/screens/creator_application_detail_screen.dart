@@ -11,10 +11,12 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/creator_colors.dart';
 import '../../../../i18n/strings.g.dart';
 import '../../../creator_dashboard/domain/creator_application.dart';
+import '../../domain/creator_browse_campaign.dart';
 import '../../domain/creator_campaign_detail.dart';
 import '../../domain/creator_social_post.dart';
 import '../providers/creator_campaigns_providers.dart';
 import '../widgets/creator_submit_post_sheet.dart';
+import '../widgets/creator_tracking_link_section.dart';
 
 /// Application detail screen (creator side).
 ///
@@ -54,8 +56,10 @@ class CreatorApplicationDetailScreen extends ConsumerWidget {
           HapticFeedback.lightImpact();
           ref.invalidate(creatorCampaignDetailProvider(campaignId));
           ref.invalidate(creatorMySubmissionsProvider(campaignId));
+          ref.invalidate(creatorTrackingLinksProvider(campaignId));
           await ref.read(creatorCampaignDetailProvider(campaignId).future);
           await ref.read(creatorMySubmissionsProvider(campaignId).future);
+          await ref.read(creatorTrackingLinksProvider(campaignId).future);
         },
         child: detailAsync.when(
           loading: () => ListView(
@@ -98,7 +102,7 @@ class CreatorApplicationDetailScreen extends ConsumerWidget {
             // detail payload while it's still loading).
             final posts = postsAsync.valueOrNull ?? c.myVideos;
             final merged = c.mergeSocialPosts(posts);
-            return _Body(campaign: merged);
+            return _Body(campaign: merged, campaignId: campaignId);
           },
         ),
       ),
@@ -107,14 +111,20 @@ class CreatorApplicationDetailScreen extends ConsumerWidget {
 }
 
 class _Body extends ConsumerWidget {
-  const _Body({required this.campaign});
+  const _Body({required this.campaign, required this.campaignId});
 
   final CreatorCampaignDetail campaign;
+  final String campaignId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final t = context.t;
     final c = campaign;
+    final isLink = c.type == CreatorCampaignType.link;
+    final linksAsync = isLink && c.isApproved
+        ? ref.watch(creatorTrackingLinksProvider(campaignId))
+        : null;
+
     return ListView(
       physics: const BouncingScrollPhysics(
         parent: AlwaysScrollableScrollPhysics(),
@@ -124,18 +134,36 @@ class _Body extends ConsumerWidget {
         _CampaignCardHeader(campaign: c),
         const SizedBox(height: 16),
         _StatusBanner(status: c.myApplicationStatus),
-        const SizedBox(height: 18),
-        _SectionTitle(title: t.creator.campaigns.my_submissions_title),
-        const SizedBox(height: 8),
-        if (c.myVideos.isEmpty)
-          _EmptySubmissions(canSubmit: c.isApproved)
-        else
-          ...c.myVideos.map(
-            (p) => Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: _SubmissionTile(post: p),
+        if (isLink && c.isApproved) ...[
+          const SizedBox(height: 18),
+          linksAsync!.when(
+            loading: () => const CreatorTrackingLinkSection(
+              links: [],
+              loading: true,
             ),
+            error: (e, _) => CreatorTrackingLinkSection(
+              links: const [],
+              error: e,
+              onRetry: () =>
+                  ref.invalidate(creatorTrackingLinksProvider(campaignId)),
+            ),
+            data: (links) => CreatorTrackingLinkSection(links: links),
           ),
+        ],
+        if (c.type.requiresVideoSubmission) ...[
+          const SizedBox(height: 18),
+          _SectionTitle(title: t.creator.campaigns.my_submissions_title),
+          const SizedBox(height: 8),
+          if (c.myVideos.isEmpty)
+            _EmptySubmissions(canSubmit: c.isApproved)
+          else
+            ...c.myVideos.map(
+              (p) => Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: _SubmissionTile(post: p),
+              ),
+            ),
+        ],
         const SizedBox(height: 20),
         _ActionBar(campaign: c),
       ],
@@ -557,6 +585,8 @@ class _ActionBar extends ConsumerWidget {
                   campaign: c,
                 );
                 if (ok == true && context.mounted) {
+                  ref.invalidate(creatorMySubmissionsProvider(c.id));
+                  ref.invalidate(creatorCampaignDetailProvider(c.id));
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(t.creator.campaigns.submit_success),

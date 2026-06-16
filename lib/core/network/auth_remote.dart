@@ -9,11 +9,67 @@ import '../storage/secure_storage.dart';
 import '../../features/auth/data/models/auth_response.dart';
 import 'interceptors/certificate_pinning.dart';
 
+/// Authoritative verdict on whether an access token is still accepted by Auth_Wayo.
+///
+/// Used to decide if a 401 from a *downstream* API (e.g. Wayo-ads) reflects a
+/// genuinely revoked session or just transient introspection flakiness.
+enum TokenValidity {
+  /// Auth_Wayo accepted the token — the session is alive.
+  valid,
+
+  /// Auth_Wayo rejected the token (401/403) — the session is revoked/expired.
+  invalid,
+
+  /// Could not determine (network/timeout/429/5xx) — must NOT force logout.
+  indeterminate,
+}
+
 /// Stateless Auth_Wayo HTTP helpers without app [Dio] interceptors (avoids refresh recursion).
 ///
 /// // TODO(dev): align paths and error payloads with Auth_Wayo production behavior.
 class AuthRemote {
   AuthRemote._();
+
+  /// Asks Auth_Wayo (the session owner) whether [accessToken] is still valid.
+  ///
+  /// Runs on a plain client (no interceptors) to avoid refresh/logout recursion.
+  /// Only a real 401/403 maps to [TokenValidity.invalid]; everything transient
+  /// maps to [TokenValidity.indeterminate] so callers never log out on a blip.
+  static Future<TokenValidity> verifyAccessToken(String accessToken) async {
+    if (accessToken.isEmpty) {
+      return TokenValidity.invalid;
+    }
+    final client = _plainClient();
+    final cfg = AuthRuntimeConfig.instance;
+    final path = cfg.authHttpPath('user');
+    final qp = <String, dynamic>{};
+    if (cfg.authAppName.trim().isNotEmpty) {
+      qp['app'] = cfg.authAppName.trim();
+    }
+    try {
+      final res = await client.get<Map<String, dynamic>>(
+        path,
+        queryParameters: qp.isEmpty ? null : qp,
+        options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
+      );
+      final data = res.data;
+      if (data != null && data['success'] == false) {
+        return TokenValidity.invalid;
+      }
+      return TokenValidity.valid;
+    } on DioException catch (e) {
+      final status = e.response?.statusCode;
+      if (status == 401 || status == 403) {
+        return TokenValidity.invalid;
+      }
+      // Network/timeout/429/5xx — cannot conclude the session is dead.
+      return TokenValidity.indeterminate;
+    } catch (_) {
+      return TokenValidity.indeterminate;
+    } finally {
+      client.close();
+    }
+  }
 
   static Dio _plainClient() {
     final runtime = AuthRuntimeConfig.instance;

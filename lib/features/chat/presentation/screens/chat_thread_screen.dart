@@ -14,6 +14,8 @@ import 'package:intl/intl.dart';
 import '../../../../core/push/wayo_push_intent.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../i18n/strings.g.dart';
+import '../../../auth/presentation/providers/current_account_providers.dart';
+import '../formatting/chat_partner_role.dart';
 import '../../data/chat_active_conversation.dart';
 import '../../data/chat_media_utils.dart';
 import '../../data/chat_message_media.dart';
@@ -1771,6 +1773,11 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
                                           context,
                                         ).top,
                                         partnerAvatarUrl: partnerAvatarResolved,
+                                        partnerRole: chatPartnerRoleFor(
+                                          ref.watch(
+                                            currentWayoAdsAccountRoleProvider,
+                                          ),
+                                        ),
                                       ),
                                     ),
                                     if (_loading)

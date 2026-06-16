@@ -128,6 +128,29 @@ final class CreatorCampaignDetail extends Equatable {
       status == 'ACTIVE' &&
       myApplicationStatus == CreatorApplicationStatus.unknown;
 
+  /// Whether the creator may submit a new video/short for this campaign.
+  /// Mirrors the backend rule: one active post unless [allowMultiplePosts].
+  bool get canSubmitVideoPost {
+    if (!isApproved) return false;
+    if (!type.requiresVideoSubmission) return false;
+    if (allowMultiplePosts == true) return true;
+    if (myVideos.isEmpty) return true;
+    // Any non-rejected submission blocks a new upload (PENDING, ACTIVE, …).
+    return myVideos.every(
+      (p) => p.status == CreatorSocialPostStatus.rejected,
+    );
+  }
+
+  /// Info banner under the action bar — only while a submission awaits review.
+  bool get shouldShowSubmitPendingNotice {
+    if (canSubmitVideoPost || !type.requiresVideoSubmission) return false;
+    return myVideos.any(
+      (p) =>
+          p.status == CreatorSocialPostStatus.pending ||
+          p.status == CreatorSocialPostStatus.flagged,
+    );
+  }
+
   factory CreatorCampaignDetail.fromJson(Map<String, dynamic> m) {
     int parseCents(dynamic v) {
       if (v == null) return 0;

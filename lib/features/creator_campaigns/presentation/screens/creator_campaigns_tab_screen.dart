@@ -116,6 +116,7 @@ class CreatorCampaignsTabScreen extends ConsumerStatefulWidget {
 class _CreatorCampaignsTabScreenState
     extends ConsumerState<CreatorCampaignsTabScreen> {
   final _searchCtrl = TextEditingController();
+  final _scrollController = ScrollController();
   Timer? _debounce;
 
   // OPTIMIZATION: Removed _searchCtrl.addListener(() => setState(() {}))
@@ -125,7 +126,17 @@ class _CreatorCampaignsTabScreenState
   void dispose() {
     _debounce?.cancel();
     _searchCtrl.dispose();
+    _scrollController.dispose();
     super.dispose();
+  }
+
+  void _scrollBrowseListToTop() {
+    if (!_scrollController.hasClients) return;
+    _scrollController.animateTo(
+      0,
+      duration: const Duration(milliseconds: 280),
+      curve: Curves.easeOutCubic,
+    );
   }
 
   void _scheduleSearchQuery(String raw) {
@@ -160,6 +171,13 @@ class _CreatorCampaignsTabScreenState
       );
     });
 
+    ref.listen<int>(creatorBrowseCampaignPageProvider, (previous, next) {
+      if (previous == null || previous == next) return;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _scrollBrowseListToTop();
+      });
+    });
+
     final cachedBrowsePage = browseAsync.valueOrNull;
     final browsePageForExplorerFilters =
         cachedBrowsePage != null &&
@@ -185,6 +203,7 @@ class _CreatorCampaignsTabScreenState
           await ref.read(creatorBrowseCampaignsPagedProvider(k).future);
         },
         child: ListView(
+          controller: _scrollController,
           physics: const BouncingScrollPhysics(
             parent: AlwaysScrollableScrollPhysics(),
           ),
@@ -446,6 +465,7 @@ class _CreatorCampaignsTabScreenState
                       onPrevious: browsePage > 1
                           ? () {
                               HapticFeedback.selectionClick();
+                              FocusManager.instance.primaryFocus?.unfocus();
                               ref
                                       .read(
                                         creatorBrowseCampaignPageProvider
@@ -458,6 +478,7 @@ class _CreatorCampaignsTabScreenState
                       onNext: browsePage < pageResult.totalPages
                           ? () {
                               HapticFeedback.selectionClick();
+                              FocusManager.instance.primaryFocus?.unfocus();
                               ref
                                       .read(
                                         creatorBrowseCampaignPageProvider

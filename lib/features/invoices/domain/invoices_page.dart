@@ -67,11 +67,17 @@ final class CreatorInvoicesStats extends Equatable {
 
     return CreatorInvoicesStats(
       totalValidatedCents: p(
-        json['totalValidated'] ?? json['totalValidatedCents'],
+        json['totalValidated'] ??
+            json['totalValidatedCents'] ??
+            json['totalEarned'],
       ),
-      totalPendingCents: p(json['totalPending'] ?? json['totalPendingCents']),
+      totalPendingCents: p(
+        json['totalPending'] ??
+            json['totalPendingCents'] ??
+            json['pendingPayout'],
+      ),
       totalThisMonthCents: p(
-        json['totalThisMonth'] ?? json['totalThisMonthCents'],
+        json['totalThisMonth'] ?? json['totalThisMonthCents'] ?? json['thisMonth'],
       ),
       pendingCount: p(json['pendingCount'] ?? json['pendingInvoiceCount']),
     );

@@ -2,6 +2,39 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:wayoadsgo/core/push/wayo_push_intent.dart';
 
 void main() {
+  group('WayoRoutePushPayload', () {
+    test('CAMPAIGN_ACTIVATED with advertiser actionUrl opens creator detail', () {
+      final payload = WayoRoutePushPayload.fromMessageData({
+        'type': 'CAMPAIGN_ACTIVATED',
+        'route': '/campaigns/camp-123',
+        'actionUrl': '/campaigns/camp-123',
+        'campaignId': 'camp-123',
+        'title': 'New Campaign Available',
+      });
+      expect(payload?.route, '/creator/campaigns/camp-123');
+    });
+
+    test('CAMPAIGN_ACTIVATED FCM data prefers metadata campaignId', () {
+      final route = resolveWayoPushRoute(
+        data: {
+          'type': 'CAMPAIGN_ACTIVATED',
+          'actionUrl': '/campaigns/camp-456',
+          'metadata': '{"campaignId":"camp-456"}',
+        },
+      );
+      expect(route, '/creator/campaigns/camp-456');
+    });
+
+    test('CREATOR_APPLIED still opens advertiser campaign detail', () {
+      final payload = WayoRoutePushPayload.fromMessageData({
+        'type': 'CREATOR_APPLIED',
+        'route': '/campaigns/camp-9',
+        'campaignId': 'camp-9',
+      });
+      expect(payload?.route, '/campaigns/camp-9');
+    });
+  });
+
   group('isSelfInitiatedWalletFcmPayload', () {
     test('detects advertiser deposit confirmation', () {
       expect(

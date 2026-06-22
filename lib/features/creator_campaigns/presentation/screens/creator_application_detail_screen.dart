@@ -14,9 +14,11 @@ import '../../../creator_dashboard/domain/creator_application.dart';
 import '../../domain/creator_browse_campaign.dart';
 import '../../domain/creator_campaign_detail.dart';
 import '../../domain/creator_social_post.dart';
+import '../../domain/creator_youtube_status.dart';
 import '../providers/creator_campaigns_providers.dart';
 import '../widgets/creator_submit_post_sheet.dart';
 import '../widgets/creator_tracking_link_section.dart';
+import '../widgets/creator_youtube_submit_gate.dart';
 
 /// Application detail screen (creator side).
 ///
@@ -569,48 +571,109 @@ class _ActionBar extends ConsumerWidget {
       return const SizedBox.shrink();
     }
 
+    final needsYoutube = campaignRequiresYoutubeConnection(c);
+    final youtubeAsync = needsYoutube && c.canSubmitVideoPost
+        ? ref.watch(creatorYoutubeChannelStatusProvider)
+        : null;
+
     return Column(
       children: [
-        if (c.canSubmitVideoPost)
-          SizedBox(
-            height: 52,
-            child: ElevatedButton.icon(
-              onPressed: () async {
-                final ok = await showCreatorSubmitPostSheet(
-                  context,
-                  campaign: c,
-                );
-                if (ok == true && context.mounted) {
-                  ref.invalidate(creatorMySubmissionsProvider(c.id));
-                  ref.invalidate(creatorCampaignDetailProvider(c.id));
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(t.creator.campaigns.submit_success),
-                      behavior: SnackBarBehavior.floating,
-                    ),
+        if (c.canSubmitVideoPost) ...[
+          if (needsYoutube)
+            youtubeAsync!.when(
+              loading: () => const SizedBox(
+                height: 52,
+                child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+              ),
+              error: (_, _) => CreatorYoutubeConnectBanner(
+                oauthStatus: CreatorYoutubeOAuthStatus.notLinked,
+              ),
+              data: (status) {
+                if (!status.isReadyForSubmit) {
+                  return CreatorYoutubeConnectBanner(
+                    oauthStatus: status.oauthStatus,
                   );
                 }
+                return SizedBox(
+                  height: 52,
+                  child: ElevatedButton.icon(
+                    onPressed: () async {
+                      final ok = await showCreatorSubmitPostSheet(
+                        context,
+                        campaign: c,
+                      );
+                      if (ok == true && context.mounted) {
+                        ref.invalidate(creatorMySubmissionsProvider(c.id));
+                        ref.invalidate(creatorCampaignDetailProvider(c.id));
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(t.creator.campaigns.submit_success),
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: CreatorColors.primaryOf(context),
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    icon: const Icon(Icons.cloud_upload_rounded),
+                    label: Text(
+                      t.creator.campaigns.submit_cta,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.2,
+                      ),
+                    ),
+                  ),
+                );
               },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: CreatorColors.primaryOf(context),
-                foregroundColor: Colors.white,
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
+            )
+          else
+            SizedBox(
+              height: 52,
+              child: ElevatedButton.icon(
+                onPressed: () async {
+                  final ok = await showCreatorSubmitPostSheet(
+                    context,
+                    campaign: c,
+                  );
+                  if (ok == true && context.mounted) {
+                    ref.invalidate(creatorMySubmissionsProvider(c.id));
+                    ref.invalidate(creatorCampaignDetailProvider(c.id));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(t.creator.campaigns.submit_success),
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: CreatorColors.primaryOf(context),
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
                 ),
-              ),
-              icon: const Icon(Icons.cloud_upload_rounded),
-              label: Text(
-                t.creator.campaigns.submit_cta,
-                style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.2,
+                icon: const Icon(Icons.cloud_upload_rounded),
+                label: Text(
+                  t.creator.campaigns.submit_cta,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.2,
+                  ),
                 ),
               ),
             ),
-          )
-        else if (c.shouldShowSubmitPendingNotice)
+        ] else if (c.shouldShowSubmitPendingNotice)
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(

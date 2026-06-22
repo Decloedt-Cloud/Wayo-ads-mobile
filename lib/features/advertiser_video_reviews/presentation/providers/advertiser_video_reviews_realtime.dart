@@ -18,6 +18,16 @@ bool isVideoReviewNotificationPayload(Object? raw) {
   return type.startsWith('video_');
 }
 
+/// Creator submission screens should refresh when their video is approved/rejected.
+bool shouldRefreshCreatorVideoSubmissions(Object? raw) {
+  final type = _notificationTypeFromRaw(raw).toLowerCase().replaceAll('-', '_');
+  if (type.isEmpty) return false;
+  return type == 'video_approved' ||
+      type == 'video_rejected' ||
+      type.contains('video_approved') ||
+      type.contains('video_rejected');
+}
+
 String _notificationTypeFromRaw(Object? raw) {
   if (raw == null) return '';
   Map<String, dynamic>? map;

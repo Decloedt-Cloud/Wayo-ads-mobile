@@ -21,6 +21,7 @@ import '../../domain/advertiser_campaign.dart';
 import '../../domain/campaign_niche_catalog.dart';
 import '../providers/advertiser_campaigns_providers.dart';
 import '../theme/advertiser_campaigns_chrome.dart';
+import '../widgets/advertiser_browse_campaigns_view.dart';
 import '../widgets/advertiser_campaign_card.dart';
 import '../widgets/advertiser_campaign_explorer_filters.dart';
 import '../widgets/advertiser_campaign_grid_tile.dart';
@@ -127,6 +128,33 @@ class _AdvertiserCampaignsScreenState
     extends ConsumerState<AdvertiserCampaignsScreen> {
   final _searchCtrl = TextEditingController();
   Timer? _debounce;
+  String? _lastRouteViewParam;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _applyViewFromRoute());
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _applyViewFromRoute();
+  }
+
+  /// Deep links: `/campaigns?view=browse` opens the marketplace segment.
+  void _applyViewFromRoute() {
+    final view = GoRouterState.of(context).uri.queryParameters['view'];
+    if (view == _lastRouteViewParam) return;
+    _lastRouteViewParam = view;
+    if (view == 'browse') {
+      ref.read(advertiserCampaignsViewModeProvider.notifier).state =
+          AdvertiserCampaignsViewMode.browse;
+    } else if (view == 'mine') {
+      ref.read(advertiserCampaignsViewModeProvider.notifier).state =
+          AdvertiserCampaignsViewMode.mine;
+    }
+  }
 
   @override
   void dispose() {
@@ -145,6 +173,82 @@ class _AdvertiserCampaignsScreenState
 
   @override
   Widget build(BuildContext context) {
+    final t = context.t;
+    final viewMode = ref.watch(advertiserCampaignsViewModeProvider);
+
+    return Scaffold(
+      body: DecoratedBox(
+        decoration: _campaignsPageBackground(context),
+        child: SafeArea(
+          bottom: false,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+                child: SegmentedButton<AdvertiserCampaignsViewMode>(
+                  segments: [
+                    ButtonSegment(
+                      value: AdvertiserCampaignsViewMode.mine,
+                      label: Text(t.advertiser_campaigns.view_mine),
+                      icon: const Icon(Icons.folder_outlined, size: 18),
+                    ),
+                    ButtonSegment(
+                      value: AdvertiserCampaignsViewMode.browse,
+                      label: Text(t.advertiser_campaigns.view_browse),
+                      icon: const Icon(Icons.explore_outlined, size: 18),
+                    ),
+                  ],
+                  selected: {viewMode},
+                  onSelectionChanged: (next) {
+                    HapticFeedback.selectionClick();
+                    ref
+                        .read(advertiserCampaignsViewModeProvider.notifier)
+                        .state = next.first;
+                  },
+                ),
+              ),
+              Expanded(
+                child: viewMode == AdvertiserCampaignsViewMode.browse
+                    ? const AdvertiserBrowseCampaignsView()
+                    : _MineCampaignsBody(
+                        searchCtrl: _searchCtrl,
+                        debounceCancel: () => _debounce?.cancel(),
+                        onScheduleSearch: _scheduleSearchDebounce,
+                      ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _MineCampaignsBody extends ConsumerWidget {
+  const _MineCampaignsBody({
+    required this.searchCtrl,
+    required this.debounceCancel,
+    required this.onScheduleSearch,
+  });
+
+  final TextEditingController searchCtrl;
+  final VoidCallback debounceCancel;
+  final void Function(String) onScheduleSearch;
+
+  String _errorMessage(BuildContext context, Object e) {
+    final t = context.t;
+    if (e is NetworkException) {
+      return t.errors.network;
+    }
+    if (e is ServerException) {
+      return e.message.isNotEmpty ? e.message : t.errors.server_generic;
+    }
+    return t.errors.server_generic;
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
     final t = context.t;
     final locale = ref.watch(localeProvider);
     final moneyLocale = _moneyLocale(locale);
@@ -174,17 +278,17 @@ class _AdvertiserCampaignsScreenState
         currentPage: pageIdx,
         counts: cachedCounts,
         tab: tab,
-        searchCtrl: _searchCtrl,
+        searchCtrl: searchCtrl,
         searchQ: searchQ,
         moneyLocale: moneyLocale,
         onTab: (v) {
           ref.read(advertiserCampaignsTabProvider.notifier).state = v;
           ref.read(advertiserCampaignsPageIndexProvider.notifier).state = 1;
         },
-        onSearchChanged: _scheduleSearchDebounce,
+        onSearchChanged: onScheduleSearch,
         onClearSearch: () {
-          _debounce?.cancel();
-          _searchCtrl.clear();
+          debounceCancel();
+          searchCtrl.clear();
           ref.read(advertiserCampaignsPageIndexProvider.notifier).state = 1;
           ref.read(advertiserCampaignsSearchQueryProvider.notifier).state = '';
         },
@@ -206,46 +310,27 @@ class _AdvertiserCampaignsScreenState
       );
     }
 
-    return Scaffold(
-      // Same as creator tab: default scaffold background (#0A0A0A) + no bottom SafeArea doubling
-      // the shell’s nav reserve (avoids a tone seam above the floating pill / system gesture area).
-      body: DecoratedBox(
-        decoration: _campaignsPageBackground(context),
-        child: SafeArea(
-          bottom: false,
-          child: cachedPage != null
-              ? buildBody(
-                  campaigns: cachedPage.campaigns,
-                  totalPages: cachedPage.totalPages,
-                )
-              : pageAsync.when(
-                  data: (pageResult) => buildBody(
-                    campaigns: pageResult.campaigns,
-                    totalPages: pageResult.totalPages,
-                  ),
-                  loading: () => _LoadingShell(t: t),
-                  error: (e, _) => _ErrorShell(
-                    t: t,
-                    message: _errorMessage(context, e),
-                    onRetry: () {
-                      ref.invalidate(advertiserCampaignsPagedProvider);
-                    },
-                  ),
-                ),
-        ),
+    if (cachedPage != null) {
+      return buildBody(
+        campaigns: cachedPage.campaigns,
+        totalPages: cachedPage.totalPages,
+      );
+    }
+
+    return pageAsync.when(
+      data: (pageResult) => buildBody(
+        campaigns: pageResult.campaigns,
+        totalPages: pageResult.totalPages,
+      ),
+      loading: () => _LoadingShell(t: t),
+      error: (e, _) => _ErrorShell(
+        t: t,
+        message: _errorMessage(context, e),
+        onRetry: () {
+          ref.invalidate(advertiserCampaignsPagedProvider);
+        },
       ),
     );
-  }
-
-  String _errorMessage(BuildContext context, Object e) {
-    final t = context.t;
-    if (e is NetworkException) {
-      return t.errors.network;
-    }
-    if (e is ServerException) {
-      return e.message.isNotEmpty ? e.message : t.errors.server_generic;
-    }
-    return t.errors.server_generic;
   }
 }
 

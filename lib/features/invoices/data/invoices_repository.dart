@@ -42,6 +42,27 @@ final class InvoicesRepository {
         sortDir: sortDir,
       );
 
+  Future<InvoicesPage> loadCreatorPayoutsPage({
+    required int page,
+    int limit = 10,
+    String? payoutType,
+    String search = '',
+    DateTime? dateFrom,
+    DateTime? dateTo,
+    String sortBy = 'statementDate',
+    String sortDir = 'desc',
+  }) =>
+      _remote.fetchCreatorPayoutsPage(
+        page: page,
+        limit: limit,
+        payoutType: payoutType,
+        search: search,
+        dateFrom: dateFrom,
+        dateTo: dateTo,
+        sortBy: sortBy,
+        sortDir: sortDir,
+      );
+
   Future<InvoicesPage> loadCreatorPage({
     required int page,
     int limit = 10,
@@ -69,6 +90,17 @@ final class InvoicesRepository {
     void Function(int received, int total)? onProgress,
   }) =>
       _remote.fetchInvoicePdf(invoiceId, locale: locale, onProgress: onProgress);
+
+  Future<Uint8List> downloadPayoutPdf(
+    String statementId, {
+    required String locale,
+    void Function(int received, int total)? onProgress,
+  }) =>
+      _remote.fetchPayoutPdf(
+        statementId,
+        locale: locale,
+        onProgress: onProgress,
+      );
 
   /// Normalises low-level [DioException] / network glitches into the typed
   /// [AuthException] tree, so screens can render proper i18n error states.

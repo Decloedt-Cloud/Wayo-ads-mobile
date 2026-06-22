@@ -45,6 +45,12 @@ InvoiceTypeVisual invoiceTypeVisual(BuildContext context, InvoiceType type) {
         accent: const Color(0xFF06B6D4),
         label: t.invoices.type_earnings,
       );
+    case InvoiceType.tokenPurchase:
+      return InvoiceTypeVisual(
+        icon: Icons.token_rounded,
+        accent: const Color(0xFFA855F7),
+        label: t.invoices.type_token_purchase,
+      );
     case InvoiceType.unknown:
       return InvoiceTypeVisual(
         icon: Icons.receipt_long_rounded,

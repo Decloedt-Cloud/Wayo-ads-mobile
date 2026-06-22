@@ -50,18 +50,3 @@ final class EmailNotRegisteredException extends AuthException {
   @override
   String toString() => message;
 }
-
-/// HTTP 409 — another active session (web browser or another mobile device).
-final class WebSessionActiveException extends AuthException {
-  const WebSessionActiveException({
-    this.message =
-        'This account is already active on another device. Disconnect the other session to sign in here.',
-    this.logoutUrl,
-    this.email,
-  });
-  final String message;
-  final String? logoutUrl;
-  final String? email;
-  @override
-  String toString() => message;
-}

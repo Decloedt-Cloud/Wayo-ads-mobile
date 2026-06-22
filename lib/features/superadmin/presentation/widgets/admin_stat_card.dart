@@ -191,11 +191,13 @@ class AdminMiniStatCard extends StatelessWidget {
     super.key,
     required this.label,
     required this.value,
+    this.subtitle,
     this.color,
   });
 
   final String label;
   final String value;
+  final String? subtitle;
   final Color? color;
 
   @override
@@ -236,6 +238,19 @@ class AdminMiniStatCard extends StatelessWidget {
               letterSpacing: -0.3,
             ),
           ),
+          if (subtitle != null) ...[
+            const SizedBox(height: 2),
+            Text(
+              subtitle!,
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w500,
+                color: AppColors.textMutedOf(context),
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
         ],
       ),
     );

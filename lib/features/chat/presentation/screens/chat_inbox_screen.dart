@@ -434,7 +434,7 @@ class _ChatInboxScreenState extends ConsumerState<ChatInboxScreen> {
                                               : null);
                                       final rowAvatarUrl = creds == null
                                           ? ''
-                                          : resolveChatMediaUrl(
+                                          : resolveChatAvatarUrl(
                                               rowAvatarPath,
                                               creds.apiBaseUrl,
                                             );

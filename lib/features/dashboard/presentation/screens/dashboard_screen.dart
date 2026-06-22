@@ -32,6 +32,8 @@ import '../../../creator_campaigns/domain/creator_browse_campaign.dart';
 import '../../../shell/presentation/widgets/shell_tutorial_replay_scope.dart';
 import '../../../advertiser_video_reviews/presentation/providers/advertiser_video_reviews_providers.dart';
 import '../../../advertiser_video_reviews/presentation/widgets/advertiser_video_reviews_summary_card.dart';
+import '../../../chat/presentation/providers/chat_providers.dart';
+import '../../../creator/presentation/providers/creator_session_gate.dart';
 import '../widgets/error_banner.dart';
 import '../widgets/notification_center_popup.dart';
 
@@ -55,14 +57,27 @@ String _localizedAdvertiserCampaignStatus(
 }
 
 /// Advertiser home — balance, campaigns, premium visuals.
-class DashboardScreen extends ConsumerWidget {
+class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends ConsumerState<DashboardScreen> {
+  @override
+  Widget build(BuildContext context) {
     final t = context.t;
     final locale = ref.watch(localeProvider);
     final async = ref.watch(dashboardStreamProvider);
+
+    ref.listen(chatPostLoginGateProvider, (previous, gateAt) {
+      if (gateAt == null) return;
+      scheduleSessionRetryAfterBootstrap(ref, () {
+        if (!mounted) return;
+        ref.invalidate(dashboardStreamProvider);
+      });
+    });
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -97,14 +112,22 @@ class DashboardScreen extends ConsumerWidget {
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      if (snap.balanceError != null)
+                      if (snap.balanceError != null &&
+                          !shouldSuppressAdvertiserSectionError(
+                            ref,
+                            snap.balanceError,
+                          ))
                         ErrorBanner(
                           message: t.dashboard.errors.load_balance,
                           retryLabel: t.dashboard.errors.retry,
                           onRetry: () =>
                               ref.invalidate(dashboardStreamProvider),
                         ),
-                      if (snap.campaignsError != null)
+                      if (snap.campaignsError != null &&
+                          !shouldSuppressAdvertiserSectionError(
+                            ref,
+                            snap.campaignsError,
+                          ))
                         ErrorBanner(
                           message: t.dashboard.errors.load_campaigns,
                           retryLabel: t.dashboard.errors.retry,
@@ -750,18 +773,38 @@ class _CampaignsSectionState extends ConsumerState<_CampaignsSection> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            t.dashboard.campaigns.title,
-            style: AppTextStyles.headlineMedium(
-              context,
-            ).copyWith(fontWeight: FontWeight.w800),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            t.dashboard.campaigns.subtitle,
-            style: AppTextStyles.bodyLarge(
-              context,
-            ).copyWith(color: AppColors.textSecondaryOf(context), height: 1.35),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      t.dashboard.campaigns.title,
+                      style: AppTextStyles.headlineMedium(
+                        context,
+                      ).copyWith(fontWeight: FontWeight.w800),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      t.dashboard.campaigns.subtitle,
+                      style: AppTextStyles.bodyLarge(
+                        context,
+                      ).copyWith(
+                        color: AppColors.textSecondaryOf(context),
+                        height: 1.35,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              TextButton.icon(
+                onPressed: () => context.go('/campaigns?view=browse'),
+                icon: const Icon(Icons.explore_outlined, size: 18),
+                label: Text(t.advertiser_campaigns.view_browse),
+              ),
+            ],
           ),
           const SizedBox(height: 16),
           if (loading)

@@ -6,6 +6,7 @@ import '../../../core/errors/auth_exceptions.dart';
 import '../../../core/network/api_endpoints.dart';
 import '../../../core/network/wayo_ads_public_url.dart';
 import '../../creator_campaigns/domain/creator_browse_campaign.dart';
+import '../../creator_campaigns/domain/creator_browse_page_result.dart';
 import '../../dashboard/domain/entities/campaign_platform.dart';
 import '../../dashboard/domain/entities/campaign_status.dart';
 import '../domain/advertiser_campaign.dart';
@@ -34,6 +35,16 @@ abstract interface class AdvertiserCampaignsRemote {
   Future<void> approveApplication(String campaignId, String applicationId);
 
   Future<void> rejectApplication(String campaignId, String applicationId);
+
+  /// Public marketplace — `GET /api/campaigns?status=ACTIVE` (inspiration / benchmarks).
+  Future<CreatorBrowsePageResult> fetchMarketplaceBrowsePage({
+    required int page,
+    int limit = 10,
+    String? search,
+    String? type,
+    String? niche,
+    String? countryCode,
+  });
 }
 
 final class AdvertiserCampaignsRemoteDatasource
@@ -479,5 +490,76 @@ final class AdvertiserCampaignsRemoteDatasource
       return 'youtube';
     }
     return '';
+  }
+
+  @override
+  Future<CreatorBrowsePageResult> fetchMarketplaceBrowsePage({
+    required int page,
+    int limit = 10,
+    String? search,
+    String? type,
+    String? niche,
+    String? countryCode,
+  }) async {
+    final qp = <String, dynamic>{
+      'status': 'ACTIVE',
+      'page': page,
+      'limit': limit.clamp(1, 100),
+    };
+    final trimmed = search?.trim();
+    if (trimmed != null && trimmed.isNotEmpty) {
+      qp['search'] = trimmed;
+    }
+    if (type != null && type.isNotEmpty) {
+      qp['type'] = type.toUpperCase();
+    }
+    if (niche != null && niche.isNotEmpty) {
+      qp['niche'] = niche;
+    }
+    if (countryCode != null && countryCode.length == 2) {
+      qp['country'] = countryCode.toUpperCase();
+    }
+
+    final res = await _dio.get<Object?>(
+      _path(ApiEndpoints.campaigns),
+      queryParameters: qp,
+    );
+    final body = res.data;
+    if (body is! Map) {
+      return CreatorBrowsePageResult(
+        campaigns: const [],
+        total: 0,
+        page: page,
+        totalPages: 1,
+      );
+    }
+    final map = Map<String, dynamic>.from(body);
+    if (map['error'] is String) {
+      throw ServerException(map['error'] as String);
+    }
+    final raw = map['campaigns'];
+    final list = raw is List
+        ? raw
+            .whereType<Map>()
+            .map(
+              (e) => CreatorBrowseCampaign.fromJson(
+                Map<String, dynamic>.from(e),
+              ),
+            )
+            .toList(growable: false)
+        : const <CreatorBrowseCampaign>[];
+    final total = _parseInt(map['total'], list.length);
+    final pageNum = _parseInt(map['page'], page);
+    var totalPages = _parseInt(map['totalPages'], 0);
+    final lim = limit.clamp(1, 100);
+    if (totalPages < 1) {
+      totalPages = total > 0 ? (total + lim - 1) ~/ lim : 1;
+    }
+    return CreatorBrowsePageResult(
+      campaigns: list,
+      total: total,
+      page: pageNum,
+      totalPages: totalPages,
+    );
   }
 }

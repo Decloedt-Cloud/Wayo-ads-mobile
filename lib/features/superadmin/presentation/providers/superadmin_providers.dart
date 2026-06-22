@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../core/network/wayo_ads_dio.dart';
+import '../../../creator/presentation/providers/creator_session_gate.dart';
 import '../../../dashboard/presentation/providers/dashboard_state_providers.dart';
 import '../../data/superadmin_remote_datasource.dart';
 import '../../data/superadmin_repository.dart';
@@ -31,21 +32,33 @@ ISuperadminRepository superadminRepository(SuperadminRepositoryRef ref) {
 // Dashboard Providers
 @riverpod
 Future<DashboardStats> dashboardStats(DashboardStatsRef ref) async {
+  await awaitPostLoginBootstrap(ref);
   final repo = ref.watch(superadminRepositoryProvider);
-  final result = await repo.getDashboardStats();
-  return result.when(
-    success: (stats) => stats,
-    failure: (e) => throw e,
+  return fetchWithSessionRetry(
+    ref,
+    () async {
+      final result = await repo.getDashboardStats();
+      return result.when(
+        success: (stats) => stats,
+        failure: (e) => throw e,
+      );
+    },
   );
 }
 
 @riverpod
 Future<PayoutStats> payoutStats(PayoutStatsRef ref) async {
+  await awaitPostLoginBootstrap(ref);
   final repo = ref.watch(superadminRepositoryProvider);
-  final result = await repo.getPayoutStats();
-  return result.when(
-    success: (stats) => stats,
-    failure: (e) => throw e,
+  return fetchWithSessionRetry(
+    ref,
+    () async {
+      final result = await repo.getPayoutStats();
+      return result.when(
+        success: (stats) => stats,
+        failure: (e) => throw e,
+      );
+    },
   );
 }
 

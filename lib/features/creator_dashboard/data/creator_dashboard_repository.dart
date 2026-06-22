@@ -21,26 +21,33 @@ class CreatorDashboardRepository {
   final RequestDeduplicator _dedup;
   final RateLimiter _rate;
 
-  static const String _statsKey = 'creator_stats';
-  static const String _applicationsKey = 'creator_applications';
+  static String _statsKeyFor(int sessionUserId) => 'creator_stats_$sessionUserId';
+  static String _applicationsKeyFor(int sessionUserId) =>
+      'creator_applications_$sessionUserId';
 
-  Future<CreatorStats> fetchStats({CreatorStats? fallback}) async {
-    if (!_rate.canCall(_statsKey) && fallback != null) {
+  Future<CreatorStats> fetchStats({
+    required int sessionUserId,
+    CreatorStats? fallback,
+  }) async {
+    final key = _statsKeyFor(sessionUserId);
+    if (!_rate.canCall(key) && fallback != null) {
       return fallback;
     }
-    _rate.mark(_statsKey);
-    return _dedup.run<CreatorStats>(_statsKey, _remote.fetchStats);
+    _rate.mark(key);
+    return _dedup.run<CreatorStats>(key, _remote.fetchStats);
   }
 
   Future<List<CreatorApplication>> fetchApplications({
+    required int sessionUserId,
     List<CreatorApplication>? fallback,
   }) async {
-    if (!_rate.canCall(_applicationsKey) && fallback != null) {
+    final key = _applicationsKeyFor(sessionUserId);
+    if (!_rate.canCall(key) && fallback != null) {
       return fallback;
     }
-    _rate.mark(_applicationsKey);
+    _rate.mark(key);
     return _dedup.run<List<CreatorApplication>>(
-      _applicationsKey,
+      key,
       _remote.fetchApplications,
     );
   }

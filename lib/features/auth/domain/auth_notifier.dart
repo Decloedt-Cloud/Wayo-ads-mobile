@@ -17,12 +17,14 @@ import '../../../core/push/system_push_permission.dart';
 import '../../../core/result.dart';
 import '../../../core/storage/secure_storage.dart';
 import '../../chat/presentation/providers/chat_providers.dart';
+import '../../creator/presentation/providers/creator_session_gate.dart';
 import '../../creator_wallet/presentation/providers/creator_wallet_providers.dart';
 import '../../dashboard/data/dashboard_hive_store.dart';
 import '../../dashboard/presentation/providers/dashboard_state_providers.dart';
 import '../data/google_sign_in_facade.dart';
 import '../data/models/app_user.dart';
 import '../data/models/auth_response.dart';
+import '../../app_settings/data/mobile_session_register.dart';
 import '../data/repositories/auth_repository.dart';
 import 'wayo_ads_account_role.dart';
 
@@ -116,6 +118,7 @@ class AuthNotifier extends _$AuthNotifier {
           final merged = _preserveExistingRoleIfNeeded(existingUser, data.user);
           await _persistAuthWithUser(storage, data, merged);
           unawaited(_syncPushTokenBestEffort());
+          _registerMobileSessionBestEffort();
           return AuthAuthenticated(merged);
         case Failure():
           await storage.clearAll();
@@ -126,14 +129,20 @@ class AuthNotifier extends _$AuthNotifier {
     // Session valid — reset any stale invalidation flags.
     AuthInterceptor.resetSessionState();
     unawaited(_syncPushTokenBestEffort());
+    _registerMobileSessionBestEffort();
     return AuthAuthenticated(existingUser);
   }
 
-  Future<void> login(
-    String email,
-    String password, {
-    bool forceWebLogout = false,
-  }) async {
+  void _registerMobileSessionBestEffort() {
+    unawaited(
+      registerMobileWayoSession(
+        wayoAdsDio: ref.read(wayoAdsDioProvider),
+        storage: ref.read(secureStorageProvider),
+      ).catchError((_) {}),
+    );
+  }
+
+  Future<void> login(String email, String password) async {
     if (_credentialLoginInFlight) {
       return;
     }
@@ -144,11 +153,10 @@ class AuthNotifier extends _$AuthNotifier {
       final result = await repo.login(
         email: email,
         password: password,
-        forceWebLogout: forceWebLogout,
       );
       switch (result) {
         case Success(:final data):
-          await _finalizeSuccessfulLogin(data, forceWebLogout: forceWebLogout);
+          await _finalizeSuccessfulLogin(data);
         case Failure(:final error):
           state = AsyncValue.error(error, StackTrace.current);
       }
@@ -157,10 +165,7 @@ class AuthNotifier extends _$AuthNotifier {
     }
   }
 
-  Future<void> loginWithGoogle(
-    String idToken, {
-    bool forceWebLogout = false,
-  }) async {
+  Future<void> loginWithGoogle(String idToken) async {
     if (_credentialLoginInFlight) {
       return;
     }
@@ -168,13 +173,10 @@ class AuthNotifier extends _$AuthNotifier {
     try {
       state = const AsyncValue.data(AuthLoading());
       final repo = ref.read(authRepositoryProvider);
-      final result = await repo.loginWithGoogle(
-        idToken: idToken,
-        forceWebLogout: forceWebLogout,
-      );
+      final result = await repo.loginWithGoogle(idToken: idToken);
       switch (result) {
         case Success(:final data):
-          await _finalizeSuccessfulLogin(data, forceWebLogout: forceWebLogout);
+          await _finalizeSuccessfulLogin(data);
         case Failure(:final error):
           state = AsyncValue.error(error, StackTrace.current);
       }
@@ -188,7 +190,6 @@ class AuthNotifier extends _$AuthNotifier {
     required String rawNonce,
     String? authorizationCode,
     String? appleUserId,
-    bool forceWebLogout = false,
   }) async {
     if (_credentialLoginInFlight) {
       return;
@@ -202,11 +203,10 @@ class AuthNotifier extends _$AuthNotifier {
         rawNonce: rawNonce,
         authorizationCode: authorizationCode,
         appleUserId: appleUserId,
-        forceWebLogout: forceWebLogout,
       );
       switch (result) {
         case Success(:final data):
-          await _finalizeSuccessfulLogin(data, forceWebLogout: forceWebLogout);
+          await _finalizeSuccessfulLogin(data);
         case Failure(:final error):
           state = AsyncValue.error(error, StackTrace.current);
       }
@@ -227,55 +227,29 @@ class AuthNotifier extends _$AuthNotifier {
   /// 1. The login response already contains fresh user data
   /// 2. Calling it immediately risks 429 rate limits on `/api/auth/user`
   /// 3. The web version doesn't make this extra call either
-  Future<void> _finalizeSuccessfulLogin(
-    AuthResponse data, {
-    bool forceWebLogout = false,
-  }) async {
+  Future<void> _finalizeSuccessfulLogin(AuthResponse data) async {
     AuthInterceptor.resetSessionState();
     _resetDashboardNetworkSpacing();
     await resetPushDeliveryForAccountSwitch();
     await dismissAllWayoLocalPushNotifications();
     await DashboardHiveStore.clearAll();
+    markSessionBootstrapStarted(ref);
     ref.read(chatPostLoginGateProvider.notifier).state = DateTime.now();
-    invalidateChatProvidersSync(ref); // Clear stale chat from previous session.
-    invalidateCreatorWalletProviders(ref);
+    invalidateChatProvidersSync(ref);
     await _persistAuth(ref.read(secureStorageProvider), data);
     // Brief delay so secure storage + Dio interceptors see the new access token.
     await Future<void>.delayed(const Duration(milliseconds: 250));
-    if (forceWebLogout) {
-      unawaited(_invalidateRemoteWebSession());
-    }
-    // Mark profile as just refreshed so subsequent calls respect cooldown.
     _lastProfileRefreshUtc = DateTime.now().toUtc();
     _lastAuthUserFetchStartUtc = DateTime.now().toUtc();
     state = AsyncValue.data(AuthAuthenticated(data.user));
-    // Background tasks - non-blocking, errors handled internally.
+    invalidateRoleSessionProviders(ref);
     unawaited(_bootstrapChatAfterLogin().catchError((_) {}));
     _invalidateDashboardProviders();
     if (data.user.wayoAdsRole == WayoAdsAccountRole.creator) {
       unawaited(_prefetchCreatorWalletAfterLogin());
     }
     unawaited(_syncPushTokenBestEffort());
-  }
-
-  /// Tells Wayo-ads to invalidate open browser sessions after mobile force-disconnect.
-  Future<void> _invalidateRemoteWebSession() async {
-    final dio = ref.read(wayoAdsDioProvider);
-    for (var attempt = 0; attempt < 3; attempt++) {
-      if (attempt > 0) {
-        await Future<void>.delayed(const Duration(milliseconds: 200));
-      }
-      try {
-        await dio.post<void>('/api/auth/invalidate-web-session');
-        return;
-      } catch (e, st) {
-        if (kDebugMode) {
-          debugPrint(
-            '[Auth] invalidate-web-session attempt ${attempt + 1} failed: $e\n$st',
-          );
-        }
-      }
-    }
+    _registerMobileSessionBestEffort();
   }
 
   /// Lets Auth / Wayo-ads persist the session before [GET /api/chat/token] to avoid
@@ -413,6 +387,8 @@ class AuthNotifier extends _$AuthNotifier {
     await DashboardHiveStore.clearAll();
     await ref.read(secureStorageProvider).clearAll();
     state = const AsyncValue.data(AuthUnauthenticated());
+    clearSessionBootstrap(ref);
+    invalidateRoleSessionProviders(ref);
     _invalidateDashboardAndChatProviders();
     await GoogleSignInFacade.signOutFromGoogle();
   }
@@ -424,6 +400,7 @@ class AuthNotifier extends _$AuthNotifier {
     unawaited(deactivatePushDelivery());
     unawaited(dismissAllWayoLocalPushNotifications());
     state = const AsyncValue.data(AuthUnauthenticated());
+    clearSessionBootstrap(ref);
     unawaited(_clearLocalSessionAfterForcedLogout());
   }
 
@@ -434,6 +411,8 @@ class AuthNotifier extends _$AuthNotifier {
     );
     await DashboardHiveStore.clearAll();
     await ref.read(secureStorageProvider).clearAll();
+    clearSessionBootstrap(ref);
+    invalidateRoleSessionProviders(ref);
     _invalidateDashboardAndChatProviders();
     await GoogleSignInFacade.signOutFromGoogle();
   }
@@ -447,7 +426,6 @@ class AuthNotifier extends _$AuthNotifier {
   void _invalidateDashboardAndChatProviders() {
     _invalidateDashboardProviders();
     invalidateChatProviders(ref);
-    invalidateCreatorWalletProviders(ref);
   }
 
   Future<void> _persistAuth(
@@ -484,6 +462,7 @@ class AuthNotifier extends _$AuthNotifier {
   void _resetDashboardNetworkSpacing() {
     ref.read(dashboardRateLimiterProvider).reset();
     ref.read(notificationsRateLimiterProvider).reset();
+    ref.read(requestDeduplicatorProvider).clear();
   }
 
   Future<void> _syncPushTokenBestEffort() async {

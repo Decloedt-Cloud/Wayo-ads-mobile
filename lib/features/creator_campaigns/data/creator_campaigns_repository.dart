@@ -29,13 +29,15 @@ class CreatorCampaignsRepository {
   final RequestDeduplicator _dedup;
   final RateLimiter _rate;
 
-  static String _browseKey(int page, int limit, String search) =>
-      'creator_browse_campaigns_${page}_${limit}_$search';
-  static String _detailKey(String id) => 'creator_campaign_detail_$id';
-  static String _submissionsKey(String id) =>
-      'creator_campaign_submissions_$id';
+  static String _browseKey(int userId, int page, int limit, String search) =>
+      'creator_browse_${userId}_${page}_${limit}_$search';
+  static String _detailKey(int userId, String id) =>
+      'creator_campaign_detail_${userId}_$id';
+  static String _submissionsKey(int userId, String campaignId) =>
+      'creator_campaign_submissions_${userId}_$campaignId';
 
   Future<CreatorBrowsePageResult> fetchBrowseCampaignsPage({
+    required int sessionUserId,
     List<CreatorBrowseCampaign>? fallbackList,
     CreatorBrowsePageResult? fallbackPage,
     int limit = 10,
@@ -43,7 +45,7 @@ class CreatorCampaignsRepository {
     String? search,
   }) async {
     final normalizedSearch = search?.trim() ?? '';
-    final key = _browseKey(page, limit, normalizedSearch);
+    final key = _browseKey(sessionUserId, page, limit, normalizedSearch);
     final fallback =
         fallbackPage ??
         (fallbackList != null
@@ -70,9 +72,10 @@ class CreatorCampaignsRepository {
 
   Future<CreatorCampaignDetail> fetchCampaignDetail(
     String id, {
+    required int sessionUserId,
     CreatorCampaignDetail? fallback,
   }) async {
-    final key = _detailKey(id);
+    final key = _detailKey(sessionUserId, id);
     if (!_rate.canCall(key) && fallback != null) {
       return fallback;
     }
@@ -83,8 +86,11 @@ class CreatorCampaignsRepository {
     );
   }
 
-  Future<List<CreatorSocialPost>> fetchMySubmissions(String campaignId) async {
-    final key = _submissionsKey(campaignId);
+  Future<List<CreatorSocialPost>> fetchMySubmissions(
+    String campaignId, {
+    required int sessionUserId,
+  }) async {
+    final key = _submissionsKey(sessionUserId, campaignId);
     _rate.mark(key);
     return _dedup.run<List<CreatorSocialPost>>(
       key,

@@ -42,4 +42,8 @@ final class RequestDeduplicator {
 
     return completer.future;
   }
+
+  /// Drops in-flight coalescing keys so a new session never awaits the prior
+  /// user's network work (account switch / quick re-login).
+  void clear() => _inflight.clear();
 }

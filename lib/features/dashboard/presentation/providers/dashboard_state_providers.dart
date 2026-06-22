@@ -159,6 +159,7 @@ final realtimeInvalidationProvider = Provider<void>((ref) {
     final submissionEvent =
         lower.contains('submission') &&
         (lower.contains('updat') || lower.contains('review'));
+    final creatorVideoStatusEvent = shouldRefreshCreatorVideoSubmissions(sig.raw);
     final payoutEvent =
         lower.contains('payout') &&
         (lower.contains('updat') || lower.contains('complet'));
@@ -182,6 +183,7 @@ final realtimeInvalidationProvider = Provider<void>((ref) {
       ref.invalidate(advertiserCampaignsCountsProvider);
       ref.invalidate(advertiserDashboardCampaignsPageFetchProvider);
       ref.invalidate(advertiserCampaignDetailProvider);
+      invalidateAdvertiserBrowseCampaigns(ref);
       final authCampaign = ref.read(authNotifierProvider).valueOrNull;
       if (authCampaign is AuthAuthenticated &&
           authCampaign.user.wayoAdsRole == WayoAdsAccountRole.superAdmin) {
@@ -239,7 +241,10 @@ final realtimeInvalidationProvider = Provider<void>((ref) {
     }
     // Submission reviews update the `myVideos` list inside the detail view;
     // invalidate the family wholesale so open screens re-fetch lazily.
-    if (fromCreatorChannel || submissionEvent || applicationEvent) {
+    if (fromCreatorChannel ||
+        submissionEvent ||
+        applicationEvent ||
+        creatorVideoStatusEvent) {
       ref.invalidate(creatorCampaignDetailProvider);
       ref.invalidate(creatorMySubmissionsProvider);
     }
@@ -274,3 +279,53 @@ final realtimeInvalidationProvider = Provider<void>((ref) {
   });
   ref.onDispose(sub.cancel);
 });
+
+/// Clears cached creator dashboard + campaigns reads after logout / account switch.
+void invalidateCreatorSessionProviders(Ref ref) {
+  ref.read(creatorRateLimiterProvider).reset();
+  ref.read(creatorCampaignsRateLimiterProvider).reset();
+  ref.read(requestDeduplicatorProvider).clear();
+  ref.read(creatorBrowseCampaignPageProvider.notifier).state = 1;
+  ref.read(creatorBrowseCampaignSearchQueryProvider.notifier).state = '';
+  Future.microtask(() {
+    ref.invalidate(creatorStatsProvider);
+    ref.invalidate(creatorApplicationsProvider);
+    ref.invalidate(creatorBrowseCampaignsPagedProvider);
+    ref.invalidate(creatorCampaignDetailProvider);
+    ref.invalidate(creatorMySubmissionsProvider);
+    ref.invalidate(creatorTrackingLinksProvider);
+  });
+}
+
+/// Clears advertiser dashboard reads after logout / account switch.
+void invalidateAdvertiserSessionProviders(Ref ref) {
+  ref.read(dashboardRateLimiterProvider).reset();
+  ref.read(advertiserDashboardCampaignPageProvider.notifier).state = 1;
+  ref.read(advertiserCampaignsViewModeProvider.notifier).state =
+      AdvertiserCampaignsViewMode.mine;
+  ref.read(advertiserBrowseCampaignPageProvider.notifier).state = 1;
+  ref.read(advertiserBrowseCampaignSearchProvider.notifier).state = '';
+  resetAdvertiserBrowseExplorerFilters(ref);
+  Future.microtask(() {
+    ref.invalidate(advertiserDashboardCampaignsPageFetchProvider);
+    ref.invalidate(dashboardStreamProvider);
+    ref.invalidate(advertiserBrowseCampaignsPagedProvider);
+  });
+}
+
+/// Clears superadmin panel reads after logout / account switch.
+void invalidateSuperadminSessionProviders(Ref ref) {
+  Future.microtask(() {
+    invalidateSuperadminRealtimePanels(ref);
+    ref.invalidate(dashboardStatsProvider);
+    ref.invalidate(payoutStatsProvider);
+  });
+}
+
+/// All role-specific caches — call after login state + tokens are ready, or on logout.
+void invalidateRoleSessionProviders(Ref ref) {
+  invalidateCreatorSessionProviders(ref);
+  invalidateCreatorWalletProviders(ref);
+  invalidateAdvertiserSessionProviders(ref);
+  invalidateSuperadminSessionProviders(ref);
+}

@@ -252,17 +252,58 @@ final class WayoRoutePushPayload {
     return m;
   }
 
-  static String? _resolveRoute(Map<String, dynamic> m) {
-    final direct = _trimmed(m['route']);
-    if (direct != null && direct.startsWith('/')) {
-      return normalizeWayoPushNavigationRoute(direct);
-    }
+  static bool _isCreatorCampaignBrowsePayload(Map<String, dynamic> m) {
+    final type = (_trimmed(m['type']) ??
+            _trimmed(m['notificationType']) ??
+            _trimmed(m['notification_type']) ??
+            '')
+        .toUpperCase();
+    if (type.contains('CAMPAIGN_ACTIVATED')) return true;
+    if (type.contains('NEW_CAMPAIGN')) return true;
+    final title = (_trimmed(m['title']) ?? '').toLowerCase();
+    if (title == 'new campaign available') return true;
+    return false;
+  }
 
+  static String? _campaignIdFromPayload(Map<String, dynamic> m) {
+    return _trimmed(m['campaignId']) ?? _trimmed(m['campaign_id']);
+  }
+
+  /// Web notifications use `/campaigns/:id`; creator browse alerts must open creator detail.
+  static String? _remapCreatorBrowseCampaignRoute(
+    String? route,
+    Map<String, dynamic> m,
+  ) {
+    if (route == null || !_isCreatorCampaignBrowsePayload(m)) return route;
+    final base = route.split('?').first;
+    final match = RegExp(r'^/campaigns/([^/?#]+)$').firstMatch(base);
+    if (match != null) {
+      return '/creator/campaigns/${match.group(1)!}';
+    }
+    return route;
+  }
+
+  static String? _resolveRoute(Map<String, dynamic> m) {
     final type = (_trimmed(m['type']) ??
             _trimmed(m['notificationType']) ??
             _trimmed(m['notification_type']) ??
             '')
         .toLowerCase();
+
+    final campId = _campaignIdFromPayload(m);
+    if (_isCreatorCampaignBrowsePayload(m) &&
+        campId != null &&
+        campId.isNotEmpty) {
+      return '/creator/campaigns/$campId';
+    }
+
+    final direct = _trimmed(m['route']);
+    if (direct != null && direct.startsWith('/')) {
+      return _remapCreatorBrowseCampaignRoute(
+        normalizeWayoPushNavigationRoute(direct),
+        m,
+      );
+    }
 
     final actionUrl =
         _trimmed(m['actionUrl']) ?? _trimmed(m['action_url']);
@@ -278,15 +319,15 @@ final class WayoRoutePushPayload {
                 }
               })(),
       );
-      if (normalized != null) return normalized;
+      if (normalized != null) {
+        return _remapCreatorBrowseCampaignRoute(normalized, m);
+      }
     }
 
     if (type.contains('withdraw') || type.contains('payout')) {
       return kSuperadminWithdrawalsRoute;
     }
 
-    final campId =
-        _trimmed(m['campaignId']) ?? _trimmed(m['campaign_id']);
     if (campId != null && campId.isNotEmpty) {
       if (type.contains('campaign_activated') || type.contains('new_campaign')) {
         return '/creator/campaigns/$campId';
@@ -301,7 +342,8 @@ final class WayoRoutePushPayload {
       if (type.contains('creator')) {
         return '/creator/campaigns/$campId';
       }
-      return '/campaigns/$campId';
+      return _remapCreatorBrowseCampaignRoute('/campaigns/$campId', m) ??
+          '/campaigns/$campId';
     }
 
     if (type.contains('wallet') ||

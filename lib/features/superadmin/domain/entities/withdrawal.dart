@@ -146,6 +146,8 @@ class WithdrawalsSummary {
   const WithdrawalsSummary({
     required this.pendingCount,
     required this.pendingAmountCents,
+    required this.processingCount,
+    required this.processingAmountCents,
     required this.validatedCount,
     required this.validatedAmountCents,
     required this.paidCount,
@@ -156,6 +158,8 @@ class WithdrawalsSummary {
 
   final int pendingCount;
   final int pendingAmountCents;
+  final int processingCount;
+  final int processingAmountCents;
   final int validatedCount;
   final int validatedAmountCents;
   final int paidCount;
@@ -169,6 +173,8 @@ class WithdrawalsSummary {
       return WithdrawalsSummary(
         pendingCount: _parseInt(json['pendingCount']),
         pendingAmountCents: _parseInt(json['pendingAmountCents']),
+        processingCount: _parseInt(json['processingCount']),
+        processingAmountCents: _parseInt(json['processingAmountCents']),
         validatedCount: _parseInt(json['validatedCount']),
         validatedAmountCents: _parseInt(json['validatedAmountCents']),
         paidCount: _parseInt(json['paidCount']),
@@ -195,6 +201,8 @@ class WithdrawalsSummary {
     return WithdrawalsSummary(
       pendingCount: statusCount('PENDING'),
       pendingAmountCents: statusAmount('PENDING'),
+      processingCount: statusCount('PROCESSING'),
+      processingAmountCents: statusAmount('PROCESSING'),
       validatedCount: statusCount('VALIDATED'),
       validatedAmountCents: statusAmount('VALIDATED'),
       paidCount: statusCount('PAID'),

@@ -1,8 +1,33 @@
-/// Same idea as `resolveMediaUrl` in `AdvertiserChatDialog.tsx`.
+import 'package:flutter/foundation.dart';
+
+import '../../../core/network/wayo_ads_public_url.dart';
+
+bool _isLoopbackHost(String host) {
+  final h = host.toLowerCase();
+  return h == 'localhost' || h == '127.0.0.1' || h == '10.0.2.2' || h == '[::1]';
+}
+
+String _maybeRemapLoopbackHostForAndroidEmulator(String url) {
+  if (kIsWeb) return url;
+  try {
+    final u = Uri.parse(url);
+    if (!u.hasScheme || !(u.scheme == 'http' || u.scheme == 'https')) {
+      return url;
+    }
+    final h = u.host.toLowerCase();
+    if (h == 'localhost' || h == '127.0.0.1') {
+      return u.replace(host: '10.0.2.2').toString();
+    }
+  } catch (_) {}
+  return url;
+}
+
+/// Same idea as `resolveChatMediaUrl` in Wayo-ads `chat-media-url.ts`.
 ///
 /// Chat-service may return `file_url` as a full URL built from Laravel `APP_URL`
 /// (e.g. `http://127.0.0.1:8000/storage/...`) while the app talks to another host
-/// (`apiBaseUrl`). Always serve `/storage/...` assets through [apiBaseUrl].
+/// (`apiBaseUrl`). Only rewrite loopback `/storage/` hosts — Auth / Wayo-ads avatars
+/// on production hosts must stay unchanged.
 String resolveChatMediaUrl(String? path, String apiBaseUrl) {
   if (path == null || path.isEmpty) return '';
   final p = path.trim();
@@ -14,7 +39,8 @@ String resolveChatMediaUrl(String? path, String apiBaseUrl) {
     if (uri != null &&
         uri.path.contains('/storage/') &&
         baseUri != null &&
-        baseUri.host.isNotEmpty) {
+        baseUri.host.isNotEmpty &&
+        _isLoopbackHost(uri.host)) {
       return Uri(
         scheme: baseUri.scheme,
         host: baseUri.host,
@@ -23,7 +49,7 @@ String resolveChatMediaUrl(String? path, String apiBaseUrl) {
         query: uri.query.isEmpty ? null : uri.query,
       ).toString();
     }
-    return p;
+    return _maybeRemapLoopbackHostForAndroidEmulator(p);
   }
 
   if (p.startsWith('blob:') || p.startsWith('data:')) {
@@ -32,6 +58,19 @@ String resolveChatMediaUrl(String? path, String apiBaseUrl) {
 
   final segment = p.startsWith('/') ? p : '/$p';
   return '$base$segment';
+}
+
+/// Profile photos in chat — Auth avatars, Wayo-ads `/uploads/`, or chat storage.
+String resolveChatAvatarUrl(String? path, String chatApiBaseUrl) {
+  if (path == null || path.isEmpty) return '';
+  final t = path.trim();
+  if (t.contains('/uploads/')) {
+    final fromAds = normalizeWayoAdsMediaUrl(t);
+    if (fromAds != null && fromAds.isNotEmpty) {
+      return fromAds;
+    }
+  }
+  return resolveChatMediaUrl(path, chatApiBaseUrl);
 }
 
 /// Storage-relative path for comparing caption vs attachment (ignores host).

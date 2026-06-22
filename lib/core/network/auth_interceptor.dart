@@ -152,6 +152,12 @@ class AuthInterceptor extends QueuedInterceptor {
       } else if (kDebugMode) {
         debugPrint('[auth] No token for ${options.uri.path}');
       }
+
+      final sessionId = await storage.getMobileSessionId();
+      if (sessionId != null && sessionId.isNotEmpty) {
+        options.headers['X-Wayo-Session-Id'] = sessionId;
+      }
+
       handler.next(options);
     } catch (e, st) {
       if (kDebugMode) {

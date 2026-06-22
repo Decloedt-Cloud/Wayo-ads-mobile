@@ -14,6 +14,7 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/creator_colors.dart';
 import '../../../../i18n/strings.g.dart';
 import '../../../dashboard/presentation/widgets/error_banner.dart';
+import '../../../creator/presentation/providers/creator_session_gate.dart';
 import '../../domain/creator_business_profile.dart';
 import '../../domain/creator_wallet_models.dart';
 import '../providers/creator_wallet_providers.dart';
@@ -84,12 +85,17 @@ class CreatorWalletTabScreen extends ConsumerWidget {
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
                 child: pageAsync.when(
                   loading: () => const _HeroSkeleton(),
-                  error: (e, _) => ErrorBanner(
-                    message:
-                        '${t.creator.wallet.load_error}\n${t.creator.wallet.history_load_error}',
-                    retryLabel: t.dashboard.errors.retry,
-                    onRetry: () => ref.invalidate(creatorWalletPageProvider),
-                  ),
+                  error: (e, _) {
+                    if (shouldSuppressCreatorLoadError(ref, e)) {
+                      return const _HeroSkeleton();
+                    }
+                    return ErrorBanner(
+                      message:
+                          '${t.creator.wallet.load_error}\n${t.creator.wallet.history_load_error}',
+                      retryLabel: t.dashboard.errors.retry,
+                      onRetry: () => ref.invalidate(creatorWalletPageProvider),
+                    );
+                  },
                   data: (page) => _BalanceBlock(
                     page: page,
                     stripe:

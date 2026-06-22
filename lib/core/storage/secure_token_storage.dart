@@ -55,9 +55,15 @@ final class SecureTokenStorage {
   Future<void> clear() => _storage.deleteAll();
 
   static const _kUserJson = 'wayo.auth_user_json';
+  static const _kMobileSessionId = 'wayo.mobile_session_id';
 
   Future<void> writeUserJson(String json) =>
       _storage.write(key: _kUserJson, value: json);
 
   Future<String?> readUserJson() => _storage.read(key: _kUserJson);
+
+  Future<void> writeMobileSessionId(String id) =>
+      _storage.write(key: _kMobileSessionId, value: id);
+
+  Future<String?> readMobileSessionId() => _storage.read(key: _kMobileSessionId);
 }

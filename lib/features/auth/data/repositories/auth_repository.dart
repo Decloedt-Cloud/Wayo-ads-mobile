@@ -21,18 +21,13 @@ abstract class IAuthRepository {
   Future<Result<AuthResponse>> login({
     required String email,
     required String password,
-    bool forceWebLogout = false,
   });
-  Future<Result<AuthResponse>> loginWithGoogle({
-    required String idToken,
-    bool forceWebLogout = false,
-  });
+  Future<Result<AuthResponse>> loginWithGoogle({required String idToken});
   Future<Result<AuthResponse>> loginWithApple({
     required String identityToken,
     required String rawNonce,
     String? authorizationCode,
     String? appleUserId,
-    bool forceWebLogout = false,
   });
   Future<Result<AuthResponse>> refresh({required String refreshToken});
 
@@ -96,7 +91,6 @@ class AuthRepositoryImpl implements IAuthRepository {
   Future<Result<AuthResponse>> login({
     required String email,
     required String password,
-    bool forceWebLogout = false,
   }) async {
     try {
       final path = AuthRuntimeConfig.instance.authHttpPath('login');
@@ -111,7 +105,6 @@ class AuthRepositoryImpl implements IAuthRepository {
             password: password,
             app: cfg.authAppName.isNotEmpty ? cfg.authAppName : null,
             appKey: cfg.wayoAdsAppKey.isNotEmpty ? cfg.wayoAdsAppKey : null,
-            forceWebLogout: forceWebLogout,
           ).toJson(),
         ),
         options: loginOptions,
@@ -119,10 +112,6 @@ class AuthRepositoryImpl implements IAuthRepository {
       final data = res.data;
       if (data == null) {
         return const Failure(ServerException('Empty response'));
-      }
-      final conflict = _parseWebSessionConflict(data);
-      if (conflict != null) {
-        return Failure(conflict);
       }
       if (data['success'] == false) {
         final msg = data['message'] as String? ?? 'Login failed';
@@ -137,18 +126,12 @@ class AuthRepositoryImpl implements IAuthRepository {
   }
 
   @override
-  Future<Result<AuthResponse>> loginWithGoogle({
-    required String idToken,
-    bool forceWebLogout = false,
-  }) {
+  Future<Result<AuthResponse>> loginWithGoogle({required String idToken}) {
     final existing = _googleLoginInFlight;
     if (existing != null) {
       return existing;
     }
-    final runner = _loginWithGoogleOnce(
-      idToken,
-      forceWebLogout: forceWebLogout,
-    );
+    final runner = _loginWithGoogleOnce(idToken);
     _googleLoginInFlight = runner;
     return runner.whenComplete(() {
       if (identical(_googleLoginInFlight, runner)) {
@@ -157,17 +140,13 @@ class AuthRepositoryImpl implements IAuthRepository {
     });
   }
 
-  Future<Result<AuthResponse>> _loginWithGoogleOnce(
-    String idToken, {
-    bool forceWebLogout = false,
-  }) async {
+  Future<Result<AuthResponse>> _loginWithGoogleOnce(String idToken) async {
     try {
       final cfg = AuthRuntimeConfig.instance;
       final body = mergeWayoAuthPayload(<String, dynamic>{
         'id_token': idToken,
         if (cfg.authAppName.isNotEmpty) 'app': cfg.authAppName,
         if (cfg.wayoAdsAppKey.isNotEmpty) 'app_key': cfg.wayoAdsAppKey,
-        if (forceWebLogout) 'force_web_logout': true,
       });
       final path = AuthRuntimeConfig.instance.authHttpPath('google');
       final googleOptions = Options(extra: {kSkipAuthInjection: true})
@@ -180,10 +159,6 @@ class AuthRepositoryImpl implements IAuthRepository {
       final data = res.data;
       if (data == null) {
         return const Failure(ServerException('Empty response'));
-      }
-      final conflict = _parseWebSessionConflict(data);
-      if (conflict != null) {
-        return Failure(conflict);
       }
       if (data['success'] == false) {
         final msg = data['message'] as String? ?? 'Google sign-in failed';
@@ -203,7 +178,6 @@ class AuthRepositoryImpl implements IAuthRepository {
     required String rawNonce,
     String? authorizationCode,
     String? appleUserId,
-    bool forceWebLogout = false,
   }) {
     final existing = _appleLoginInFlight;
     if (existing != null) {
@@ -214,7 +188,6 @@ class AuthRepositoryImpl implements IAuthRepository {
       rawNonce: rawNonce,
       authorizationCode: authorizationCode,
       appleUserId: appleUserId,
-      forceWebLogout: forceWebLogout,
     );
     _appleLoginInFlight = runner;
     return runner.whenComplete(() {
@@ -229,7 +202,6 @@ class AuthRepositoryImpl implements IAuthRepository {
     required String rawNonce,
     String? authorizationCode,
     String? appleUserId,
-    bool forceWebLogout = false,
   }) async {
     try {
       final cfg = AuthRuntimeConfig.instance;
@@ -243,7 +215,6 @@ class AuthRepositoryImpl implements IAuthRepository {
           'apple_user_id': appleUserId,
         if (cfg.authAppName.isNotEmpty) 'app': cfg.authAppName,
         if (cfg.wayoAdsAppKey.isNotEmpty) 'app_key': cfg.wayoAdsAppKey,
-        if (forceWebLogout) 'force_web_logout': true,
       });
       final path = AuthRuntimeConfig.instance.authHttpPath('apple');
       final appleOptions = Options(
@@ -259,10 +230,6 @@ class AuthRepositoryImpl implements IAuthRepository {
       final data = res.data;
       if (data == null) {
         return const Failure(ServerException('Empty response'));
-      }
-      final conflict = _parseWebSessionConflict(data);
-      if (conflict != null) {
-        return Failure(conflict);
       }
       if (data['success'] == false) {
         final msg = data['message'] as String? ?? 'Apple sign-in failed';
@@ -724,17 +691,6 @@ class AuthRepositoryImpl implements IAuthRepository {
     }
     final status = e.response?.statusCode;
     final body = e.response?.data;
-    if (body is Map<String, dynamic>) {
-      final conflict = _parseWebSessionConflict(body);
-      if (conflict != null) {
-        return conflict;
-      }
-    } else if (body is Map) {
-      final conflict = _parseWebSessionConflict(body.cast<String, dynamic>());
-      if (conflict != null) {
-        return conflict;
-      }
-    }
     var message = e.message ?? 'Request failed';
     if (body is Map && body['message'] is String) {
       message = body['message'] as String;
@@ -744,19 +700,6 @@ class AuthRepositoryImpl implements IAuthRepository {
         retryAfterSeconds: _parseRetryAfterSeconds(e, message),
       );
     }
-    if (status == 409) {
-      if (body is Map<String, dynamic>) {
-        final conflict = _parseWebSessionConflict(body);
-        if (conflict != null) {
-          return conflict;
-        }
-      } else if (body is Map) {
-        final conflict = _parseWebSessionConflict(body.cast<String, dynamic>());
-        if (conflict != null) {
-          return conflict;
-        }
-      }
-    }
     if (status == 401 || status == 422) {
       return InvalidCredentialsException(message);
     }
@@ -764,37 +707,6 @@ class AuthRepositoryImpl implements IAuthRepository {
       return InvalidCredentialsException(message);
     }
     return ServerException(message, status);
-  }
-
-  WebSessionActiveException? _parseWebSessionConflict(Map<String, dynamic> data) {
-    final code = data['code'];
-    if (code != 'WEB_SESSION_ACTIVE') {
-      return null;
-    }
-    final message = data['message'] as String?;
-    final logoutUrl = data['web_logout_url'] as String?;
-    final email = _parseConflictEmail(data);
-    return WebSessionActiveException(
-      message: message ??
-          'This account is already active on another device. Disconnect the other session to sign in here.',
-      logoutUrl: logoutUrl,
-      email: email,
-    );
-  }
-
-  String? _parseConflictEmail(Map<String, dynamic> data) {
-    final direct = data['email'];
-    if (direct is String && direct.trim().isNotEmpty) {
-      return direct.trim();
-    }
-    final user = data['user'];
-    if (user is Map) {
-      final fromUser = user['email'];
-      if (fromUser is String && fromUser.trim().isNotEmpty) {
-        return fromUser.trim();
-      }
-    }
-    return null;
   }
 }
 

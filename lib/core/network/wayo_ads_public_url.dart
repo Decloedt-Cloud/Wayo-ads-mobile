@@ -152,3 +152,18 @@ String? buildPublicTrackingLinkUrl(String slug) {
   if (origin.isEmpty) return '/t/$s';
   return _maybeRemapLoopbackHostForAndroidEmulator('$origin/t/$s');
 }
+
+/// Web-only YouTube OAuth settings (`/settings/youtube`) — creators connect their channel here.
+String? buildCreatorYoutubeSettingsWebUrl() {
+  var origin = AuthRuntimeConfig.instance.resolvedWayoAdsPublicAssetOrigin;
+  origin ??= AuthRuntimeConfig.instance.resolvedWayoAdsBaseUrl.replaceAll(
+    RegExp(r'/+$'),
+    '',
+  );
+  if (origin.endsWith('/api')) {
+    origin = origin.substring(0, origin.length - 4);
+  }
+  origin = origin.replaceAll(RegExp(r'/+$'), '');
+  if (origin.isEmpty) return null;
+  return _maybeRemapLoopbackHostForAndroidEmulator('$origin/settings/youtube');
+}

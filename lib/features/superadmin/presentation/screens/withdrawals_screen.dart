@@ -23,6 +23,7 @@ class _WithdrawalsScreenState extends ConsumerState<WithdrawalsScreen> {
   Timer? _pollTimer;
 
   static const _pollInterval = Duration(seconds: 4);
+  static final _currencyFormat = NumberFormat.currency(symbol: '\$', decimalDigits: 2);
 
   @override
   void initState() {
@@ -118,36 +119,14 @@ class _WithdrawalsScreenState extends ConsumerState<WithdrawalsScreen> {
               ],
             ),
           ),
-          // Summary cards
+          // Summary cards (aligned with web superadmin withdrawals page)
           withdrawalsAsync.when(
             data: (page) => Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: AdminMiniStatCard(
-                      label: 'Pending',
-                      value: '\$${(page.summary.pendingAmountCents / 100).toStringAsFixed(0)}',
-                      color: const Color(0xFFF59E0B),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: AdminMiniStatCard(
-                      label: 'Validated',
-                      value: '\$${(page.summary.validatedAmountCents / 100).toStringAsFixed(0)}',
-                      color: AppColors.success,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: AdminMiniStatCard(
-                      label: 'Paid',
-                      value: '\$${(page.summary.paidAmountCents / 100).toStringAsFixed(0)}',
-                      color: AppColors.primary,
-                    ),
-                  ),
-                ],
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              child: _WithdrawalsSummaryRow(
+                summary: page.summary,
+                totalCount: page.total,
+                formatCurrency: (cents) => _currencyFormat.format(cents / 100),
               ),
             ),
             loading: () => const Padding(
@@ -360,6 +339,61 @@ class _WithdrawalsScreenState extends ConsumerState<WithdrawalsScreen> {
         ),
       );
     }
+  }
+}
+
+class _WithdrawalsSummaryRow extends StatelessWidget {
+  const _WithdrawalsSummaryRow({
+    required this.summary,
+    required this.totalCount,
+    required this.formatCurrency,
+  });
+
+  final WithdrawalsSummary summary;
+  final int totalCount;
+  final String Function(int cents) formatCurrency;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: AdminMiniStatCard(
+            label: 'Pending',
+            value: '${summary.pendingCount}',
+            subtitle: formatCurrency(summary.pendingAmountCents),
+            color: const Color(0xFFF59E0B),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: AdminMiniStatCard(
+            label: 'Processing',
+            value: '${summary.processingCount}',
+            subtitle: formatCurrency(summary.processingAmountCents),
+            color: const Color(0xFF3B82F6),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: AdminMiniStatCard(
+            label: 'Validated',
+            value: '${summary.validatedCount}',
+            subtitle: formatCurrency(summary.validatedAmountCents),
+            color: AppColors.success,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: AdminMiniStatCard(
+            label: 'Total',
+            value: '$totalCount',
+            subtitle: 'All time',
+            color: AppColors.primary,
+          ),
+        ),
+      ],
+    );
   }
 }
 

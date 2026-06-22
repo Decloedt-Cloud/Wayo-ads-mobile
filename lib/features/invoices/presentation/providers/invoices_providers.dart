@@ -16,7 +16,8 @@ enum InvoiceFilter {
   deposit,
   billing,
   payout,
-  earnings;
+  earnings,
+  tokenPurchase;
 
   bool matches(Invoice inv) {
     switch (this) {
@@ -30,7 +31,23 @@ enum InvoiceFilter {
         return inv.type == InvoiceType.payout;
       case InvoiceFilter.earnings:
         return inv.type == InvoiceType.earnings;
+      case InvoiceFilter.tokenPurchase:
+        return inv.type == InvoiceType.tokenPurchase;
     }
+  }
+}
+
+String? _creatorPayoutTypeForServer(InvoiceFilter f) {
+  switch (f) {
+    case InvoiceFilter.payout:
+      return 'WITHDRAWAL';
+    case InvoiceFilter.tokenPurchase:
+      return 'TOKEN_PURCHASE';
+    case InvoiceFilter.all:
+    case InvoiceFilter.deposit:
+    case InvoiceFilter.billing:
+    case InvoiceFilter.earnings:
+      return null;
   }
 }
 
@@ -39,12 +56,12 @@ String? _invoiceTypeForServer(WayoAdsAccountRole role, InvoiceFilter f) {
     case WayoAdsAccountRole.creator:
       switch (f) {
         case InvoiceFilter.payout:
-          return 'PAYOUT';
-        case InvoiceFilter.earnings:
-          return 'EARNINGS';
+        case InvoiceFilter.tokenPurchase:
+          return _creatorPayoutTypeForServer(f);
         case InvoiceFilter.all:
         case InvoiceFilter.deposit:
         case InvoiceFilter.billing:
+        case InvoiceFilter.earnings:
           return null;
       }
     case WayoAdsAccountRole.advertiser:
@@ -57,6 +74,7 @@ String? _invoiceTypeForServer(WayoAdsAccountRole role, InvoiceFilter f) {
         case InvoiceFilter.all:
         case InvoiceFilter.payout:
         case InvoiceFilter.earnings:
+        case InvoiceFilter.tokenPurchase:
           return null;
       }
     case WayoAdsAccountRole.user:
@@ -266,14 +284,14 @@ class InvoicesController extends AsyncNotifier<InvoicesState> {
 
     switch (role) {
       case WayoAdsAccountRole.creator:
-        result = await _repo.loadCreatorPage(
+        result = await _repo.loadCreatorPayoutsPage(
           page: page,
           limit: kCreatorInvoicesPageSize,
-          invoiceType: _invoiceTypeForServer(role, filter),
+          payoutType: _creatorPayoutTypeForServer(filter),
           search: ref.read(invoiceSearchQueryProvider),
           dateFrom: ref.read(invoiceDateFromProvider),
           dateTo: ref.read(invoiceDateToProvider),
-          sortBy: 'createdAt',
+          sortBy: 'statementDate',
           sortDir: 'desc',
         );
         break;
@@ -357,7 +375,8 @@ final invoicesKpisProvider = Provider<AsyncValue<InvoicesKpis>>((ref) {
     final role = ref.watch(currentWayoAdsAccountRoleProvider);
     final filter = ref.watch(invoicesFilterProvider);
     final server = s.advertiserStats;
-    final currency = s.statsCurrency ?? 'EUR';
+    final currency = s.statsCurrency ??
+        (role == WayoAdsAccountRole.creator ? 'USD' : 'EUR');
 
     // Advertiser "Dépôts" / "Budget campagne": totals must match the filtered list,
     // not the account-wide KPI block returned by the API.

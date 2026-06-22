@@ -101,7 +101,22 @@ class SecureStorageService {
   Future<void> clearAll() async {
     _cachedAccessToken = null;
     _cachedRefreshToken = null;
+    _cachedMobileSessionId = null;
     await _tokens.clear();
+  }
+
+  String? _cachedMobileSessionId;
+
+  Future<void> saveMobileSessionId(String id) async {
+    _cachedMobileSessionId = id;
+    await _tokens.writeMobileSessionId(id);
+  }
+
+  Future<String?> getMobileSessionId() async {
+    if (_cachedMobileSessionId != null) return _cachedMobileSessionId;
+    final val = await _tokens.readMobileSessionId();
+    _cachedMobileSessionId = val;
+    return val;
   }
 
   /// Persists [user] as JSON alongside tokens (already saved separately).

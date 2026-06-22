@@ -64,8 +64,17 @@ abstract final class ApiEndpoints {
   /// [GET /api/chat/token](Wayo-ads) — Bearer (mobile) or session (web).
   static const String chatToken = 'api/chat/token';
 
+  /// Marketing profile lookup for missing chat avatars.
+  static const String chatUserProfiles = 'api/chat/user-profiles';
+
   /// [GET /api/user/profile](Wayo-ads) — Bearer (mobile) or session (web).
   static const String userProfile = 'api/user/profile';
+
+  /// [GET/POST /api/user/sessions](Wayo-ads) — active browser sessions (mobile).
+  static const String userSessions = 'api/user/sessions';
+
+  /// [POST /api/user/sessions/register](Wayo-ads) — register this phone session.
+  static const String userSessionsRegister = 'api/user/sessions/register';
 
   /// [POST /api/user/delete-account](Wayo-ads), body `{ password }`.
   static const String userDeleteAccount = 'api/user/delete-account';
@@ -82,6 +91,14 @@ abstract final class ApiEndpoints {
   /// Paginated invoices list for ADVERTISER (`?page=N`, default page size 15) —
   /// [GET /api/advertiser/invoices](Wayo-ads).
   static const String advertiserInvoices = 'api/advertiser/invoices';
+
+  /// Creator earnings statements — [GET /api/creator/payouts](Wayo-ads).
+  static const String creatorPayouts = 'api/creator/payouts';
+
+  /// Creator payout / token-purchase PDF —
+  /// [GET /payouts/:statementId?locale=](Wayo-ads).
+  static String payoutPdf(String statementId) =>
+      'payouts/${Uri.encodeComponent(statementId)}';
 
   /// Paginated invoices list for CREATOR (`?page=N`, page size 10) —
   /// [GET /api/creator/invoices](Wayo-ads).
@@ -111,6 +128,9 @@ abstract final class ApiEndpoints {
 
   /// [GET|PUT /api/creator/business-profile](Wayo-ads).
   static const String creatorBusinessProfile = 'api/creator/business-profile';
+
+  /// [GET /api/creator/youtube/channel](Wayo-ads) — OAuth link status for submit gate.
+  static const String creatorYoutubeChannel = 'api/creator/youtube/channel';
 
   /// [GET|POST /api/creator/campaigns/:id/submit-post](Wayo-ads).
   static String creatorCampaignSubmitPost(String campaignId) =>

@@ -5,22 +5,45 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/dashboard_stats.dart';
+import '../../../chat/presentation/providers/chat_providers.dart';
+import '../../../creator/presentation/providers/creator_session_gate.dart';
 import '../../../dashboard/presentation/providers/dashboard_state_providers.dart';
 import '../providers/superadmin_providers.dart';
 import '../widgets/admin_section_header.dart';
 import '../widgets/admin_stat_card.dart';
 import '../widgets/superadmin_chrome_actions.dart';
 
-class SuperadminDashboardScreen extends ConsumerWidget {
+class SuperadminDashboardScreen extends ConsumerStatefulWidget {
   const SuperadminDashboardScreen({super.key});
 
-  static final _currencyFormat = NumberFormat.currency(symbol: '\$', decimalDigits: 2);
+  @override
+  ConsumerState<SuperadminDashboardScreen> createState() =>
+      _SuperadminDashboardScreenState();
+}
+
+class _SuperadminDashboardScreenState
+    extends ConsumerState<SuperadminDashboardScreen> {
+  static final _currencyFormat =
+      NumberFormat.currency(symbol: '\$', decimalDigits: 2);
   static final _numberFormat = NumberFormat.compact();
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final dashboardAsync = ref.watch(dashboardStatsProvider);
     final payoutAsync = ref.watch(payoutStatsProvider);
+
+    ref.listen(chatPostLoginGateProvider, (previous, gateAt) {
+      if (gateAt == null) return;
+      scheduleSessionRetryAfterBootstrap(ref, () {
+        if (!mounted) return;
+        if (ref.read(payoutStatsProvider).hasError) {
+          ref.invalidate(payoutStatsProvider);
+        }
+        if (ref.read(dashboardStatsProvider).hasError) {
+          ref.invalidate(dashboardStatsProvider);
+        }
+      });
+    });
 
     return Scaffold(
       backgroundColor: AppColors.surfaceOf(context),
@@ -49,10 +72,15 @@ class SuperadminDashboardScreen extends ConsumerWidget {
                 child: payoutAsync.when(
                   data: (stats) => _buildPayoutStats(context, stats),
                   loading: () => const _StatsLoadingGrid(),
-                  error: (e, _) => _ErrorCard(
-                    message: 'Erreur stats payouts: $e',
-                    onRetry: () => ref.invalidate(payoutStatsProvider),
-                  ),
+                  error: (e, _) {
+                    if (shouldSuppressSessionLoadError(ref, e)) {
+                      return const _StatsLoadingGrid();
+                    }
+                    return _ErrorCard(
+                      message: 'Erreur stats payouts: $e',
+                      onRetry: () => ref.invalidate(payoutStatsProvider),
+                    );
+                  },
                 ),
               ),
             ),
@@ -62,10 +90,15 @@ class SuperadminDashboardScreen extends ConsumerWidget {
                 child: dashboardAsync.when(
                   data: (stats) => _buildTransactionStats(context, stats),
                   loading: () => const _StatsLoadingGrid(),
-                  error: (e, _) => _ErrorCard(
-                    message: 'Erreur transactions: $e',
-                    onRetry: () => ref.invalidate(dashboardStatsProvider),
-                  ),
+                  error: (e, _) {
+                    if (shouldSuppressSessionLoadError(ref, e)) {
+                      return const _StatsLoadingGrid();
+                    }
+                    return _ErrorCard(
+                      message: 'Erreur transactions: $e',
+                      onRetry: () => ref.invalidate(dashboardStatsProvider),
+                    );
+                  },
                 ),
               ),
             ),

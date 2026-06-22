@@ -354,6 +354,9 @@ class TranslationsAdvertiserCampaignsEn {
 	// Translations
 	String get title => 'Campaigns';
 	String get subtitle => 'Create draft campaigns, track performance, and review creator applications.';
+	String get view_mine => 'My campaigns';
+	String get view_browse => 'Browse';
+	late final TranslationsAdvertiserCampaignsBrowseEn browse = TranslationsAdvertiserCampaignsBrowseEn.internal(_root);
 	late final TranslationsAdvertiserCampaignsTabsEn tabs = TranslationsAdvertiserCampaignsTabsEn.internal(_root);
 	String get search_placeholder => 'Search campaigns';
 	late final TranslationsAdvertiserCampaignsEmptyEn empty = TranslationsAdvertiserCampaignsEmptyEn.internal(_root);
@@ -430,14 +433,18 @@ class TranslationsInvoicesEn {
 	String get summary_pending => 'Pending';
 	String get summary_count => 'Documents';
 	String get filter_all => 'All';
+	String get filter_all_types => 'All types';
 	String get filter_deposits => 'Deposits';
 	String get filter_billing => 'Campaign budget';
 	String get filter_payouts => 'Payouts';
 	String get filter_earnings => 'Earnings';
+	String get filter_withdrawal => 'Withdrawal';
+	String get filter_token_purchase => 'Token purchase';
 	String get type_deposit => 'Wallet deposit';
 	String get type_billing => 'Campaign budget';
 	String get type_payout => 'Creator payout';
 	String get type_earnings => 'Ad earnings';
+	String get type_token_purchase => 'Token purchase';
 	String get type_unknown => 'Other';
 	String get status_paid => 'Paid';
 	String get status_validated => 'Validated';
@@ -863,6 +870,24 @@ class TranslationsAppSettingsEn {
 	String get notifications_enable_error => 'Could not enable notifications. Check system settings.';
 	String get notifications_update_error => 'Could not update notification settings. Try again.';
 	String get section_account => 'Account';
+	String get section_security => 'Security';
+	String get sessions_title => 'Active sessions';
+	String get sessions_desc => 'Devices currently signed in to your account. Revoke any session you don\'t recognize.';
+	String get sessions_empty => 'No other browser sessions are active.';
+	String get sessions_error_load => 'Could not load active sessions.';
+	String get sessions_error_revoke => 'Could not revoke the session. Try again.';
+	String get session_unknown_device => 'Unknown device';
+	String get session_this_device => 'This device';
+	String get session_last_active => 'Last active';
+	String get session_revoke => 'Revoke';
+	String get session_revoking => 'Revoking…';
+	String get session_revoke_others => 'Sign out all other devices';
+	String get session_revoke_confirm_title => 'Revoke session?';
+	String get session_revoke_confirm_desc => 'This device will be signed out on its next request.';
+	String get session_revoke_others_confirm_title => 'Sign out other devices?';
+	String get session_revoke_others_confirm_desc => 'Every other browser session will be signed out. This phone stays connected.';
+	String get session_revoke_confirm => 'Revoke';
+	String get session_revoke_cancel => 'Cancel';
 	String get delete_account_entry => 'Delete account';
 	String get delete_account_entry_sub => '30-day grace — manage deletion in the app';
 	String get section_about => 'About';
@@ -1014,6 +1039,22 @@ class TranslationsDashboardErrorsEn {
 	String get load_balance => 'Couldn\'t load balance';
 	String get load_campaigns => 'Couldn\'t load campaigns';
 	String get retry => 'Retry';
+}
+
+// Path: advertiser_campaigns.browse
+class TranslationsAdvertiserCampaignsBrowseEn {
+	TranslationsAdvertiserCampaignsBrowseEn.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+	String get title => 'Browse campaigns';
+	String get subtitle => 'Explore active campaigns on the marketplace — benchmarks and inspiration from other brands.';
+	String get search_placeholder => 'Search campaigns';
+	String get empty_title => 'No active campaigns';
+	String get empty_subtitle => 'New campaigns appear here when advertisers launch them.';
+	String get empty_search_title => 'No matching campaigns';
+	String get empty_search_subtitle => 'Try another keyword or reset your filters.';
 }
 
 // Path: advertiser_campaigns.tabs
@@ -1353,6 +1394,11 @@ class TranslationsCreatorCampaignsEn {
 	String get submit_error => 'Could not submit your video. Please try again.';
 	String get submit_success => 'Video submitted — advertiser will review it shortly.';
 	String get submit_blocked_limit => 'You\'ve already submitted for this campaign. Wait for the review.';
+	String get youtube_connect_title => 'Connect your YouTube channel';
+	String get youtube_connect_body => 'Link your channel on Wayo Ads (web) before submitting a video or Short. This lets us verify your unlisted upload.';
+	String get youtube_reconnect_title => 'Reconnect YouTube';
+	String get youtube_reconnect_body => 'Your YouTube connection expired. Open Wayo Ads on the web to reconnect, then submit from the app.';
+	String get youtube_connect_cta => 'Open YouTube settings on web';
 	String get submission_status_pending => 'In review';
 	String get submission_status_approved => 'Approved';
 	String get submission_status_rejected => 'Rejected';
@@ -1665,6 +1711,15 @@ extension on Translations {
 			case 'dashboard.shell_tour_restart_hint': return 'Replay the guided tour of Dashboard, Campaigns, Wallet and Chat navigation';
 			case 'advertiser_campaigns.title': return 'Campaigns';
 			case 'advertiser_campaigns.subtitle': return 'Create draft campaigns, track performance, and review creator applications.';
+			case 'advertiser_campaigns.view_mine': return 'My campaigns';
+			case 'advertiser_campaigns.view_browse': return 'Browse';
+			case 'advertiser_campaigns.browse.title': return 'Browse campaigns';
+			case 'advertiser_campaigns.browse.subtitle': return 'Explore active campaigns on the marketplace — benchmarks and inspiration from other brands.';
+			case 'advertiser_campaigns.browse.search_placeholder': return 'Search campaigns';
+			case 'advertiser_campaigns.browse.empty_title': return 'No active campaigns';
+			case 'advertiser_campaigns.browse.empty_subtitle': return 'New campaigns appear here when advertisers launch them.';
+			case 'advertiser_campaigns.browse.empty_search_title': return 'No matching campaigns';
+			case 'advertiser_campaigns.browse.empty_search_subtitle': return 'Try another keyword or reset your filters.';
 			case 'advertiser_campaigns.tabs.active': return 'Active';
 			case 'advertiser_campaigns.tabs.draft': return 'Draft';
 			case 'advertiser_campaigns.tabs.paused': return 'Paused';
@@ -1794,14 +1849,18 @@ extension on Translations {
 			case 'invoices.summary_pending': return 'Pending';
 			case 'invoices.summary_count': return 'Documents';
 			case 'invoices.filter_all': return 'All';
+			case 'invoices.filter_all_types': return 'All types';
 			case 'invoices.filter_deposits': return 'Deposits';
 			case 'invoices.filter_billing': return 'Campaign budget';
 			case 'invoices.filter_payouts': return 'Payouts';
 			case 'invoices.filter_earnings': return 'Earnings';
+			case 'invoices.filter_withdrawal': return 'Withdrawal';
+			case 'invoices.filter_token_purchase': return 'Token purchase';
 			case 'invoices.type_deposit': return 'Wallet deposit';
 			case 'invoices.type_billing': return 'Campaign budget';
 			case 'invoices.type_payout': return 'Creator payout';
 			case 'invoices.type_earnings': return 'Ad earnings';
+			case 'invoices.type_token_purchase': return 'Token purchase';
 			case 'invoices.type_unknown': return 'Other';
 			case 'invoices.status_paid': return 'Paid';
 			case 'invoices.status_validated': return 'Validated';
@@ -2032,6 +2091,11 @@ extension on Translations {
 			case 'creator.campaigns.submit_error': return 'Could not submit your video. Please try again.';
 			case 'creator.campaigns.submit_success': return 'Video submitted — advertiser will review it shortly.';
 			case 'creator.campaigns.submit_blocked_limit': return 'You\'ve already submitted for this campaign. Wait for the review.';
+			case 'creator.campaigns.youtube_connect_title': return 'Connect your YouTube channel';
+			case 'creator.campaigns.youtube_connect_body': return 'Link your channel on Wayo Ads (web) before submitting a video or Short. This lets us verify your unlisted upload.';
+			case 'creator.campaigns.youtube_reconnect_title': return 'Reconnect YouTube';
+			case 'creator.campaigns.youtube_reconnect_body': return 'Your YouTube connection expired. Open Wayo Ads on the web to reconnect, then submit from the app.';
+			case 'creator.campaigns.youtube_connect_cta': return 'Open YouTube settings on web';
 			case 'creator.campaigns.submission_status_pending': return 'In review';
 			case 'creator.campaigns.submission_status_approved': return 'Approved';
 			case 'creator.campaigns.submission_status_rejected': return 'Rejected';
@@ -2346,6 +2410,24 @@ extension on Translations {
 			case 'app_settings.notifications_enable_error': return 'Could not enable notifications. Check system settings.';
 			case 'app_settings.notifications_update_error': return 'Could not update notification settings. Try again.';
 			case 'app_settings.section_account': return 'Account';
+			case 'app_settings.section_security': return 'Security';
+			case 'app_settings.sessions_title': return 'Active sessions';
+			case 'app_settings.sessions_desc': return 'Devices currently signed in to your account. Revoke any session you don\'t recognize.';
+			case 'app_settings.sessions_empty': return 'No other browser sessions are active.';
+			case 'app_settings.sessions_error_load': return 'Could not load active sessions.';
+			case 'app_settings.sessions_error_revoke': return 'Could not revoke the session. Try again.';
+			case 'app_settings.session_unknown_device': return 'Unknown device';
+			case 'app_settings.session_this_device': return 'This device';
+			case 'app_settings.session_last_active': return 'Last active';
+			case 'app_settings.session_revoke': return 'Revoke';
+			case 'app_settings.session_revoking': return 'Revoking…';
+			case 'app_settings.session_revoke_others': return 'Sign out all other devices';
+			case 'app_settings.session_revoke_confirm_title': return 'Revoke session?';
+			case 'app_settings.session_revoke_confirm_desc': return 'This device will be signed out on its next request.';
+			case 'app_settings.session_revoke_others_confirm_title': return 'Sign out other devices?';
+			case 'app_settings.session_revoke_others_confirm_desc': return 'Every other browser session will be signed out. This phone stays connected.';
+			case 'app_settings.session_revoke_confirm': return 'Revoke';
+			case 'app_settings.session_revoke_cancel': return 'Cancel';
 			case 'app_settings.delete_account_entry': return 'Delete account';
 			case 'app_settings.delete_account_entry_sub': return '30-day grace — manage deletion in the app';
 			case 'app_settings.section_about': return 'About';

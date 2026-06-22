@@ -7,6 +7,7 @@ import 'advertiser_campaigns_remote_datasource.dart';
 import '../domain/advertiser_campaign.dart';
 import '../domain/advertiser_campaigns_page_result.dart';
 import '../domain/campaign_application.dart';
+import '../../creator_campaigns/domain/creator_browse_page_result.dart';
 
 final advertiserCampaignsRemoteProvider = Provider<AdvertiserCampaignsRemote>((
   ref,
@@ -74,6 +75,23 @@ final class AdvertiserCampaignsRepository {
 
   Future<void> rejectApplication(String campaignId, String applicationId) =>
       _remote.rejectApplication(campaignId, applicationId);
+
+  Future<CreatorBrowsePageResult> loadMarketplaceBrowsePage({
+    required int page,
+    int limit = 10,
+    String? search,
+    String? type,
+    String? niche,
+    String? countryCode,
+  }) =>
+      _remote.fetchMarketplaceBrowsePage(
+        page: page,
+        limit: limit,
+        search: search,
+        type: type,
+        niche: niche,
+        countryCode: countryCode,
+      );
 
   static AuthException mapError(Object e) {
     if (e is AuthException) {

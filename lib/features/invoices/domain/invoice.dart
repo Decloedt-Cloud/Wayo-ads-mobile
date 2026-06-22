@@ -16,6 +16,9 @@ enum InvoiceType {
 
   /// Creator ad earnings — issued for each completed ad delivery batch.
   earnings('EARNINGS'),
+
+  /// Creator token purchase receipt.
+  tokenPurchase('TOKEN_PURCHASE'),
   unknown('UNKNOWN');
 
   const InvoiceType(this.api);

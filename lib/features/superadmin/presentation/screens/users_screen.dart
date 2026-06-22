@@ -155,10 +155,54 @@ class _UsersScreenState extends ConsumerState<UsersScreen>
 
     return Scaffold(
       backgroundColor: AppColors.surfaceOf(context),
+      appBar: AppBar(
+        title: const Text('Users'),
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+        actions: [
+          if (!_showBannedOnly)
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: AppColors.success.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: AppColors.success.withValues(alpha: 0.35)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 7,
+                        height: 7,
+                        decoration: const BoxDecoration(
+                          color: AppColors.success,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Live',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.success,
+                          letterSpacing: 0.2,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          const SuperadminChromeActions(trailingPadding: 12),
+        ],
+      ),
       body: CustomScrollView(
         controller: _scrollController,
         slivers: [
-          _buildHeader(isDark),
           if (!_showBannedOnly && usersAsync != null)
             usersAsync.when(
               data: (page) => _buildStatsSection(page.stats, isDark),
@@ -217,68 +261,6 @@ class _UsersScreenState extends ConsumerState<UsersScreen>
                   ),
                 ) ?? const SliverToBoxAdapter(child: SizedBox.shrink())),
         ],
-      ),
-    );
-  }
-
-  // ── Header ──
-  SliverAppBar _buildHeader(bool isDark) {
-    return SliverAppBar(
-      expandedHeight: 100, collapsedHeight: 64,
-      floating: true, pinned: true, stretch: true,
-      backgroundColor: AppColors.surfaceOf(context),
-      surfaceTintColor: Colors.transparent,
-      flexibleSpace: FlexibleSpaceBar(
-        stretchModes: const [StretchMode.zoomBackground],
-        titlePadding: EdgeInsets.zero,
-        title: Padding(
-          padding: EdgeInsets.only(
-            left: 20, bottom: 8, right: 20,
-            top: MediaQuery.of(context).padding.top + 4,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              Row(children: [
-                Text('Users', style: TextStyle(
-                  fontSize: 28, fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimaryOf(context),
-                  letterSpacing: -0.8,
-                )),
-                const Spacer(),
-                if (!_showBannedOnly)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                    decoration: BoxDecoration(
-                      color: AppColors.success.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Row(mainAxisSize: MainAxisSize.min, children: [
-                      Container(width: 6, height: 6,
-                        decoration: BoxDecoration(color: AppColors.success, shape: BoxShape.circle),
-                      ),
-                      const SizedBox(width: 5),
-                      Text('Live', style: TextStyle(
-                        fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.success,
-                      )),
-                    ]),
-                  ),
-                const SizedBox(width: 8),
-                const SuperadminChromeActions(),
-              ]),
-              const SizedBox(height: 2),
-              Row(children: [
-                Icon(Icons.people_rounded, size: 14, color: AppColors.textMutedOf(context)),
-                const SizedBox(width: 4),
-                Text(
-                  _showBannedOnly ? 'Banned users management' : 'Manage all platform users',
-                  style: TextStyle(fontSize: 13, color: AppColors.textMutedOf(context)),
-                ),
-              ]),
-            ],
-          ),
-        ),
       ),
     );
   }

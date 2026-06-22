@@ -2,11 +2,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/network/rate_limiter.dart';
 import '../../../../core/network/wayo_ads_dio.dart';
+import '../../../creator/presentation/providers/creator_session_gate.dart';
 import '../../../dashboard/presentation/providers/dashboard_state_providers.dart';
 import '../../data/creator_dashboard_remote_datasource.dart';
 import '../../data/creator_dashboard_repository.dart';
 import '../../domain/creator_application.dart';
 import '../../domain/creator_stats.dart';
+
+Future<int> _creatorSessionUserId(Ref ref) => awaitCreatorSessionUserId(ref);
 
 /// 2 s rate limiter (matches the advertiser dashboard cadence).
 final creatorRateLimiterProvider = Provider<RateLimiter>((ref) {
@@ -32,16 +35,28 @@ final creatorDashboardRepositoryProvider = Provider<CreatorDashboardRepository>(
 
 /// Creator KPIs (`GET /api/creator/stats`).
 final creatorStatsProvider = FutureProvider<CreatorStats>((ref) async {
+  final userId = await _creatorSessionUserId(ref);
   ref.keepAlive();
-  return ref.watch(creatorDashboardRepositoryProvider).fetchStats();
+  return fetchCreatorWithAuthRetry(
+    ref,
+    () => ref
+        .watch(creatorDashboardRepositoryProvider)
+        .fetchStats(sessionUserId: userId),
+  );
 });
 
 /// Creator applications (`GET /api/creator/applications`).
 final creatorApplicationsProvider = FutureProvider<List<CreatorApplication>>((
   ref,
 ) async {
+  final userId = await _creatorSessionUserId(ref);
   ref.keepAlive();
-  return ref.watch(creatorDashboardRepositoryProvider).fetchApplications();
+  return fetchCreatorWithAuthRetry(
+    ref,
+    () => ref
+        .watch(creatorDashboardRepositoryProvider)
+        .fetchApplications(sessionUserId: userId),
+  );
 });
 
 /// Number of applications still waiting for approval — drives the red dot

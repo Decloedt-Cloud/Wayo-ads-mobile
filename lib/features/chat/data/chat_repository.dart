@@ -13,6 +13,7 @@ import '../domain/chat_conversation.dart';
 import '../domain/chat_credentials.dart';
 import '../domain/chat_directory_user.dart';
 import '../domain/chat_message.dart';
+import 'chat_avatar_enrichment.dart';
 import 'chat_media_utils.dart';
 import 'chat_message_media.dart';
 import 'chat_message_text.dart';
@@ -378,6 +379,26 @@ final class ChatRepository {
     return list
         .map((e) => _parseConversation(e as Map<String, dynamic>))
         .toList();
+  }
+
+  Future<List<ChatConversation>> fetchConversationsEnriched(
+    ChatCredentials c, {
+    String? Function()? socketId,
+  }) async {
+    final list = await fetchConversations(c, socketId: socketId);
+    try {
+      return await enrichChatConversationsWithMarketingAvatars(
+        list,
+        c.chatUserId,
+        c.apiBaseUrl,
+        (path) async {
+          final res = await _wayoAdsDio.get<Map<String, dynamic>>(path);
+          return res.data;
+        },
+      );
+    } catch (_) {
+      return list;
+    }
   }
 
   Future<List<ChatMessage>> fetchMessages(
@@ -763,6 +784,10 @@ final class ChatRepository {
                 id: (u['id'] as num).toInt(),
                 name: u['name'] as String?,
                 avatar: u['avatar'] as String?,
+                email: u['email'] as String?,
+                marketingUserId:
+                    u['marketing_user_id'] as String? ??
+                    u['marketingUserId'] as String?,
               )
             : null,
       );

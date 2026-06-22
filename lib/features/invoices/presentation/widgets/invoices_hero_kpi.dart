@@ -28,7 +28,8 @@ class InvoicesHeroKpi extends ConsumerWidget {
     final thisMonth = (kpis?.thisMonthCents ?? 0) / 100.0;
     final pending = kpis?.pendingCount ?? 0;
     final count = kpis?.count ?? 0;
-    final currency = kpis?.currency ?? 'EUR';
+    final currency = kpis?.currency ??
+        (role == WayoAdsAccountRole.creator ? 'USD' : 'EUR');
     final showMonth = true;
     final summaryLabel = role == WayoAdsAccountRole.creator
         ? t.invoices.summary_total_validated

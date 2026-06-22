@@ -352,6 +352,9 @@ class _TranslationsAdvertiserCampaignsAr extends TranslationsAdvertiserCampaigns
 	// Translations
 	@override String get title => 'الحملات';
 	@override String get subtitle => 'أنشئ حملات كمسودات، تابع الأداء وراجع طلبات المنشئين.';
+	@override String get view_mine => 'حملاتي';
+	@override String get view_browse => 'استكشاف';
+	@override late final _TranslationsAdvertiserCampaignsBrowseAr browse = _TranslationsAdvertiserCampaignsBrowseAr._(_root);
 	@override late final _TranslationsAdvertiserCampaignsTabsAr tabs = _TranslationsAdvertiserCampaignsTabsAr._(_root);
 	@override String get search_placeholder => 'ابحث عن حملة';
 	@override late final _TranslationsAdvertiserCampaignsEmptyAr empty = _TranslationsAdvertiserCampaignsEmptyAr._(_root);
@@ -427,14 +430,18 @@ class _TranslationsInvoicesAr extends TranslationsInvoicesEn {
 	@override String get summary_pending => 'قيد الانتظار';
 	@override String get summary_count => 'المستندات';
 	@override String get filter_all => 'الكل';
+	@override String get filter_all_types => 'كل الأنواع';
 	@override String get filter_deposits => 'الإيداعات';
 	@override String get filter_billing => 'ميزانية الحملة';
 	@override String get filter_payouts => 'التحويلات';
 	@override String get filter_earnings => 'الأرباح';
+	@override String get filter_withdrawal => 'السحب';
+	@override String get filter_token_purchase => 'شراء الرموز';
 	@override String get type_deposit => 'إيداع المحفظة';
 	@override String get type_billing => 'ميزانية الحملة';
 	@override String get type_payout => 'تحويل المنشئ';
 	@override String get type_earnings => 'أرباح الإعلانات';
+	@override String get type_token_purchase => 'شراء الرموز';
 	@override String get type_unknown => 'أخرى';
 	@override String get status_paid => 'مدفوعة';
 	@override String get status_validated => 'معتمدة';
@@ -860,6 +867,24 @@ class _TranslationsAppSettingsAr extends TranslationsAppSettingsEn {
 	@override String get notifications_enable_error => 'تعذّر تفعيل الإشعارات. تحقق من إعدادات النظام.';
 	@override String get notifications_update_error => 'تعذّر تحديث إعدادات الإشعارات. أعد المحاولة.';
 	@override String get section_account => 'الحساب';
+	@override String get section_security => 'الأمان';
+	@override String get sessions_title => 'الجلسات النشطة';
+	@override String get sessions_desc => 'الأجهزة المتصلة حالياً بحسابك. ألغِ أي جلسة لا تعرفها.';
+	@override String get sessions_empty => 'لا توجد جلسات متصفح أخرى نشطة.';
+	@override String get sessions_error_load => 'تعذّر تحميل الجلسات النشطة.';
+	@override String get sessions_error_revoke => 'تعذّر إلغاء الجلسة. حاول مرة أخرى.';
+	@override String get session_unknown_device => 'جهاز غير معروف';
+	@override String get session_this_device => 'هذا الجهاز';
+	@override String get session_last_active => 'آخر نشاط';
+	@override String get session_revoke => 'إلغاء';
+	@override String get session_revoking => 'جارٍ الإلغاء…';
+	@override String get session_revoke_others => 'تسجيل الخروج من الأجهزة الأخرى';
+	@override String get session_revoke_confirm_title => 'إلغاء الجلسة؟';
+	@override String get session_revoke_confirm_desc => 'سيتم تسجيل خروج هذا الجهاز في طلبه التالي.';
+	@override String get session_revoke_others_confirm_title => 'تسجيل الخروج من الأجهزة الأخرى؟';
+	@override String get session_revoke_others_confirm_desc => 'سيتم إغلاق جميع جلسات المتصفح الأخرى. يبقى هذا الهاتف متصلاً.';
+	@override String get session_revoke_confirm => 'إلغاء';
+	@override String get session_revoke_cancel => 'إلغاء';
 	@override String get delete_account_entry => 'حذف الحساب';
 	@override String get delete_account_entry_sub => 'فترة سماح 30 يومًا — من داخل التطبيق';
 	@override String get section_about => 'حول التطبيق';
@@ -1011,6 +1036,22 @@ class _TranslationsDashboardErrorsAr extends TranslationsDashboardErrorsEn {
 	@override String get load_balance => 'تعذر تحميل الرصيد';
 	@override String get load_campaigns => 'تعذر تحميل الحملات';
 	@override String get retry => 'إعادة المحاولة';
+}
+
+// Path: advertiser_campaigns.browse
+class _TranslationsAdvertiserCampaignsBrowseAr extends TranslationsAdvertiserCampaignsBrowseEn {
+	_TranslationsAdvertiserCampaignsBrowseAr._(TranslationsAr root) : this._root = root, super.internal(root);
+
+	final TranslationsAr _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'استكشاف الحملات';
+	@override String get subtitle => 'تصفّح الحملات النشطة في السوق — للمقارنة والإلهام من العلامات الأخرى.';
+	@override String get search_placeholder => 'البحث عن حملة';
+	@override String get empty_title => 'لا توجد حملات نشطة';
+	@override String get empty_subtitle => 'تظهر الحملات الجديدة هنا عند إطلاقها.';
+	@override String get empty_search_title => 'لا توجد حملات مطابقة';
+	@override String get empty_search_subtitle => 'جرّب كلمة أخرى أو أعد ضبط الفلاتر.';
 }
 
 // Path: advertiser_campaigns.tabs
@@ -1350,6 +1391,11 @@ class _TranslationsCreatorCampaignsAr extends TranslationsCreatorCampaignsEn {
 	@override String get submit_error => 'تعذّر إرسال الفيديو. حاول مجدداً.';
 	@override String get submit_success => 'تم إرسال الفيديو — سيراجعه المعلن قريباً.';
 	@override String get submit_blocked_limit => 'سبق أن أرسلت مشاركة لهذه الحملة. انتظر المراجعة.';
+	@override String get youtube_connect_title => 'اربط قناة YouTube';
+	@override String get youtube_connect_body => 'اربط قناتك على Wayo Ads (الويب) قبل إرسال فيديو أو Short. هذا يسمح بالتحقق من الفيديو غير المدرج.';
+	@override String get youtube_reconnect_title => 'أعد ربط YouTube';
+	@override String get youtube_reconnect_body => 'انتهت صلاحية ربط YouTube. افتح Wayo Ads على الويب لإعادة الربط ثم أرسل من التطبيق.';
+	@override String get youtube_connect_cta => 'فتح إعدادات YouTube على الويب';
 	@override String get submission_status_pending => 'قيد المراجعة';
 	@override String get submission_status_approved => 'مقبول';
 	@override String get submission_status_rejected => 'مرفوض';
@@ -1662,6 +1708,15 @@ extension on TranslationsAr {
 			case 'dashboard.shell_tour_restart_hint': return 'إعادة عرض الجولة التعريفية للتنقل بين لوحة التحكم والحملات والمحفظة والمحادثة';
 			case 'advertiser_campaigns.title': return 'الحملات';
 			case 'advertiser_campaigns.subtitle': return 'أنشئ حملات كمسودات، تابع الأداء وراجع طلبات المنشئين.';
+			case 'advertiser_campaigns.view_mine': return 'حملاتي';
+			case 'advertiser_campaigns.view_browse': return 'استكشاف';
+			case 'advertiser_campaigns.browse.title': return 'استكشاف الحملات';
+			case 'advertiser_campaigns.browse.subtitle': return 'تصفّح الحملات النشطة في السوق — للمقارنة والإلهام من العلامات الأخرى.';
+			case 'advertiser_campaigns.browse.search_placeholder': return 'البحث عن حملة';
+			case 'advertiser_campaigns.browse.empty_title': return 'لا توجد حملات نشطة';
+			case 'advertiser_campaigns.browse.empty_subtitle': return 'تظهر الحملات الجديدة هنا عند إطلاقها.';
+			case 'advertiser_campaigns.browse.empty_search_title': return 'لا توجد حملات مطابقة';
+			case 'advertiser_campaigns.browse.empty_search_subtitle': return 'جرّب كلمة أخرى أو أعد ضبط الفلاتر.';
 			case 'advertiser_campaigns.tabs.active': return 'نشطة';
 			case 'advertiser_campaigns.tabs.draft': return 'مسودات';
 			case 'advertiser_campaigns.tabs.paused': return 'معلّقة';
@@ -1790,14 +1845,18 @@ extension on TranslationsAr {
 			case 'invoices.summary_pending': return 'قيد الانتظار';
 			case 'invoices.summary_count': return 'المستندات';
 			case 'invoices.filter_all': return 'الكل';
+			case 'invoices.filter_all_types': return 'كل الأنواع';
 			case 'invoices.filter_deposits': return 'الإيداعات';
 			case 'invoices.filter_billing': return 'ميزانية الحملة';
 			case 'invoices.filter_payouts': return 'التحويلات';
 			case 'invoices.filter_earnings': return 'الأرباح';
+			case 'invoices.filter_withdrawal': return 'السحب';
+			case 'invoices.filter_token_purchase': return 'شراء الرموز';
 			case 'invoices.type_deposit': return 'إيداع المحفظة';
 			case 'invoices.type_billing': return 'ميزانية الحملة';
 			case 'invoices.type_payout': return 'تحويل المنشئ';
 			case 'invoices.type_earnings': return 'أرباح الإعلانات';
+			case 'invoices.type_token_purchase': return 'شراء الرموز';
 			case 'invoices.type_unknown': return 'أخرى';
 			case 'invoices.status_paid': return 'مدفوعة';
 			case 'invoices.status_validated': return 'معتمدة';
@@ -2028,6 +2087,11 @@ extension on TranslationsAr {
 			case 'creator.campaigns.submit_error': return 'تعذّر إرسال الفيديو. حاول مجدداً.';
 			case 'creator.campaigns.submit_success': return 'تم إرسال الفيديو — سيراجعه المعلن قريباً.';
 			case 'creator.campaigns.submit_blocked_limit': return 'سبق أن أرسلت مشاركة لهذه الحملة. انتظر المراجعة.';
+			case 'creator.campaigns.youtube_connect_title': return 'اربط قناة YouTube';
+			case 'creator.campaigns.youtube_connect_body': return 'اربط قناتك على Wayo Ads (الويب) قبل إرسال فيديو أو Short. هذا يسمح بالتحقق من الفيديو غير المدرج.';
+			case 'creator.campaigns.youtube_reconnect_title': return 'أعد ربط YouTube';
+			case 'creator.campaigns.youtube_reconnect_body': return 'انتهت صلاحية ربط YouTube. افتح Wayo Ads على الويب لإعادة الربط ثم أرسل من التطبيق.';
+			case 'creator.campaigns.youtube_connect_cta': return 'فتح إعدادات YouTube على الويب';
 			case 'creator.campaigns.submission_status_pending': return 'قيد المراجعة';
 			case 'creator.campaigns.submission_status_approved': return 'مقبول';
 			case 'creator.campaigns.submission_status_rejected': return 'مرفوض';
@@ -2342,6 +2406,24 @@ extension on TranslationsAr {
 			case 'app_settings.notifications_enable_error': return 'تعذّر تفعيل الإشعارات. تحقق من إعدادات النظام.';
 			case 'app_settings.notifications_update_error': return 'تعذّر تحديث إعدادات الإشعارات. أعد المحاولة.';
 			case 'app_settings.section_account': return 'الحساب';
+			case 'app_settings.section_security': return 'الأمان';
+			case 'app_settings.sessions_title': return 'الجلسات النشطة';
+			case 'app_settings.sessions_desc': return 'الأجهزة المتصلة حالياً بحسابك. ألغِ أي جلسة لا تعرفها.';
+			case 'app_settings.sessions_empty': return 'لا توجد جلسات متصفح أخرى نشطة.';
+			case 'app_settings.sessions_error_load': return 'تعذّر تحميل الجلسات النشطة.';
+			case 'app_settings.sessions_error_revoke': return 'تعذّر إلغاء الجلسة. حاول مرة أخرى.';
+			case 'app_settings.session_unknown_device': return 'جهاز غير معروف';
+			case 'app_settings.session_this_device': return 'هذا الجهاز';
+			case 'app_settings.session_last_active': return 'آخر نشاط';
+			case 'app_settings.session_revoke': return 'إلغاء';
+			case 'app_settings.session_revoking': return 'جارٍ الإلغاء…';
+			case 'app_settings.session_revoke_others': return 'تسجيل الخروج من الأجهزة الأخرى';
+			case 'app_settings.session_revoke_confirm_title': return 'إلغاء الجلسة؟';
+			case 'app_settings.session_revoke_confirm_desc': return 'سيتم تسجيل خروج هذا الجهاز في طلبه التالي.';
+			case 'app_settings.session_revoke_others_confirm_title': return 'تسجيل الخروج من الأجهزة الأخرى؟';
+			case 'app_settings.session_revoke_others_confirm_desc': return 'سيتم إغلاق جميع جلسات المتصفح الأخرى. يبقى هذا الهاتف متصلاً.';
+			case 'app_settings.session_revoke_confirm': return 'إلغاء';
+			case 'app_settings.session_revoke_cancel': return 'إلغاء';
 			case 'app_settings.delete_account_entry': return 'حذف الحساب';
 			case 'app_settings.delete_account_entry_sub': return 'فترة سماح 30 يومًا — من داخل التطبيق';
 			case 'app_settings.section_about': return 'حول التطبيق';

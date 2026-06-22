@@ -10,7 +10,9 @@ import '../../../../i18n/strings.g.dart';
 import '../../../creator_dashboard/presentation/providers/creator_dashboard_providers.dart';
 import '../../data/creator_campaigns_remote_datasource.dart';
 import '../../domain/creator_campaign_detail.dart';
+import '../../domain/creator_youtube_status.dart';
 import '../providers/creator_campaigns_providers.dart';
+import 'creator_youtube_submit_gate.dart';
 
 /// Modal bottom-sheet to submit a YouTube post URL for a campaign. Server-side
 /// validates the URL (extractable video id, privacy, min duration, vertical…).
@@ -116,6 +118,45 @@ class _SubmitPostSheetState extends ConsumerState<_SubmitPostSheet> {
   Widget build(BuildContext context) {
     final t = context.t;
     final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
+    final needsYoutube = campaignRequiresYoutubeConnection(widget.campaign);
+    final youtubeAsync = needsYoutube
+        ? ref.watch(creatorYoutubeChannelStatusProvider)
+        : null;
+
+    if (needsYoutube && youtubeAsync != null) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              color: AppColors.surfaceOf(context),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            ),
+            padding: EdgeInsets.fromLTRB(20, 12, 20, 20 + bottomInset),
+            child: youtubeAsync.when(
+              loading: () => const Padding(
+                padding: EdgeInsets.symmetric(vertical: 32),
+                child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+              ),
+              error: (_, _) => CreatorYoutubeConnectBanner(
+                oauthStatus: CreatorYoutubeOAuthStatus.notLinked,
+              ),
+              data: (status) {
+                if (!status.isReadyForSubmit) {
+                  return CreatorYoutubeConnectBanner(
+                    oauthStatus: status.oauthStatus,
+                  );
+                }
+                return _buildForm(context, t, bottomInset);
+              },
+            ),
+          ),
+          const WayoBlackBottomBar(),
+        ],
+      );
+    }
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -126,12 +167,20 @@ class _SubmitPostSheetState extends ConsumerState<_SubmitPostSheet> {
             borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           ),
           padding: EdgeInsets.fromLTRB(20, 12, 20, 20 + bottomInset),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
+          child: _buildForm(context, t, bottomInset),
+        ),
+        const WayoBlackBottomBar(),
+      ],
+    );
+  }
+
+  Widget _buildForm(BuildContext context, Translations t, double bottomInset) {
+    return Form(
+      key: _formKey,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
             Center(
               child: Container(
                 width: 40,
@@ -291,12 +340,8 @@ class _SubmitPostSheetState extends ConsumerState<_SubmitPostSheet> {
               ).copyWith(color: AppColors.textSecondaryOf(context)),
               textAlign: TextAlign.center,
             ),
-              ],
-            ),
-          ),
-        ),
-        const WayoBlackBottomBar(),
-      ],
+        ],
+      ),
     );
   }
 }

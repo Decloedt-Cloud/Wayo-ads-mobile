@@ -15,6 +15,7 @@ import '../../../auth/presentation/providers/current_account_providers.dart';
 import '../../../../i18n/strings.g.dart';
 import '../../../../router/app_router.dart';
 import 'app_settings_notifications_tile.dart';
+import 'app_settings_active_sessions_section.dart';
 
 class AppSettingsPanelContent extends ConsumerWidget {
   const AppSettingsPanelContent({super.key, required this.onClose});
@@ -120,6 +121,27 @@ class AppSettingsPanelContent extends ConsumerWidget {
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
+                const SizedBox(height: 22),
+                _SectionTitle(
+                      icon: Icons.shield_outlined,
+                      text: t.app_settings.section_security,
+                    )
+                    .animate()
+                    .fadeIn(delay: 108.ms, duration: 220.ms)
+                    .slideX(begin: 0.04, curve: Curves.easeOutCubic),
+                const SizedBox(height: 6),
+                Text(
+                  t.app_settings.sessions_desc,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    height: 1.35,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                const AppSettingsActiveSessionsSection()
+                    .animate()
+                    .fadeIn(delay: 112.ms, duration: 260.ms)
+                    .slideY(begin: 0.03),
                 const SizedBox(height: 22),
                 _SectionTitle(
                       icon: Icons.star_outline_rounded,

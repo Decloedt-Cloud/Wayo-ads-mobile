@@ -1726,7 +1726,7 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
                 conv?.displayAvatar ??
                 conv?.partnerAvatarFromParticipants(creds.chatUserId) ??
                 _partnerAvatarFromMessages(creds.chatUserId);
-            final partnerAvatarResolved = resolveChatMediaUrl(
+            final partnerAvatarResolved = resolveChatAvatarUrl(
               partnerPhotoPath,
               creds.apiBaseUrl,
             );

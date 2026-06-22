@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/campaigns/campaign_explorer_layout.dart';
 import '../../../../core/network/rate_limiter.dart';
 import '../../../../core/network/wayo_ads_dio.dart';
+import '../../../auth/presentation/providers/current_account_providers.dart';
 import '../../../dashboard/presentation/providers/dashboard_state_providers.dart';
 import '../../data/creator_campaigns_remote_datasource.dart';
 import '../../data/creator_campaigns_repository.dart';
@@ -11,6 +12,8 @@ import '../../domain/creator_browse_page_result.dart';
 import '../../domain/creator_campaign_detail.dart';
 import '../../domain/creator_social_post.dart';
 import '../../domain/creator_tracking_link.dart';
+import '../../data/creator_youtube_remote.dart';
+import '../../domain/creator_youtube_status.dart';
 
 /// Rate limiter for the creator campaigns feature. Slightly tighter than the
 /// dashboard (5 s) because the browse list doesn't change very often, but it
@@ -66,10 +69,15 @@ typedef CreatorBrowsePagedKey = ({int page, String search});
 /// Paginated browse (`GET /api/campaigns?creatorOnly=true&limit=10&search=…`).
 final creatorBrowseCampaignsPagedProvider = FutureProvider.autoDispose
     .family<CreatorBrowsePageResult, CreatorBrowsePagedKey>((ref, key) async {
+      final userId = ref.watch(currentAppUserProvider)?.id;
+      if (userId == null) {
+        throw StateError('Creator browse requires an authenticated user');
+      }
       final q = key.search.trim();
       return ref
           .watch(creatorCampaignsRepositoryProvider)
           .fetchBrowseCampaignsPage(
+            sessionUserId: userId,
             page: key.page,
             limit: 10,
             search: q.isEmpty ? null : q,
@@ -79,10 +87,14 @@ final creatorBrowseCampaignsPagedProvider = FutureProvider.autoDispose
 /// Detail of a single campaign — keyed by campaign id.
 final creatorCampaignDetailProvider =
     FutureProvider.family<CreatorCampaignDetail, String>((ref, id) async {
+      final userId = ref.watch(currentAppUserProvider)?.id;
+      if (userId == null) {
+        throw StateError('Creator campaign detail requires an authenticated user');
+      }
       ref.keepAlive();
       return ref
           .watch(creatorCampaignsRepositoryProvider)
-          .fetchCampaignDetail(id);
+          .fetchCampaignDetail(id, sessionUserId: userId);
     });
 
 /// Social posts (videos) the creator has submitted for a given campaign —
@@ -91,10 +103,14 @@ final creatorCampaignDetailProvider =
 /// refetching the whole campaign payload.
 final creatorMySubmissionsProvider =
     FutureProvider.family<List<CreatorSocialPost>, String>((ref, id) async {
+      final userId = ref.watch(currentAppUserProvider)?.id;
+      if (userId == null) {
+        throw StateError('Creator submissions require an authenticated user');
+      }
       ref.keepAlive();
       return ref
           .watch(creatorCampaignsRepositoryProvider)
-          .fetchMySubmissions(id);
+          .fetchMySubmissions(id, sessionUserId: userId);
     });
 
 /// Tracking short links for LINK campaigns — keyed by campaign id.
@@ -115,4 +131,15 @@ final creatorTrackingLinksProvider =
             .fetchTrackingLinks(id);
       }
       return detail?.trackingLinks ?? const [];
+    });
+
+final creatorYoutubeRemoteProvider = Provider<CreatorYoutubeRemote>((ref) {
+  return CreatorYoutubeRemote(ref.watch(wayoAdsDioProvider));
+});
+
+/// Linked YouTube channel + OAuth status — gates video/short submission on mobile.
+final creatorYoutubeChannelStatusProvider =
+    FutureProvider.autoDispose<CreatorYoutubeChannelStatus>((ref) async {
+      ref.watch(currentAppUserProvider);
+      return ref.watch(creatorYoutubeRemoteProvider).fetchChannelStatus();
     });

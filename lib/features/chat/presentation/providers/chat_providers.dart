@@ -153,7 +153,7 @@ final chatConversationsProvider = FutureProvider<List<ChatConversation>>((
     // Always fetch fresh credentials on each attempt (handles expired tokens).
     final creds = await ref.read(chatBootstrapProvider.future);
     try {
-      return await repo.fetchConversations(creds, socketId: () => rt.socketId);
+      return await repo.fetchConversationsEnriched(creds, socketId: () => rt.socketId);
     } on DioException catch (e) {
       lastError = e;
       final code = e.response?.statusCode;

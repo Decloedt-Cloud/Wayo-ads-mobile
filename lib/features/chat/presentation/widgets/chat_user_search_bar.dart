@@ -268,7 +268,7 @@ class _ChatUserSearchBarState extends ConsumerState<ChatUserSearchBar> {
                         ),
                         itemBuilder: (context, i) {
                           final u = _results[i];
-                          final avatarUrl = resolveChatMediaUrl(
+                          final avatarUrl = resolveChatAvatarUrl(
                             u.avatar,
                             widget.creds.apiBaseUrl,
                           );

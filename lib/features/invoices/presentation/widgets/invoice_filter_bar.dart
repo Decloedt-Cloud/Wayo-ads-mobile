@@ -19,7 +19,7 @@ class InvoiceFilterBar extends ConsumerWidget {
         return [
           InvoiceFilter.all,
           InvoiceFilter.payout,
-          InvoiceFilter.earnings,
+          InvoiceFilter.tokenPurchase,
         ];
       case WayoAdsAccountRole.advertiser:
       case WayoAdsAccountRole.superAdmin:
@@ -36,17 +36,22 @@ class InvoiceFilterBar extends ConsumerWidget {
 
   String _label(BuildContext context, InvoiceFilter f) {
     final t = context.t;
+    final isCreator = role == WayoAdsAccountRole.creator;
     switch (f) {
       case InvoiceFilter.all:
-        return t.invoices.filter_all;
+        return isCreator ? t.invoices.filter_all_types : t.invoices.filter_all;
       case InvoiceFilter.deposit:
         return t.invoices.filter_deposits;
       case InvoiceFilter.billing:
         return t.invoices.filter_billing;
       case InvoiceFilter.payout:
-        return t.invoices.filter_payouts;
+        return isCreator
+            ? t.invoices.filter_withdrawal
+            : t.invoices.filter_payouts;
       case InvoiceFilter.earnings:
         return t.invoices.filter_earnings;
+      case InvoiceFilter.tokenPurchase:
+        return t.invoices.filter_token_purchase;
     }
   }
 
@@ -54,6 +59,13 @@ class InvoiceFilterBar extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final current = ref.watch(invoicesFilterProvider);
     final filters = _filtersForRole();
+    if (!filters.contains(current)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (ref.read(invoicesFilterProvider) == current) {
+          ref.read(invoicesFilterProvider.notifier).state = InvoiceFilter.all;
+        }
+      });
+    }
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       padding: const EdgeInsets.symmetric(horizontal: 4),

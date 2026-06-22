@@ -32,11 +32,20 @@ final class InvoicePdfService {
     void Function(int received, int total)? onProgress,
   }) async {
     try {
-      final bytes = await _repo.downloadPdf(
-        invoice.id,
-        locale: invoicePdfLocaleForApp(),
-        onProgress: onProgress,
-      );
+      final locale = invoicePdfLocaleForApp();
+      final bytes = invoice.roleType == InvoiceRoleType.creator &&
+              (invoice.type == InvoiceType.payout ||
+                  invoice.type == InvoiceType.tokenPurchase)
+          ? await _repo.downloadPayoutPdf(
+              invoice.invoiceNumber,
+              locale: locale,
+              onProgress: onProgress,
+            )
+          : await _repo.downloadPdf(
+              invoice.id,
+              locale: locale,
+              onProgress: onProgress,
+            );
       final dir = await getTemporaryDirectory();
       final file = File('${dir.path}/${_filenameFor(invoice)}');
       await file.writeAsBytes(bytes, flush: true);

@@ -803,7 +803,7 @@ class _CinematicMessageBubbleState extends State<CinematicMessageBubble> {
 
     final peerPhoto = !isMine
         ? () {
-            final fromMsg = resolveChatMediaUrl(
+            final fromMsg = resolveChatAvatarUrl(
               m.user?.avatar,
               widget.apiBaseUrl,
             );

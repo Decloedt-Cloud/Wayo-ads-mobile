@@ -352,6 +352,9 @@ class _TranslationsAdvertiserCampaignsFr extends TranslationsAdvertiserCampaigns
 	// Translations
 	@override String get title => 'Campagnes';
 	@override String get subtitle => 'Créez des campagnes brouillon, suivez les performances et examinez les candidatures.';
+	@override String get view_mine => 'Mes campagnes';
+	@override String get view_browse => 'Parcourir';
+	@override late final _TranslationsAdvertiserCampaignsBrowseFr browse = _TranslationsAdvertiserCampaignsBrowseFr._(_root);
 	@override late final _TranslationsAdvertiserCampaignsTabsFr tabs = _TranslationsAdvertiserCampaignsTabsFr._(_root);
 	@override String get search_placeholder => 'Rechercher une campagne';
 	@override late final _TranslationsAdvertiserCampaignsEmptyFr empty = _TranslationsAdvertiserCampaignsEmptyFr._(_root);
@@ -428,14 +431,18 @@ class _TranslationsInvoicesFr extends TranslationsInvoicesEn {
 	@override String get summary_pending => 'En attente';
 	@override String get summary_count => 'Documents';
 	@override String get filter_all => 'Tout';
+	@override String get filter_all_types => 'Tous les types';
 	@override String get filter_deposits => 'Dépôts';
 	@override String get filter_billing => 'Budget campagne';
 	@override String get filter_payouts => 'Virements';
 	@override String get filter_earnings => 'Revenus';
+	@override String get filter_withdrawal => 'Retrait';
+	@override String get filter_token_purchase => 'Achat de jetons';
 	@override String get type_deposit => 'Dépôt portefeuille';
 	@override String get type_billing => 'Budget campagne';
 	@override String get type_payout => 'Virement créateur';
 	@override String get type_earnings => 'Revenus publicitaires';
+	@override String get type_token_purchase => 'Achat de jetons';
 	@override String get type_unknown => 'Autre';
 	@override String get status_paid => 'Payée';
 	@override String get status_validated => 'Validée';
@@ -861,6 +868,24 @@ class _TranslationsAppSettingsFr extends TranslationsAppSettingsEn {
 	@override String get notifications_enable_error => 'Impossible d’activer les notifications. Vérifiez les réglages système.';
 	@override String get notifications_update_error => 'Impossible de mettre à jour les notifications. Réessayez.';
 	@override String get section_account => 'Compte';
+	@override String get section_security => 'Sécurité';
+	@override String get sessions_title => 'Sessions actives';
+	@override String get sessions_desc => 'Appareils actuellement connectés à votre compte. Révoquez toute session que vous ne reconnaissez pas.';
+	@override String get sessions_empty => 'Aucune autre session navigateur active.';
+	@override String get sessions_error_load => 'Impossible de charger les sessions actives.';
+	@override String get sessions_error_revoke => 'Impossible de révoquer la session. Réessayez.';
+	@override String get session_unknown_device => 'Appareil inconnu';
+	@override String get session_this_device => 'Cet appareil';
+	@override String get session_last_active => 'Dernière activité';
+	@override String get session_revoke => 'Révoquer';
+	@override String get session_revoking => 'Révocation…';
+	@override String get session_revoke_others => 'Déconnecter les autres appareils';
+	@override String get session_revoke_confirm_title => 'Révoquer la session ?';
+	@override String get session_revoke_confirm_desc => 'Cet appareil sera déconnecté à la prochaine requête.';
+	@override String get session_revoke_others_confirm_title => 'Déconnecter les autres appareils ?';
+	@override String get session_revoke_others_confirm_desc => 'Toutes les autres sessions navigateur seront fermées. Ce téléphone reste connecté.';
+	@override String get session_revoke_confirm => 'Révoquer';
+	@override String get session_revoke_cancel => 'Annuler';
 	@override String get delete_account_entry => 'Supprimer le compte';
 	@override String get delete_account_entry_sub => 'Délai de 30 jours — suppression dans l’app';
 	@override String get section_about => 'À propos';
@@ -1012,6 +1037,22 @@ class _TranslationsDashboardErrorsFr extends TranslationsDashboardErrorsEn {
 	@override String get load_balance => 'Impossible de charger le solde';
 	@override String get load_campaigns => 'Impossible de charger les campagnes';
 	@override String get retry => 'Réessayer';
+}
+
+// Path: advertiser_campaigns.browse
+class _TranslationsAdvertiserCampaignsBrowseFr extends TranslationsAdvertiserCampaignsBrowseEn {
+	_TranslationsAdvertiserCampaignsBrowseFr._(TranslationsFr root) : this._root = root, super.internal(root);
+
+	final TranslationsFr _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'Parcourir les campagnes';
+	@override String get subtitle => 'Explorez les campagnes actives sur la marketplace — repères et inspiration d\'autres marques.';
+	@override String get search_placeholder => 'Rechercher une campagne';
+	@override String get empty_title => 'Aucune campagne active';
+	@override String get empty_subtitle => 'Les nouvelles campagnes apparaissent ici dès qu\'elles sont lancées.';
+	@override String get empty_search_title => 'Aucune campagne correspondante';
+	@override String get empty_search_subtitle => 'Essayez un autre mot-clé ou réinitialisez les filtres.';
 }
 
 // Path: advertiser_campaigns.tabs
@@ -1351,6 +1392,11 @@ class _TranslationsCreatorCampaignsFr extends TranslationsCreatorCampaignsEn {
 	@override String get submit_error => 'Impossible d\'envoyer votre vidéo. Réessayez.';
 	@override String get submit_success => 'Vidéo envoyée — l\'annonceur la validera sous peu.';
 	@override String get submit_blocked_limit => 'Vous avez déjà soumis pour cette campagne. Attendez la revue.';
+	@override String get youtube_connect_title => 'Connectez votre chaîne YouTube';
+	@override String get youtube_connect_body => 'Liez votre chaîne sur Wayo Ads (web) avant de soumettre une vidéo ou un Short. Cela permet de vérifier votre vidéo non répertoriée.';
+	@override String get youtube_reconnect_title => 'Reconnectez YouTube';
+	@override String get youtube_reconnect_body => 'Votre connexion YouTube a expiré. Ouvrez Wayo Ads sur le web pour vous reconnecter, puis soumettez depuis l\'app.';
+	@override String get youtube_connect_cta => 'Ouvrir les paramètres YouTube (web)';
 	@override String get submission_status_pending => 'En revue';
 	@override String get submission_status_approved => 'Approuvé';
 	@override String get submission_status_rejected => 'Refusé';
@@ -1663,6 +1709,15 @@ extension on TranslationsFr {
 			case 'dashboard.shell_tour_restart_hint': return 'Relancer la visite guidée de la navigation Tableau de bord, Campagnes, Portefeuille et Messages';
 			case 'advertiser_campaigns.title': return 'Campagnes';
 			case 'advertiser_campaigns.subtitle': return 'Créez des campagnes brouillon, suivez les performances et examinez les candidatures.';
+			case 'advertiser_campaigns.view_mine': return 'Mes campagnes';
+			case 'advertiser_campaigns.view_browse': return 'Parcourir';
+			case 'advertiser_campaigns.browse.title': return 'Parcourir les campagnes';
+			case 'advertiser_campaigns.browse.subtitle': return 'Explorez les campagnes actives sur la marketplace — repères et inspiration d\'autres marques.';
+			case 'advertiser_campaigns.browse.search_placeholder': return 'Rechercher une campagne';
+			case 'advertiser_campaigns.browse.empty_title': return 'Aucune campagne active';
+			case 'advertiser_campaigns.browse.empty_subtitle': return 'Les nouvelles campagnes apparaissent ici dès qu\'elles sont lancées.';
+			case 'advertiser_campaigns.browse.empty_search_title': return 'Aucune campagne correspondante';
+			case 'advertiser_campaigns.browse.empty_search_subtitle': return 'Essayez un autre mot-clé ou réinitialisez les filtres.';
 			case 'advertiser_campaigns.tabs.active': return 'Actives';
 			case 'advertiser_campaigns.tabs.draft': return 'Brouillons';
 			case 'advertiser_campaigns.tabs.paused': return 'En pause';
@@ -1792,14 +1847,18 @@ extension on TranslationsFr {
 			case 'invoices.summary_pending': return 'En attente';
 			case 'invoices.summary_count': return 'Documents';
 			case 'invoices.filter_all': return 'Tout';
+			case 'invoices.filter_all_types': return 'Tous les types';
 			case 'invoices.filter_deposits': return 'Dépôts';
 			case 'invoices.filter_billing': return 'Budget campagne';
 			case 'invoices.filter_payouts': return 'Virements';
 			case 'invoices.filter_earnings': return 'Revenus';
+			case 'invoices.filter_withdrawal': return 'Retrait';
+			case 'invoices.filter_token_purchase': return 'Achat de jetons';
 			case 'invoices.type_deposit': return 'Dépôt portefeuille';
 			case 'invoices.type_billing': return 'Budget campagne';
 			case 'invoices.type_payout': return 'Virement créateur';
 			case 'invoices.type_earnings': return 'Revenus publicitaires';
+			case 'invoices.type_token_purchase': return 'Achat de jetons';
 			case 'invoices.type_unknown': return 'Autre';
 			case 'invoices.status_paid': return 'Payée';
 			case 'invoices.status_validated': return 'Validée';
@@ -2030,6 +2089,11 @@ extension on TranslationsFr {
 			case 'creator.campaigns.submit_error': return 'Impossible d\'envoyer votre vidéo. Réessayez.';
 			case 'creator.campaigns.submit_success': return 'Vidéo envoyée — l\'annonceur la validera sous peu.';
 			case 'creator.campaigns.submit_blocked_limit': return 'Vous avez déjà soumis pour cette campagne. Attendez la revue.';
+			case 'creator.campaigns.youtube_connect_title': return 'Connectez votre chaîne YouTube';
+			case 'creator.campaigns.youtube_connect_body': return 'Liez votre chaîne sur Wayo Ads (web) avant de soumettre une vidéo ou un Short. Cela permet de vérifier votre vidéo non répertoriée.';
+			case 'creator.campaigns.youtube_reconnect_title': return 'Reconnectez YouTube';
+			case 'creator.campaigns.youtube_reconnect_body': return 'Votre connexion YouTube a expiré. Ouvrez Wayo Ads sur le web pour vous reconnecter, puis soumettez depuis l\'app.';
+			case 'creator.campaigns.youtube_connect_cta': return 'Ouvrir les paramètres YouTube (web)';
 			case 'creator.campaigns.submission_status_pending': return 'En revue';
 			case 'creator.campaigns.submission_status_approved': return 'Approuvé';
 			case 'creator.campaigns.submission_status_rejected': return 'Refusé';
@@ -2344,6 +2408,24 @@ extension on TranslationsFr {
 			case 'app_settings.notifications_enable_error': return 'Impossible d’activer les notifications. Vérifiez les réglages système.';
 			case 'app_settings.notifications_update_error': return 'Impossible de mettre à jour les notifications. Réessayez.';
 			case 'app_settings.section_account': return 'Compte';
+			case 'app_settings.section_security': return 'Sécurité';
+			case 'app_settings.sessions_title': return 'Sessions actives';
+			case 'app_settings.sessions_desc': return 'Appareils actuellement connectés à votre compte. Révoquez toute session que vous ne reconnaissez pas.';
+			case 'app_settings.sessions_empty': return 'Aucune autre session navigateur active.';
+			case 'app_settings.sessions_error_load': return 'Impossible de charger les sessions actives.';
+			case 'app_settings.sessions_error_revoke': return 'Impossible de révoquer la session. Réessayez.';
+			case 'app_settings.session_unknown_device': return 'Appareil inconnu';
+			case 'app_settings.session_this_device': return 'Cet appareil';
+			case 'app_settings.session_last_active': return 'Dernière activité';
+			case 'app_settings.session_revoke': return 'Révoquer';
+			case 'app_settings.session_revoking': return 'Révocation…';
+			case 'app_settings.session_revoke_others': return 'Déconnecter les autres appareils';
+			case 'app_settings.session_revoke_confirm_title': return 'Révoquer la session ?';
+			case 'app_settings.session_revoke_confirm_desc': return 'Cet appareil sera déconnecté à la prochaine requête.';
+			case 'app_settings.session_revoke_others_confirm_title': return 'Déconnecter les autres appareils ?';
+			case 'app_settings.session_revoke_others_confirm_desc': return 'Toutes les autres sessions navigateur seront fermées. Ce téléphone reste connecté.';
+			case 'app_settings.session_revoke_confirm': return 'Révoquer';
+			case 'app_settings.session_revoke_cancel': return 'Annuler';
 			case 'app_settings.delete_account_entry': return 'Supprimer le compte';
 			case 'app_settings.delete_account_entry_sub': return 'Délai de 30 jours — suppression dans l’app';
 			case 'app_settings.section_about': return 'À propos';

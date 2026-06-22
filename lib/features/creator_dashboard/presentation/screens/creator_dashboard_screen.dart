@@ -22,6 +22,8 @@ import '../../../app_settings/presentation/widgets/app_settings_side_panel.dart'
 import '../../../auth/domain/auth_notifier.dart';
 import '../../../auth/presentation/providers/current_account_providers.dart';
 import '../../../auth/presentation/widgets/wayo_logo.dart';
+import '../../../chat/presentation/providers/chat_providers.dart';
+import '../../../creator/presentation/providers/creator_session_gate.dart';
 import '../../../dashboard/presentation/providers/dashboard_state_providers.dart';
 import '../../../dashboard/presentation/widgets/error_banner.dart';
 import '../../../dashboard/presentation/widgets/notification_center_popup.dart';
@@ -113,6 +115,7 @@ class _CreatorDashboardScreenState extends ConsumerState<CreatorDashboardScreen>
   /// Safe to call frequently — [CreatorDashboardRepository] deduplicates
   /// in-flight requests and enforces a 2 s rate limit per endpoint.
   void _refreshNow() {
+    if (isSessionBootstrapActive(ref)) return;
     ref.invalidate(creatorApplicationsProvider);
     ref.invalidate(creatorStatsProvider);
   }
@@ -124,6 +127,43 @@ class _CreatorDashboardScreenState extends ConsumerState<CreatorDashboardScreen>
     final moneyLocale = _moneyLocale(locale);
     final statsAsync = ref.watch(creatorStatsProvider);
     final applicationsAsync = ref.watch(creatorApplicationsProvider);
+
+    ref.listen(chatPostLoginGateProvider, (previous, gateAt) {
+      if (gateAt == null) return;
+      scheduleCreatorRetryAfterBootstrap(ref, () {
+        if (!context.mounted) return;
+        if (ref.read(creatorStatsProvider).hasError) {
+          ref.invalidate(creatorStatsProvider);
+        }
+        if (ref.read(creatorApplicationsProvider).hasError) {
+          ref.invalidate(creatorApplicationsProvider);
+        }
+      });
+    });
+
+    ref.listen(creatorStatsProvider, (previous, next) {
+      next.whenOrNull(
+        error: (e, _) {
+          if (!shouldSuppressCreatorLoadError(ref, e)) return;
+          scheduleCreatorRetryAfterBootstrap(ref, () {
+            if (!context.mounted) return;
+            ref.invalidate(creatorStatsProvider);
+          });
+        },
+      );
+    });
+
+    ref.listen(creatorApplicationsProvider, (previous, next) {
+      next.whenOrNull(
+        error: (e, _) {
+          if (!shouldSuppressCreatorLoadError(ref, e)) return;
+          scheduleCreatorRetryAfterBootstrap(ref, () {
+            if (!context.mounted) return;
+            ref.invalidate(creatorApplicationsProvider);
+          });
+        },
+      );
+    });
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -155,11 +195,16 @@ class _CreatorDashboardScreenState extends ConsumerState<CreatorDashboardScreen>
                 padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
                 child: statsAsync.when(
                   loading: () => const _StatsSkeleton(),
-                  error: (e, _) => ErrorBanner(
-                    message: t.dashboard.errors.load_balance,
-                    retryLabel: t.dashboard.errors.retry,
-                    onRetry: () => ref.invalidate(creatorStatsProvider),
-                  ),
+                  error: (e, _) {
+                    if (shouldSuppressCreatorLoadError(ref, e)) {
+                      return const _StatsSkeleton();
+                    }
+                    return ErrorBanner(
+                      message: t.dashboard.errors.load_balance,
+                      retryLabel: t.dashboard.errors.retry,
+                      onRetry: () => ref.invalidate(creatorStatsProvider),
+                    );
+                  },
                   data: (s) =>
                       _StatsSection(stats: s, moneyLocale: moneyLocale),
                 ),
@@ -181,16 +226,27 @@ class _CreatorDashboardScreenState extends ConsumerState<CreatorDashboardScreen>
                   child: _ApplicationsSkeleton(),
                 ),
               ),
-              error: (e, _) => SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: ErrorBanner(
-                    message: t.creator.applications.load_error,
-                    retryLabel: t.dashboard.errors.retry,
-                    onRetry: () => ref.invalidate(creatorApplicationsProvider),
+              error: (e, _) {
+                if (shouldSuppressCreatorLoadError(ref, e)) {
+                  return const SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16),
+                      child: _ApplicationsSkeleton(),
+                    ),
+                  );
+                }
+                return SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: ErrorBanner(
+                      message: t.creator.applications.load_error,
+                      retryLabel: t.dashboard.errors.retry,
+                      onRetry: () =>
+                          ref.invalidate(creatorApplicationsProvider),
+                    ),
                   ),
-                ),
-              ),
+                );
+              },
               data: (list) {
                 if (list.isEmpty) {
                   return SliverToBoxAdapter(

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/maintenance/maintenance_providers.dart';
@@ -145,18 +146,7 @@ class _MaintenanceScreen extends ConsumerWidget {
                 child: _MaintenancePreferences(),
               ),
               const SizedBox(height: 32),
-              Image.asset(
-                'assets/images/wayo_ads_logo.png',
-                height: 44,
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) => Text(
-                  'Wayo Ads',
-                  style: AppTextStyles.headlineMedium(context).copyWith(
-                    color: onSurface,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),
+              const _MaintenanceBrandMark(),
               const Spacer(),
               _PulseIcon(probing: probing),
               const SizedBox(height: 28),
@@ -221,6 +211,73 @@ class _MaintenanceScreen extends ConsumerWidget {
   }
 }
 
+/// Theme-aware wordmark — the bundled PNG has a baked-in black bar that clashes
+/// with the light scaffold; dark mode keeps the full horizontal asset.
+class _MaintenanceBrandMark extends StatelessWidget {
+  const _MaintenanceBrandMark();
+
+  static const _amber = Color(0xFFF47A1F);
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+
+    if (isDark) {
+      return Image.asset(
+        'assets/images/wayo_ads_logo.png',
+        height: 44,
+        fit: BoxFit.contain,
+        errorBuilder: (context, error, stackTrace) => Text(
+          'Wayo Ads',
+          style: AppTextStyles.headlineMedium(context).copyWith(
+            color: onSurface,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      );
+    }
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SvgPicture.asset(
+          'assets/branding/wayo_splash_p1.svg',
+          height: 36,
+          width: 36,
+        ),
+        const SizedBox(width: 10),
+        Text.rich(
+          TextSpan(
+            children: [
+              TextSpan(
+                text: 'Wayo ',
+                style: TextStyle(
+                  color: _amber,
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.3,
+                  height: 1.1,
+                ),
+              ),
+              TextSpan(
+                text: 'Ads',
+                style: TextStyle(
+                  color: onSurface,
+                  fontSize: 22,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: -0.3,
+                  height: 1.1,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 /// Compact theme toggle + language pill (matches maintenance web/mobile mock).
 class _MaintenancePreferences extends StatelessWidget {
   const _MaintenancePreferences();
@@ -245,10 +302,12 @@ class _MaintenanceThemeToggle extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final scheme = Theme.of(context).colorScheme;
-    final borderColor = scheme.outlineVariant.withValues(alpha: 0.55);
-    final fill = scheme.surfaceContainerHighest.withValues(
-      alpha: isDark ? 0.35 : 0.7,
+    final borderColor = scheme.outlineVariant.withValues(
+      alpha: isDark ? 0.55 : 0.45,
     );
+    final fill = isDark
+        ? scheme.surfaceContainerHighest.withValues(alpha: 0.35)
+        : Colors.white;
 
     return Semantics(
       button: true,
@@ -296,12 +355,12 @@ class _MaintenanceLanguagePill extends ConsumerWidget {
     final locale = ref.watch(localeProvider);
     final scheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final shellFill = scheme.surfaceContainerHighest.withValues(
-      alpha: isDark ? 0.28 : 0.55,
-    );
+    final shellFill = isDark
+        ? scheme.surfaceContainerHighest.withValues(alpha: 0.28)
+        : Colors.white;
     final selectedFill = isDark
         ? const Color(0xFF5C5C5C)
-        : scheme.surfaceContainerHigh;
+        : const Color(0xFFEBEBEB);
 
     return Container(
       height: 44,

@@ -686,6 +686,7 @@ class _TranslationsChatFr extends TranslationsChatEn {
 	@override String get image_download_failed => 'Impossible de télécharger cette photo.';
 	@override String get image_permission_denied => 'Accès aux photos refusé. Activez-la dans les réglages.';
 	@override String get image_saved_downloads_browser => 'Photo téléchargée — vérifiez votre dossier Téléchargements.';
+	@override String get peer_unavailable => 'Cet utilisateur n\'est plus disponible.';
 }
 
 // Path: common
@@ -888,6 +889,7 @@ class _TranslationsAppSettingsFr extends TranslationsAppSettingsEn {
 	@override String get session_revoke_cancel => 'Annuler';
 	@override String get delete_account_entry => 'Supprimer le compte';
 	@override String get delete_account_entry_sub => 'Délai de 30 jours — suppression dans l’app';
+	@override String get delete_account_manage => 'Voir les détails de suppression';
 	@override String get section_about => 'À propos';
 	@override String get rate_app => 'Notez Wayo Ads';
 	@override String get rate_app_sub => 'Ouvrez l’App Store ou Google Play';
@@ -958,6 +960,8 @@ class _TranslationsAccountDeletionFr extends TranslationsAccountDeletionEn {
 	@override String get error_load_network => 'Vérifiez votre connexion et l’accessibilité de Wayo Ads, puis réessayez.';
 	@override String get error_delete => 'Une erreur s’est produite. Réessayez.';
 	@override String get error_password => 'Mot de passe incorrect. Réessayez ou réinitialisez votre mot de passe.';
+	@override String get error_superadmin => 'Les comptes superadmin ne peuvent pas demander la suppression.';
+	@override String get funds_warning => 'Important : le solde de votre portefeuille et les retraits en cours seront supprimés définitivement. Retirez vos fonds avant de confirmer.';
 	@override String banner_line({required Object date, required Object n}) => 'Votre compte sera supprimé le ${date} (${n} jours restants).';
 	@override String get banner_cancel_dialog_title => 'Annuler la suppression planifiée ?';
 	@override String get banner_cancel_dialog_body => 'Votre profil Wayo Ads restera actif.';
@@ -2271,6 +2275,7 @@ extension on TranslationsFr {
 			case 'chat.image_download_failed': return 'Impossible de télécharger cette photo.';
 			case 'chat.image_permission_denied': return 'Accès aux photos refusé. Activez-la dans les réglages.';
 			case 'chat.image_saved_downloads_browser': return 'Photo téléchargée — vérifiez votre dossier Téléchargements.';
+			case 'chat.peer_unavailable': return 'Cet utilisateur n\'est plus disponible.';
 			case 'common.language': return 'Langue';
 			case 'common.theme': return 'Thème';
 			case 'common.light': return 'Clair';
@@ -2428,6 +2433,7 @@ extension on TranslationsFr {
 			case 'app_settings.session_revoke_cancel': return 'Annuler';
 			case 'app_settings.delete_account_entry': return 'Supprimer le compte';
 			case 'app_settings.delete_account_entry_sub': return 'Délai de 30 jours — suppression dans l’app';
+			case 'app_settings.delete_account_manage': return 'Voir les détails de suppression';
 			case 'app_settings.section_about': return 'À propos';
 			case 'app_settings.rate_app': return 'Notez Wayo Ads';
 			case 'app_settings.rate_app_sub': return 'Ouvrez l’App Store ou Google Play';
@@ -2489,6 +2495,8 @@ extension on TranslationsFr {
 			case 'account_deletion.error_load_network': return 'Vérifiez votre connexion et l’accessibilité de Wayo Ads, puis réessayez.';
 			case 'account_deletion.error_delete': return 'Une erreur s’est produite. Réessayez.';
 			case 'account_deletion.error_password': return 'Mot de passe incorrect. Réessayez ou réinitialisez votre mot de passe.';
+			case 'account_deletion.error_superadmin': return 'Les comptes superadmin ne peuvent pas demander la suppression.';
+			case 'account_deletion.funds_warning': return 'Important : le solde de votre portefeuille et les retraits en cours seront supprimés définitivement. Retirez vos fonds avant de confirmer.';
 			case 'account_deletion.banner_line': return ({required Object date, required Object n}) => 'Votre compte sera supprimé le ${date} (${n} jours restants).';
 			case 'account_deletion.banner_cancel_dialog_title': return 'Annuler la suppression planifiée ?';
 			case 'account_deletion.banner_cancel_dialog_body': return 'Votre profil Wayo Ads restera actif.';

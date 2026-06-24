@@ -24,6 +24,7 @@ import 'push_registration_debug.dart';
 import 'user_push_notifications_preference.dart';
 import 'wayo_push_intent.dart';
 import 'mobile_push_route_utils.dart';
+import 'session_revocation_refresh_hub.dart';
 import 'superadmin_withdrawals_refresh_hub.dart';
 
 void _logPush(String message, {Object? error, StackTrace? stackTrace}) {
@@ -115,6 +116,9 @@ const _kFcmTokenPrefKey = 'push.fcm.token';
 /// When true, FCM payloads are ignored locally (logout / until re-register).
 const kPushSuppressExternalKey = 'push.suppress_external';
 
+/// After mobile schedules account deletion, ignore the server echo FCM briefly.
+const kPushSuppressAccountDeletionUntilKey = 'push.suppress_account_deletion_until';
+
 /// Wayo-ads [User.id] (cuid) for whom [registerWayoPushDeviceIfTokenPresent] succeeded.
 const kPushRegisteredWayoUserIdKey = 'push.session.wayo_user_id';
 
@@ -129,6 +133,25 @@ Future<bool> isPushExternalDeliverySuppressed() async {
 Future<void> setPushExternalDeliverySuppressed(bool suppressed) async {
   final p = await SharedPreferences.getInstance();
   await p.setBool(kPushSuppressExternalKey, suppressed);
+}
+
+Future<void> markAccountDeletionSelfInitiatedPushSuppress({
+  Duration window = const Duration(minutes: 3),
+}) async {
+  final p = await SharedPreferences.getInstance();
+  final until = DateTime.now().add(window).millisecondsSinceEpoch;
+  await p.setInt(kPushSuppressAccountDeletionUntilKey, until);
+}
+
+Future<bool> isAccountDeletionSelfInitiatedPushSuppressed() async {
+  final p = await SharedPreferences.getInstance();
+  final until = p.getInt(kPushSuppressAccountDeletionUntilKey);
+  if (until == null) return false;
+  if (DateTime.now().millisecondsSinceEpoch > until) {
+    await p.remove(kPushSuppressAccountDeletionUntilKey);
+    return false;
+  }
+  return true;
 }
 
 Future<void> clearRegisteredPushWayoUserId() async {
@@ -174,6 +197,13 @@ Future<bool> shouldDeliverFcmData(Map<String, dynamic> data) async {
   }
   if (isSelfInitiatedWalletFcmPayload(data)) {
     _logPush('FCM ignored — self-initiated wallet action (deposit/withdraw) suppressed');
+    return false;
+  }
+  if (isAccountDeletionScheduledNotificationPayload(data) &&
+      await isAccountDeletionSelfInitiatedPushSuppressed()) {
+    _logPush(
+      'FCM ignored — self-initiated account deletion schedule suppressed',
+    );
     return false;
   }
   // Legacy / not-yet-deployed server: no recipient field — trust token registration only.
@@ -677,6 +707,13 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
     _logPush('FCM background ignored — wrong/missing recipient');
     return;
   }
+  // Silent session-control message: never shows a tray. The actual logout is
+  // performed by the foreground session watchdog's immediate re-check on resume
+  // (the app must be reopened to do anything anyway).
+  if (isSessionsChangedRealtimePayload(message.data)) {
+    _logPush('FCM background sessions.changed — defer to resume re-check');
+    return;
+  }
   final chat = WayoChatPushPayload.fromMessageData(message.data);
   final title = message.notification?.title ??
       message.data['title']?.toString() ??
@@ -833,6 +870,13 @@ Future<void> attachForegroundFcmHandlers() async {
   FirebaseMessaging.onMessage.listen((RemoteMessage m) async {
     if (!await shouldDeliverFcmData(m.data)) {
       _logPush('FCM foreground ignored — wrong/missing recipient');
+      return;
+    }
+    // Silent session-control message (active sessions changed / revoked):
+    // refresh the sessions list + re-validate this session. No tray.
+    if (isSessionsChangedRealtimePayload(m.data)) {
+      _logPush('FCM foreground sessions.changed — triggering session re-check');
+      notifySessionsChanged();
       return;
     }
     final n = m.notification;

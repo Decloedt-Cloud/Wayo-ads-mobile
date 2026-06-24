@@ -9,7 +9,10 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../i18n/strings.g.dart';
+import '../../../auth/domain/wayo_ads_account_role.dart';
+import '../../../auth/presentation/providers/current_account_providers.dart';
 import '../../data/account_deletion_remote_datasource.dart';
+import '../../domain/account_deletion_side_effects.dart';
 import '../providers/account_deletion_providers.dart';
 
 /// In-app account deletion: educate → password → confirm sheet → success (30-day grace, same as web API).
@@ -83,6 +86,25 @@ class _AccountDeletionScreenState extends ConsumerState<AccountDeletionScreen> {
     }
   }
 
+  PreferredSizeWidget _deletionAppBar(BuildContext context, String title) {
+    final theme = Theme.of(context);
+    return AppBar(
+      title: Text(
+        title,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: theme.textTheme.titleMedium?.copyWith(
+          fontWeight: FontWeight.w700,
+          fontSize: 18,
+        ),
+      ),
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back_rounded),
+        onPressed: () => context.pop(),
+      ),
+    );
+  }
+
   String _mapProfileLoadError(BuildContext context, Object e) {
     final t = context.t.account_deletion;
     if (e is DioException) {
@@ -120,6 +142,24 @@ class _AccountDeletionScreenState extends ConsumerState<AccountDeletionScreen> {
     final a = DateTime(purgeLocal.year, purgeLocal.month, purgeLocal.day);
     final b = DateTime(now.year, now.month, now.day);
     return math.max(0, a.difference(b).inDays);
+  }
+
+  String _mapScheduleError(DioException e) {
+    final t = context.t.account_deletion;
+    final code = e.response?.statusCode;
+    final data = e.response?.data;
+    String? serverError;
+    if (data is Map) {
+      final err = data['error'];
+      if (err is String) serverError = err;
+    }
+    if (code == 403) {
+      if (serverError?.toLowerCase().contains('superadmin') == true) {
+        return t.error_superadmin;
+      }
+      return t.error_password;
+    }
+    return t.error_delete;
   }
 
   Future<void> _showFinalDialog() async {
@@ -169,6 +209,38 @@ class _AccountDeletionScreenState extends ConsumerState<AccountDeletionScreen> {
                 t.dialog_body,
                 textAlign: TextAlign.center,
                 style: Theme.of(ctx).textTheme.bodyMedium,
+              ),
+              const SizedBox(height: 12),
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: Theme.of(ctx).colorScheme.tertiary.withValues(alpha: 0.45),
+                  ),
+                  color: Theme.of(ctx).colorScheme.tertiaryContainer.withValues(alpha: 0.35),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(
+                        Icons.warning_amber_rounded,
+                        size: 20,
+                        color: Theme.of(ctx).colorScheme.tertiary,
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          t.funds_warning,
+                          style: Theme.of(ctx).textTheme.bodySmall?.copyWith(
+                            height: 1.4,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
               const SizedBox(height: 8),
               Text(
@@ -278,6 +350,8 @@ class _AccountDeletionScreenState extends ConsumerState<AccountDeletionScreen> {
         return;
       }
 
+      await runAccountDeletionScheduledSideEffects(ref);
+
       setState(() {
         _submitting = false;
         _step = 2;
@@ -293,11 +367,9 @@ class _AccountDeletionScreenState extends ConsumerState<AccountDeletionScreen> {
     } on DioException catch (e) {
       if (!mounted) return;
       setState(() => _submitting = false);
-      final code = e.response?.statusCode;
-      final msg = code == 403
-          ? context.t.account_deletion.error_password
-          : context.t.account_deletion.error_delete;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(_mapScheduleError(e))),
+      );
     } catch (_) {
       if (!mounted) return;
       setState(() => _submitting = false);
@@ -337,17 +409,34 @@ class _AccountDeletionScreenState extends ConsumerState<AccountDeletionScreen> {
   Widget build(BuildContext context) {
     final t = context.t.account_deletion;
     final scheme = Theme.of(context).colorScheme;
+    final role = ref.watch(currentWayoAdsAccountRoleProvider);
+
+    if (role == WayoAdsAccountRole.superAdmin) {
+      return Scaffold(
+        appBar: _deletionAppBar(context, t.nav_title),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Text(
+              t.error_superadmin,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
+          ),
+        ),
+      );
+    }
 
     if (_loadingProfile) {
       return Scaffold(
-        appBar: AppBar(title: Text(t.nav_title)),
+        appBar: _deletionAppBar(context, t.nav_title),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
 
     if (_loadError != null) {
       return Scaffold(
-        appBar: AppBar(title: Text(t.nav_title)),
+        appBar: _deletionAppBar(context, t.nav_title),
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
@@ -365,13 +454,7 @@ class _AccountDeletionScreenState extends ConsumerState<AccountDeletionScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(t.nav_title),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded),
-          onPressed: () => context.pop(),
-        ),
-      ),
+      appBar: _deletionAppBar(context, t.nav_title),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
@@ -481,9 +564,12 @@ class _AccountDeletionScreenState extends ConsumerState<AccountDeletionScreen> {
                 ),
                 const SizedBox(height: 10),
                 _DangerItemRow(text: t.danger_item_profile, scheme: scheme),
-                _DangerItemRow(text: t.danger_item_campaigns, scheme: scheme),
-                _DangerItemRow(text: t.danger_item_business, scheme: scheme),
-                _DangerItemRow(text: t.danger_item_wallet, scheme: scheme),
+                if (p.hasAdvertiserRole || p.hasCreatorRole)
+                  _DangerItemRow(text: t.danger_item_campaigns, scheme: scheme),
+                if (p.hasAdvertiserRole) ...[
+                  _DangerItemRow(text: t.danger_item_business, scheme: scheme),
+                  _DangerItemRow(text: t.danger_item_wallet, scheme: scheme),
+                ],
                 _DangerItemRow(text: t.danger_item_notifications, scheme: scheme),
                 _DangerItemRow(text: t.danger_item_access, scheme: scheme),
                 const SizedBox(height: 14),

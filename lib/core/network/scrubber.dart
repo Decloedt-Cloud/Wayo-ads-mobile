@@ -20,6 +20,13 @@ const Set<String> _sensitiveKeysLower = {
   'id_token',
   'bearer',
 
+  // Push / device identifiers (FCM registration tokens are device secrets)
+  'fcm_token',
+  'fcmtoken',
+  'device_token',
+  'push_token',
+  'registration_token',
+
   // Passwords and secrets
   'password',
   'password_confirmation',

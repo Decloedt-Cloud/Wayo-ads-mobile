@@ -100,48 +100,74 @@ class _LivePulseDot extends StatefulWidget {
 
 class _LivePulseDotState extends State<_LivePulseDot>
     with SingleTickerProviderStateMixin {
-  late final AnimationController _ctrl = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 1600),
-  )..repeat();
+  // PERF: only spin a 60 fps ticker when this pill actually pulses. Non-animated
+  // statuses (and every row of a long invoices list) render a static dot with
+  // no AnimationController and no per-frame rebuilds.
+  AnimationController? _ctrl;
 
   @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
+  void initState() {
+    super.initState();
+    if (widget.animate) _startController();
+  }
+
+  void _startController() {
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1600),
+    )..repeat();
   }
 
   @override
+  void didUpdateWidget(_LivePulseDot oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.animate && _ctrl == null) {
+      setState(_startController);
+    } else if (!widget.animate && _ctrl != null) {
+      _ctrl!.dispose();
+      _ctrl = null;
+    }
+  }
+
+  @override
+  void dispose() {
+    _ctrl?.dispose();
+    super.dispose();
+  }
+
+  Widget _staticDot() => Container(
+        width: 7,
+        height: 7,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: widget.color,
+        ),
+      );
+
+  @override
   Widget build(BuildContext context) {
+    final ctrl = _ctrl;
+    if (ctrl == null) return _staticDot();
+
     return AnimatedBuilder(
-      animation: _ctrl,
+      animation: ctrl,
       builder: (context, _) {
-        final pulse = widget.animate
-            ? (0.4 + 0.6 * (1 - (_ctrl.value * 2 - 1).abs()))
-            : 1.0;
+        final pulse = 0.4 + 0.6 * (1 - (ctrl.value * 2 - 1).abs());
         return Stack(
           alignment: Alignment.center,
           children: [
-            if (widget.animate)
-              Opacity(
-                opacity: 0.45 * pulse,
-                child: Container(
-                  width: 14 * pulse,
-                  height: 14 * pulse,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: widget.color.withValues(alpha: 0.5),
-                  ),
+            Opacity(
+              opacity: 0.45 * pulse,
+              child: Container(
+                width: 14 * pulse,
+                height: 14 * pulse,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: widget.color.withValues(alpha: 0.5),
                 ),
               ),
-            Container(
-              width: 7,
-              height: 7,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: widget.color,
-              ),
             ),
+            _staticDot(),
           ],
         );
       },

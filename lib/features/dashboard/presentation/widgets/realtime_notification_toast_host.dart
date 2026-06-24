@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/push/wayo_push_intent.dart';
+import '../../../../core/push/wayo_push_service.dart';
 import '../../../../core/realtime/realtime_signal.dart';
 import '../../../../core/ui/root_scaffold_messenger_key.dart';
 import '../../../../i18n/strings.g.dart';
@@ -41,7 +42,13 @@ class _RealtimeNotificationToastHostState
     super.dispose();
   }
 
-  void _onSignal(RealtimeSignal sig) {
+  void _onSignal(RealtimeSignal sig) async {
+    if (!mounted) return;
+    final payload = _signalPayloadMap(sig.raw);
+    if (isAccountDeletionScheduledNotificationPayload(payload) &&
+        await isAccountDeletionSelfInitiatedPushSuppressed()) {
+      return;
+    }
     if (!mounted) return;
     final role = ref.read(currentWayoAdsAccountRoleProvider);
     if (role == WayoAdsAccountRole.creator &&

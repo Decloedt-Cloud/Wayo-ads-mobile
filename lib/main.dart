@@ -31,8 +31,10 @@ Future<void> main() async {
   // vs our scaffold color when floating bottom nav overlaps the gesture area (Android).
   await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 
-  PaintingBinding.instance.imageCache.maximumSize = 100;
-  PaintingBinding.instance.imageCache.maximumSizeBytes = 50 * 1024 * 1024;
+  // Larger decoded-image cache reduces evict/re-decode churn while fast-scrolling
+  // image grids (campaign explorer, chat avatars). Bytes ceiling still caps RAM.
+  PaintingBinding.instance.imageCache.maximumSize = 300;
+  PaintingBinding.instance.imageCache.maximumSizeBytes = 80 * 1024 * 1024;
 
   // [AuthRuntimeConfig.ensureLoaded] only awaits in **debug** (reads dart_defines.json asset);
   // in release it short-circuits synchronously after applying compile-time constants — that
@@ -42,8 +44,21 @@ Future<void> main() async {
   try {
     await AuthRuntimeConfig.ensureLoaded();
   } catch (e, st) {
+    // SECURITY (fail-closed): in release, [ensureLoaded] runs
+    // [validateProductionUrls] which throws on insecure (HTTP) config. We must
+    // NOT boot with insecure transport config — refuse to start instead.
+    if (kReleaseMode) {
+      developer.log(
+        'AuthRuntimeConfig.ensureLoaded failed in release — aborting startup',
+        name: 'wayo.main',
+        error: e,
+        stackTrace: st,
+      );
+      runApp(_StartupFailedApp(error: e, stackTrace: st));
+      return;
+    }
     developer.log(
-      'AuthRuntimeConfig.ensureLoaded failed (continuing): $e',
+      'AuthRuntimeConfig.ensureLoaded failed (continuing in debug): $e',
       name: 'wayo.main',
       error: e,
       stackTrace: st,
@@ -276,8 +291,11 @@ final class _DeferredObservabilityBootstrapState
       'pinningOff=${AppConfig.disableCertPinning} '
       'googleClientIdSet=${r.googleServerClientId.isNotEmpty}',
     );
-    debugPrint('[config] resolvedDioBaseUrl = ${r.resolvedDioBaseUrl}');
-    debugPrint('[config] authWayoBaseUrl = ${r.authWayoBaseUrl}');
+    // Endpoint URLs only go to the console in debug builds — never in release logs.
+    if (kDebugMode) {
+      debugPrint('[config] resolvedDioBaseUrl = ${r.resolvedDioBaseUrl}');
+      debugPrint('[config] authWayoBaseUrl = ${r.authWayoBaseUrl}');
+    }
   }
 
   Future<void> _initSentryWhenIdle() async {

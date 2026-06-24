@@ -1,10 +1,32 @@
 import 'chat_message.dart';
 import 'chat_user_preview.dart';
 
+/// Anonymized account emails from chat-service after soft-delete purge.
+bool isDeletedChatUserEmail(String? email) {
+  final e = email?.trim() ?? '';
+  if (e.isEmpty) return false;
+  return e.endsWith('@deleted.wayo.com') || e.endsWith('@deleted.wayo.local');
+}
+
+/// Fallback when the conversation row is not in [chatConversationsProvider] yet.
+bool chatPeerUnavailableFromMessages(
+  int myChatUserId,
+  List<ChatMessage> messages,
+) {
+  for (final m in messages) {
+    final uid = m.userId != 0 ? m.userId : (m.user?.id ?? 0);
+    if (uid != 0 && uid != myChatUserId) {
+      if (isDeletedChatUserEmail(m.user?.email)) return true;
+    }
+  }
+  return false;
+}
+
 final class ChatConversation {
   const ChatConversation({
     required this.id,
     required this.type,
+    this.status,
     this.displayName,
     this.displayAvatar,
     this.unreadCount = 0,
@@ -15,6 +37,9 @@ final class ChatConversation {
 
   final int id;
   final String type;
+
+  /// Laravel chat-service: `active` | `archived` | `closed` (peer deleted account).
+  final String? status;
   final String? displayName;
   final String? displayAvatar;
   final int unreadCount;
@@ -49,6 +74,21 @@ final class ChatConversation {
       }
     }
     return null;
+  }
+
+  /// Direct thread with a soft-deleted / anonymized peer — composer must be hidden.
+  bool isPeerUnavailable(int myChatUserId) {
+    if (type != 'direct') return false;
+    if (status == 'closed') return true;
+    final parts = participants;
+    if (parts == null) return false;
+    for (final p in parts) {
+      final uid = p.user?.id ?? p.userId;
+      if (uid != 0 && uid != myChatUserId) {
+        if (isDeletedChatUserEmail(p.user?.email)) return true;
+      }
+    }
+    return false;
   }
 }
 

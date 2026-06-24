@@ -1513,12 +1513,15 @@ class _Avatar extends StatelessWidget {
     if (avatarUrl != null && avatarUrl!.isNotEmpty) {
       return ClipRRect(
         borderRadius: BorderRadius.circular(20),
-        child: Image.network(
-          avatarUrl!,
+        child: CachedNetworkImage(
+          imageUrl: avatarUrl!,
           width: 44,
           height: 44,
+          memCacheWidth: 88,
+          memCacheHeight: 88,
           fit: BoxFit.cover,
-          errorBuilder: (ctx, err, stack) =>
+          placeholder: (ctx, url) => _Placeholder(letter: letter, isDark: isDark),
+          errorWidget: (ctx, url, err) =>
               _Placeholder(letter: letter, isDark: isDark),
         ),
       );

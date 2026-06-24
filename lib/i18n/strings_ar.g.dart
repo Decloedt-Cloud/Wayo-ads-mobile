@@ -685,6 +685,7 @@ class _TranslationsChatAr extends TranslationsChatEn {
 	@override String get image_download_failed => 'تعذّر تنزيل هذه الصورة.';
 	@override String get image_permission_denied => 'تم رفض الوصول إلى الصور. فعّل الإذن من الإعدادات.';
 	@override String get image_saved_downloads_browser => 'تم تنزيل الصورة — تحقق من مجلد التحميلات.';
+	@override String get peer_unavailable => 'هذا المستخدم لم يعد متاحًا.';
 }
 
 // Path: common
@@ -887,6 +888,7 @@ class _TranslationsAppSettingsAr extends TranslationsAppSettingsEn {
 	@override String get session_revoke_cancel => 'إلغاء';
 	@override String get delete_account_entry => 'حذف الحساب';
 	@override String get delete_account_entry_sub => 'فترة سماح 30 يومًا — من داخل التطبيق';
+	@override String get delete_account_manage => 'عرض تفاصيل الحذف';
 	@override String get section_about => 'حول التطبيق';
 	@override String get rate_app => 'قيّم Wayo Ads';
 	@override String get rate_app_sub => 'افتح App Store أو Google Play';
@@ -957,6 +959,8 @@ class _TranslationsAccountDeletionAr extends TranslationsAccountDeletionEn {
 	@override String get error_load_network => 'تحقق من الاتصال وإمكانية الوصول إلى Wayo Ads، ثم أعد المحاولة.';
 	@override String get error_delete => 'حدث خطأ. حاول مجددًا.';
 	@override String get error_password => 'كلمة مرور غير صحيحة. أعد المحاولة أو أعد التعيين.';
+	@override String get error_superadmin => 'لا يمكن لحسابات المشرف الأعلى طلب الحذف.';
+	@override String get funds_warning => 'تنبيه: سيتم حذف رصيد محفظتك وأي طلبات سحب معلّقة نهائيًا. اسحب أموالك قبل التأكيد.';
 	@override String banner_line({required Object date, required Object n}) => 'سيُحذف حسابك في ${date} (${n} يومًا متبقيًا).';
 	@override String get banner_cancel_dialog_title => 'إلغاء الحذف المجدول؟';
 	@override String get banner_cancel_dialog_body => 'يظل ملف Wayo Ads نشطًا.';
@@ -2269,6 +2273,7 @@ extension on TranslationsAr {
 			case 'chat.image_download_failed': return 'تعذّر تنزيل هذه الصورة.';
 			case 'chat.image_permission_denied': return 'تم رفض الوصول إلى الصور. فعّل الإذن من الإعدادات.';
 			case 'chat.image_saved_downloads_browser': return 'تم تنزيل الصورة — تحقق من مجلد التحميلات.';
+			case 'chat.peer_unavailable': return 'هذا المستخدم لم يعد متاحًا.';
 			case 'common.language': return 'اللغة';
 			case 'common.theme': return 'المظهر';
 			case 'common.light': return 'فاتح';
@@ -2426,6 +2431,7 @@ extension on TranslationsAr {
 			case 'app_settings.session_revoke_cancel': return 'إلغاء';
 			case 'app_settings.delete_account_entry': return 'حذف الحساب';
 			case 'app_settings.delete_account_entry_sub': return 'فترة سماح 30 يومًا — من داخل التطبيق';
+			case 'app_settings.delete_account_manage': return 'عرض تفاصيل الحذف';
 			case 'app_settings.section_about': return 'حول التطبيق';
 			case 'app_settings.rate_app': return 'قيّم Wayo Ads';
 			case 'app_settings.rate_app_sub': return 'افتح App Store أو Google Play';
@@ -2487,6 +2493,8 @@ extension on TranslationsAr {
 			case 'account_deletion.error_load_network': return 'تحقق من الاتصال وإمكانية الوصول إلى Wayo Ads، ثم أعد المحاولة.';
 			case 'account_deletion.error_delete': return 'حدث خطأ. حاول مجددًا.';
 			case 'account_deletion.error_password': return 'كلمة مرور غير صحيحة. أعد المحاولة أو أعد التعيين.';
+			case 'account_deletion.error_superadmin': return 'لا يمكن لحسابات المشرف الأعلى طلب الحذف.';
+			case 'account_deletion.funds_warning': return 'تنبيه: سيتم حذف رصيد محفظتك وأي طلبات سحب معلّقة نهائيًا. اسحب أموالك قبل التأكيد.';
 			case 'account_deletion.banner_line': return ({required Object date, required Object n}) => 'سيُحذف حسابك في ${date} (${n} يومًا متبقيًا).';
 			case 'account_deletion.banner_cancel_dialog_title': return 'إلغاء الحذف المجدول؟';
 			case 'account_deletion.banner_cancel_dialog_body': return 'يظل ملف Wayo Ads نشطًا.';

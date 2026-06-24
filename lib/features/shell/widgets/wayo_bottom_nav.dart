@@ -83,6 +83,8 @@ class WayoBottomNav extends StatefulWidget {
 }
 
 class _WayoBottomNavState extends State<WayoBottomNav> {
+  final GlobalKey _navStackKey = GlobalKey();
+
   void _goBranch(int shellIndex) {
     HapticFeedback.lightImpact();
     widget.navigationShell.goBranch(
@@ -115,70 +117,194 @@ class _WayoBottomNavState extends State<WayoBottomNav> {
         child: Container(
           height: kWayoBottomNavBarHeight,
           padding: const EdgeInsets.symmetric(horizontal: 4),
-          child: Row(
-            children: [
-              Expanded(
-                child: WayoProNavTabItem(
-                  tabKey: widget.dashboardTabKey,
-                  coachTarget: ShellTutorialTarget.dashboard,
-                  coachAccent: coachAccent,
-                  icon: Icons.space_dashboard_rounded,
-                  label: t.nav.dashboard,
-                  isSelected: idx == 0,
-                  onTap: () => _goBranch(0),
-                  badge: widget.notificationUnread > 0 && idx != 0
-                      ? widget.notificationUnread
-                      : null,
-                ),
-              ),
-              Expanded(
-                child: WayoProNavTabItem(
-                  tabKey: widget.campaignsTabKey,
-                  coachTarget: ShellTutorialTarget.campaigns,
-                  coachAccent: coachAccent,
-                  icon: Icons.work_rounded,
-                  label: t.nav.campaigns,
-                  isSelected: idx == 1,
-                  onTap: () => _goBranch(1),
-                  showDot: widget.campaignsAttentionCount > 0,
-                ),
-              ),
-              Expanded(
-                child: WayoProNavTabItem(
-                  tabKey: widget.walletTabKey,
-                  coachTarget: ShellTutorialTarget.wallet,
-                  coachAccent: coachAccent,
-                  icon: Icons.account_balance_wallet_rounded,
-                  label: t.nav.wallet,
-                  isSelected: idx == 2,
-                  onTap: () => _goBranch(2),
-                ),
-              ),
-              if (widget.showInvoicesTab)
-                Expanded(
-                  child: WayoProNavTabItem(
-                    tabKey: widget.invoicesTabKey,
-                    coachTarget: ShellTutorialTarget.invoices,
-                    coachAccent: coachAccent,
-                    icon: Icons.receipt_long_rounded,
-                    label: widget.invoicesNavLabel,
-                    isSelected: idx == 3,
-                    onTap: () => _goBranch(3),
+          child: ValueListenableBuilder<ShellTutorialTarget?>(
+          valueListenable: shellTutorialHighlightTab,
+          builder: (context, coachTarget, _) {
+            return Stack(
+              key: _navStackKey,
+              clipBehavior: Clip.none,
+              children: [
+                if (coachTarget != null)
+                  _SlidingCoachHighlight(
+                    stackKey: _navStackKey,
+                    tabKey: shellTutorialTabKeyForTarget(
+                      coachTarget,
+                      dashboardKey: widget.dashboardTabKey,
+                      campaignsKey: widget.campaignsTabKey,
+                      walletKey: widget.walletTabKey,
+                      invoicesKey: widget.invoicesTabKey,
+                      chatKey: widget.chatTabKey,
+                      showInvoicesTab: widget.showInvoicesTab,
+                    ),
+                    accent: coachAccent,
+                    isDark: isDark,
                   ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: WayoProNavTabItem(
+                        tabKey: widget.dashboardTabKey,
+                        coachTarget: ShellTutorialTarget.dashboard,
+                        coachAccent: coachAccent,
+                        icon: Icons.space_dashboard_rounded,
+                        label: t.nav.dashboard,
+                        isSelected: idx == 0,
+                        onTap: () => _goBranch(0),
+                        badge: widget.notificationUnread > 0 && idx != 0
+                            ? widget.notificationUnread
+                            : null,
+                      ),
+                    ),
+                    Expanded(
+                      child: WayoProNavTabItem(
+                        tabKey: widget.campaignsTabKey,
+                        coachTarget: ShellTutorialTarget.campaigns,
+                        coachAccent: coachAccent,
+                        icon: Icons.work_rounded,
+                        label: t.nav.campaigns,
+                        isSelected: idx == 1,
+                        onTap: () => _goBranch(1),
+                        showDot: widget.campaignsAttentionCount > 0,
+                      ),
+                    ),
+                    Expanded(
+                      child: WayoProNavTabItem(
+                        tabKey: widget.walletTabKey,
+                        coachTarget: ShellTutorialTarget.wallet,
+                        coachAccent: coachAccent,
+                        icon: Icons.account_balance_wallet_rounded,
+                        label: t.nav.wallet,
+                        isSelected: idx == 2,
+                        onTap: () => _goBranch(2),
+                      ),
+                    ),
+                    if (widget.showInvoicesTab)
+                      Expanded(
+                        child: WayoProNavTabItem(
+                          tabKey: widget.invoicesTabKey,
+                          coachTarget: ShellTutorialTarget.invoices,
+                          coachAccent: coachAccent,
+                          icon: Icons.receipt_long_rounded,
+                          label: widget.invoicesNavLabel,
+                          isSelected: idx == 3,
+                          onTap: () => _goBranch(3),
+                        ),
+                      ),
+                    Expanded(
+                      child: WayoProNavTabItem(
+                        tabKey: widget.chatTabKey,
+                        coachTarget: ShellTutorialTarget.chat,
+                        coachAccent: coachAccent,
+                        icon: Icons.forum_rounded,
+                        label: t.nav.chat,
+                        isSelected: idx == 4,
+                        onTap: () => _goBranch(4),
+                        badge: widget.chatUnread > 0 && idx != 4
+                            ? widget.chatUnread
+                            : null,
+                      ),
+                    ),
+                  ],
                 ),
-              Expanded(
-                child: WayoProNavTabItem(
-                  tabKey: widget.chatTabKey,
-                  coachTarget: ShellTutorialTarget.chat,
-                  coachAccent: coachAccent,
-                  icon: Icons.forum_rounded,
-                  label: t.nav.chat,
-                  isSelected: idx == 4,
-                  onTap: () => _goBranch(4),
-                  badge: widget.chatUnread > 0 && idx != 4
-                      ? widget.chatUnread
-                      : null,
-                ),
+              ],
+            );
+          },
+        ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Single pill that slides between tab cells — avoids overlap on the previous icon.
+class _SlidingCoachHighlight extends StatefulWidget {
+  const _SlidingCoachHighlight({
+    required this.stackKey,
+    required this.tabKey,
+    required this.accent,
+    required this.isDark,
+  });
+
+  final GlobalKey stackKey;
+  final GlobalKey? tabKey;
+  final Color accent;
+  final bool isDark;
+
+  @override
+  State<_SlidingCoachHighlight> createState() => _SlidingCoachHighlightState();
+}
+
+class _SlidingCoachHighlightState extends State<_SlidingCoachHighlight> {
+  Rect? _rect;
+
+  @override
+  void initState() {
+    super.initState();
+    shellTutorialHighlightTab.addListener(_scheduleMeasure);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _measure());
+  }
+
+  @override
+  void didUpdateWidget(covariant _SlidingCoachHighlight oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.tabKey != widget.tabKey) {
+      _scheduleMeasure();
+    }
+  }
+
+  @override
+  void dispose() {
+    shellTutorialHighlightTab.removeListener(_scheduleMeasure);
+    super.dispose();
+  }
+
+  void _scheduleMeasure() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _measure();
+    });
+  }
+
+  void _measure() {
+    final tabKey = widget.tabKey;
+    if (tabKey == null) return;
+
+    final tabBox = tabKey.currentContext?.findRenderObject() as RenderBox?;
+    final stackBox =
+        widget.stackKey.currentContext?.findRenderObject() as RenderBox?;
+    if (tabBox == null || stackBox == null || !tabBox.hasSize) return;
+
+    final topLeft = tabBox.localToGlobal(Offset.zero, ancestor: stackBox);
+    final nextRect = topLeft & tabBox.size;
+    if (_rect == nextRect) return;
+
+    setState(() => _rect = nextRect);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final rect = _rect;
+    if (rect == null) return const SizedBox.shrink();
+
+    return AnimatedPositioned(
+      duration: shellTutorialSlideDuration,
+      curve: shellTutorialSlideCurve,
+      left: rect.left,
+      top: rect.top,
+      width: rect.width,
+      height: rect.height,
+      child: IgnorePointer(
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: widget.isDark
+                ? Colors.white.withValues(alpha: 0.14)
+                : Colors.white.withValues(alpha: 0.96),
+            borderRadius: BorderRadius.circular(kWayoNavCoachMarkRadius + 2),
+            border: Border.all(color: widget.accent, width: 2),
+            boxShadow: [
+              BoxShadow(
+                color: widget.accent.withValues(alpha: 0.4),
+                blurRadius: 14,
+                spreadRadius: 0,
               ),
             ],
           ),
@@ -222,6 +348,8 @@ class WayoProNavTabItem extends StatelessWidget {
       builder: (context, coachFocused, _) {
         final isCoachFocused =
             coachTarget != null && coachFocused == coachTarget;
+        final highlightDuration = const Duration(milliseconds: 200);
+        const highlightCurve = Curves.easeOutCubic;
 
         return GestureDetector(
           onTap: onTap,
@@ -231,30 +359,15 @@ class WayoProNavTabItem extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
               child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                curve: Curves.easeOutCubic,
+                duration: highlightDuration,
+                curve: highlightCurve,
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
                 decoration: BoxDecoration(
-                  color: isCoachFocused
-                      ? (isDark
-                            ? Colors.white.withValues(alpha: 0.14)
-                            : Colors.white.withValues(alpha: 0.96))
-                      : Colors.transparent,
+                  color: Colors.transparent,
                   borderRadius:
                       BorderRadius.circular(kWayoNavCoachMarkRadius + 2),
-                  border: isCoachFocused
-                      ? Border.all(color: accent, width: 2)
-                      : null,
-                  boxShadow: isCoachFocused
-                      ? [
-                          BoxShadow(
-                            color: accent.withValues(alpha: 0.4),
-                            blurRadius: 14,
-                            spreadRadius: 0,
-                          ),
-                        ]
-                      : null,
+                  border: Border.all(color: Colors.transparent, width: 2),
                 ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -265,7 +378,8 @@ class WayoProNavTabItem extends StatelessWidget {
                       alignment: Alignment.center,
                       children: [
                         AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
+                          duration: highlightDuration,
+                          curve: highlightCurve,
                           padding: const EdgeInsets.all(6),
                           child: Icon(
                             icon,
@@ -335,7 +449,8 @@ class WayoProNavTabItem extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     AnimatedDefaultTextStyle(
-                      duration: const Duration(milliseconds: 200),
+                      duration: highlightDuration,
+                      curve: highlightCurve,
                       style: TextStyle(
                         fontSize: 10,
                         fontWeight: isCoachFocused || isSelected

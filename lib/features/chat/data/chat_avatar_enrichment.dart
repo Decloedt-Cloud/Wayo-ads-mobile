@@ -142,6 +142,7 @@ Future<List<ChatConversation>> enrichChatConversationsWithMarketingAvatars(
     return ChatConversation(
       id: c.id,
       type: c.type,
+      status: c.status,
       displayName: c.displayName,
       displayAvatar: resolvedDisplay ?? c.displayAvatar,
       unreadCount: c.unreadCount,

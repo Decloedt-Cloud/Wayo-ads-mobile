@@ -34,6 +34,7 @@ import '../cinematic/cinematic_composer_bar.dart';
 import '../cinematic/cinematic_date_pill.dart';
 import '../cinematic/cinematic_mesh_background.dart';
 import '../cinematic/cinematic_message_bubble.dart';
+import '../cinematic/cinematic_peer_unavailable_bar.dart';
 import '../cinematic/cinematic_send_burst.dart';
 import '../cinematic/cinematic_typing_dots.dart';
 import '../formatting/chat_message_plain_body.dart';
@@ -117,6 +118,9 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
   bool _pendingShareBound = false;
   final ChatSendSpamGuard _sendSpamGuard = ChatSendSpamGuard();
   Timer? _spamCooldownTicker;
+
+  /// Set when send API returns `conversation_closed` (peer deleted mid-thread).
+  bool _peerUnavailableForced = false;
 
   /// Laravel-style `page` / `per_page` for [/messages].
   static const int _messagesPageSize = 40;
@@ -958,6 +962,17 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
     ChatRepository repo,
     ChatRealtimeService rt,
   ) async {
+    final conv = _findConversation(ref.read(chatConversationsProvider).valueOrNull);
+    if (_isPeerUnavailable(creds, conv)) {
+      _markPeerUnavailable();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.t.chat.peer_unavailable)),
+        );
+      }
+      return;
+    }
+
     final text = _draft.text.trim();
     if (text.isEmpty || _sending) return;
     if (chatTextLooksLikePhoneNumber(text)) {
@@ -1081,9 +1096,19 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
         _replyingTo = null;
       });
       ref.invalidate(chatConversationsProvider);
-    } catch (_) {
+    } catch (e) {
       await clearInlineReplyEchoGuard();
       if (!mounted) return;
+      if (_isConversationClosedError(e)) {
+        _markPeerUnavailable();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.t.chat.peer_unavailable)),
+        );
+        setState(() {
+          _messages = _messages.where((m) => m.id != tempId).toList();
+        });
+        return;
+      }
       setState(() {
         _messages = _messages
             .map(
@@ -1205,6 +1230,34 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
       if (c.id == widget.conversationId) return c;
     }
     return null;
+  }
+
+  bool _isPeerUnavailable(ChatCredentials creds, ChatConversation? conv) {
+    if (_peerUnavailableForced) return true;
+    if (conv?.isPeerUnavailable(creds.chatUserId) == true) return true;
+    return chatPeerUnavailableFromMessages(creds.chatUserId, _messages);
+  }
+
+  bool _isConversationClosedError(Object error) {
+    if (error is DioException) {
+      final data = error.response?.data;
+      if (data is Map) {
+        final code = data['error_code'] ?? data['errorCode'];
+        if ('$code' == 'conversation_closed') return true;
+      }
+    }
+    return false;
+  }
+
+  void _markPeerUnavailable() {
+    if (_peerUnavailableForced) return;
+    setState(() {
+      _peerUnavailableForced = true;
+      _editingMessageId = null;
+      _editingOriginalContent = '';
+      _replyingTo = null;
+      _draft.clear();
+    });
   }
 
   /// Partner chat user id for presence; falls back to loaded messages when the
@@ -1738,6 +1791,7 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
                 : '';
             final replyBnSub = replyTo != null ? _replySnippet(replyTo) : '';
             final listCount = segments.length + (_typingName != null ? 1 : 0);
+            final peerUnavailable = _isPeerUnavailable(creds, conv);
 
             return AnnotatedRegion<SystemUiOverlayStyle>(
               value: threadUi,
@@ -1998,75 +2052,82 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
                           clipBehavior: Clip.none,
                           alignment: Alignment.bottomRight,
                           children: [
-                            CinematicComposerBar(
-                              controller: _draft,
-                              enabled:
-                                  !_sending &&
-                                  !_uploading &&
-                                  !_loading &&
-                                  _error == null &&
-                                  !_sendSpamGuard.isCoolingDown,
-                              reduceMotion: reduce,
-                              spamCooldownRemaining:
-                                  _sendSpamGuard.remainingCooldown,
-                              spamCooldownTotal:
-                                  _sendSpamGuard.activeCooldownTotal,
-                              hint: _editingMessageId != null
-                                  ? t.chat.edit_mode_hint
-                                  : replyTo != null
-                                  ? t.chat.composer_reply_hint
-                                  : t.chat.composer_hint,
-                              errorText: _phoneError,
-                              editing: _editingMessageId != null,
-                              editingTitle: t.chat.edit_mode_title,
-                              editingPreview: _editingOriginalContent,
-                              editingCancelLabel: t.chat.edit_mode_cancel,
-                              onCancelEdit: _cancelEdit,
-                              replying:
-                                  _editingMessageId == null && replyTo != null,
-                              replyBannerTitle: replyBnTitle,
-                              replyBannerSubtitle: replyBnSub,
-                              replyCancelTooltip: MaterialLocalizations.of(
-                                context,
-                              ).cancelButtonLabel,
-                              onCancelReply: _cancelReply,
-                              onAttach: _editingMessageId != null
-                                  ? null
-                                  : () => _pickAndUpload(creds, repo, rt),
-                              onSendBurst: () => _burstKey.currentState?.play(),
-                              onDraftChanged: (s) {
-                                setState(() {
-                                  _phoneError =
-                                      chatTextLooksLikePhoneNumber(s.trim())
-                                      ? t.chat.error_phone
-                                      : null;
-                                });
-                                if (_editingMessageId != null) return;
-                                _typingQuietTimer?.cancel();
-                                if (s.trim().isEmpty) {
-                                  unawaited(
-                                    _fireTyping(creds, repo, rt, false),
-                                  );
-                                  return;
-                                }
-                                unawaited(_fireTyping(creds, repo, rt, true));
-                                _typingQuietTimer = Timer(
-                                  const Duration(milliseconds: 1200),
-                                  () {
+                            if (peerUnavailable)
+                              CinematicPeerUnavailableBar(
+                                message: t.chat.peer_unavailable,
+                              )
+                            else
+                              CinematicComposerBar(
+                                controller: _draft,
+                                enabled:
+                                    !_sending &&
+                                    !_uploading &&
+                                    !_loading &&
+                                    _error == null &&
+                                    !_sendSpamGuard.isCoolingDown,
+                                reduceMotion: reduce,
+                                spamCooldownRemaining:
+                                    _sendSpamGuard.remainingCooldown,
+                                spamCooldownTotal:
+                                    _sendSpamGuard.activeCooldownTotal,
+                                hint: _editingMessageId != null
+                                    ? t.chat.edit_mode_hint
+                                    : replyTo != null
+                                    ? t.chat.composer_reply_hint
+                                    : t.chat.composer_hint,
+                                errorText: _phoneError,
+                                editing: _editingMessageId != null,
+                                editingTitle: t.chat.edit_mode_title,
+                                editingPreview: _editingOriginalContent,
+                                editingCancelLabel: t.chat.edit_mode_cancel,
+                                onCancelEdit: _cancelEdit,
+                                replying:
+                                    _editingMessageId == null && replyTo != null,
+                                replyBannerTitle: replyBnTitle,
+                                replyBannerSubtitle: replyBnSub,
+                                replyCancelTooltip: MaterialLocalizations.of(
+                                  context,
+                                ).cancelButtonLabel,
+                                onCancelReply: _cancelReply,
+                                onAttach: _editingMessageId != null
+                                    ? null
+                                    : () => _pickAndUpload(creds, repo, rt),
+                                onSendBurst: () =>
+                                    _burstKey.currentState?.play(),
+                                onDraftChanged: (s) {
+                                  setState(() {
+                                    _phoneError =
+                                        chatTextLooksLikePhoneNumber(s.trim())
+                                        ? t.chat.error_phone
+                                        : null;
+                                  });
+                                  if (_editingMessageId != null) return;
+                                  _typingQuietTimer?.cancel();
+                                  if (s.trim().isEmpty) {
                                     unawaited(
                                       _fireTyping(creds, repo, rt, false),
                                     );
-                                  },
-                                );
-                              },
-                              onSend: () => _onSend(creds, repo, rt),
-                              autoFocusOnMount: widget.autoFocusComposer,
-                            ),
-                            Positioned(
-                              right: 24,
-                              bottom: 88,
-                              child: CinematicSendBurst(key: _burstKey),
-                            ),
+                                    return;
+                                  }
+                                  unawaited(_fireTyping(creds, repo, rt, true));
+                                  _typingQuietTimer = Timer(
+                                    const Duration(milliseconds: 1200),
+                                    () {
+                                      unawaited(
+                                        _fireTyping(creds, repo, rt, false),
+                                      );
+                                    },
+                                  );
+                                },
+                                onSend: () => _onSend(creds, repo, rt),
+                                autoFocusOnMount: widget.autoFocusComposer,
+                              ),
+                            if (!peerUnavailable)
+                              Positioned(
+                                right: 24,
+                                bottom: 88,
+                                child: CinematicSendBurst(key: _burstKey),
+                              ),
                           ],
                         ),
                       ],

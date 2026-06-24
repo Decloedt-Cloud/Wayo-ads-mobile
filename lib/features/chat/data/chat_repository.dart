@@ -588,6 +588,9 @@ final class ChatRepository {
     if (url.isEmpty) {
       throw const ServerException('Invalid attachment URL');
     }
+    if (!isAllowedChatMediaHost(url, c.apiBaseUrl)) {
+      throw const ServerException('Attachment host not allowed');
+    }
 
     final hdr = <String, dynamic>{
       ...dio.options.headers.map((k, v) => MapEntry(k, v)),
@@ -645,6 +648,9 @@ final class ChatRepository {
       c.apiBaseUrl,
     );
     final target = resolved.isNotEmpty ? resolved : url;
+    if (!isAllowedChatMediaHost(target, c.apiBaseUrl)) {
+      throw const ServerException('Attachment host not allowed');
+    }
     final targetUri = Uri.tryParse(target);
     final baseUri = Uri.tryParse(c.apiBaseUrl.trim());
     final sameChatHost = targetUri != null &&
@@ -755,6 +761,7 @@ final class ChatRepository {
     return ChatConversation(
       id: (m['id'] as num).toInt(),
       type: '${m['type'] ?? 'direct'}',
+      status: m['status'] as String?,
       displayName: m['display_name'] as String? ?? m['displayName'] as String?,
       displayAvatar:
           m['display_avatar'] as String? ?? m['displayAvatar'] as String?,

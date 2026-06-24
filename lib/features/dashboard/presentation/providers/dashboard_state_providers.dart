@@ -1,14 +1,20 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/push/wayo_push_intent.dart';
+
 import '../../../auth/data/repositories/auth_repository.dart';
+import '../../../../core/network/auth_force_logout_hub.dart';
+import '../../../../core/network/auth_remote.dart';
 import '../../../../core/network/rate_limiter.dart';
 import '../../../../core/network/request_deduplicator.dart';
 import '../../../../core/network/wayo_ads_dio.dart';
 import '../../../../core/realtime/reverb_client.dart';
 import '../../../../core/storage/secure_storage.dart';
+import '../../../app_settings/presentation/providers/active_sessions_providers.dart';
 import '../../data/datasources/dashboard_remote_datasource.dart';
 import '../../data/repositories/dashboard_repository.dart';
 import '../../data/repositories/notifications_repository.dart';
@@ -27,7 +33,6 @@ import '../../../wallet/presentation/providers/advertiser_wallet_providers.dart'
 import '../../../auth/domain/auth_notifier.dart';
 import '../../../auth/domain/wayo_ads_account_role.dart';
 import '../../../superadmin/presentation/providers/superadmin_providers.dart';
-import '../../../../core/push/wayo_push_intent.dart';
 
 final requestDeduplicatorProvider = Provider<RequestDeduplicator>((ref) {
   ref.keepAlive();
@@ -120,6 +125,38 @@ bool _isNotificationCreatedRealtimeEvent(String name) {
   return false;
 }
 
+Map<String, dynamic> _realtimeSignalPayloadMap(Object? raw) {
+  if (raw == null) return const {};
+  if (raw is Map<String, dynamic>) return raw;
+  if (raw is String) {
+    final s = raw.trim();
+    if (s.isEmpty) return const {};
+    try {
+      final decoded = jsonDecode(s);
+      if (decoded is Map<String, dynamic>) return decoded;
+    } catch (_) {}
+  }
+  return const {};
+}
+
+/// Authoritative session re-check used by the realtime watchdog. Mirrors the
+/// web `SessionRevocationWatchdog`: only an explicit Auth_Wayo rejection
+/// (`TokenValidity.invalid`) ends the session — network/timeout/5xx
+/// (`indeterminate`) must never force logout. Valid tokens (e.g. when THIS
+/// device merely revoked *another* session) are left untouched.
+Future<void> _recheckSessionRevocation(Ref ref) async {
+  try {
+    final token = await ref.read(secureStorageProvider).getAccessToken();
+    if (token == null || token.isEmpty) return;
+    final validity = await AuthRemote.verifyAccessToken(token);
+    if (validity == TokenValidity.invalid) {
+      notifyAuthForceLogout();
+    }
+  } catch (_) {
+    // Best-effort: never force logout on an inconclusive check.
+  }
+}
+
 /// Listens to Reverb and invalidates dashboard, wallet, campaigns, creator
 /// KPIs, applications, and notifications.
 final realtimeInvalidationProvider = Provider<void>((ref) {
@@ -138,6 +175,21 @@ final realtimeInvalidationProvider = Provider<void>((ref) {
         '[WayoReverb] event=${sig.name} channel=${sig.channelName ?? '(none)'}',
       );
     }
+    // Session revocation watchdog (parity with web SessionRevocationWatchdog):
+    // the backend publishes `sessions.changed` on the per-user notification
+    // channel whenever a session is registered or revoked. We react regardless
+    // of the broadcast event name by also inspecting the payload.
+    final sessionsChangedEvent =
+        (lower.contains('session') && lower.contains('chang')) ||
+        isSessionsChangedRealtimePayload(_realtimeSignalPayloadMap(sig.raw));
+    if (sessionsChangedEvent) {
+      // G2 — live-refresh the active sessions list (drop the revoked/added row).
+      ref.invalidate(activeSessionsProvider);
+      // G1 — if THIS device's token was the one revoked, end the session now
+      // instead of waiting for the next authenticated API call to 401.
+      unawaited(_recheckSessionRevocation(ref));
+    }
+
     final notif = _isNotificationCreatedRealtimeEvent(name);
     final balanceEvent =
         name == 'balance.updated' ||
@@ -196,6 +248,14 @@ final realtimeInvalidationProvider = Provider<void>((ref) {
     if (notif) {
       ref.invalidate(notificationsListProvider);
       ref.invalidate(notificationsUnreadCountsProvider);
+      final payload = _realtimeSignalPayloadMap(sig.raw);
+      if (isAccountDeletionScheduledNotificationPayload(payload)) {
+        unawaited(
+          ref
+              .read(accountDeletionScheduledAtProvider.notifier)
+              .syncFromRemote(),
+        );
+      }
       final auth = ref.read(authNotifierProvider).valueOrNull;
       final isSuperadmin = auth is AuthAuthenticated &&
           auth.user.wayoAdsRole == WayoAdsAccountRole.superAdmin;

@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -57,12 +58,14 @@ class HomeScreen extends ConsumerWidget {
               backgroundColor: theme.colorScheme.primaryContainer,
               child: user.avatar != null && user.avatar!.isNotEmpty
                   ? ClipOval(
-                      child: Image.network(
-                        user.avatar!,
+                      child: CachedNetworkImage(
+                        imageUrl: user.avatar!,
                         width: 40,
                         height: 40,
+                        memCacheWidth: 80,
+                        memCacheHeight: 80,
                         fit: BoxFit.cover,
-                        errorBuilder: (_, _, _) => Text(
+                        errorWidget: (_, _, _) => Text(
                           (user.name ?? user.email).isNotEmpty
                               ? (user.name ?? user.email)[0].toUpperCase()
                               : '?',

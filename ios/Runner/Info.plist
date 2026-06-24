@@ -67,23 +67,12 @@
     <true/>
     <key>NSAppTransportSecurity</key>
     <dict>
-        <key>NSExceptionDomains</key>
-        <dict>
-            <key>wayo.ac</key>
-            <dict>
-                <key>NSIncludesSubdomains</key>
-                <true/>
-                <key>NSTemporaryExceptionAllowsInsecureHTTPLoads</key>
-                <true/>
-            </dict>
-            <key>wayo.agency</key>
-            <dict>
-                <key>NSIncludesSubdomains</key>
-                <true/>
-                <key>NSTemporaryExceptionAllowsInsecureHTTPLoads</key>
-                <true/>
-            </dict>
-        </dict>
+        <!-- ATS stays fully enforced for all remote hosts (wayo.ac / wayo.agency
+             are HTTPS in production, so no insecure exceptions are declared).
+             NSAllowsLocalNetworking only relaxes ATS for local dev backends
+             (localhost / 127.0.0.1), which are unreachable in production. -->
+        <key>NSAllowsLocalNetworking</key>
+        <true/>
     </dict>
     <key>NSCameraUsageDescription</key>
     <string>Wayoadsgo needs access to the camera so you can take photos to upload when you choose that option—for example for your profile, campaigns, or document capture.</string>

@@ -1,10 +1,49 @@
 import 'package:flutter/foundation.dart';
 
+import '../../../core/config/auth_runtime_config.dart';
 import '../../../core/network/wayo_ads_public_url.dart';
 
 bool _isLoopbackHost(String host) {
   final h = host.toLowerCase();
   return h == 'localhost' || h == '127.0.0.1' || h == '10.0.2.2' || h == '[::1]';
+}
+
+String? _hostOf(String? url) {
+  if (url == null) return null;
+  final t = url.trim();
+  if (t.isEmpty) return null;
+  final u = Uri.tryParse(t.contains('://') ? t : 'https://$t');
+  final h = u?.host.trim().toLowerCase();
+  return (h == null || h.isEmpty) ? null : h;
+}
+
+/// SECURITY (SSRF guard): the chat client must only ever fetch media from a
+/// known set of Wayo-owned hosts. A compromised/spoofed `file_url` (or a
+/// remote-reference forward) must NOT be able to make the app issue
+/// authenticated requests to arbitrary attacker-controlled hosts.
+///
+/// Allowed = chat-service host + Wayo-ads / Auth origins + local dev loopbacks.
+bool isAllowedChatMediaHost(String url, String chatApiBaseUrl) {
+  final host = _hostOf(url);
+  if (host == null) return false;
+  if (_isLoopbackHost(host)) return true;
+
+  final cfg = AuthRuntimeConfig.instance;
+  final allowed = <String?>{
+    _hostOf(chatApiBaseUrl),
+    _hostOf(cfg.chatServiceApiBaseUrl),
+    _hostOf(cfg.resolvedWayoAdsPublicAssetOrigin),
+    _hostOf(cfg.resolvedWayoAdsBaseUrl),
+    _hostOf(cfg.resolvedDioBaseUrl),
+    _hostOf(cfg.authWayoBaseUrl),
+  }..removeWhere((h) => h == null || h.isEmpty);
+
+  for (final a in allowed) {
+    if (a == null) continue;
+    // Exact host or a subdomain of an allowed registrable origin.
+    if (host == a || host.endsWith('.$a')) return true;
+  }
+  return false;
 }
 
 String _maybeRemapLoopbackHostForAndroidEmulator(String url) {

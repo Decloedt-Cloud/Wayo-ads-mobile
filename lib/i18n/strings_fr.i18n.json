@@ -821,7 +821,8 @@
     "image_saved_to_gallery": "Photo enregistrée dans la galerie.",
     "image_download_failed": "Impossible de télécharger cette photo.",
     "image_permission_denied": "Accès aux photos refusé. Activez-la dans les réglages.",
-    "image_saved_downloads_browser": "Photo téléchargée — vérifiez votre dossier Téléchargements."
+    "image_saved_downloads_browser": "Photo téléchargée — vérifiez votre dossier Téléchargements.",
+    "peer_unavailable": "Cet utilisateur n'est plus disponible."
   },
   "common": {
     "language": "Langue",
@@ -989,6 +990,8 @@
     "session_revoke_cancel": "Annuler",
     "delete_account_entry": "Supprimer le compte",
     "delete_account_entry_sub": "Délai de 30 jours — suppression dans l’app",
+    "delete_account_manage": "Voir les détails de suppression",
+    "delete_account_manage": "Voir les détails de suppression",
     "section_about": "À propos",
     "rate_app": "Notez Wayo Ads",
     "rate_app_sub": "Ouvrez l’App Store ou Google Play"
@@ -1052,6 +1055,8 @@
     "error_load_network": "Vérifiez votre connexion et l’accessibilité de Wayo Ads, puis réessayez.",
     "error_delete": "Une erreur s’est produite. Réessayez.",
     "error_password": "Mot de passe incorrect. Réessayez ou réinitialisez votre mot de passe.",
+    "error_superadmin": "Les comptes superadmin ne peuvent pas demander la suppression.",
+    "funds_warning": "Important : le solde de votre portefeuille et les retraits en cours seront supprimés définitivement. Retirez vos fonds avant de confirmer.",
     "banner_line": "Votre compte sera supprimé le $date ($n jours restants).",
     "banner_cancel_dialog_title": "Annuler la suppression planifiée ?",
     "banner_cancel_dialog_body": "Votre profil Wayo Ads restera actif.",

@@ -821,7 +821,8 @@
     "image_saved_to_gallery": "Photo saved to your gallery.",
     "image_download_failed": "Couldn't download this photo.",
     "image_permission_denied": "Photos access denied. Allow it in your device settings.",
-    "image_saved_downloads_browser": "Photo downloaded — check your Downloads folder."
+    "image_saved_downloads_browser": "Photo downloaded — check your Downloads folder.",
+    "peer_unavailable": "This user is no longer available."
   },
   "common": {
     "language": "Language",
@@ -989,6 +990,7 @@
     "session_revoke_cancel": "Cancel",
     "delete_account_entry": "Delete account",
     "delete_account_entry_sub": "30-day grace — manage deletion in the app",
+    "delete_account_manage": "View deletion details",
     "section_about": "About",
     "rate_app": "Rate Wayo Ads",
     "rate_app_sub": "Open the App Store or Google Play"
@@ -1052,6 +1054,8 @@
     "error_load_network": "Check your connection and that Wayo Ads is reachable, then retry.",
     "error_delete": "Something went wrong. Please try again.",
     "error_password": "Incorrect password. Try again or reset your password.",
+    "error_superadmin": "Superadmin accounts cannot request deletion.",
+    "funds_warning": "Important: your wallet balance and any pending withdrawal requests will be permanently deleted. Withdraw your funds before confirming.",
     "banner_line": "Your account will be deleted on $date ($n days left).",
     "banner_cancel_dialog_title": "Cancel scheduled deletion?",
     "banner_cancel_dialog_body": "Your Wayo Ads profile will stay active.",

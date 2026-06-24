@@ -6,8 +6,7 @@
     -->
     <uses-permission android:name="android.permission.INTERNET" />
 
-    <!-- Debug-only: allow HTTP to local Laravel (e.g. http://10.0.2.2:8000). Release keeps cleartext off. -->
-    <application
-        android:usesCleartextTraffic="true"
-        tools:replace="android:usesCleartextTraffic" />
+    <!-- Cleartext for local backends (10.0.2.2 / localhost / 127.0.0.1) is handled
+         by res/xml/network_security_config.xml in ALL build types. Every other host
+         is HTTPS-only. No debug-only cleartext override is needed. -->
 </manifest>

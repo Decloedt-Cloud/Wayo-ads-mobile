@@ -820,7 +820,8 @@
     "image_saved_to_gallery": "تم حفظ الصورة في معرض الصور.",
     "image_download_failed": "تعذّر تنزيل هذه الصورة.",
     "image_permission_denied": "تم رفض الوصول إلى الصور. فعّل الإذن من الإعدادات.",
-    "image_saved_downloads_browser": "تم تنزيل الصورة — تحقق من مجلد التحميلات."
+    "image_saved_downloads_browser": "تم تنزيل الصورة — تحقق من مجلد التحميلات.",
+    "peer_unavailable": "هذا المستخدم لم يعد متاحًا."
   },
   "common": {
     "language": "اللغة",
@@ -988,6 +989,7 @@
     "session_revoke_cancel": "إلغاء",
     "delete_account_entry": "حذف الحساب",
     "delete_account_entry_sub": "فترة سماح 30 يومًا — من داخل التطبيق",
+    "delete_account_manage": "عرض تفاصيل الحذف",
     "section_about": "حول التطبيق",
     "rate_app": "قيّم Wayo Ads",
     "rate_app_sub": "افتح App Store أو Google Play"
@@ -1051,6 +1053,8 @@
     "error_load_network": "تحقق من الاتصال وإمكانية الوصول إلى Wayo Ads، ثم أعد المحاولة.",
     "error_delete": "حدث خطأ. حاول مجددًا.",
     "error_password": "كلمة مرور غير صحيحة. أعد المحاولة أو أعد التعيين.",
+    "error_superadmin": "لا يمكن لحسابات المشرف الأعلى طلب الحذف.",
+    "funds_warning": "تنبيه: سيتم حذف رصيد محفظتك وأي طلبات سحب معلّقة نهائيًا. اسحب أموالك قبل التأكيد.",
     "banner_line": "سيُحذف حسابك في $date ($n يومًا متبقيًا).",
     "banner_cancel_dialog_title": "إلغاء الحذف المجدول؟",
     "banner_cancel_dialog_body": "يظل ملف Wayo Ads نشطًا.",

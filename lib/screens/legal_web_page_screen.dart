@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -35,12 +37,46 @@ class _LegalWebPageScreenState extends ConsumerState<LegalWebPageScreen> {
     _initController(_uri);
   }
 
+  /// Hosts the in-app WebView is allowed to render. Any other destination
+  /// (external links tapped inside the legal page) is opened in the system
+  /// browser instead of being loaded in this authenticated-app WebView.
+  bool _isAllowedNavigationHost(String url) {
+    final target = Uri.tryParse(url);
+    if (target == null) return false;
+    final scheme = target.scheme.toLowerCase();
+    if (scheme != 'https' && scheme != 'http') return false;
+    final host = target.host.toLowerCase();
+    if (host.isEmpty) return false;
+
+    final allowedHosts = <String>{
+      _uri.host.toLowerCase(),
+      Uri.tryParse(WayoLegalUrls.origin)?.host.toLowerCase() ?? '',
+    }..removeWhere((h) => h.isEmpty);
+
+    for (final a in allowedHosts) {
+      if (host == a || host.endsWith('.$a')) return true;
+    }
+    return false;
+  }
+
   void _initController(Uri uri) {
     final controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(Colors.transparent)
       ..setNavigationDelegate(
         NavigationDelegate(
+          onNavigationRequest: (request) {
+            if (_isAllowedNavigationHost(request.url)) {
+              return NavigationDecision.navigate;
+            }
+            unawaited(
+              launchUrl(
+                Uri.parse(request.url),
+                mode: LaunchMode.externalApplication,
+              ),
+            );
+            return NavigationDecision.prevent;
+          },
           onPageStarted: (_) {
             if (!mounted) return;
             setState(() {

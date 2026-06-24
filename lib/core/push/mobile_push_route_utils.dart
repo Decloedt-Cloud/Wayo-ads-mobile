@@ -106,9 +106,59 @@ String normalizeWayoPushNavigationRoute(String route) {
   return route;
 }
 
+/// Exact in-app routes a push/deep-link is allowed to open.
+const Set<String> _kAllowedExactPushRoutes = {
+  '/dashboard',
+  '/campaigns',
+  '/wallet',
+  '/invoices',
+  '/chat',
+  '/notifications',
+  '/advertiser/video-reviews',
+  '/settings/delete-account',
+  '/superadmin',
+  '/superadmin/ai-usage',
+  '/superadmin/ledger',
+  '/superadmin/withdrawals',
+  '/admin/withdrawals',
+  '/superadmin/banned-users',
+  '/superadmin/announcements',
+  '/superadmin/browse-campaigns',
+  '/superadmin/tax-rates',
+};
+
+/// Parameterised in-app routes (matched on the path, query ignored).
+final List<RegExp> _kAllowedParamPushRoutes = [
+  RegExp(r'^/campaigns/[^/]+$'),
+  RegExp(r'^/superadmin/campaigns/[^/]+$'),
+  RegExp(r'^/creator/campaigns/[^/]+$'),
+  RegExp(r'^/creator/campaigns/[^/]+/application$'),
+  RegExp(r'^/invoices/[^/]+$'),
+  RegExp(r'^/chat/thread/[^/]+$'),
+];
+
+/// SECURITY: a push payload's `route` / `actionUrl` is attacker-influenceable.
+/// Only navigate to known, registered in-app routes — never push an arbitrary
+/// server-supplied path into the router.
+bool isAllowedWayoPushNavigationRoute(String route) {
+  final base = route.split('?').first.split('#').first;
+  if (base.isEmpty || !base.startsWith('/') || base.startsWith('//')) {
+    return false;
+  }
+  if (_kAllowedExactPushRoutes.contains(base)) return true;
+  for (final re in _kAllowedParamPushRoutes) {
+    if (re.hasMatch(base)) return true;
+  }
+  return false;
+}
+
 /// Opens push / notification deep links without replacing the authenticated shell.
 void navigateWayoPushRoute(GoRouter router, String route) {
-  final target = normalizeWayoPushNavigationRoute(route);
+  var target = normalizeWayoPushNavigationRoute(route);
+  if (!isAllowedWayoPushNavigationRoute(target)) {
+    // Unknown / untrusted destination — fall back to a safe in-app screen.
+    target = '/dashboard';
+  }
   final base = target.split('?').first;
   if (kNotificationShellTabRoutes.contains(base)) {
     router.go(target);

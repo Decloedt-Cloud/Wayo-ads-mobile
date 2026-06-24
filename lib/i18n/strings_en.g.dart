@@ -688,6 +688,7 @@ class TranslationsChatEn {
 	String get image_download_failed => 'Couldn\'t download this photo.';
 	String get image_permission_denied => 'Photos access denied. Allow it in your device settings.';
 	String get image_saved_downloads_browser => 'Photo downloaded — check your Downloads folder.';
+	String get peer_unavailable => 'This user is no longer available.';
 }
 
 // Path: common
@@ -890,6 +891,7 @@ class TranslationsAppSettingsEn {
 	String get session_revoke_cancel => 'Cancel';
 	String get delete_account_entry => 'Delete account';
 	String get delete_account_entry_sub => '30-day grace — manage deletion in the app';
+	String get delete_account_manage => 'View deletion details';
 	String get section_about => 'About';
 	String get rate_app => 'Rate Wayo Ads';
 	String get rate_app_sub => 'Open the App Store or Google Play';
@@ -960,6 +962,8 @@ class TranslationsAccountDeletionEn {
 	String get error_load_network => 'Check your connection and that Wayo Ads is reachable, then retry.';
 	String get error_delete => 'Something went wrong. Please try again.';
 	String get error_password => 'Incorrect password. Try again or reset your password.';
+	String get error_superadmin => 'Superadmin accounts cannot request deletion.';
+	String get funds_warning => 'Important: your wallet balance and any pending withdrawal requests will be permanently deleted. Withdraw your funds before confirming.';
 	String banner_line({required Object date, required Object n}) => 'Your account will be deleted on ${date} (${n} days left).';
 	String get banner_cancel_dialog_title => 'Cancel scheduled deletion?';
 	String get banner_cancel_dialog_body => 'Your Wayo Ads profile will stay active.';
@@ -2273,6 +2277,7 @@ extension on Translations {
 			case 'chat.image_download_failed': return 'Couldn\'t download this photo.';
 			case 'chat.image_permission_denied': return 'Photos access denied. Allow it in your device settings.';
 			case 'chat.image_saved_downloads_browser': return 'Photo downloaded — check your Downloads folder.';
+			case 'chat.peer_unavailable': return 'This user is no longer available.';
 			case 'common.language': return 'Language';
 			case 'common.theme': return 'Theme';
 			case 'common.light': return 'Light';
@@ -2430,6 +2435,7 @@ extension on Translations {
 			case 'app_settings.session_revoke_cancel': return 'Cancel';
 			case 'app_settings.delete_account_entry': return 'Delete account';
 			case 'app_settings.delete_account_entry_sub': return '30-day grace — manage deletion in the app';
+			case 'app_settings.delete_account_manage': return 'View deletion details';
 			case 'app_settings.section_about': return 'About';
 			case 'app_settings.rate_app': return 'Rate Wayo Ads';
 			case 'app_settings.rate_app_sub': return 'Open the App Store or Google Play';
@@ -2491,6 +2497,8 @@ extension on Translations {
 			case 'account_deletion.error_load_network': return 'Check your connection and that Wayo Ads is reachable, then retry.';
 			case 'account_deletion.error_delete': return 'Something went wrong. Please try again.';
 			case 'account_deletion.error_password': return 'Incorrect password. Try again or reset your password.';
+			case 'account_deletion.error_superadmin': return 'Superadmin accounts cannot request deletion.';
+			case 'account_deletion.funds_warning': return 'Important: your wallet balance and any pending withdrawal requests will be permanently deleted. Withdraw your funds before confirming.';
 			case 'account_deletion.banner_line': return ({required Object date, required Object n}) => 'Your account will be deleted on ${date} (${n} days left).';
 			case 'account_deletion.banner_cancel_dialog_title': return 'Cancel scheduled deletion?';
 			case 'account_deletion.banner_cancel_dialog_body': return 'Your Wayo Ads profile will stay active.';

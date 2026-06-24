@@ -466,6 +466,73 @@ bool shouldSkipDuplicateFcmLocalTray({
   return true;
 }
 
+/// Account soft-delete scheduled (`SYSTEM_ALERT`, danger settings tab).
+bool isAccountDeletionScheduledNotificationPayload(Map<String, dynamic> data) {
+  final flat = _flattenFcmPayloadMap(data);
+
+  final dedupe = (_trimmedPayloadField(flat['dedupeKey']) ??
+          _trimmedPayloadField(flat['dedupe_key']) ??
+          '')
+      .toLowerCase();
+  if (dedupe.contains('account.deletion_requested')) {
+    return true;
+  }
+
+  final type = (_trimmedPayloadField(flat['type']) ??
+          _trimmedPayloadField(flat['notificationType']) ??
+          _trimmedPayloadField(flat['notification_type']) ??
+          '')
+      .toUpperCase();
+  if (type != 'SYSTEM_ALERT') {
+    return false;
+  }
+
+  final actionUrl = (_trimmedPayloadField(flat['actionUrl']) ??
+          _trimmedPayloadField(flat['action_url']) ??
+          '')
+      .toLowerCase();
+  if (!actionUrl.contains('tab=danger') && !actionUrl.contains('/settings')) {
+    return false;
+  }
+
+  final title = (_trimmedPayloadField(flat['title']) ?? '').toLowerCase();
+  final body = (_trimmedPayloadField(flat['body']) ??
+          _trimmedPayloadField(flat['message']) ??
+          '')
+      .toLowerCase();
+  final haystack = '$title $body';
+  return haystack.contains('deletion') ||
+      haystack.contains('delete') ||
+      haystack.contains('supprim') ||
+      haystack.contains('suppression') ||
+      haystack.contains('حذف');
+}
+
+/// Realtime "active sessions changed" signal (web publishes
+/// `{type:'sessions.changed'}` on the per-user notification channel when a
+/// session is registered/revoked). Used to live-refresh the sessions list and
+/// trigger a session-revocation re-check on mobile.
+bool isSessionsChangedRealtimePayload(Map<String, dynamic> data) {
+  final flat = _flattenFcmPayloadMap(data);
+  final candidates = <String>[
+    _trimmedPayloadField(flat['type']) ?? '',
+    _trimmedPayloadField(flat['event']) ?? '',
+    _trimmedPayloadField(flat['notificationType']) ?? '',
+    _trimmedPayloadField(flat['notification_type']) ?? '',
+    _trimmedPayloadField(flat['dedupeKey']) ?? '',
+    _trimmedPayloadField(flat['dedupe_key']) ?? '',
+  ];
+  for (final raw in candidates) {
+    final f = raw.toLowerCase();
+    if (f.isEmpty) continue;
+    if (f.contains('sessions.changed') ||
+        (f.contains('session') && f.contains('chang'))) {
+      return true;
+    }
+  }
+  return false;
+}
+
 /// Self-initiated wallet actions (creator withdraw request, advertiser deposit).
 bool isSelfInitiatedWalletFcmPayload(Map<String, dynamic> data) {
   final flat = _flattenFcmPayloadMap(data);

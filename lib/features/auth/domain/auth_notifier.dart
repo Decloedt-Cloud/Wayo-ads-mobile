@@ -18,9 +18,14 @@ import '../../../core/result.dart';
 import '../../../core/storage/secure_storage.dart';
 import '../../chat/presentation/providers/chat_providers.dart';
 import '../../creator/presentation/providers/creator_session_gate.dart';
+import '../../account_deletion/presentation/providers/account_deletion_providers.dart';
+import '../../creator_campaigns/presentation/providers/creator_campaigns_providers.dart';
+import '../../creator_dashboard/presentation/providers/creator_dashboard_providers.dart';
 import '../../creator_wallet/presentation/providers/creator_wallet_providers.dart';
+import '../../wallet/presentation/providers/advertiser_wallet_providers.dart';
 import '../../dashboard/data/dashboard_hive_store.dart';
 import '../../dashboard/presentation/providers/dashboard_state_providers.dart';
+import '../data/auth_login_method_store.dart';
 import '../data/google_sign_in_facade.dart';
 import '../data/models/app_user.dart';
 import '../data/models/auth_response.dart';
@@ -156,7 +161,10 @@ class AuthNotifier extends _$AuthNotifier {
       );
       switch (result) {
         case Success(:final data):
-          await _finalizeSuccessfulLogin(data);
+          await _finalizeSuccessfulLogin(
+            data,
+            loginMethod: AuthLoginMethod.email,
+          );
         case Failure(:final error):
           state = AsyncValue.error(error, StackTrace.current);
       }
@@ -176,7 +184,10 @@ class AuthNotifier extends _$AuthNotifier {
       final result = await repo.loginWithGoogle(idToken: idToken);
       switch (result) {
         case Success(:final data):
-          await _finalizeSuccessfulLogin(data);
+          await _finalizeSuccessfulLogin(
+            data,
+            loginMethod: AuthLoginMethod.google,
+          );
         case Failure(:final error):
           state = AsyncValue.error(error, StackTrace.current);
       }
@@ -206,7 +217,10 @@ class AuthNotifier extends _$AuthNotifier {
       );
       switch (result) {
         case Success(:final data):
-          await _finalizeSuccessfulLogin(data);
+          await _finalizeSuccessfulLogin(
+            data,
+            loginMethod: AuthLoginMethod.apple,
+          );
         case Failure(:final error):
           state = AsyncValue.error(error, StackTrace.current);
       }
@@ -227,7 +241,13 @@ class AuthNotifier extends _$AuthNotifier {
   /// 1. The login response already contains fresh user data
   /// 2. Calling it immediately risks 429 rate limits on `/api/auth/user`
   /// 3. The web version doesn't make this extra call either
-  Future<void> _finalizeSuccessfulLogin(AuthResponse data) async {
+  Future<void> _finalizeSuccessfulLogin(
+    AuthResponse data, {
+    AuthLoginMethod? loginMethod,
+  }) async {
+    if (loginMethod != null) {
+      unawaited(AuthLoginMethodStore.save(loginMethod));
+    }
     AuthInterceptor.resetSessionState();
     _resetDashboardNetworkSpacing();
     await resetPushDeliveryForAccountSwitch();
@@ -363,7 +383,106 @@ class AuthNotifier extends _$AuthNotifier {
   }
 
   /// After onboarding API returns an updated [AppUser] (role / email verification).
-  Future<void> applyOnboardingUser(AppUser user) => _persistUserOnly(user);
+  Future<void> applyOnboardingUser(AppUser user) async {
+    AuthInterceptor.resetSessionState();
+    markSessionBootstrapStarted(ref);
+    ref.read(chatPostLoginGateProvider.notifier).state = DateTime.now();
+    await _persistUserOnly(user);
+    await refreshAuthSessionAfterRoleChange(user);
+    ref.read(accountDeletionScheduledAtProvider.notifier).clearScheduledAt();
+    await refreshProfileFromAuthServer(force: true);
+    invalidateRoleSessionProviders(ref);
+    _invalidateDashboardProviders();
+    if (user.wayoAdsRole == WayoAdsAccountRole.creator) {
+      unawaited(_warmCreatorSessionAfterOnboarding());
+    } else if (user.wayoAdsRole == WayoAdsAccountRole.advertiser) {
+      unawaited(_prefetchAdvertiserWalletAfterLogin());
+    }
+    unawaited(_bootstrapChatAfterLogin().catchError((_) {}));
+    unawaited(
+      ref
+          .read(accountDeletionScheduledAtProvider.notifier)
+          .syncFromRemote(bypassCache: true)
+          .catchError((_) {}),
+    );
+    unawaited(_syncPushTokenBestEffort());
+  }
+
+  /// Refreshes JWT after role onboarding so Wayo-ads mutations see CREATOR/ADVERTISER claims.
+  Future<bool> refreshAuthSessionAfterRoleChange([AppUser? knownUser]) async {
+    final snap = state.valueOrNull;
+    final current = knownUser ??
+        (snap is AuthAuthenticated ? snap.user : null);
+    if (current == null) return false;
+
+    final storage = ref.read(secureStorageProvider);
+    final refreshed = await AuthRemote.refreshFromStorage(storage);
+    switch (refreshed) {
+      case Success(:final data):
+        AuthInterceptor.resetSessionState();
+        var merged = _preserveExistingRoleIfNeeded(current, data.user);
+        if (merged.wayoAdsRole == WayoAdsAccountRole.unknown &&
+            current.wayoAdsRole != WayoAdsAccountRole.unknown) {
+          merged = current;
+        }
+        await _persistAuthWithUser(storage, data, merged);
+        state = AsyncValue.data(AuthAuthenticated(merged));
+        return true;
+      case Failure():
+        return false;
+    }
+  }
+
+  /// Provisions Wayo-ads creator endpoints after role pick (delete → re-login path).
+  Future<void> _warmCreatorSessionAfterOnboarding() async {
+    await Future<void>.delayed(const Duration(milliseconds: 350));
+    try {
+      await ref.read(creatorApplicationsProvider.future);
+    } catch (_) {}
+    const browseKey = (page: 1, search: '');
+    for (var attempt = 0; attempt < 5; attempt++) {
+      try {
+        await ref.read(creatorBrowseCampaignsPagedProvider(browseKey).future);
+        return;
+      } catch (_) {
+        if (attempt >= 4) break;
+        ref.invalidate(creatorBrowseCampaignsPagedProvider);
+        await Future<void>.delayed(Duration(milliseconds: 700 * (attempt + 1)));
+      }
+    }
+    try {
+      await ref.read(creatorWalletPageProvider.future);
+    } catch (_) {}
+  }
+
+  Future<void> _prefetchAdvertiserWalletAfterLogin() async {
+    try {
+      await ref.read(advertiserWalletPageProvider.future);
+    } catch (_) {}
+  }
+
+  /// Mirrors Wayo-ads profile PATCH into the local auth session (header, settings).
+  Future<void> applyLocalProfileUpdate({
+    String? name,
+    String? imageUrl,
+    bool removeImage = false,
+  }) async {
+    final current = state.valueOrNull;
+    if (current is! AuthAuthenticated) return;
+    final u = current.user;
+    await _persistUserOnly(
+      AppUser(
+        id: u.id,
+        email: u.email,
+        name: name ?? u.name,
+        avatar: removeImage ? null : (imageUrl ?? u.avatar),
+        wayoAdsRole: u.wayoAdsRole,
+        appRoles: u.appRoles,
+        emailVerified: u.emailVerified,
+        pendingOnboarding: u.pendingOnboarding,
+      ),
+    );
+  }
 
   Future<void> _persistUserOnly(AppUser user) async {
     await ref
@@ -386,6 +505,7 @@ class AuthNotifier extends _$AuthNotifier {
     }
     await DashboardHiveStore.clearAll();
     await ref.read(secureStorageProvider).clearAll();
+    unawaited(AuthLoginMethodStore.clear());
     state = const AsyncValue.data(AuthUnauthenticated());
     clearSessionBootstrap(ref);
     invalidateRoleSessionProviders(ref);
@@ -399,6 +519,7 @@ class AuthNotifier extends _$AuthNotifier {
     _lastAuthUserFetchStartUtc = null;
     unawaited(deactivatePushDelivery());
     unawaited(dismissAllWayoLocalPushNotifications());
+    unawaited(AuthLoginMethodStore.clear());
     state = const AsyncValue.data(AuthUnauthenticated());
     clearSessionBootstrap(ref);
     unawaited(_clearLocalSessionAfterForcedLogout());
@@ -489,9 +610,16 @@ class AuthNotifier extends _$AuthNotifier {
       if (!osGranted && Platform.isIOS && wayoFirebaseCoreReady) {
         osGranted = await requestSystemPushPermission();
       }
-      if (!osGranted) {
-        logPushLifecycle('sync: skipped — OS notification permission not granted');
+      if (!osGranted && Platform.isIOS) {
+        logPushLifecycle(
+          'sync: iOS notification permission not granted — skipping register',
+        );
         return;
+      }
+      if (!osGranted && Platform.isAndroid) {
+        logPushLifecycle(
+          'sync: Android POST_NOTIFICATIONS not granted — continuing register',
+        );
       }
       await refreshAndCacheFcmToken(prefs);
       final ok = await registerWayoPushDeviceIfTokenPresent(

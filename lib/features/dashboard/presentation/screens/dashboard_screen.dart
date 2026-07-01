@@ -79,6 +79,21 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       });
     });
 
+    ref.listen(dashboardStreamProvider, (previous, next) {
+      next.whenOrNull(
+        data: (snap) {
+          if (snap.campaignsError == null) return;
+          if (!shouldSuppressAdvertiserSectionError(ref, snap.campaignsError)) {
+            return;
+          }
+          scheduleSessionRetryAfterBootstrap(ref, () {
+            if (!mounted) return;
+            ref.invalidate(dashboardStreamProvider);
+          });
+        },
+      );
+    });
+
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: RefreshIndicator(
@@ -193,7 +208,7 @@ class _HeaderState extends ConsumerState<_Header> {
       ),
       child: Row(
         children: [
-          const WayoLogo(size: 36),
+          const WayoLogo(size: 36, enableMotion: false),
           const Spacer(),
           Tooltip(
             message: t.app_settings.title,

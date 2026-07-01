@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:dio/dio.dart';
@@ -8,10 +9,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/config/auth_runtime_config.dart';
+import '../../../../core/network/auth_force_logout_hub.dart';
+import '../../../../core/ui/wayo_toast.dart';
 import '../../../../i18n/strings.g.dart';
+import '../../../auth/data/apple_sign_in_facade.dart';
+import '../../../auth/data/auth_login_method_store.dart';
+import '../../../auth/data/google_sign_in_facade.dart';
 import '../../../auth/domain/wayo_ads_account_role.dart';
 import '../../../auth/presentation/providers/current_account_providers.dart';
 import '../../data/account_deletion_remote_datasource.dart';
+import '../../domain/account_deletion_oauth_reauth.dart';
+import '../../domain/account_deletion_realtime.dart' as deletion_rt;
 import '../../domain/account_deletion_side_effects.dart';
 import '../providers/account_deletion_providers.dart';
 
@@ -36,15 +45,31 @@ class _AccountDeletionScreenState extends ConsumerState<AccountDeletionScreen> {
   bool _loadingProfile = true;
   String? _loadError;
 
-  /// 0 intro, 1 password, 2 success (scheduled or already pending).
+  /// 0 intro, 1 password / OAuth re-auth, 2 success (scheduled or already pending).
   int _step = 0;
   bool _submitting = false;
   bool _cancelling = false;
 
+  /// Fresh Google/Apple credential proving re-authentication for OAuth-only users.
+  /// Consumed by the next [scheduleDeletion]; cleared after every attempt so a
+  /// retry always requires a new sign-in (matches the web re-auth-to-delete step).
+  Map<String, dynamic>? _pendingReauth;
+  bool _reauthing = false;
+  AuthLoginMethod? _lastLoginMethod;
+
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _load());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _load();
+      unawaited(_loadLastLoginMethod());
+    });
+  }
+
+  Future<void> _loadLastLoginMethod() async {
+    final method = await AuthLoginMethodStore.read();
+    if (!mounted) return;
+    setState(() => _lastLoginMethod = method);
   }
 
   @override
@@ -63,11 +88,20 @@ class _AccountDeletionScreenState extends ConsumerState<AccountDeletionScreen> {
     try {
       final p = await ds.fetchProfile(bypassCache: true);
       if (!mounted) return;
+      if (p.isAnonymized) {
+        ref.read(accountDeletionScheduledAtProvider.notifier).clearScheduledAt();
+        notifyAuthForceLogout();
+        return;
+      }
+      final providerScheduled = ref.read(accountDeletionScheduledAtProvider);
       setState(() {
         _profile = p;
         _loadingProfile = false;
-        if (p.deletionRequestedAt != null) {
+        if (p.deletionRequestedAt != null || providerScheduled != null) {
           _step = 2;
+          if (p.deletionRequestedAt == null && providerScheduled != null) {
+            _profile = p.withDeletionScheduledAt(providerScheduled);
+          }
         }
       });
       ref
@@ -144,6 +178,16 @@ class _AccountDeletionScreenState extends ConsumerState<AccountDeletionScreen> {
     return math.max(0, a.difference(b).inDays);
   }
 
+  /// OAuth re-auth applies to Google/Apple-only accounts, and to users who signed
+  /// in with a provider even when the profile API still reports password required.
+  bool get _prefersOAuthReauth {
+    final p = _profile;
+    if (p == null) return false;
+    if (!p.deletionRequiresPassword) return true;
+    final m = _lastLoginMethod;
+    return m == AuthLoginMethod.google || m == AuthLoginMethod.apple;
+  }
+
   String _mapScheduleError(DioException e) {
     final t = context.t.account_deletion;
     final code = e.response?.statusCode;
@@ -153,11 +197,21 @@ class _AccountDeletionScreenState extends ConsumerState<AccountDeletionScreen> {
       final err = data['error'];
       if (err is String) serverError = err;
     }
+    final err = serverError?.toLowerCase();
+    if (code == 401 && err == 'reauth_required') {
+      return t.error_reauth_required;
+    }
     if (code == 403) {
-      if (serverError?.toLowerCase().contains('superadmin') == true) {
+      if (err == 'reauth_mismatch') {
+        return t.oauth_reauth_mismatch;
+      }
+      if (err?.contains('superadmin') == true) {
         return t.error_superadmin;
       }
-      return t.error_password;
+      return _prefersOAuthReauth ? t.error_reauth_required : t.error_password;
+    }
+    if (code == 400 && err?.contains('password') == true && _prefersOAuthReauth) {
+      return t.error_reauth_required;
     }
     return t.error_delete;
   }
@@ -299,14 +353,20 @@ class _AccountDeletionScreenState extends ConsumerState<AccountDeletionScreen> {
     if (ok != true || !mounted) return;
 
     final p = _profile!;
-    final passwordArg =
-        p.deletionRequiresPassword ? _passwordController.text.trim() : null;
-    if (p.deletionRequiresPassword &&
-        (passwordArg == null || passwordArg.length < 8)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.t.account_deletion.password_hint)),
-      );
-      return;
+    final reauthArg =
+        (_pendingReauth != null && _pendingReauth!.isNotEmpty) ? _pendingReauth : null;
+    String? passwordArg;
+    if (reauthArg == null) {
+      if (p.deletionRequiresPassword && !_prefersOAuthReauth) {
+        passwordArg = _passwordController.text.trim();
+        if (passwordArg.length < 8) {
+          WayoToast.info(context, context.t.account_deletion.password_hint);
+          return;
+        }
+      } else {
+        WayoToast.error(context, context.t.account_deletion.error_reauth_required);
+        return;
+      }
     }
 
     setState(() => _submitting = true);
@@ -315,38 +375,34 @@ class _AccountDeletionScreenState extends ConsumerState<AccountDeletionScreen> {
       final res = await ds.scheduleDeletion(
         password:
             passwordArg != null && passwordArg.isNotEmpty ? passwordArg : null,
+        reauth: reauthArg,
       );
+      // Consume the single-use credential regardless of outcome.
+      _pendingReauth = null;
       if (!mounted) return;
 
       DateTime? requestedFromPost;
-      final rawDel = res['deletionRequestedAt'];
-      if (rawDel is String && rawDel.isNotEmpty) {
-        requestedFromPost = DateTime.tryParse(rawDel);
-      }
-      if (requestedFromPost != null) {
-        ref
-            .read(accountDeletionScheduledAtProvider.notifier)
-            .setScheduledAt(requestedFromPost);
-      }
+      final parsedPost = deletion_rt.extractAccountDeletionStateFromPayload(res);
+      requestedFromPost = parsedPost.deletionRequestedAt;
+      final scheduledAt = requestedFromPost ?? DateTime.now().toUtc();
+      ref
+          .read(accountDeletionScheduledAtProvider.notifier)
+          .setScheduledAt(scheduledAt);
+      requestedFromPost = scheduledAt;
 
       await _load();
       if (!mounted) return;
 
       if (_profile?.deletionRequestedAt == null) {
-        final fromPost = requestedFromPost;
-        if (fromPost != null) {
-          setState(() {
-            _profile = _profile!.withDeletionScheduledAt(fromPost);
-          });
-        }
+        setState(() {
+          _profile = _profile!.withDeletionScheduledAt(scheduledAt);
+        });
       }
 
       if (!mounted) return;
-      if (_profile?.deletionRequestedAt == null) {
+      if (_profile == null) {
         setState(() => _submitting = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.t.account_deletion.error_delete)),
-        );
+        WayoToast.error(context, context.t.account_deletion.error_delete);
         return;
       }
 
@@ -357,26 +413,152 @@ class _AccountDeletionScreenState extends ConsumerState<AccountDeletionScreen> {
         _step = 2;
         _passwordController.clear();
       });
-      try {
-        await ref
-            .read(accountDeletionScheduledAtProvider.notifier)
-            .syncFromRemote();
-      } catch (_) {}
+      ref.read(accountDeletionScheduledAtProvider.notifier).applyRealtimeSignal({
+        'type': 'account.deletion_requested',
+        'deletionRequestedAt': scheduledAt.toIso8601String(),
+      });
       if (!mounted) return;
       HapticFeedback.mediumImpact();
     } on DioException catch (e) {
+      _pendingReauth = null;
       if (!mounted) return;
       setState(() => _submitting = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(_mapScheduleError(e))),
-      );
+      WayoToast.error(context, _mapScheduleError(e));
     } catch (_) {
+      _pendingReauth = null;
       if (!mounted) return;
       setState(() => _submitting = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.t.account_deletion.error_delete)),
-      );
+      WayoToast.error(context, context.t.account_deletion.error_delete);
     }
+  }
+
+  /// Re-authenticates an OAuth-only user with [provider] ('google' | 'apple'),
+  /// then opens the final confirmation sheet. The fresh credential is the mobile
+  /// equivalent of the web "Re-authenticate to delete" step.
+  Future<void> _reauthAndDelete(String provider) async {
+    if (_reauthing || _submitting) return;
+    final t = context.t.account_deletion;
+    final loginT = context.t.login;
+    setState(() => _reauthing = true);
+
+    Map<String, dynamic>? reauth;
+    try {
+      if (provider == 'google') {
+        final cid = AuthRuntimeConfig.instance.googleServerClientId;
+        if (cid.isEmpty) {
+          if (!mounted) return;
+          setState(() => _reauthing = false);
+          WayoToast.error(context, t.oauth_reauth_failed);
+          return;
+        }
+        if (!AuthRuntimeConfig.looksLikeGoogleWebClientId(cid)) {
+          if (!mounted) return;
+          setState(() => _reauthing = false);
+          WayoToast.error(context, loginT.google_wrong_client_id);
+          return;
+        }
+        final idToken = await GoogleSignInFacade.signInForIdToken(cid);
+        if (idToken == null || idToken.isEmpty) {
+          if (!mounted) return;
+          setState(() => _reauthing = false);
+          WayoToast.info(context, t.oauth_reauth_cancelled);
+          return;
+        }
+        reauth = buildGoogleDeletionReauth(idToken);
+      } else {
+        final cred = await AppleSignInFacade.signInOnIos();
+        if (cred == null) {
+          if (!mounted) return;
+          setState(() => _reauthing = false);
+          WayoToast.info(context, t.oauth_reauth_cancelled);
+          return;
+        }
+        reauth = buildAppleDeletionReauth(cred);
+      }
+    } on PlatformException catch (e) {
+      if (!mounted) return;
+      setState(() => _reauthing = false);
+      final msg = GoogleSignInFacade.isAndroidDeveloperConfigError(e)
+          ? loginT.google_android_oauth_misconfigured
+          : GoogleSignInFacade.looksLikeStaleChannel(e)
+          ? loginT.google_channel_restart
+          : t.oauth_reauth_failed;
+      WayoToast.error(context, msg);
+      return;
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _reauthing = false);
+      final cancelled = AppleSignInFacade.isUserCanceled(e);
+      if (cancelled) {
+        WayoToast.info(context, t.oauth_reauth_cancelled);
+      } else {
+        WayoToast.error(context, t.oauth_reauth_failed);
+      }
+      return;
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _reauthing = false;
+      _pendingReauth = reauth;
+    });
+    await _showFinalDialog();
+  }
+
+  List<Widget> _oauthReauthButtons(ColorScheme scheme) {
+    final t = context.t.account_deletion;
+    final busy = _reauthing || _submitting;
+
+    Widget googleButton() => FilledButton.icon(
+      style: FilledButton.styleFrom(
+        backgroundColor: scheme.error,
+        foregroundColor: scheme.onError,
+        minimumSize: const Size.fromHeight(48),
+      ),
+      onPressed: busy ? null : () => _reauthAndDelete('google'),
+      icon: busy
+          ? const SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Colors.white,
+              ),
+            )
+          : const Icon(Icons.login_rounded, size: 20),
+      label: Text(t.oauth_reauth_google),
+    );
+
+    Widget appleButton() => OutlinedButton.icon(
+      style: OutlinedButton.styleFrom(
+        minimumSize: const Size.fromHeight(48),
+      ),
+      onPressed: busy ? null : () => _reauthAndDelete('apple'),
+      icon: const Icon(Icons.apple, size: 20),
+      label: Text(t.oauth_reauth_apple),
+    );
+
+    final showApple =
+        !kIsWeb && Theme.of(context).platform == TargetPlatform.iOS;
+    final preferApple = _lastLoginMethod == AuthLoginMethod.apple;
+
+    if (!showApple) {
+      return [googleButton()];
+    }
+
+    if (preferApple) {
+      return [
+        appleButton(),
+        const SizedBox(height: 10),
+        googleButton(),
+      ];
+    }
+
+    return [
+      googleButton(),
+      const SizedBox(height: 10),
+      appleButton(),
+    ];
   }
 
   Future<void> _cancelDeletion() async {
@@ -392,16 +574,12 @@ class _AccountDeletionScreenState extends ConsumerState<AccountDeletionScreen> {
         _cancelling = false;
         _step = 0;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.t.account_deletion.toast_cancelled)),
-      );
+      WayoToast.success(context, context.t.account_deletion.toast_cancelled);
       HapticFeedback.lightImpact();
     } catch (_) {
       if (!mounted) return;
       setState(() => _cancelling = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.t.account_deletion.error_delete)),
-      );
+      WayoToast.error(context, context.t.account_deletion.error_delete);
     }
   }
 
@@ -606,7 +784,7 @@ class _AccountDeletionScreenState extends ConsumerState<AccountDeletionScreen> {
             ),
           ),
         ),
-        if (!p.deletionRequiresPassword) ...[
+        if (_prefersOAuthReauth) ...[
           const SizedBox(height: 16),
           Text(
             t.oauth_deletion_intro,
@@ -664,13 +842,7 @@ class _AccountDeletionScreenState extends ConsumerState<AccountDeletionScreen> {
             foregroundColor: scheme.onError,
             minimumSize: const Size.fromHeight(48),
           ),
-          onPressed: () {
-            if (p.deletionRequiresPassword) {
-              setState(() => _step = 1);
-            } else {
-              _showFinalDialog();
-            }
-          },
+          onPressed: () => setState(() => _step = 1),
           child: Text(t.continue_cta),
         ),
         const SizedBox(height: 8),
@@ -688,8 +860,9 @@ class _AccountDeletionScreenState extends ConsumerState<AccountDeletionScreen> {
   Widget _buildAuth(BuildContext context, ColorScheme scheme) {
     final t = context.t.account_deletion;
     final p = _profile!;
-    final hasPending = p.deletionRequestedAt != null;
-    final requested = p.deletionRequestedAt;
+    final providerScheduled = ref.watch(accountDeletionScheduledAtProvider);
+    final requested = p.deletionRequestedAt ?? providerScheduled;
+    final hasPending = requested != null;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -719,7 +892,7 @@ class _AccountDeletionScreenState extends ConsumerState<AccountDeletionScreen> {
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    hasPending && requested != null
+                    hasPending
                         ? t.status_pending(date: _fmtDate(_purgeAt(requested)))
                         : t.status_active,
                     style: Theme.of(context).textTheme.bodyMedium,
@@ -747,7 +920,7 @@ class _AccountDeletionScreenState extends ConsumerState<AccountDeletionScreen> {
             child: Text(t.back),
           ),
         ] else ...[
-          if (p.deletionRequiresPassword) ...[
+          if (p.deletionRequiresPassword && !_prefersOAuthReauth) ...[
             const SizedBox(height: 20),
             TextField(
               controller: _passwordController,
@@ -818,7 +991,7 @@ class _AccountDeletionScreenState extends ConsumerState<AccountDeletionScreen> {
           ] else ...[
             const SizedBox(height: 12),
             Text(
-              t.oauth_deletion_step_hint,
+              t.oauth_reauth_intro,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 height: 1.4,
               ),
@@ -832,24 +1005,7 @@ class _AccountDeletionScreenState extends ConsumerState<AccountDeletionScreen> {
               ),
             ),
             const SizedBox(height: 20),
-            FilledButton(
-              style: FilledButton.styleFrom(
-                backgroundColor: scheme.error,
-                foregroundColor: scheme.onError,
-                minimumSize: const Size.fromHeight(48),
-              ),
-              onPressed: _submitting ? null : _trySubmit,
-              child: _submitting
-                  ? const SizedBox(
-                      width: 22,
-                      height: 22,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : Text(t.next_review),
-            ),
+            ..._oauthReauthButtons(scheme),
           ],
           const SizedBox(height: 8),
           OutlinedButton(
@@ -867,11 +1023,7 @@ class _AccountDeletionScreenState extends ConsumerState<AccountDeletionScreen> {
 
   void _trySubmit() {
     FocusScope.of(context).unfocus();
-    final p = _profile!;
-    if (!p.deletionRequiresPassword) {
-      _showFinalDialog();
-      return;
-    }
+    if (_prefersOAuthReauth) return;
     final pw = _passwordController.text;
     if (pw.length < 8) return;
     _showFinalDialog();
@@ -879,7 +1031,9 @@ class _AccountDeletionScreenState extends ConsumerState<AccountDeletionScreen> {
 
   Widget _buildSuccess(BuildContext context, ColorScheme scheme) {
     final t = context.t.account_deletion;
-    final requested = _profile!.deletionRequestedAt;
+    final requested =
+        _profile!.deletionRequestedAt ??
+        ref.watch(accountDeletionScheduledAtProvider);
     if (requested == null) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,

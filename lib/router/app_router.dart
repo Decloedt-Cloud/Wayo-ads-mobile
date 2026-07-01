@@ -29,6 +29,8 @@ import '../features/wallet/presentation/screens/wallet_tab_screen.dart';
 import '../features/invoices/presentation/screens/invoices_tab_screen.dart';
 import '../features/invoices/presentation/screens/invoice_detail_screen.dart';
 import '../features/account_deletion/presentation/screens/account_deletion_screen.dart';
+import '../features/profile/presentation/screens/profile_settings_screen.dart';
+import '../features/security/presentation/screens/security_settings_screen.dart';
 import '../features/superadmin/presentation/screens/superadmin_home_screen.dart';
 import '../features/superadmin/presentation/screens/ai_usage_screen.dart';
 import '../features/superadmin/presentation/screens/ledger_screen.dart';
@@ -397,6 +399,16 @@ GoRouter goRouter(GoRouterRef ref) {
             child: InvoiceDetailScreen(invoiceId: id),
           );
         },
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: '/settings/profile',
+        builder: (context, state) => const ProfileSettingsScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: '/settings/security',
+        builder: (context, state) => const SecuritySettingsScreen(),
       ),
       GoRoute(
         parentNavigatorKey: rootNavigatorKey,

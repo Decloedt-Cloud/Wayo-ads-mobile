@@ -10,6 +10,7 @@ import '../core/legal/wayo_legal_urls.dart';
 import '../core/providers/app_providers.dart';
 import '../core/theme/app_colors.dart';
 import '../core/theme/app_text_styles.dart';
+import '../core/ui/wayo_toast.dart';
 import '../i18n/strings.g.dart';
 import '../shared/widgets/language_switcher.dart';
 import '../shared/widgets/theme_toggle_button.dart';
@@ -129,9 +130,7 @@ class _LegalWebPageScreenState extends ConsumerState<LegalWebPageScreen> {
   Future<void> _openInBrowser() async {
     final ok = await launchUrl(_uri, mode: LaunchMode.externalApplication);
     if (!ok && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(_uri.toString())),
-      );
+      WayoToast.info(context, _uri.toString());
     }
   }
 

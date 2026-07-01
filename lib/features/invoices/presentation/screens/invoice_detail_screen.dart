@@ -7,6 +7,7 @@ import '../../../../core/errors/auth_exceptions.dart';
 import '../../../../core/format/money_formatter.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/ui/wayo_toast.dart';
 import '../../../../i18n/strings.g.dart';
 import '../../data/invoice_pdf_service.dart';
 import '../../domain/invoice.dart';
@@ -32,7 +33,6 @@ class _InvoiceDetailScreenState extends ConsumerState<InvoiceDetailScreen> {
 
   Future<void> _downloadAndShare(Invoice invoice) async {
     final t = context.t;
-    final messenger = ScaffoldMessenger.of(context);
     final pdfService = ref.read(invoicePdfServiceProvider);
     setState(() {
       _downloading = true;
@@ -59,19 +59,14 @@ class _InvoiceDetailScreenState extends ConsumerState<InvoiceDetailScreen> {
         ),
       );
     } on AuthException catch (_) {
+      if (!mounted) return;
       setState(() => _downloading = false);
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text(t.invoices.download_error),
-          backgroundColor: AppColors.error,
-        ),
-      );
+      WayoToast.error(context, t.invoices.download_error);
     }
   }
 
   Future<void> _downloadAndOpen(Invoice invoice) async {
     final t = context.t;
-    final messenger = ScaffoldMessenger.of(context);
     final pdfService = ref.read(invoicePdfServiceProvider);
     setState(() {
       _downloading = true;
@@ -92,22 +87,16 @@ class _InvoiceDetailScreenState extends ConsumerState<InvoiceDetailScreen> {
       });
       await pdfService.open(file);
     } on AuthException catch (_) {
+      if (!mounted) return;
       setState(() => _downloading = false);
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text(t.invoices.download_error),
-          backgroundColor: AppColors.error,
-        ),
-      );
+      WayoToast.error(context, t.invoices.download_error);
     }
   }
 
   Future<void> _copyNumber(Invoice invoice) async {
     await Clipboard.setData(ClipboardData(text: invoice.invoiceNumber));
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(context.t.invoices.copied_to_clipboard)),
-    );
+    WayoToast.success(context, context.t.invoices.copied_to_clipboard);
   }
 
   @override

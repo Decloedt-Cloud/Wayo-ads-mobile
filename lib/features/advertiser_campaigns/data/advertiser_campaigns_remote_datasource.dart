@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 
 import '../../../core/config/auth_runtime_config.dart';
 import '../../../core/errors/auth_exceptions.dart';
+import '../../../core/campaigns/campaign_recency.dart';
 import '../../../core/network/api_endpoints.dart';
 import '../../../core/network/wayo_ads_public_url.dart';
 import '../../creator_campaigns/domain/creator_browse_campaign.dart';
@@ -459,6 +460,9 @@ final class AdvertiserCampaignsRemoteDatasource
       location: campaignLocationFromCampaignJson(
         m,
         debugSource: 'advertiserCampaignsList',
+      ),
+      createdAt: parseCampaignTimestamp(
+        m['createdAt'] ?? m['created_at'] ?? m['createdat'],
       ),
     );
   }

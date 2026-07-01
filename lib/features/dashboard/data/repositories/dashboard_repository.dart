@@ -10,6 +10,7 @@ import '../../../../core/network/rate_limiter.dart';
 import '../../../../core/storage/secure_storage.dart';
 import '../dashboard_hive_store.dart';
 import '../datasources/dashboard_remote_datasource.dart';
+import '../../../creator/presentation/providers/creator_session_gate.dart';
 import '../../domain/entities/advertiser_balance.dart';
 import '../../domain/entities/campaign_platform.dart';
 import '../../domain/entities/campaign_status.dart';
@@ -152,9 +153,11 @@ final class DashboardRepositoryImpl implements DashboardRepository {
     AuthException? userErr;
 
     try {
-      user = await _deduplicator.run(
-        'dashboard_user',
-        () => _remote.fetchUser(),
+      user = await retryTransientHttp(
+        () => _deduplicator.run(
+          'dashboard_user',
+          () => _remote.fetchUser(),
+        ),
       );
       userErr = null;
     } catch (e) {
@@ -168,9 +171,11 @@ final class DashboardRepositoryImpl implements DashboardRepository {
     AdvertiserBalance? balance = seed?.balance;
     if (_rate.canCall(DashboardRateLimiterKeys.balance)) {
       try {
-        balance = await _deduplicator.run(
-          'dashboard_balance',
-          () => _remote.fetchBalance(),
+        balance = await retryTransientHttp(
+          () => _deduplicator.run(
+            'dashboard_balance',
+            () => _remote.fetchBalance(),
+          ),
         );
         _rate.mark(DashboardRateLimiterKeys.balance);
       } catch (e) {
@@ -190,11 +195,13 @@ final class DashboardRepositoryImpl implements DashboardRepository {
       try {
         const campaignsLimit = 10;
         const campaignsPageNum = 1;
-        final pageResult = await _deduplicator.run(
-          'dashboard_campaigns_${campaignsPageNum}_$campaignsLimit',
-          () => _remote.fetchCampaignsPage(
-            page: campaignsPageNum,
-            limit: campaignsLimit,
+        final pageResult = await retryTransientHttp(
+          () => _deduplicator.run(
+            'dashboard_campaigns_${campaignsPageNum}_$campaignsLimit',
+            () => _remote.fetchCampaignsPage(
+              page: campaignsPageNum,
+              limit: campaignsLimit,
+            ),
           ),
         );
         campaigns = pageResult.campaigns;
@@ -501,7 +508,11 @@ final class DashboardRepositoryImpl implements DashboardRepository {
           e.type == DioExceptionType.connectionError) {
         return const NetworkException();
       }
-      return ServerException(e.message ?? 'Request failed');
+      final code = e.response?.statusCode;
+      if (code == 401 || code == 403) {
+        return ServerException('', code);
+      }
+      return ServerException(e.message ?? 'Request failed', code);
     }
     return ServerException('$e');
   }

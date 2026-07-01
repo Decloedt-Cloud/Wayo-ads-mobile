@@ -60,6 +60,8 @@ class TranslationsAr extends Translations {
 	@override late final _TranslationsPrivacyPolicyAr privacy_policy = _TranslationsPrivacyPolicyAr._(_root);
 	@override late final _TranslationsTermsAndConditionsAr terms_and_conditions = _TranslationsTermsAndConditionsAr._(_root);
 	@override late final _TranslationsAppSettingsAr app_settings = _TranslationsAppSettingsAr._(_root);
+	@override late final _TranslationsProfileAr profile = _TranslationsProfileAr._(_root);
+	@override late final _TranslationsSecurityAr security = _TranslationsSecurityAr._(_root);
 	@override late final _TranslationsAccountDeletionAr account_deletion = _TranslationsAccountDeletionAr._(_root);
 	@override late final _TranslationsOnboardingAr onboarding = _TranslationsOnboardingAr._(_root);
 }
@@ -663,6 +665,7 @@ class _TranslationsChatAr extends TranslationsChatEn {
 	@override String get forward_failed => 'فشل التحويل.';
 	@override String get forward_view => 'فتح';
 	@override String get edited => 'معدَّل';
+	@override String get message_deleted => 'تم حذف هذه الرسالة';
 	@override String get seen => 'تمت القراءة';
 	@override String get delivered => 'تم التسليم';
 	@override String get edit_mode_title => 'تعديل الرسالة';
@@ -892,6 +895,70 @@ class _TranslationsAppSettingsAr extends TranslationsAppSettingsEn {
 	@override String get section_about => 'حول التطبيق';
 	@override String get rate_app => 'قيّم Wayo Ads';
 	@override String get rate_app_sub => 'افتح App Store أو Google Play';
+	@override String get rate_app_error => 'تعذّر فتح المتجر. أعِد المحاولة بعد لحظات.';
+}
+
+// Path: profile
+class _TranslationsProfileAr extends TranslationsProfileEn {
+	_TranslationsProfileAr._(TranslationsAr root) : this._root = root, super.internal(root);
+
+	final TranslationsAr _root; // ignore: unused_field
+
+	// Translations
+	@override String get nav_title => 'الملف الشخصي';
+	@override String get entry_title => 'تعديل الملف الشخصي';
+	@override String get entry_sub => 'الصورة، الاسم المعروض ومعلومات الحساب';
+	@override String get section_info_title => 'معلومات الملف الشخصي';
+	@override String get section_info_desc => 'حدّث معلوماتك الشخصية وصورة ملفك.';
+	@override String get section_details_title => 'تفاصيل الحساب';
+	@override String get section_details_desc => 'معلومات حسابك وأدوارك.';
+	@override String get display_name => 'الاسم المعروض';
+	@override String get display_name_hint => 'كيف يراك الآخرون على Wayo Ads';
+	@override String get display_name_required => 'الاسم المعروض مطلوب';
+	@override String get save_changes => 'حفظ التغييرات';
+	@override String get saving => 'جارٍ الحفظ…';
+	@override String get saved => 'تم تحديث الملف الشخصي';
+	@override String get save_error => 'تعذّر حفظ الملف الشخصي. أعِد المحاولة.';
+	@override String get load_error => 'تعذّر تحميل الملف الشخصي.';
+	@override String get name_taken => 'هذا الاسم مستخدم بالفعل. يُرجى اختيار اسم آخر.';
+	@override String get name_invalid => 'يمزج هذا الاسم أحرفًا من أبجديات مختلفة، وهذا غير مسموح.';
+	@override String get avatar_upload => 'رفع صورة';
+	@override String get avatar_remove => 'إزالة';
+	@override String get avatar_hint => 'JPG أو PNG أو GIF — بحد أقصى 500 ك.ب';
+	@override String get avatar_pick_error => 'تعذّر اختيار الصورة.';
+	@override String get avatar_too_large => 'الصورة كبيرة جدًا (الحد 500 ك.ب).';
+	@override String get email => 'البريد الإلكتروني';
+	@override String get roles => 'الأدوار';
+	@override String get member_since => 'عضو منذ';
+	@override String get role_creator => 'منشئ محتوى';
+	@override String get role_advertiser => 'معلن';
+	@override String get role_user => 'مستخدم';
+}
+
+// Path: security
+class _TranslationsSecurityAr extends TranslationsSecurityEn {
+	_TranslationsSecurityAr._(TranslationsAr root) : this._root = root, super.internal(root);
+
+	final TranslationsAr _root; // ignore: unused_field
+
+	// Translations
+	@override String get nav_title => 'الأمان';
+	@override String get entry_title => 'كلمة المرور والجلسات';
+	@override String get entry_sub => 'تغيير كلمة المرور وإدارة الأجهزة المتصلة';
+	@override String get change_password_title => 'تغيير كلمة المرور';
+	@override String get password_management_title => 'كلمة المرور';
+	@override String get current_password => 'كلمة المرور الحالية';
+	@override String get new_password => 'كلمة المرور الجديدة';
+	@override String get confirm_password => 'تأكيد كلمة المرور';
+	@override String get update_password => 'تحديث كلمة المرور';
+	@override String get updating_password => 'جاري التحديث…';
+	@override String get password_updated => 'تم تحديث كلمة المرور.';
+	@override String get password_oauth_message => 'سجّلت الدخول عبر Google أو Apple. إدارة كلمة المرور تتم عبر مزودك. لتغييرها، استخدم إعدادات حساب Google أو Apple.';
+	@override String get all_fields_required => 'جميع الحقول مطلوبة.';
+	@override String get password_min_length => '8 أحرف على الأقل.';
+	@override String get password_same_as_current => 'يجب أن تختلف كلمة المرور الجديدة عن الحالية.';
+	@override String get password_wrong_current => 'كلمة المرور الحالية غير صحيحة.';
+	@override String get password_change_error => 'تعذّر تحديث كلمة المرور. حاول مرة أخرى.';
 }
 
 // Path: account_deletion
@@ -931,8 +998,15 @@ class _TranslationsAccountDeletionAr extends TranslationsAccountDeletionEn {
 	@override String get password_hint => '8 أحرف على الأقل';
 	@override String get forgot_password => 'نسيت كلمة المرور؟';
 	@override String get oauth_note => 'إذا سجّلت الدخول فقط عبر Google أو Apple، عيّن كلمة مرور أولًا (نسيت كلمة المرور).';
-	@override String get oauth_deletion_intro => 'تسجيل الدخول عبر Google أو Apple. بعد «متابعة»، أكد في الخطوة التالية — دون كلمة مرور.';
+	@override String get oauth_deletion_intro => 'تسجّل الدخول عبر Google أو Apple. لحمايتك، ستعيد المصادقة لدى مزوّدك قبل جدولة الحذف.';
 	@override String get oauth_deletion_step_hint => 'تم التحقق من هويتك عند تسجيل الدخول بـ Google أو Apple. اضغط الزر أدناه لعرض ورقة التأكيد النهائية.';
+	@override String get oauth_reauth_intro => 'لحمايتك، أكّد هويتك بإعادة تسجيل الدخول عبر المزوّد الذي تستخدمه مع Wayo Ads. ستتم جدولة الحذف مباشرةً بعد ذلك.';
+	@override String get oauth_reauth_google => 'إعادة المصادقة عبر Google';
+	@override String get oauth_reauth_apple => 'إعادة المصادقة عبر Apple';
+	@override String get oauth_reauth_cancelled => 'تم إلغاء إعادة المصادقة.';
+	@override String get oauth_reauth_failed => 'فشلت إعادة المصادقة. يُرجى المحاولة مرة أخرى.';
+	@override String get oauth_reauth_mismatch => 'يُرجى إعادة المصادقة بنفس الحساب الذي تستخدمه مع Wayo Ads.';
+	@override String get error_reauth_required => 'إعادة المصادقة مطلوبة لحذف حسابك. يُرجى تسجيل الدخول مجددًا عبر مزوّدك.';
 	@override String legal_recap({required Object date}) => 'ستبدأ فترة سماح 30 يومًا قبل الحذف النهائي. يمكنك الإلغاء حتى ${date}.';
 	@override String get next_review => 'مراجعة وتأكيد';
 	@override String get dialog_title => 'هل أنت متأكد؟';
@@ -1097,6 +1171,7 @@ class _TranslationsAdvertiserCampaignsCardAr extends TranslationsAdvertiserCampa
 	@override String get spent => 'المنفق';
 	@override String get cpc => 'CPC';
 	@override String get cpm => 'CPM';
+	@override String get badge_new => 'جديد';
 	@override String get valid_engagements => '{count} مشاهدة مُصدّقة';
 	@override String get list_row_views => '{count} مشاهدة';
 	@override String get list_row_clicks => '{count} نقرات';
@@ -1139,6 +1214,9 @@ class _TranslationsAdvertiserCampaignsDetailAr extends TranslationsAdvertiserCam
 	// Translations
 	@override String get fallback_title => 'حملة';
 	@override String get metrics_title => 'الأداء';
+	@override String get budget_usage_title => 'استخدام الميزانية';
+	@override String get budget_usage_spent => 'المصروف';
+	@override String get budget_usage_remaining => 'المتبقّي';
 	@override String get valid_views => 'مشاهدات مُصدّقة';
 	@override String get valid_clicks => 'نقرات صالحة';
 	@override String get approved_creators => 'منشئون معتمدون';
@@ -1736,6 +1814,7 @@ extension on TranslationsAr {
 			case 'advertiser_campaigns.card.spent': return 'المنفق';
 			case 'advertiser_campaigns.card.cpc': return 'CPC';
 			case 'advertiser_campaigns.card.cpm': return 'CPM';
+			case 'advertiser_campaigns.card.badge_new': return 'جديد';
 			case 'advertiser_campaigns.card.valid_engagements': return '{count} مشاهدة مُصدّقة';
 			case 'advertiser_campaigns.card.list_row_views': return '{count} مشاهدة';
 			case 'advertiser_campaigns.card.list_row_clicks': return '{count} نقرات';
@@ -1751,6 +1830,9 @@ extension on TranslationsAr {
 			case 'advertiser_campaigns.platform.other': return 'منصة';
 			case 'advertiser_campaigns.detail.fallback_title': return 'حملة';
 			case 'advertiser_campaigns.detail.metrics_title': return 'الأداء';
+			case 'advertiser_campaigns.detail.budget_usage_title': return 'استخدام الميزانية';
+			case 'advertiser_campaigns.detail.budget_usage_spent': return 'المصروف';
+			case 'advertiser_campaigns.detail.budget_usage_remaining': return 'المتبقّي';
 			case 'advertiser_campaigns.detail.valid_views': return 'مشاهدات مُصدّقة';
 			case 'advertiser_campaigns.detail.valid_clicks': return 'نقرات صالحة';
 			case 'advertiser_campaigns.detail.approved_creators': return 'منشئون معتمدون';
@@ -2251,6 +2333,7 @@ extension on TranslationsAr {
 			case 'chat.forward_failed': return 'فشل التحويل.';
 			case 'chat.forward_view': return 'فتح';
 			case 'chat.edited': return 'معدَّل';
+			case 'chat.message_deleted': return 'تم حذف هذه الرسالة';
 			case 'chat.seen': return 'تمت القراءة';
 			case 'chat.delivered': return 'تم التسليم';
 			case 'chat.edit_mode_title': return 'تعديل الرسالة';
@@ -2435,6 +2518,52 @@ extension on TranslationsAr {
 			case 'app_settings.section_about': return 'حول التطبيق';
 			case 'app_settings.rate_app': return 'قيّم Wayo Ads';
 			case 'app_settings.rate_app_sub': return 'افتح App Store أو Google Play';
+			case 'app_settings.rate_app_error': return 'تعذّر فتح المتجر. أعِد المحاولة بعد لحظات.';
+			case 'profile.nav_title': return 'الملف الشخصي';
+			case 'profile.entry_title': return 'تعديل الملف الشخصي';
+			case 'profile.entry_sub': return 'الصورة، الاسم المعروض ومعلومات الحساب';
+			case 'profile.section_info_title': return 'معلومات الملف الشخصي';
+			case 'profile.section_info_desc': return 'حدّث معلوماتك الشخصية وصورة ملفك.';
+			case 'profile.section_details_title': return 'تفاصيل الحساب';
+			case 'profile.section_details_desc': return 'معلومات حسابك وأدوارك.';
+			case 'profile.display_name': return 'الاسم المعروض';
+			case 'profile.display_name_hint': return 'كيف يراك الآخرون على Wayo Ads';
+			case 'profile.display_name_required': return 'الاسم المعروض مطلوب';
+			case 'profile.save_changes': return 'حفظ التغييرات';
+			case 'profile.saving': return 'جارٍ الحفظ…';
+			case 'profile.saved': return 'تم تحديث الملف الشخصي';
+			case 'profile.save_error': return 'تعذّر حفظ الملف الشخصي. أعِد المحاولة.';
+			case 'profile.load_error': return 'تعذّر تحميل الملف الشخصي.';
+			case 'profile.name_taken': return 'هذا الاسم مستخدم بالفعل. يُرجى اختيار اسم آخر.';
+			case 'profile.name_invalid': return 'يمزج هذا الاسم أحرفًا من أبجديات مختلفة، وهذا غير مسموح.';
+			case 'profile.avatar_upload': return 'رفع صورة';
+			case 'profile.avatar_remove': return 'إزالة';
+			case 'profile.avatar_hint': return 'JPG أو PNG أو GIF — بحد أقصى 500 ك.ب';
+			case 'profile.avatar_pick_error': return 'تعذّر اختيار الصورة.';
+			case 'profile.avatar_too_large': return 'الصورة كبيرة جدًا (الحد 500 ك.ب).';
+			case 'profile.email': return 'البريد الإلكتروني';
+			case 'profile.roles': return 'الأدوار';
+			case 'profile.member_since': return 'عضو منذ';
+			case 'profile.role_creator': return 'منشئ محتوى';
+			case 'profile.role_advertiser': return 'معلن';
+			case 'profile.role_user': return 'مستخدم';
+			case 'security.nav_title': return 'الأمان';
+			case 'security.entry_title': return 'كلمة المرور والجلسات';
+			case 'security.entry_sub': return 'تغيير كلمة المرور وإدارة الأجهزة المتصلة';
+			case 'security.change_password_title': return 'تغيير كلمة المرور';
+			case 'security.password_management_title': return 'كلمة المرور';
+			case 'security.current_password': return 'كلمة المرور الحالية';
+			case 'security.new_password': return 'كلمة المرور الجديدة';
+			case 'security.confirm_password': return 'تأكيد كلمة المرور';
+			case 'security.update_password': return 'تحديث كلمة المرور';
+			case 'security.updating_password': return 'جاري التحديث…';
+			case 'security.password_updated': return 'تم تحديث كلمة المرور.';
+			case 'security.password_oauth_message': return 'سجّلت الدخول عبر Google أو Apple. إدارة كلمة المرور تتم عبر مزودك. لتغييرها، استخدم إعدادات حساب Google أو Apple.';
+			case 'security.all_fields_required': return 'جميع الحقول مطلوبة.';
+			case 'security.password_min_length': return '8 أحرف على الأقل.';
+			case 'security.password_same_as_current': return 'يجب أن تختلف كلمة المرور الجديدة عن الحالية.';
+			case 'security.password_wrong_current': return 'كلمة المرور الحالية غير صحيحة.';
+			case 'security.password_change_error': return 'تعذّر تحديث كلمة المرور. حاول مرة أخرى.';
 			case 'account_deletion.nav_title': return 'حذف الحساب';
 			case 'account_deletion.title': return 'حذف حساب Wayo Ads';
 			case 'account_deletion.danger_zone_chip': return 'منطقة الخطر';
@@ -2465,8 +2594,15 @@ extension on TranslationsAr {
 			case 'account_deletion.password_hint': return '8 أحرف على الأقل';
 			case 'account_deletion.forgot_password': return 'نسيت كلمة المرور؟';
 			case 'account_deletion.oauth_note': return 'إذا سجّلت الدخول فقط عبر Google أو Apple، عيّن كلمة مرور أولًا (نسيت كلمة المرور).';
-			case 'account_deletion.oauth_deletion_intro': return 'تسجيل الدخول عبر Google أو Apple. بعد «متابعة»، أكد في الخطوة التالية — دون كلمة مرور.';
+			case 'account_deletion.oauth_deletion_intro': return 'تسجّل الدخول عبر Google أو Apple. لحمايتك، ستعيد المصادقة لدى مزوّدك قبل جدولة الحذف.';
 			case 'account_deletion.oauth_deletion_step_hint': return 'تم التحقق من هويتك عند تسجيل الدخول بـ Google أو Apple. اضغط الزر أدناه لعرض ورقة التأكيد النهائية.';
+			case 'account_deletion.oauth_reauth_intro': return 'لحمايتك، أكّد هويتك بإعادة تسجيل الدخول عبر المزوّد الذي تستخدمه مع Wayo Ads. ستتم جدولة الحذف مباشرةً بعد ذلك.';
+			case 'account_deletion.oauth_reauth_google': return 'إعادة المصادقة عبر Google';
+			case 'account_deletion.oauth_reauth_apple': return 'إعادة المصادقة عبر Apple';
+			case 'account_deletion.oauth_reauth_cancelled': return 'تم إلغاء إعادة المصادقة.';
+			case 'account_deletion.oauth_reauth_failed': return 'فشلت إعادة المصادقة. يُرجى المحاولة مرة أخرى.';
+			case 'account_deletion.oauth_reauth_mismatch': return 'يُرجى إعادة المصادقة بنفس الحساب الذي تستخدمه مع Wayo Ads.';
+			case 'account_deletion.error_reauth_required': return 'إعادة المصادقة مطلوبة لحذف حسابك. يُرجى تسجيل الدخول مجددًا عبر مزوّدك.';
 			case 'account_deletion.legal_recap': return ({required Object date}) => 'ستبدأ فترة سماح 30 يومًا قبل الحذف النهائي. يمكنك الإلغاء حتى ${date}.';
 			case 'account_deletion.next_review': return 'مراجعة وتأكيد';
 			case 'account_deletion.dialog_title': return 'هل أنت متأكد؟';

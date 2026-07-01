@@ -164,6 +164,23 @@ class AppUser {
     );
   }
 
+  AppUser copyWith({
+    String? name,
+    String? avatar,
+    bool clearAvatar = false,
+  }) {
+    return AppUser(
+      id: id,
+      email: email,
+      name: name ?? this.name,
+      avatar: clearAvatar ? null : (avatar ?? this.avatar),
+      wayoAdsRole: wayoAdsRole,
+      appRoles: appRoles,
+      emailVerified: emailVerified,
+      pendingOnboarding: pendingOnboarding,
+    );
+  }
+
   Map<String, dynamic> toJson() => {
     'id': id,
     'email': email,

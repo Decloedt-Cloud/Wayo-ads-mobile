@@ -17,6 +17,9 @@ const Duration _kPostLoginRetryDelay = Duration(milliseconds: 450);
 /// Matches [AuthInterceptor._postLoginGrace] — hide load errors while tokens settle.
 const Duration _kSessionBootstrapWindow = Duration(seconds: 5);
 
+/// After role onboarding (delete → re-login), Wayo-ads can lag before creator browse works.
+const Duration _kPostOnboardingGraceWindow = Duration(seconds: 20);
+
 /// Set on login / account switch; independent of chat bootstrap clearing.
 final sessionBootstrapStartedAtProvider = StateProvider<DateTime?>(
   (ref) => null,
@@ -82,15 +85,27 @@ Future<int> awaitCreatorSessionUserId(Ref ref) async {
   return id;
 }
 
+/// Reads HTTP status from Dio, [ServerException], or feature API exceptions.
+int? httpStatusCodeFromSessionError(Object error) {
+  if (error is DioException) return error.response?.statusCode;
+  if (error is ServerException) return error.statusCode;
+  try {
+    final dynamic d = error;
+    final code = d.statusCode;
+    if (code is int) return code;
+  } catch (_) {}
+  return null;
+}
+
 bool isTransientSessionError(Object error) {
   if (error is StateError) return true;
   if (error is SessionExpiredException) return true;
   if (error is SessionInvalidException) return true;
   if (error is NetworkException) return true;
+  final code = httpStatusCodeFromSessionError(error);
+  if (code == 401 || code == 403 || code == 429) return true;
+  if (code != null && code >= 500) return true;
   if (error is DioException) {
-    final code = error.response?.statusCode;
-    if (code == 401 || code == 403 || code == 429) return true;
-    if (code != null && code >= 500) return true;
     switch (error.type) {
       case DioExceptionType.connectionTimeout:
       case DioExceptionType.receiveTimeout:
@@ -101,18 +116,20 @@ bool isTransientSessionError(Object error) {
         break;
     }
   }
-  if (error is ServerException) {
-    final code = error.statusCode;
-    if (code == null || code == 401 || code == 403 || code == 429) {
-      return true;
-    }
-    if (code >= 500) return true;
-  }
   return false;
+}
+
+bool _withinPostOnboardingGrace(dynamic ref) {
+  final started = ref.read(sessionBootstrapStartedAtProvider);
+  if (started == null) return false;
+  return DateTime.now().difference(started) < _kPostOnboardingGraceWindow;
 }
 
 bool shouldSuppressSessionLoadError(dynamic ref, Object error) {
   if (isSessionBootstrapActive(ref)) return true;
+  if (_withinPostOnboardingGrace(ref) && isTransientSessionError(error)) {
+    return true;
+  }
   final auth = ref.read(authNotifierProvider);
   if (auth.isLoading) return true;
   if (isTransientSessionError(error) &&
@@ -126,23 +143,42 @@ bool shouldSuppressSessionLoadError(dynamic ref, Object error) {
 bool shouldSuppressCreatorLoadError(dynamic ref, Object error) =>
     shouldSuppressSessionLoadError(ref, error);
 
+/// Retries transient HTTP failures without a [Ref] (dashboard repository, etc.).
+Future<T> retryTransientHttp<T>(
+  Future<T> Function() fetcher, {
+  int attempts = 4,
+}) async {
+  Object? lastError;
+  for (var attempt = 0; attempt < attempts; attempt++) {
+    try {
+      return await fetcher();
+    } catch (e) {
+      lastError = e;
+      if (!isTransientSessionError(e) || attempt >= attempts - 1) rethrow;
+      await Future<void>.delayed(_kPostLoginRetryDelay * (attempt + 1));
+    }
+  }
+  throw lastError ?? StateError('retryTransientHttp failed');
+}
+
 Future<T> fetchWithSessionRetry<T>(
   Ref ref,
-  Future<T> Function() fetcher,
-) async {
+  Future<T> Function() fetcher, {
+  int attempts = 6,
+}) async {
   Object? lastError;
-  for (var attempt = 0; attempt < 4; attempt++) {
+  for (var attempt = 0; attempt < attempts; attempt++) {
     try {
       return await fetcher();
     } catch (e) {
       lastError = e;
       final canRetry =
           isTransientSessionError(e) || isSessionBootstrapActive(ref);
-      if (!canRetry || attempt >= 3) rethrow;
+      if (!canRetry || attempt >= attempts - 1) rethrow;
       await awaitPostLoginBootstrapReader(ref);
-      await Future<void>.delayed(
-        _kPostLoginRetryDelay * (attempt + 1),
-      );
+      final status = httpStatusCodeFromSessionError(e);
+      final multiplier = status == 403 ? (attempt + 1) * 2 : (attempt + 1);
+      await Future<void>.delayed(_kPostLoginRetryDelay * multiplier);
     }
   }
   throw lastError ?? StateError('fetchWithSessionRetry failed');

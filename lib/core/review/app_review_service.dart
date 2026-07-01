@@ -1,7 +1,10 @@
 import 'dart:developer' as developer;
+import 'dart:io';
 
 import 'package:in_app_review/in_app_review.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+import 'app_store_links.dart';
 import '../storage/app_prefs.dart';
 
 /// Positive user actions that may trigger an in-app review (after [minSessionsBeforePositivePrompt]).
@@ -75,9 +78,26 @@ class AppReviewService {
   }
 
   /// Opens the store listing (no native popup quota). For explicit user taps.
-  Future<void> openStoreListing() async {
+  ///
+  /// On iOS, [InAppReview.openStoreListing] requires a numeric App Store id;
+  /// without it the call succeeds but does nothing. We therefore prefer a
+  /// direct App Store URL via [url_launcher], then fall back to the plugin.
+  Future<bool> openStoreListing() async {
+    final reviewUrl = AppStoreLinks.reviewUrlForCurrentPlatform();
+    if (reviewUrl != null) {
+      final launched = await _launchExternalStoreUrl(reviewUrl);
+      if (launched) return true;
+    }
+
     try {
-      await _inAppReview.openStoreListing();
+      if (Platform.isIOS) {
+        await _inAppReview.openStoreListing(
+          appStoreId: AppStoreLinks.iosAppStoreId,
+        );
+      } else {
+        await _inAppReview.openStoreListing();
+      }
+      return true;
     } catch (e, st) {
       developer.log(
         'openStoreListing failed: $e',
@@ -85,6 +105,29 @@ class AppReviewService {
         error: e,
         stackTrace: st,
       );
+    }
+
+    if (reviewUrl != null) {
+      final listingUrl = Platform.isIOS
+          ? AppStoreLinks.iosListingUrl
+          : AppStoreLinks.androidListingUrl;
+      return _launchExternalStoreUrl(listingUrl);
+    }
+    return false;
+  }
+
+  Future<bool> _launchExternalStoreUrl(String url) async {
+    try {
+      final uri = Uri.parse(url);
+      return await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (e, st) {
+      developer.log(
+        'launch store url failed: $e',
+        name: 'wayo.review',
+        error: e,
+        stackTrace: st,
+      );
+      return false;
     }
   }
 

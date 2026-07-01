@@ -33,6 +33,23 @@ void main() {
       });
       expect(payload?.route, '/campaigns/camp-9');
     });
+
+    test('CREATOR_APPLICATION_APPROVED opens creator application detail', () {
+      final payload = WayoRoutePushPayload.fromMessageData({
+        'type': 'CREATOR_APPLICATION_APPROVED',
+        'route': '/campaigns/camp-55',
+        'campaignId': 'camp-55',
+      });
+      expect(payload?.route, '/creator/campaigns/camp-55/application');
+    });
+
+    test('WITHDRAWAL_REQUESTED opens wallet not superadmin', () {
+      final payload = WayoRoutePushPayload.fromMessageData({
+        'type': 'WITHDRAWAL_REQUESTED',
+        'campaignId': 'ignored',
+      });
+      expect(payload?.route, '/wallet');
+    });
   });
 
   group('isSelfInitiatedWalletFcmPayload', () {
@@ -110,10 +127,23 @@ void main() {
   });
 
   group('shouldSkipDuplicateFcmLocalTray', () {
-    test('skips when OS already shows background notification', () {
+    test('skips on iOS when OS already shows background notification', () {
       expect(
-        shouldSkipDuplicateFcmLocalTray(hasDisplayNotificationPayload: true),
+        shouldSkipDuplicateFcmLocalTray(
+          hasDisplayNotificationPayload: true,
+          skipWhenBackgroundSystemTrayShown: true,
+        ),
         isTrue,
+      );
+    });
+
+    test('does not skip on Android background hybrid FCM', () {
+      expect(
+        shouldSkipDuplicateFcmLocalTray(
+          hasDisplayNotificationPayload: true,
+          skipWhenBackgroundSystemTrayShown: false,
+        ),
+        isFalse,
       );
     });
 

@@ -12,6 +12,7 @@ import '../../../../core/errors/auth_error_localizer.dart';
 import '../../../../core/errors/auth_exceptions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/ui/wayo_toast.dart';
 import '../../../../i18n/strings.g.dart';
 import '../../../../shared/widgets/language_switcher.dart';
 import '../../../../shared/widgets/theme_toggle_button.dart';
@@ -68,12 +69,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final t = context.t;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          behavior: SnackBarBehavior.floating,
-          content: Text(t.login.session_expired_snack),
-        ),
-      );
+      WayoToast.error(context, t.login.session_expired_snack);
       if (context.mounted) context.go('/login');
     });
   }
@@ -125,16 +121,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final googleCid = AuthRuntimeConfig.instance.googleServerClientId;
     if (googleCid.isEmpty) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(t.login.google_not_configured)));
+      WayoToast.error(context, t.login.google_not_configured);
       return;
     }
     if (!AuthRuntimeConfig.looksLikeGoogleWebClientId(googleCid)) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(t.login.google_wrong_client_id)));
+      WayoToast.error(context, t.login.google_wrong_client_id);
       return;
     }
     FocusScope.of(context).unfocus();
@@ -146,9 +138,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         return;
       }
       if (idToken.isEmpty) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(t.login.google_failed)));
+        WayoToast.error(context, t.login.google_failed);
         return;
       }
       await ref.read(authNotifierProvider.notifier).loginWithGoogle(idToken);
@@ -164,7 +154,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           : (e.message?.isNotEmpty == true
                 ? e.message!
                 : t.login.google_failed);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+      WayoToast.error(context, msg);
     } catch (e) {
       if (!mounted) return;
       final msg = GoogleSignInFacade.looksLikeStaleChannel(e)
@@ -172,7 +162,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           : GoogleSignInFacade.isAndroidDeveloperConfigError(e)
           ? t.login.google_android_oauth_misconfigured
           : t.login.google_failed;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+      WayoToast.error(context, msg);
     } finally {
       if (mounted) setState(() => _googleSigningIn = false);
     }
@@ -189,9 +179,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       final cred = await AppleSignInFacade.signInOnIos();
       if (!mounted) return;
       if (cred == null) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(t.login.apple_unavailable)));
+        WayoToast.error(context, t.login.apple_unavailable);
         return;
       }
       await ref.read(authNotifierProvider.notifier).loginWithApple(
@@ -205,20 +193,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       _goAfterLogin(ref);
     } on SignInWithAppleNotSupportedException {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(t.login.apple_unavailable)));
+      WayoToast.error(context, t.login.apple_unavailable);
     } catch (e) {
       if (!mounted) return;
       if (AppleSignInFacade.isUserCanceled(e)) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(t.login.apple_canceled)));
+        WayoToast.info(context, t.login.apple_canceled);
         return;
       }
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(t.login.apple_failed)));
+      WayoToast.error(context, t.login.apple_failed);
     } finally {
       if (mounted) setState(() => _appleSigningIn = false);
     }

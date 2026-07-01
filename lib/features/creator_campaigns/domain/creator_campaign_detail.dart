@@ -1,8 +1,10 @@
 import 'package:equatable/equatable.dart';
 
+import '../../../core/campaigns/campaign_detail_metadata.dart';
 import '../../../core/network/wayo_ads_public_url.dart';
 import '../../advertiser_campaigns/domain/campaign_niche_catalog.dart';
 import '../../creator_dashboard/domain/creator_application.dart';
+import '../../dashboard/domain/entities/campaign_platform.dart';
 import 'creator_browse_campaign.dart';
 import 'creator_social_post.dart';
 import 'creator_tracking_link.dart';
@@ -27,7 +29,11 @@ final class CreatorCampaignDetail extends Equatable {
     required this.cpcCents,
     required this.payoutPerViewCents,
     required this.validViews,
+    required this.validClicks,
     required this.approvedCreators,
+    required this.platform,
+    this.campaignObjective,
+    this.lockedBudgetCents = 0,
     required this.myApplicationStatus,
     required this.myVideos,
     this.trackingLinks = const [],
@@ -73,7 +79,11 @@ final class CreatorCampaignDetail extends Equatable {
   /// Payout per 1 valid view, minor units. Useful for "you'll earn X / view".
   final int payoutPerViewCents;
   final int validViews;
+  final int validClicks;
   final int approvedCreators;
+  final CampaignPlatform platform;
+  final String? campaignObjective;
+  final int lockedBudgetCents;
 
   final CreatorApplicationStatus myApplicationStatus;
   final List<CreatorSocialPost> myVideos;
@@ -238,7 +248,16 @@ final class CreatorCampaignDetail extends Equatable {
           (financeMap['validViews'] as num?)?.toInt() ??
           (m['validViews'] as num?)?.toInt() ??
           0,
+      validClicks:
+          (financeMap['validClicks'] as num?)?.toInt() ??
+          (m['validClicks'] as num?)?.toInt() ??
+          0,
       approvedCreators: (m['approvedCreators'] as num?)?.toInt() ?? 0,
+      platform: CampaignPlatform.fromString(campaignDetailPlatformKey(m)),
+      campaignObjective: trimOrNull(m['campaignObjective']),
+      lockedBudgetCents: parseCents(
+        financeMap['lockedBudgetCents'] ?? m['lockedBudgetCents'],
+      ),
       myApplicationStatus: CreatorApplicationStatus.fromApi(
         myAppMap?['status'] ?? (m['isApproved'] == true ? 'APPROVED' : null),
       ),
@@ -297,7 +316,11 @@ final class CreatorCampaignDetail extends Equatable {
       cpcCents: cpcCents,
       payoutPerViewCents: payoutPerViewCents,
       validViews: validViews,
+      validClicks: validClicks,
       approvedCreators: approvedCreators,
+      platform: platform,
+      campaignObjective: campaignObjective,
+      lockedBudgetCents: lockedBudgetCents,
       myApplicationStatus: myApplicationStatus,
       myApplicationId: myApplicationId,
       myVideos: posts,
@@ -340,7 +363,11 @@ final class CreatorCampaignDetail extends Equatable {
     cpcCents,
     payoutPerViewCents,
     validViews,
+    validClicks,
     approvedCreators,
+    platform,
+    campaignObjective,
+    lockedBudgetCents,
     myApplicationStatus,
     myApplicationId,
     myVideos,

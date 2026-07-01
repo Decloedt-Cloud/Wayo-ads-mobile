@@ -67,19 +67,25 @@ final advertiserCampaignsPagedProvider = FutureProvider.autoDispose
       ref,
       key,
     ) async {
+      await awaitPostLoginBootstrap(ref);
       final repo = ref.watch(advertiserCampaignsRepositoryProvider);
-      try {
-        final status = apiStatusForAdvertiserTab(key.tab);
-        final q = key.search.trim();
-        return await repo.loadCampaignsPage(
-          status: status,
-          page: key.page,
-          limit: 10,
-          search: q.isEmpty ? null : q,
-        );
-      } catch (e) {
-        throw AdvertiserCampaignsRepository.mapError(e);
-      }
+      return fetchWithSessionRetry(
+        ref,
+        () async {
+          try {
+            final status = apiStatusForAdvertiserTab(key.tab);
+            final q = key.search.trim();
+            return await repo.loadCampaignsPage(
+              status: status,
+              page: key.page,
+              limit: 10,
+              search: q.isEmpty ? null : q,
+            );
+          } catch (e) {
+            throw AdvertiserCampaignsRepository.mapError(e);
+          }
+        },
+      );
     });
 
 /// Tab totals for chips (four `limit=1` requests).
@@ -88,16 +94,23 @@ final advertiserCampaignsCountsProvider =
       ref,
     ) async {
       ref.keepAlive();
+      await awaitPostLoginBootstrap(ref);
       final repo = ref.watch(advertiserCampaignsRepositoryProvider);
-      try {
-        return await repo.loadCampaignStatusCounts();
-      } catch (e) {
-        throw AdvertiserCampaignsRepository.mapError(e);
-      }
+      return fetchWithSessionRetry(
+        ref,
+        () async {
+          try {
+            return await repo.loadCampaignStatusCounts();
+          } catch (e) {
+            throw AdvertiserCampaignsRepository.mapError(e);
+          }
+        },
+      );
     });
 
 final advertiserCampaignDetailProvider = FutureProvider.family
     .autoDispose<Map<String, dynamic>, String>((ref, id) async {
+      ref.keepAlive();
       final repo = ref.watch(advertiserCampaignsRepositoryProvider);
       try {
         return await repo.loadCampaignDetail(id);
@@ -112,12 +125,13 @@ final advertiserCampaignDetailProvider = FutureProvider.family
 /// (Wayo-ads `GET /api/campaigns/:id` already embeds them for owners).
 final campaignApplicationsProvider = FutureProvider.family
     .autoDispose<List<CampaignApplication>, String>((ref, campaignId) async {
-      final detail = await ref.watch(
-        advertiserCampaignDetailProvider(campaignId).future,
-      );
-      final embedded = campaignApplicationsFromCampaignDetail(detail);
-      if (embedded != null) {
-        return embedded;
+      final embeddedDetail =
+          ref.watch(advertiserCampaignDetailProvider(campaignId)).valueOrNull;
+      if (embeddedDetail != null) {
+        final embedded = campaignApplicationsFromCampaignDetail(embeddedDetail);
+        if (embedded != null) {
+          return embedded;
+        }
       }
 
       final repo = ref.watch(advertiserCampaignsRepositoryProvider);

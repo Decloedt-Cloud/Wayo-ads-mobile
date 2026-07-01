@@ -10,18 +10,25 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../firebase_options.dart';
 import '../../features/chat/data/chat_active_conversation.dart';
+import '../../features/auth/domain/wayo_ads_account_role.dart';
+import '../../features/auth/presentation/providers/current_account_providers.dart';
+import '../../features/dashboard/presentation/utils/notification_route_resolver.dart';
 import '../../router/app_router.dart';
 import '../observability/app_log.dart';
 import '../storage/app_prefs.dart';
+import '../maintenance/maintenance_recovery_hub.dart';
+import '../maintenance/maintenance_service.dart';
 import 'wayo_background_chat_quick_reply.dart';
 import 'push_registration_debug.dart';
 import 'user_push_notifications_preference.dart';
+import 'account_deletion_refresh_hub.dart';
 import 'wayo_push_intent.dart';
 import 'mobile_push_route_utils.dart';
 import 'session_revocation_refresh_hub.dart';
@@ -61,11 +68,41 @@ typedef FcmTokenBackendRegistrationCallback = Future<void> Function(
 
 FcmTokenBackendRegistrationCallback? _fcmTokenBackendRegistrationCallback;
 
+Timer? _pushRegistrationRetryTimer;
+var _pushRegistrationRetryCoalesced = false;
+
 /// When FCM rotates the device token, re-register with Wayo-ads (wired from [AuthNotifier]).
 void setFcmTokenBackendRegistrationCallback(
   FcmTokenBackendRegistrationCallback? callback,
 ) {
   _fcmTokenBackendRegistrationCallback = callback;
+}
+
+/// Debounced backend re-register when FCM arrives before POST /api/user/push-device completes.
+void schedulePushRegistrationRetry({
+  Duration delay = const Duration(seconds: 2),
+}) {
+  if (_pushRegistrationRetryCoalesced) return;
+  _pushRegistrationRetryCoalesced = true;
+  _pushRegistrationRetryTimer?.cancel();
+  _pushRegistrationRetryTimer = Timer(delay, () {
+    _pushRegistrationRetryCoalesced = false;
+    final hook = _fcmTokenBackendRegistrationCallback;
+    if (hook == null) {
+      logPushLifecycle('register retry: skipped — no backend hook');
+      return;
+    }
+    logPushLifecycle('register retry: invoking backend sync');
+    unawaited(
+      hook('').catchError((Object e, StackTrace st) {
+        _logPush(
+          'register retry backend sync failed: $e',
+          error: e,
+          stackTrace: st,
+        );
+      }),
+    );
+  });
 }
 
 /// Android: one tray notification per conversation (MessagingStyle + stable id/tag).
@@ -184,12 +221,22 @@ Future<bool> shouldDeliverFcmData(Map<String, dynamic> data) async {
     return false;
   }
   final registered = await readRegisteredPushWayoUserId();
-  if (registered == null) {
-    return false;
-  }
   final recipient = data['recipientUserId']?.toString().trim();
-  if (recipient != null && recipient.isNotEmpty) {
-    if (recipient != registered) return false;
+  if (registered != null &&
+      recipient != null &&
+      recipient.isNotEmpty &&
+      recipient != registered) {
+    _logPush(
+      'FCM recipient mismatch registered=$registered recipient=$recipient — '
+      'clearing stale id and scheduling register retry',
+    );
+    await clearRegisteredPushWayoUserId();
+    schedulePushRegistrationRetry();
+  } else if (registered == null) {
+    _logPush(
+      'FCM before push-device register — delivering and scheduling register retry',
+    );
+    schedulePushRegistrationRetry();
   }
   if (isCreatorYoutubeConnectFcmPayload(data)) {
     _logPush('FCM ignored — creator YouTube connect notification suppressed');
@@ -322,18 +369,52 @@ void wayoNotificationTapBackground(NotificationResponse response) {
   unawaited(_handleNotificationResponse(response, fromBackgroundIsolate: true));
 }
 
+WayoAdsAccountRole _readCurrentPushRouteRole(BuildContext context) {
+  try {
+    return ProviderScope.containerOf(context)
+        .read(currentWayoAdsAccountRoleProvider);
+  } catch (_) {
+    return WayoAdsAccountRole.unknown;
+  }
+}
+
+String _resolvePushNavigationTarget({
+  required String fallbackRoute,
+  Map<String, dynamic>? payloadData,
+  String? payload,
+  WayoAdsAccountRole role = WayoAdsAccountRole.unknown,
+}) {
+  return resolvePushRouteForRole(
+        data: payloadData,
+        payload: payload,
+        role: role,
+      ) ??
+      fallbackRoute;
+}
+
 Future<void> _navigateOrDeferPushRoute(
   String route, {
   required bool fromBackgroundIsolate,
+  Map<String, dynamic>? payloadData,
+  String? payload,
 }) async {
   if (!fromBackgroundIsolate) {
     final ctx = rootNavigatorKey.currentContext;
     if (ctx != null && ctx.mounted) {
-      navigateWayoPushRoute(GoRouter.of(ctx), route);
+      final role = _readCurrentPushRouteRole(ctx);
+      final target = _resolvePushNavigationTarget(
+        fallbackRoute: route,
+        payloadData: payloadData,
+        payload: payload,
+        role: role,
+      );
+      navigateWayoPushRoute(GoRouter.of(ctx), target);
       return;
     }
   }
-  await persistPendingChatRoute(route);
+  final dataToPersist = payloadData ??
+      (payload != null ? wayoRoutePushPayloadDataFromLocalPayload(payload) : null);
+  await persistPendingChatRoute(route, payloadData: dataToPersist);
   _pingDeferredPushConsume();
 }
 
@@ -395,11 +476,14 @@ Future<void> _handleNotificationResponse(
     return;
   }
 
+  final payloadData = wayoRoutePushPayloadDataFromLocalPayload(response.payload);
   final route = resolveWayoPushRoute(payload: response.payload);
   if (route != null) {
     await _navigateOrDeferPushRoute(
       route,
       fromBackgroundIsolate: fromBackgroundIsolate,
+      payloadData: payloadData,
+      payload: response.payload,
     );
   }
 }
@@ -410,9 +494,10 @@ Future<void> _persistOpenFromFcmData(Map<String, dynamic> data) async {
     await persistPendingChatRoute(chat.route(forReply: false));
     return;
   }
+  final flat = flattenPushPayloadMap(data);
   final route = resolveWayoPushRoute(data: data);
   if (route != null) {
-    await persistPendingChatRoute(route);
+    await persistPendingChatRoute(route, payloadData: flat);
   }
 }
 
@@ -433,7 +518,10 @@ Future<void> _presentWithdrawalOrAdminTray({
     id: wayoFcmTrayNotificationId(message.data),
     title: trayTitle,
     body: trayBody.isEmpty ? ' ' : trayBody,
-    payload: route,
+    payload: encodeWayoRoutePushLocalPayload(
+      route: route,
+      fcmData: message.data,
+    ),
   );
 }
 
@@ -714,6 +802,15 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
     _logPush('FCM background sessions.changed — defer to resume re-check');
     return;
   }
+  if (isMaintenanceRecoveryRealtimePayload(message.data)) {
+    _logPush('FCM background maintenance recovery — defer to resume probe');
+    return;
+  }
+  if (isMaintenanceStartedRealtimePayload(message.data)) {
+    _logPush('FCM background maintenance started');
+    MaintenanceServiceHolder.instance.enterMaintenance();
+    return;
+  }
   final chat = WayoChatPushPayload.fromMessageData(message.data);
   final title = message.notification?.title ??
       message.data['title']?.toString() ??
@@ -879,6 +976,23 @@ Future<void> attachForegroundFcmHandlers() async {
       notifySessionsChanged();
       return;
     }
+    if (isAccountDeletionStateChangedPayload(m.data)) {
+      _logPush(
+        'FCM foreground account deletion state changed — refreshing banner',
+      );
+      notifyAccountDeletionStateChanged(Map<String, dynamic>.from(m.data));
+      return;
+    }
+    if (isMaintenanceRecoveryRealtimePayload(m.data)) {
+      _logPush('FCM foreground maintenance recovery — triggering health probe');
+      notifyMaintenanceRecoveryProbe();
+      return;
+    }
+    if (isMaintenanceStartedRealtimePayload(m.data)) {
+      _logPush('FCM foreground maintenance started');
+      MaintenanceServiceHolder.instance.enterMaintenance();
+      return;
+    }
     final n = m.notification;
     final title =
         n?.title ?? m.data['title']?.toString() ?? 'Wayo Ads';
@@ -963,7 +1077,7 @@ Future<void> attachForegroundFcmHandlers() async {
       id: wayoFcmTrayNotificationId(m.data),
       title: titleText,
       body: bodyText.isEmpty ? ' ' : bodyText,
-      payload: route,
+      payload: encodeWayoRoutePushLocalPayload(route: route, fcmData: m.data),
       isAndroidChat: false,
     );
     _notifySuperadminWithdrawalsRefreshFromFcm(m.data, route);
@@ -989,6 +1103,7 @@ Future<void> attachForegroundFcmHandlers() async {
       await _navigateOrDeferPushRoute(
         route,
         fromBackgroundIsolate: false,
+        payloadData: flattenPushPayloadMap(m.data),
       );
       return;
     }
@@ -1330,6 +1445,7 @@ Future<void> consumeDeferredWayoPushIntents({
     required String notificationId,
     String? conversationId,
   }) processDeferredMarkRead,
+  WayoAdsAccountRole role = WayoAdsAccountRole.unknown,
 }) async {
   if (!isAuthenticated || !context.mounted) return;
   final p = await SharedPreferences.getInstance();
@@ -1361,10 +1477,30 @@ Future<void> consumeDeferredWayoPushIntents({
 
   if (routePending.isNotEmpty) {
     await p.remove(kWayoPushPendingRouteKey);
+    final payloadRaw = p.getString(kWayoPushPendingPayloadKey) ?? '';
+    await p.remove(kWayoPushPendingPayloadKey);
     // Cold resume: auth + FlutterSecureStorage can lag the first Wayo-ads request.
     await Future<void>.delayed(const Duration(milliseconds: 200));
     if (context.mounted) {
-      navigateWayoPushRoute(GoRouter.of(context), routePending);
+      Map<String, dynamic>? payloadData;
+      if (payloadRaw.isNotEmpty) {
+        try {
+          final decoded = jsonDecode(payloadRaw);
+          if (decoded is Map) {
+            payloadData = Map<String, dynamic>.from(decoded);
+          }
+        } catch (_) {}
+      }
+      final effectiveRole =
+          role != WayoAdsAccountRole.unknown
+              ? role
+              : _readCurrentPushRouteRole(context);
+      final target = _resolvePushNavigationTarget(
+        fallbackRoute: routePending,
+        payloadData: payloadData,
+        role: effectiveRole,
+      );
+      navigateWayoPushRoute(GoRouter.of(context), target);
     }
   }
 }

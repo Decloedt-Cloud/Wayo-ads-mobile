@@ -310,7 +310,7 @@ class _CreatorHeader extends ConsumerWidget {
       ),
       child: Row(
         children: [
-          const WayoLogo(size: 36),
+          const WayoLogo(size: 36, enableMotion: false),
           const Spacer(),
           Tooltip(
             message: t.app_settings.title,

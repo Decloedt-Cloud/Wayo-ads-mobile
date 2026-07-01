@@ -60,6 +60,8 @@ class TranslationsFr extends Translations {
 	@override late final _TranslationsPrivacyPolicyFr privacy_policy = _TranslationsPrivacyPolicyFr._(_root);
 	@override late final _TranslationsTermsAndConditionsFr terms_and_conditions = _TranslationsTermsAndConditionsFr._(_root);
 	@override late final _TranslationsAppSettingsFr app_settings = _TranslationsAppSettingsFr._(_root);
+	@override late final _TranslationsProfileFr profile = _TranslationsProfileFr._(_root);
+	@override late final _TranslationsSecurityFr security = _TranslationsSecurityFr._(_root);
 	@override late final _TranslationsAccountDeletionFr account_deletion = _TranslationsAccountDeletionFr._(_root);
 	@override late final _TranslationsOnboardingFr onboarding = _TranslationsOnboardingFr._(_root);
 }
@@ -664,6 +666,7 @@ class _TranslationsChatFr extends TranslationsChatEn {
 	@override String get forward_failed => 'Échec du transfert.';
 	@override String get forward_view => 'Ouvrir';
 	@override String get edited => 'modifié';
+	@override String get message_deleted => 'Ce message a été supprimé';
 	@override String get seen => 'Vu';
 	@override String get delivered => 'Livré';
 	@override String get edit_mode_title => 'Modification du message';
@@ -893,6 +896,70 @@ class _TranslationsAppSettingsFr extends TranslationsAppSettingsEn {
 	@override String get section_about => 'À propos';
 	@override String get rate_app => 'Notez Wayo Ads';
 	@override String get rate_app_sub => 'Ouvrez l’App Store ou Google Play';
+	@override String get rate_app_error => 'Impossible d’ouvrir le store. Réessayez dans un instant.';
+}
+
+// Path: profile
+class _TranslationsProfileFr extends TranslationsProfileEn {
+	_TranslationsProfileFr._(TranslationsFr root) : this._root = root, super.internal(root);
+
+	final TranslationsFr _root; // ignore: unused_field
+
+	// Translations
+	@override String get nav_title => 'Profil';
+	@override String get entry_title => 'Modifier le profil';
+	@override String get entry_sub => 'Photo, nom d’affichage et infos du compte';
+	@override String get section_info_title => 'Informations du profil';
+	@override String get section_info_desc => 'Mettez à jour vos informations personnelles et votre photo de profil.';
+	@override String get section_details_title => 'Détails du compte';
+	@override String get section_details_desc => 'Vos informations de compte et vos rôles.';
+	@override String get display_name => 'Nom d’affichage';
+	@override String get display_name_hint => 'Comment les autres vous voient sur Wayo Ads';
+	@override String get display_name_required => 'Le nom d’affichage est obligatoire';
+	@override String get save_changes => 'Enregistrer';
+	@override String get saving => 'Enregistrement…';
+	@override String get saved => 'Profil mis à jour';
+	@override String get save_error => 'Impossible d’enregistrer le profil. Réessayez.';
+	@override String get load_error => 'Impossible de charger le profil.';
+	@override String get name_taken => 'Ce nom est déjà pris. Veuillez en choisir un autre.';
+	@override String get name_invalid => 'Ce nom mélange des caractères de différents alphabets, ce qui n’est pas autorisé.';
+	@override String get avatar_upload => 'Importer une photo';
+	@override String get avatar_remove => 'Supprimer';
+	@override String get avatar_hint => 'JPG, PNG ou GIF — max 500 Ko';
+	@override String get avatar_pick_error => 'Impossible de choisir l’image.';
+	@override String get avatar_too_large => 'Image trop volumineuse (max 500 Ko).';
+	@override String get email => 'Adresse e-mail';
+	@override String get roles => 'Rôles';
+	@override String get member_since => 'Membre depuis';
+	@override String get role_creator => 'Créateur';
+	@override String get role_advertiser => 'Annonceur';
+	@override String get role_user => 'Utilisateur';
+}
+
+// Path: security
+class _TranslationsSecurityFr extends TranslationsSecurityEn {
+	_TranslationsSecurityFr._(TranslationsFr root) : this._root = root, super.internal(root);
+
+	final TranslationsFr _root; // ignore: unused_field
+
+	// Translations
+	@override String get nav_title => 'Sécurité';
+	@override String get entry_title => 'Mot de passe & sessions';
+	@override String get entry_sub => 'Modifier le mot de passe et gérer les appareils connectés';
+	@override String get change_password_title => 'Changer le mot de passe';
+	@override String get password_management_title => 'Mot de passe';
+	@override String get current_password => 'Mot de passe actuel';
+	@override String get new_password => 'Nouveau mot de passe';
+	@override String get confirm_password => 'Confirmer le mot de passe';
+	@override String get update_password => 'Mettre à jour le mot de passe';
+	@override String get updating_password => 'Mise à jour…';
+	@override String get password_updated => 'Mot de passe mis à jour.';
+	@override String get password_oauth_message => 'Vous vous êtes connecté avec Google ou Apple. La gestion du mot de passe est assurée par votre fournisseur. Pour le modifier, utilisez les paramètres de compte de Google ou Apple.';
+	@override String get all_fields_required => 'Tous les champs sont requis.';
+	@override String get password_min_length => 'Au moins 8 caractères.';
+	@override String get password_same_as_current => 'Le nouveau mot de passe doit être différent de l\'actuel.';
+	@override String get password_wrong_current => 'Mot de passe actuel incorrect.';
+	@override String get password_change_error => 'Impossible de mettre à jour le mot de passe. Réessayez.';
 }
 
 // Path: account_deletion
@@ -932,8 +999,15 @@ class _TranslationsAccountDeletionFr extends TranslationsAccountDeletionEn {
 	@override String get password_hint => 'Au moins 8 caractères';
 	@override String get forgot_password => 'Mot de passe oublié ?';
 	@override String get oauth_note => 'Si vous utilisez uniquement Google ou Apple, définissez d’abord un mot de passe (Mot de passe oublié).';
-	@override String get oauth_deletion_intro => 'Vous vous connectez avec Google ou Apple. Après « Continuer », confirmez à l’étape suivante — aucun mot de passe requis.';
+	@override String get oauth_deletion_intro => 'Vous vous connectez avec Google ou Apple. Pour votre sécurité, vous vous ré-authentifierez auprès de votre fournisseur avant la planification de la suppression.';
 	@override String get oauth_deletion_step_hint => 'Votre identité a été vérifiée à la connexion Google ou Apple. Touchez le bouton ci-dessous pour afficher la feuille de confirmation finale.';
+	@override String get oauth_reauth_intro => 'Pour votre sécurité, confirmez votre identité en vous reconnectant avec le fournisseur que vous utilisez pour Wayo Ads. La suppression est planifiée juste après.';
+	@override String get oauth_reauth_google => 'Se ré-authentifier avec Google';
+	@override String get oauth_reauth_apple => 'Se ré-authentifier avec Apple';
+	@override String get oauth_reauth_cancelled => 'La ré-authentification a été annulée.';
+	@override String get oauth_reauth_failed => 'Échec de la ré-authentification. Veuillez réessayer.';
+	@override String get oauth_reauth_mismatch => 'Veuillez vous ré-authentifier avec le même compte que celui utilisé pour Wayo Ads.';
+	@override String get error_reauth_required => 'Une ré-authentification est requise pour supprimer votre compte. Veuillez vous reconnecter avec votre fournisseur.';
 	@override String legal_recap({required Object date}) => 'Vous lancez une période de grâce de 30 jours avant suppression définitive. Vous pouvez annuler jusqu’au ${date}.';
 	@override String get next_review => 'Vérifier et confirmer';
 	@override String get dialog_title => 'Confirmer ?';
@@ -1098,6 +1172,7 @@ class _TranslationsAdvertiserCampaignsCardFr extends TranslationsAdvertiserCampa
 	@override String get spent => 'Dépensé';
 	@override String get cpc => 'CPC';
 	@override String get cpm => 'CPM';
+	@override String get badge_new => 'Nouveau';
 	@override String get valid_engagements => '{count} vues validées';
 	@override String get list_row_views => '{count} vues';
 	@override String get list_row_clicks => '{count} clics';
@@ -1140,6 +1215,9 @@ class _TranslationsAdvertiserCampaignsDetailFr extends TranslationsAdvertiserCam
 	// Translations
 	@override String get fallback_title => 'Campagne';
 	@override String get metrics_title => 'Performance';
+	@override String get budget_usage_title => 'Utilisation du budget';
+	@override String get budget_usage_spent => 'Dépensé';
+	@override String get budget_usage_remaining => 'Restant';
 	@override String get valid_views => 'Vues validées';
 	@override String get valid_clicks => 'Clics valides';
 	@override String get approved_creators => 'Créateurs approuvés';
@@ -1737,6 +1815,7 @@ extension on TranslationsFr {
 			case 'advertiser_campaigns.card.spent': return 'Dépensé';
 			case 'advertiser_campaigns.card.cpc': return 'CPC';
 			case 'advertiser_campaigns.card.cpm': return 'CPM';
+			case 'advertiser_campaigns.card.badge_new': return 'Nouveau';
 			case 'advertiser_campaigns.card.valid_engagements': return '{count} vues validées';
 			case 'advertiser_campaigns.card.list_row_views': return '{count} vues';
 			case 'advertiser_campaigns.card.list_row_clicks': return '{count} clics';
@@ -1752,6 +1831,9 @@ extension on TranslationsFr {
 			case 'advertiser_campaigns.platform.other': return 'Plateforme';
 			case 'advertiser_campaigns.detail.fallback_title': return 'Campagne';
 			case 'advertiser_campaigns.detail.metrics_title': return 'Performance';
+			case 'advertiser_campaigns.detail.budget_usage_title': return 'Utilisation du budget';
+			case 'advertiser_campaigns.detail.budget_usage_spent': return 'Dépensé';
+			case 'advertiser_campaigns.detail.budget_usage_remaining': return 'Restant';
 			case 'advertiser_campaigns.detail.valid_views': return 'Vues validées';
 			case 'advertiser_campaigns.detail.valid_clicks': return 'Clics valides';
 			case 'advertiser_campaigns.detail.approved_creators': return 'Créateurs approuvés';
@@ -2253,6 +2335,7 @@ extension on TranslationsFr {
 			case 'chat.forward_failed': return 'Échec du transfert.';
 			case 'chat.forward_view': return 'Ouvrir';
 			case 'chat.edited': return 'modifié';
+			case 'chat.message_deleted': return 'Ce message a été supprimé';
 			case 'chat.seen': return 'Vu';
 			case 'chat.delivered': return 'Livré';
 			case 'chat.edit_mode_title': return 'Modification du message';
@@ -2437,6 +2520,52 @@ extension on TranslationsFr {
 			case 'app_settings.section_about': return 'À propos';
 			case 'app_settings.rate_app': return 'Notez Wayo Ads';
 			case 'app_settings.rate_app_sub': return 'Ouvrez l’App Store ou Google Play';
+			case 'app_settings.rate_app_error': return 'Impossible d’ouvrir le store. Réessayez dans un instant.';
+			case 'profile.nav_title': return 'Profil';
+			case 'profile.entry_title': return 'Modifier le profil';
+			case 'profile.entry_sub': return 'Photo, nom d’affichage et infos du compte';
+			case 'profile.section_info_title': return 'Informations du profil';
+			case 'profile.section_info_desc': return 'Mettez à jour vos informations personnelles et votre photo de profil.';
+			case 'profile.section_details_title': return 'Détails du compte';
+			case 'profile.section_details_desc': return 'Vos informations de compte et vos rôles.';
+			case 'profile.display_name': return 'Nom d’affichage';
+			case 'profile.display_name_hint': return 'Comment les autres vous voient sur Wayo Ads';
+			case 'profile.display_name_required': return 'Le nom d’affichage est obligatoire';
+			case 'profile.save_changes': return 'Enregistrer';
+			case 'profile.saving': return 'Enregistrement…';
+			case 'profile.saved': return 'Profil mis à jour';
+			case 'profile.save_error': return 'Impossible d’enregistrer le profil. Réessayez.';
+			case 'profile.load_error': return 'Impossible de charger le profil.';
+			case 'profile.name_taken': return 'Ce nom est déjà pris. Veuillez en choisir un autre.';
+			case 'profile.name_invalid': return 'Ce nom mélange des caractères de différents alphabets, ce qui n’est pas autorisé.';
+			case 'profile.avatar_upload': return 'Importer une photo';
+			case 'profile.avatar_remove': return 'Supprimer';
+			case 'profile.avatar_hint': return 'JPG, PNG ou GIF — max 500 Ko';
+			case 'profile.avatar_pick_error': return 'Impossible de choisir l’image.';
+			case 'profile.avatar_too_large': return 'Image trop volumineuse (max 500 Ko).';
+			case 'profile.email': return 'Adresse e-mail';
+			case 'profile.roles': return 'Rôles';
+			case 'profile.member_since': return 'Membre depuis';
+			case 'profile.role_creator': return 'Créateur';
+			case 'profile.role_advertiser': return 'Annonceur';
+			case 'profile.role_user': return 'Utilisateur';
+			case 'security.nav_title': return 'Sécurité';
+			case 'security.entry_title': return 'Mot de passe & sessions';
+			case 'security.entry_sub': return 'Modifier le mot de passe et gérer les appareils connectés';
+			case 'security.change_password_title': return 'Changer le mot de passe';
+			case 'security.password_management_title': return 'Mot de passe';
+			case 'security.current_password': return 'Mot de passe actuel';
+			case 'security.new_password': return 'Nouveau mot de passe';
+			case 'security.confirm_password': return 'Confirmer le mot de passe';
+			case 'security.update_password': return 'Mettre à jour le mot de passe';
+			case 'security.updating_password': return 'Mise à jour…';
+			case 'security.password_updated': return 'Mot de passe mis à jour.';
+			case 'security.password_oauth_message': return 'Vous vous êtes connecté avec Google ou Apple. La gestion du mot de passe est assurée par votre fournisseur. Pour le modifier, utilisez les paramètres de compte de Google ou Apple.';
+			case 'security.all_fields_required': return 'Tous les champs sont requis.';
+			case 'security.password_min_length': return 'Au moins 8 caractères.';
+			case 'security.password_same_as_current': return 'Le nouveau mot de passe doit être différent de l\'actuel.';
+			case 'security.password_wrong_current': return 'Mot de passe actuel incorrect.';
+			case 'security.password_change_error': return 'Impossible de mettre à jour le mot de passe. Réessayez.';
 			case 'account_deletion.nav_title': return 'Suppression de compte';
 			case 'account_deletion.title': return 'Supprimer mon compte Wayo Ads';
 			case 'account_deletion.danger_zone_chip': return 'Zone de danger';
@@ -2467,8 +2596,15 @@ extension on TranslationsFr {
 			case 'account_deletion.password_hint': return 'Au moins 8 caractères';
 			case 'account_deletion.forgot_password': return 'Mot de passe oublié ?';
 			case 'account_deletion.oauth_note': return 'Si vous utilisez uniquement Google ou Apple, définissez d’abord un mot de passe (Mot de passe oublié).';
-			case 'account_deletion.oauth_deletion_intro': return 'Vous vous connectez avec Google ou Apple. Après « Continuer », confirmez à l’étape suivante — aucun mot de passe requis.';
+			case 'account_deletion.oauth_deletion_intro': return 'Vous vous connectez avec Google ou Apple. Pour votre sécurité, vous vous ré-authentifierez auprès de votre fournisseur avant la planification de la suppression.';
 			case 'account_deletion.oauth_deletion_step_hint': return 'Votre identité a été vérifiée à la connexion Google ou Apple. Touchez le bouton ci-dessous pour afficher la feuille de confirmation finale.';
+			case 'account_deletion.oauth_reauth_intro': return 'Pour votre sécurité, confirmez votre identité en vous reconnectant avec le fournisseur que vous utilisez pour Wayo Ads. La suppression est planifiée juste après.';
+			case 'account_deletion.oauth_reauth_google': return 'Se ré-authentifier avec Google';
+			case 'account_deletion.oauth_reauth_apple': return 'Se ré-authentifier avec Apple';
+			case 'account_deletion.oauth_reauth_cancelled': return 'La ré-authentification a été annulée.';
+			case 'account_deletion.oauth_reauth_failed': return 'Échec de la ré-authentification. Veuillez réessayer.';
+			case 'account_deletion.oauth_reauth_mismatch': return 'Veuillez vous ré-authentifier avec le même compte que celui utilisé pour Wayo Ads.';
+			case 'account_deletion.error_reauth_required': return 'Une ré-authentification est requise pour supprimer votre compte. Veuillez vous reconnecter avec votre fournisseur.';
 			case 'account_deletion.legal_recap': return ({required Object date}) => 'Vous lancez une période de grâce de 30 jours avant suppression définitive. Vous pouvez annuler jusqu’au ${date}.';
 			case 'account_deletion.next_review': return 'Vérifier et confirmer';
 			case 'account_deletion.dialog_title': return 'Confirmer ?';

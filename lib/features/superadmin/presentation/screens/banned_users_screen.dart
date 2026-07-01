@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/ui/wayo_toast.dart';
 import '../../domain/entities/banned_user.dart';
 import '../providers/superadmin_providers.dart';
 import '../widgets/superadmin_chrome_actions.dart';
@@ -257,16 +258,11 @@ class _BannedUsersScreenState extends ConsumerState<BannedUsersScreen> {
           .read(bannedUsersNotifierProvider(search: _searchQuery).notifier)
           .unbanUser(user.authUserId);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(success ? 'User unbanned successfully' : 'Failed to unban user'),
-            backgroundColor: success ? AppColors.success : AppColors.error,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        );
+        if (success) {
+          WayoToast.success(context, 'User unbanned successfully');
+        } else {
+          WayoToast.error(context, 'Failed to unban user');
+        }
       }
     }
   }
@@ -448,15 +444,9 @@ class _BannedUsersScreenState extends ConsumerState<BannedUsersScreen> {
   Future<void> _executeBan(BuildContext dialogContext, SearchUser user) async {
     if (user.wayoUserId.isEmpty) {
       if (dialogContext.mounted) {
-        ScaffoldMessenger.of(dialogContext).showSnackBar(
-          SnackBar(
-            content: const Text('Missing user id — cannot ban. Try again or update the app.'),
-            backgroundColor: AppColors.error,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
+        WayoToast.error(
+          dialogContext,
+          'Missing user id — cannot ban. Try again or update the app.',
         );
       }
       return;
@@ -469,16 +459,11 @@ class _BannedUsersScreenState extends ConsumerState<BannedUsersScreen> {
         .banUser(user.wayoUserId);
 
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(success ? 'User banned successfully' : 'Failed to ban user'),
-          backgroundColor: success ? AppColors.success : AppColors.error,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-      );
+      if (success) {
+        WayoToast.success(context, 'User banned successfully');
+      } else {
+        WayoToast.error(context, 'Failed to ban user');
+      }
     }
   }
 }

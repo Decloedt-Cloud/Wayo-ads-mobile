@@ -5,6 +5,7 @@ import '../../../core/network/admin_api_endpoints.dart';
 import '../../../core/network/api_endpoints.dart';
 import '../../creator_campaigns/domain/creator_browse_campaign.dart';
 import '../../creator_campaigns/domain/creator_browse_page_result.dart';
+import '../domain/entities/admin_transaction.dart';
 import '../domain/entities/admin_user.dart';
 import '../domain/entities/ai_usage.dart';
 import '../domain/entities/announcement.dart';
@@ -21,6 +22,14 @@ abstract interface class SuperadminRemote {
     int limit = 50,
     String? reason,
   });
+
+  Future<AdminTransactionsPage> fetchAdminTransactionsPage({
+    int page = 1,
+    int limit = 20,
+    String? reason,
+  });
+
+  Future<TrafficQualitySummary> fetchTrafficQualitySummary();
   
   Future<PayoutStats> fetchPayoutStats();
 
@@ -139,6 +148,32 @@ final class SuperadminRemoteDatasource implements SuperadminRemote {
     final data = _extractMap(res.data);
     final summary = data['summary'] as Map<String, dynamic>? ?? data;
     return DashboardStats.fromJson(summary);
+  }
+
+  @override
+  Future<AdminTransactionsPage> fetchAdminTransactionsPage({
+    int page = 1,
+    int limit = 20,
+    String? reason,
+  }) async {
+    final res = await _dio.get<Object?>(
+      _path(AdminApiEndpoints.transactions),
+      queryParameters: <String, dynamic>{
+        'page': page,
+        'limit': limit.clamp(1, 50),
+        if (reason != null && reason.isNotEmpty) 'reason': reason,
+      },
+    );
+    return AdminTransactionsPage.fromJson(_extractMap(res.data));
+  }
+
+  @override
+  Future<TrafficQualitySummary> fetchTrafficQualitySummary() async {
+    final res = await _dio.get<Object?>(
+      _path(AdminApiEndpoints.debugTracking),
+      queryParameters: const {'type': 'creator-risk'},
+    );
+    return TrafficQualitySummary.fromJson(_extractMap(res.data));
   }
 
   @override

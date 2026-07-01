@@ -4,6 +4,7 @@ import '../../../../core/campaigns/campaign_explorer_layout.dart';
 import '../../../../core/network/rate_limiter.dart';
 import '../../../../core/network/wayo_ads_dio.dart';
 import '../../../auth/presentation/providers/current_account_providers.dart';
+import '../../../creator/presentation/providers/creator_session_gate.dart';
 import '../../../dashboard/presentation/providers/dashboard_state_providers.dart';
 import '../../data/creator_campaigns_remote_datasource.dart';
 import '../../data/creator_campaigns_repository.dart';
@@ -69,19 +70,19 @@ typedef CreatorBrowsePagedKey = ({int page, String search});
 /// Paginated browse (`GET /api/campaigns?creatorOnly=true&limit=10&search=…`).
 final creatorBrowseCampaignsPagedProvider = FutureProvider.autoDispose
     .family<CreatorBrowsePageResult, CreatorBrowsePagedKey>((ref, key) async {
-      final userId = ref.watch(currentAppUserProvider)?.id;
-      if (userId == null) {
-        throw StateError('Creator browse requires an authenticated user');
-      }
+      final userId = await awaitCreatorSessionUserId(ref);
       final q = key.search.trim();
-      return ref
-          .watch(creatorCampaignsRepositoryProvider)
-          .fetchBrowseCampaignsPage(
-            sessionUserId: userId,
-            page: key.page,
-            limit: 10,
-            search: q.isEmpty ? null : q,
-          );
+      return fetchCreatorWithAuthRetry(
+        ref,
+        () => ref
+            .watch(creatorCampaignsRepositoryProvider)
+            .fetchBrowseCampaignsPage(
+              sessionUserId: userId,
+              page: key.page,
+              limit: 10,
+              search: q.isEmpty ? null : q,
+            ),
+      );
     });
 
 /// Detail of a single campaign — keyed by campaign id.
@@ -127,7 +128,7 @@ final creatorTrackingLinksProvider =
           detail.type == CreatorCampaignType.link &&
           detail.isApproved) {
         return ref
-            .watch(creatorCampaignsRepositoryProvider)
+            .read(creatorCampaignsRepositoryProvider)
             .fetchTrackingLinks(id);
       }
       return detail?.trackingLinks ?? const [];

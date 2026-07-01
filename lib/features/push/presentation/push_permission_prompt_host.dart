@@ -19,9 +19,11 @@ import '../../../core/push/user_push_notifications_preference.dart';
 import '../../../core/push/wayo_push_intent.dart';
 import '../../../core/push/wayo_push_service.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/ui/wayo_toast.dart';
 import '../../../i18n/strings.g.dart';
 import '../../auth/domain/auth_notifier.dart';
 import '../../auth/domain/wayo_ads_account_role.dart';
+import '../../auth/presentation/providers/current_account_providers.dart';
 import '../../chat/presentation/providers/chat_providers.dart';
 import '../../dashboard/presentation/providers/dashboard_state_providers.dart';
 import 'push_permission_prompt_trigger.dart';
@@ -103,6 +105,7 @@ class _PushPermissionPromptHostState
       await consumeDeferredWayoPushIntents(
         context: context,
         isAuthenticated: true,
+        role: ref.read(currentWayoAdsAccountRoleProvider),
         processDeferredMarkRead:
             ({required notificationId, conversationId}) async {
           if (conversationId != null && conversationId.isNotEmpty) {
@@ -311,20 +314,22 @@ class _PushPermissionPromptHostState
               setState(() => _overlayVisible = false);
 
               if (!context.mounted) return;
-              final messenger = ScaffoldMessenger.maybeOf(context);
               final debugHint = !ok && kWayoShowPushDebugUi
                   ? '\n${PushRegistrationDebug.failureSummary}'
                   : '';
-              messenger?.showSnackBar(
-                SnackBar(
-                  content: Text(
-                    ok
-                        ? context.t.push.onboarding_success
-                        : '${context.t.push.onboarding_denied_hint}$debugHint',
-                  ),
-                  duration: Duration(seconds: ok ? 4 : 6),
-                ),
-              );
+              if (ok) {
+                WayoToast.success(
+                  context,
+                  context.t.push.onboarding_success,
+                  duration: const Duration(seconds: 4),
+                );
+              } else {
+                WayoToast.warning(
+                  context,
+                  '${context.t.push.onboarding_denied_hint}$debugHint',
+                  duration: const Duration(seconds: 6),
+                );
+              }
             },
           ),
       ],

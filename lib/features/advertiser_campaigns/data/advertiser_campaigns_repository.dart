@@ -105,9 +105,9 @@ final class AdvertiserCampaignsRepository {
       }
       final code = e.response?.statusCode;
       if (code == 401 || code == 403) {
-        return ServerException(e.message ?? 'Unauthorized');
+        return ServerException('', code);
       }
-      return ServerException(e.message ?? 'Request failed');
+      return ServerException(e.message ?? 'Request failed', code);
     }
     return ServerException('$e');
   }

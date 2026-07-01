@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/ui/wayo_toast.dart';
 import '../../domain/entities/announcement.dart';
 import '../providers/superadmin_providers.dart';
 import '../widgets/superadmin_chrome_actions.dart';
@@ -155,20 +156,14 @@ class AnnouncementsScreen extends ConsumerWidget {
           : await notifier.create(result);
 
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              success
-                  ? (announcement != null ? 'Updated' : 'Created')
-                  : 'Failed to save',
-            ),
-            backgroundColor: success ? AppColors.success : AppColors.error,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        );
+        if (success) {
+          WayoToast.success(
+            context,
+            announcement != null ? 'Updated' : 'Created',
+          );
+        } else {
+          WayoToast.error(context, 'Failed to save');
+        }
       }
     }
   }
@@ -215,16 +210,11 @@ class AnnouncementsScreen extends ConsumerWidget {
           .read(announcementsNotifierProvider.notifier)
           .deleteAnnouncement(announcement.id);
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(success ? 'Deleted' : 'Failed to delete'),
-            backgroundColor: success ? AppColors.success : AppColors.error,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        );
+        if (success) {
+          WayoToast.success(context, 'Deleted');
+        } else {
+          WayoToast.error(context, 'Failed to delete');
+        }
       }
     }
   }
@@ -240,20 +230,14 @@ class AnnouncementsScreen extends ConsumerWidget {
         .updateAnnouncement(announcement.id, updated);
 
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            success
-                ? (updated.active ? 'Activated' : 'Deactivated')
-                : 'Failed to update',
-          ),
-          backgroundColor: success ? AppColors.success : AppColors.error,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-      );
+      if (success) {
+        WayoToast.success(
+          context,
+          updated.active ? 'Activated' : 'Deactivated',
+        );
+      } else {
+        WayoToast.error(context, 'Failed to update');
+      }
     }
   }
 }

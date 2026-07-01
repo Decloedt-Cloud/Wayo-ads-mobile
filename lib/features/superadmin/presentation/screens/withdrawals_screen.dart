@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/ui/wayo_toast.dart';
 import '../../domain/entities/withdrawal.dart';
 import '../providers/superadmin_providers.dart';
 import '../widgets/superadmin_chrome_actions.dart';
@@ -328,16 +329,11 @@ class _WithdrawalsScreenState extends ConsumerState<WithdrawalsScreen> {
 
   void _showResultSnackbar(bool success, String successMsg, String failureMsg) {
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(success ? successMsg : failureMsg),
-          backgroundColor: success ? AppColors.success : AppColors.error,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-      );
+      if (success) {
+        WayoToast.success(context, successMsg);
+      } else {
+        WayoToast.error(context, failureMsg);
+      }
     }
   }
 }

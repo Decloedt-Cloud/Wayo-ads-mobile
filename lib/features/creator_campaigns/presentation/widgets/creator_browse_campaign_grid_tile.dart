@@ -6,8 +6,10 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/format/campaign_finance_display.dart';
 import '../../../../core/format/money_formatter.dart';
 import '../../../../core/network/wayo_ads_public_url.dart';
+import '../../../../core/campaigns/campaign_recency.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/campaign_grid_hero_image.dart';
+import '../../../../core/widgets/campaign_new_badge.dart';
 import '../../../../i18n/strings.g.dart';
 import '../../../creator_dashboard/domain/creator_application.dart';
 import '../../../dashboard/domain/entities/campaign_platform.dart';
@@ -158,6 +160,7 @@ class _GridTileBodyState extends State<_GridTileBody> {
       CreatorCampaignType.unknown => '—',
     };
     final rateCaption = _gridRateCaption(c, t, widget.moneyLocale);
+    final isNew = isCampaignNew(c.createdAt);
     final spentFrac = c.totalBudgetCents > 0
         ? (c.spentBudgetCents / c.totalBudgetCents).clamp(0.0, 1.0)
         : 0.0;
@@ -223,33 +226,51 @@ class _GridTileBodyState extends State<_GridTileBody> {
                                       .heroImageBottomFade(context),
                                 ),
                               ),
-                            if (rateCaption != null)
+                            if (rateCaption != null || isNew)
                               PositionedDirectional(
                                 start: 8,
                                 top: 8,
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.black.withValues(alpha: 0.45),
-                                    borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(
-                                      color: CreatorCampaignsChrome.green
-                                          .withValues(alpha: 0.65),
-                                    ),
-                                  ),
-                                  child: Text(
-                                    rateCaption,
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: GoogleFonts.dmSans(
-                                      fontSize: 9.5,
-                                      fontWeight: FontWeight.w800,
-                                      color: CreatorCampaignsChrome.green,
-                                    ),
-                                  ),
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    if (isNew) ...[
+                                      CampaignNewBadge(
+                                        label: t.advertiser_campaigns.card
+                                            .badge_new,
+                                      ),
+                                      if (rateCaption != null)
+                                        const SizedBox(height: 6),
+                                    ],
+                                    if (rateCaption != null)
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 4,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.black
+                                              .withValues(alpha: 0.45),
+                                          borderRadius:
+                                              BorderRadius.circular(8),
+                                          border: Border.all(
+                                            color: CreatorCampaignsChrome.green
+                                                .withValues(alpha: 0.65),
+                                          ),
+                                        ),
+                                        child: Text(
+                                          rateCaption,
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: GoogleFonts.dmSans(
+                                            fontSize: 9.5,
+                                            fontWeight: FontWeight.w800,
+                                            color: CreatorCampaignsChrome.green,
+                                          ),
+                                        ),
+                                      ),
+                                  ],
                                 ),
                               ),
                             if (widget.applicationStatus != null)

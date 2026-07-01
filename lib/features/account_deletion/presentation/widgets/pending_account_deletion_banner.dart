@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/ui/wayo_toast.dart';
 import '../../../../i18n/strings.g.dart';
 import '../providers/account_deletion_providers.dart';
 import '../screens/account_deletion_screen.dart';
@@ -39,11 +40,10 @@ class _PendingAccountDeletionBannerState
     return math.max(0, a.difference(b).inDays);
   }
 
-  Future<void> _confirmAndCancel(BuildContext context) async {
+  Future<void> _confirmAndCancel() async {
     final t = context.t.account_deletion;
     final toastCancelled = t.toast_cancelled;
     final errorDelete = t.error_delete;
-    final messenger = ScaffoldMessenger.maybeOf(context);
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -72,19 +72,13 @@ class _PendingAccountDeletionBannerState
       await ref.read(accountDeletionScheduledAtProvider.notifier).syncFromRemote();
       if (!mounted) return;
       HapticFeedback.lightImpact();
-      messenger?.showSnackBar(
-        SnackBar(content: Text(toastCancelled)),
-      );
+      WayoToast.success(context, toastCancelled);
     } on DioException {
       if (!mounted) return;
-      messenger?.showSnackBar(
-        SnackBar(content: Text(errorDelete)),
-      );
+      WayoToast.error(context, errorDelete);
     } catch (_) {
       if (!mounted) return;
-      messenger?.showSnackBar(
-        SnackBar(content: Text(errorDelete)),
-      );
+      WayoToast.error(context, errorDelete);
     } finally {
       if (mounted) {
         setState(() => _cancelling = false);
@@ -150,7 +144,7 @@ class _PendingAccountDeletionBannerState
                 )
               else
                 TextButton(
-                  onPressed: () => _confirmAndCancel(context),
+                  onPressed: () => _confirmAndCancel(),
                   style: TextButton.styleFrom(
                     foregroundColor: onErr,
                     padding: const EdgeInsets.symmetric(

@@ -37,7 +37,7 @@ final superadminRepositoryProvider = Provider<ISuperadminRepository>.internal(
 );
 
 typedef SuperadminRepositoryRef = ProviderRef<ISuperadminRepository>;
-String _$dashboardStatsHash() => r'18cf6e5ddfac83a9d3b51581e27c0ca3be74ea9f';
+String _$dashboardStatsHash() => r'8918cef952e3e9367d41e9f6a4c74bd7d4fe59ed';
 
 /// See also [dashboardStats].
 @ProviderFor(dashboardStats)
@@ -53,7 +53,43 @@ final dashboardStatsProvider =
 );
 
 typedef DashboardStatsRef = AutoDisposeFutureProviderRef<DashboardStats>;
-String _$payoutStatsHash() => r'91a90d6785464d610f514e4db3de08c24a53aefe';
+String _$adminRecentTransactionsHash() =>
+    r'b227ef6bafd28c99da9ba09e898a1266ed21b61b';
+
+/// See also [adminRecentTransactions].
+@ProviderFor(adminRecentTransactions)
+final adminRecentTransactionsProvider =
+    AutoDisposeFutureProvider<AdminTransactionsPage>.internal(
+  adminRecentTransactions,
+  name: r'adminRecentTransactionsProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$adminRecentTransactionsHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+typedef AdminRecentTransactionsRef
+    = AutoDisposeFutureProviderRef<AdminTransactionsPage>;
+String _$trafficQualitySummaryHash() =>
+    r'1044338428a7fd3362b393b83a7c188a2c909098';
+
+/// See also [trafficQualitySummary].
+@ProviderFor(trafficQualitySummary)
+final trafficQualitySummaryProvider =
+    AutoDisposeFutureProvider<TrafficQualitySummary>.internal(
+  trafficQualitySummary,
+  name: r'trafficQualitySummaryProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$trafficQualitySummaryHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+typedef TrafficQualitySummaryRef
+    = AutoDisposeFutureProviderRef<TrafficQualitySummary>;
+String _$payoutStatsHash() => r'd303e4fa3bb1bc0406e24870b469c428dbb198e5';
 
 /// See also [payoutStats].
 @ProviderFor(payoutStats)
@@ -714,7 +750,7 @@ class _AdminUsersNotifierProviderElement
 }
 
 String _$withdrawalsNotifierHash() =>
-    r'bb8d282dc0376e60ea065d715b4a7441c9a4af8f';
+    r'36d90f24c8aa3b86958ee540302d1073c001116b';
 
 abstract class _$WithdrawalsNotifier
     extends BuildlessAutoDisposeAsyncNotifier<WithdrawalsPage> {

@@ -8,6 +8,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/ui/wayo_toast.dart';
 import '../../../../i18n/strings.g.dart';
 import '../../../auth/domain/auth_notifier.dart';
 import '../../../auth/domain/wayo_ads_account_role.dart';
@@ -178,9 +179,7 @@ class _ChatInboxScreenState extends ConsumerState<ChatInboxScreen> {
     }
     if (conv == null) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(t.chat.conversation_open_failed)),
-        );
+        WayoToast.error(context, t.chat.conversation_open_failed);
       }
       return;
     }
@@ -495,14 +494,9 @@ class _ChatInboxScreenState extends ConsumerState<ChatInboxScreen> {
                                                     DismissDirection
                                                         .startToEnd) {
                                               if (context.mounted) {
-                                                ScaffoldMessenger.of(
+                                                WayoToast.info(
                                                   context,
-                                                ).showSnackBar(
-                                                  SnackBar(
-                                                    content: Text(
-                                                      t.chat.inbox_swipe_soon,
-                                                    ),
-                                                  ),
+                                                  t.chat.inbox_swipe_soon,
                                                 );
                                               }
                                             }

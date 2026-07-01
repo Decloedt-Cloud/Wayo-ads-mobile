@@ -12,6 +12,7 @@ import '../../../../core/push/push_registration_debug.dart';
 import '../../../../core/push/system_push_permission.dart';
 import '../../../../core/push/push_notifications_status_provider.dart';
 import '../../../../core/push/user_push_notifications_preference.dart';
+import '../../../../core/ui/wayo_toast.dart';
 import '../../../../i18n/strings.g.dart';
 import 'push_registration_debug_panel.dart';
 
@@ -79,13 +80,10 @@ class _AppSettingsNotificationsTileState
           final debugHint = kWayoShowPushDebugUi
               ? '\n${PushRegistrationDebug.failureSummary}'
               : '';
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                '${t.app_settings.notifications_enable_error}$debugHint',
-              ),
-              duration: const Duration(seconds: 6),
-            ),
+          WayoToast.error(
+            context,
+            '${t.app_settings.notifications_enable_error}$debugHint',
+            duration: const Duration(seconds: 6),
           );
         }
       } else {
@@ -95,9 +93,7 @@ class _AppSettingsNotificationsTileState
       ref.read(pushNotificationsActiveProvider.notifier).refresh();
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(t.app_settings.notifications_update_error)),
-        );
+        WayoToast.error(context, t.app_settings.notifications_update_error);
       }
     } finally {
       if (mounted) {

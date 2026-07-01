@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/errors/auth_error_localizer.dart';
 import '../../../../core/result.dart';
+import '../../../../core/ui/wayo_toast.dart';
 import '../../../../i18n/strings.g.dart';
 import '../../data/repositories/auth_repository.dart';
 import '../../domain/apple_email_policy.dart';
@@ -117,12 +118,7 @@ class _EmailVerificationOtpOnboardingScreenState
         final next = onboardingRedirectPath(data);
         context.go(next ?? '/dashboard');
       case Failure(:final error):
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(localizeAuthError(error, t)),
-            backgroundColor: Colors.red.shade700,
-          ),
-        );
+        WayoToast.error(context, localizeAuthError(error, t));
         setState(() => _otpKey++);
     }
     if (mounted) setState(() => _verifying = false);

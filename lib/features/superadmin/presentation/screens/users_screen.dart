@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/ui/wayo_toast.dart';
 import '../../domain/entities/admin_user.dart';
 import '../../domain/entities/banned_user.dart';
 import '../providers/superadmin_providers.dart';
@@ -763,12 +764,11 @@ class _UsersScreenState extends ConsumerState<UsersScreen>
           ).notifier)
           .banUser(user.id, reason: reasonController.text);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(success ? 'User banned successfully' : 'Failed to ban user'),
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: success ? AppColors.success : AppColors.error,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ));
+        if (success) {
+          WayoToast.success(context, 'User banned successfully');
+        } else {
+          WayoToast.error(context, 'Failed to ban user');
+        }
       }
     }
   }
@@ -822,12 +822,11 @@ class _UsersScreenState extends ConsumerState<UsersScreen>
           ).notifier)
           .unbanUser(user.authUserId);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(success ? 'User unbanned successfully' : 'Failed to unban user'),
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: success ? AppColors.success : AppColors.error,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ));
+        if (success) {
+          WayoToast.success(context, 'User unbanned successfully');
+        } else {
+          WayoToast.error(context, 'Failed to unban user');
+        }
       }
     }
   }
@@ -879,12 +878,11 @@ class _UsersScreenState extends ConsumerState<UsersScreen>
           .read(bannedUsersNotifierProvider(search: _searchQuery).notifier)
           .unbanUser(user.authUserId);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(success ? 'User unbanned successfully' : 'Failed to unban user'),
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: success ? AppColors.success : AppColors.error,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ));
+        if (success) {
+          WayoToast.success(context, 'User unbanned successfully');
+        } else {
+          WayoToast.error(context, 'Failed to unban user');
+        }
       }
     }
   }
@@ -1622,8 +1620,11 @@ class _UserDetailsSheet extends StatelessWidget {
                     GestureDetector(
                       onTap: () {
                         Clipboard.setData(ClipboardData(text: user.email));
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Email copied'), duration: Duration(seconds: 1)));
+                        WayoToast.success(
+                          context,
+                          'Email copied',
+                          duration: const Duration(seconds: 1),
+                        );
                       },
                       child: Row(children: [
                         Flexible(child: Text(user.email, style: TextStyle(fontSize: 14, color: AppColors.textSecondaryOf(context)))),

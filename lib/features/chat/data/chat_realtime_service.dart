@@ -68,6 +68,27 @@ final class ChatMessageEditedEvent extends ChatRealtimeEvent {
   final Map<String, dynamic> rawMessage;
 }
 
+/// Conversation metadata changed (e.g. peer account soft-deleted → `closed`).
+final class ChatConversationUpdatedEvent extends ChatRealtimeEvent {
+  const ChatConversationUpdatedEvent({
+    required this.conversationId,
+    this.status,
+  });
+
+  final int conversationId;
+  final String? status;
+}
+
+int? _parseRealtimeIntId(dynamic raw) {
+  if (raw is num) return raw.toInt();
+  if (raw is String) {
+    final s = raw.trim();
+    if (s.isEmpty) return null;
+    return int.tryParse(s);
+  }
+  return null;
+}
+
 /// Laravel Reverb / Pusher client for **chat-service** only (separate from [WayoReverbRealtime] singleton).
 final class ChatRealtimeService {
   ChatRealtimeService({this.onConnectionError});
@@ -668,15 +689,26 @@ final class ChatRealtimeService {
             );
             return;
           case 'message.deleted':
-            final mid = map['message_id'];
-            if (mid is num) {
+            final mid = _parseRealtimeIntId(map['message_id'] ?? map['messageId']);
+            if (mid != null) {
               _events.add(
                 ChatMessageDeletedEvent(
                   conversationId: convoId(),
-                  messageId: mid.toInt(),
+                  messageId: mid,
                 ),
               );
             }
+            _events.add(const ChatInboxRefreshEvent());
+            return;
+          case 'conversation.updated':
+          case 'conversation.closed':
+            final statusRaw = map['status'] ?? map['conversation_status'];
+            _events.add(
+              ChatConversationUpdatedEvent(
+                conversationId: convoId(),
+                status: statusRaw == null ? null : '$statusRaw',
+              ),
+            );
             _events.add(const ChatInboxRefreshEvent());
             return;
           case 'message.edited':
@@ -706,6 +738,8 @@ final class ChatRealtimeService {
         'message.read',
         'message.deleted',
         'message.edited',
+        'conversation.updated',
+        'conversation.closed',
       ]) {
         _subs.add(
           ch.bind(eventName).listen((ChannelReadEvent ev) {

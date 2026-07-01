@@ -9,6 +9,7 @@ import '../../../../core/providers/app_providers.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/creator_colors.dart';
+import '../../../../core/ui/wayo_toast.dart';
 import '../../../../i18n/strings.g.dart';
 import '../../../creator_dashboard/domain/creator_application.dart';
 import '../../domain/creator_browse_campaign.dart';
@@ -64,6 +65,7 @@ class CreatorApplicationDetailScreen extends ConsumerWidget {
           await ref.read(creatorTrackingLinksProvider(campaignId).future);
         },
         child: detailAsync.when(
+          skipLoadingOnReload: true,
           loading: () => ListView(
             physics: const AlwaysScrollableScrollPhysics(),
             children: [
@@ -139,6 +141,7 @@ class _Body extends ConsumerWidget {
         if (isLink && c.isApproved) ...[
           const SizedBox(height: 18),
           linksAsync!.when(
+            skipLoadingOnReload: true,
             loading: () => const CreatorTrackingLinkSection(
               links: [],
               loading: true,
@@ -605,11 +608,9 @@ class _ActionBar extends ConsumerWidget {
                       if (ok == true && context.mounted) {
                         ref.invalidate(creatorMySubmissionsProvider(c.id));
                         ref.invalidate(creatorCampaignDetailProvider(c.id));
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(t.creator.campaigns.submit_success),
-                            behavior: SnackBarBehavior.floating,
-                          ),
+                        WayoToast.success(
+                          context,
+                          t.creator.campaigns.submit_success,
                         );
                       }
                     },
@@ -646,11 +647,9 @@ class _ActionBar extends ConsumerWidget {
                   if (ok == true && context.mounted) {
                     ref.invalidate(creatorMySubmissionsProvider(c.id));
                     ref.invalidate(creatorCampaignDetailProvider(c.id));
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(t.creator.campaigns.submit_success),
-                        behavior: SnackBarBehavior.floating,
-                      ),
+                    WayoToast.success(
+                      context,
+                      t.creator.campaigns.submit_success,
                     );
                   }
                 },

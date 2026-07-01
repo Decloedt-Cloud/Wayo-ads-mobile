@@ -24,6 +24,8 @@ final class ChatMessage {
     this.updatedAt,
     this.editedAt,
     this.isEdited = false,
+    this.isDeleted = false,
+    this.deletedAt,
     this.fileUrl,
     this.fileName,
     this.fileSize,
@@ -42,6 +44,8 @@ final class ChatMessage {
   final String? updatedAt;
   final String? editedAt;
   final bool isEdited;
+  final bool isDeleted;
+  final String? deletedAt;
   final String? fileUrl;
   final String? fileName;
   final int? fileSize;
@@ -67,6 +71,8 @@ final class ChatMessage {
     String? updatedAt,
     String? editedAt,
     bool? isEdited,
+    bool? isDeleted,
+    String? deletedAt,
     ChatUserPreview? user,
     ChatReplyRef? replyTo,
   }) {
@@ -80,6 +86,8 @@ final class ChatMessage {
       updatedAt: updatedAt ?? this.updatedAt,
       editedAt: editedAt ?? this.editedAt,
       isEdited: isEdited ?? this.isEdited,
+      isDeleted: isDeleted ?? this.isDeleted,
+      deletedAt: deletedAt ?? this.deletedAt,
       fileUrl: fileUrl ?? this.fileUrl,
       fileName: fileName ?? this.fileName,
       fileSize: fileSize ?? this.fileSize,

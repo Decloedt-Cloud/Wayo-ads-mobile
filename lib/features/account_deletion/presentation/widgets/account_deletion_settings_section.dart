@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/ui/wayo_toast.dart';
 import '../../../../i18n/strings.g.dart';
 import '../../../auth/domain/wayo_ads_account_role.dart';
 import '../../../auth/presentation/providers/current_account_providers.dart';
@@ -86,19 +87,13 @@ class _AccountDeletionSettingsSectionState
       await ref.read(accountDeletionScheduledAtProvider.notifier).syncFromRemote();
       if (!mounted) return;
       HapticFeedback.lightImpact();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(t.toast_cancelled)),
-      );
+      WayoToast.success(context, t.toast_cancelled);
     } on DioException {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(t.error_delete)),
-      );
+      WayoToast.error(context, t.error_delete);
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(t.error_delete)),
-      );
+      WayoToast.error(context, t.error_delete);
     } finally {
       if (mounted) setState(() => _cancelling = false);
     }

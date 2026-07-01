@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/errors/auth_error_localizer.dart';
 import '../../../../core/result.dart';
+import '../../../../core/ui/wayo_toast.dart';
 import '../../../../i18n/strings.g.dart';
 import '../../data/repositories/auth_repository.dart';
 import '../../domain/auth_notifier.dart';
@@ -65,12 +66,7 @@ class _WayoAdsRoleOnboardingScreenState
         final next = onboardingRedirectPath(data);
         context.go(next ?? '/dashboard');
       case Failure(:final error):
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(localizeAuthError(error, t)),
-            backgroundColor: Colors.red.shade700,
-          ),
-        );
+        WayoToast.error(context, localizeAuthError(error, t));
     }
     if (mounted) {
       setState(() {

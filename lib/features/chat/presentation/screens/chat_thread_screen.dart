@@ -13,6 +13,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/push/wayo_push_intent.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/ui/wayo_toast.dart';
 import '../../../../i18n/strings.g.dart';
 import '../../../auth/presentation/providers/current_account_providers.dart';
 import '../formatting/chat_partner_role.dart';
@@ -463,10 +464,7 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
       }
     } catch (_) {
       if (!mounted) return;
-      final messenger = ScaffoldMessenger.maybeOf(context);
-      messenger?.showSnackBar(
-        SnackBar(content: Text(context.t.chat.load_older_failed)),
-      );
+      WayoToast.error(context, context.t.chat.load_older_failed);
     } finally {
       _olderMessagesFetchInFlight = false;
       if (mounted) {
@@ -493,6 +491,29 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
     if (best != null && (_peerReadAt == null || best.isAfter(_peerReadAt!))) {
       if (mounted) setState(() => _peerReadAt = best);
     }
+  }
+
+  void _markMessageDeleted(int messageId) {
+    setState(() {
+      _messages = _messages
+          .map(
+            (m) => m.id == messageId
+                ? m.copyWith(
+                    isDeleted: true,
+                    content: '',
+                    fileUrl: null,
+                    fileName: null,
+                  )
+                : m,
+          )
+          .toList();
+      if (_selectedMessageId == messageId) _selectedMessageId = null;
+      if (_editingMessageId == messageId) {
+        _editingMessageId = null;
+        _editingOriginalContent = '';
+        _draft.clear();
+      }
+    });
   }
 
   void _listenRt(
@@ -550,15 +571,15 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
       }
       if (event is ChatMessageDeletedEvent &&
           event.conversationId == widget.conversationId) {
-        setState(() {
-          _messages = _messages.where((m) => m.id != event.messageId).toList();
-          if (_selectedMessageId == event.messageId) _selectedMessageId = null;
-          if (_editingMessageId == event.messageId) {
-            _editingMessageId = null;
-            _editingOriginalContent = '';
-            _draft.clear();
-          }
-        });
+        _markMessageDeleted(event.messageId);
+        return;
+      }
+      if (event is ChatConversationUpdatedEvent &&
+          event.conversationId == widget.conversationId) {
+        if (event.status == 'closed') {
+          _markPeerUnavailable();
+        }
+        ref.invalidate(chatConversationsProvider);
         return;
       }
       if (event is ChatMessageEditedEvent &&
@@ -792,9 +813,7 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
     if (plain.isEmpty) return;
     Clipboard.setData(ClipboardData(text: plain));
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(context.t.chat.bubble_copied)),
-    );
+    WayoToast.success(context, context.t.chat.bubble_copied);
   }
 
   void _onForwardMessage(
@@ -809,9 +828,7 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
         .where((c) => c.id != widget.conversationId)
         .toList();
     if (others.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(t.chat.forward_no_other_chats)),
-      );
+      WayoToast.info(context, t.chat.forward_no_other_chats);
       return;
     }
     showModalBottomSheet<void>(
@@ -895,8 +912,7 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
   ) async {
     final t = context.t;
     if (!mounted) return;
-    var messenger = ScaffoldMessenger.of(context);
-    messenger.showSnackBar(SnackBar(content: Text(t.chat.forward_sending)));
+    WayoToast.info(context, t.chat.forward_sending);
     try {
       final plainCaption = plainBodyFromChatContent(m.content);
 
@@ -931,28 +947,21 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
       }
       ref.invalidate(chatConversationsProvider);
       if (!mounted) return;
-      messenger = ScaffoldMessenger.of(context);
-      messenger.hideCurrentSnackBar();
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text(t.chat.forward_ok),
-          action: SnackBarAction(
-            label: t.chat.forward_view,
-            onPressed: () {
-              if (context.mounted) {
-                context.push('/chat/thread/${target.id}');
-              }
-            },
-          ),
+      WayoToast.success(
+        context,
+        t.chat.forward_ok,
+        action: SnackBarAction(
+          label: t.chat.forward_view,
+          onPressed: () {
+            if (context.mounted) {
+              context.push('/chat/thread/${target.id}');
+            }
+          },
         ),
       );
     } catch (e) {
       if (!mounted) return;
-      messenger = ScaffoldMessenger.of(context);
-      messenger.hideCurrentSnackBar();
-      messenger.showSnackBar(
-        SnackBar(content: Text(t.chat.forward_failed)),
-      );
+      WayoToast.error(context, t.chat.forward_failed);
       debugPrint('[ChatThread] forward failed: $e');
     }
   }
@@ -966,9 +975,7 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
     if (_isPeerUnavailable(creds, conv)) {
       _markPeerUnavailable();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.t.chat.peer_unavailable)),
-        );
+        WayoToast.warning(context, context.t.chat.peer_unavailable);
       }
       return;
     }
@@ -1035,9 +1042,7 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
         ref.invalidate(chatConversationsProvider);
       } catch (_) {
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(context.t.chat.edit_failed)));
+          WayoToast.error(context, context.t.chat.edit_failed);
         }
       } finally {
         if (mounted) setState(() => _sending = false);
@@ -1101,9 +1106,7 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
       if (!mounted) return;
       if (_isConversationClosedError(e)) {
         _markPeerUnavailable();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.t.chat.peer_unavailable)),
-        );
+        WayoToast.warning(context, context.t.chat.peer_unavailable);
         setState(() {
           _messages = _messages.where((m) => m.id != tempId).toList();
         });
@@ -1124,9 +1127,7 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
 
   void _onEditMessage(ChatMessage m, int myChatUserId) {
     if (m.userId != myChatUserId || m.type != 'text') {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(context.t.chat.edit_not_allowed)));
+      WayoToast.warning(context, context.t.chat.edit_not_allowed);
       return;
     }
     setState(() {
@@ -1159,9 +1160,7 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
   ) async {
     final t = context.t;
     if (m.userId != creds.chatUserId) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(t.chat.delete_not_allowed)));
+      WayoToast.warning(context, t.chat.delete_not_allowed);
       return;
     }
 
@@ -1198,15 +1197,7 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
     if (!mounted) return;
 
     final previous = _messages;
-    setState(() {
-      _messages = _messages.where((x) => x.id != m.id).toList();
-      if (_selectedMessageId == m.id) _selectedMessageId = null;
-      if (_editingMessageId == m.id) {
-        _editingMessageId = null;
-        _editingOriginalContent = '';
-        _draft.clear();
-      }
-    });
+    _markMessageDeleted(m.id);
     try {
       await repo.deleteMessage(
         creds,
@@ -1218,9 +1209,7 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
     } catch (_) {
       if (!mounted) return;
       setState(() => _messages = previous);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(t.chat.delete_failed)));
+      WayoToast.error(context, t.chat.delete_failed);
     }
   }
 
@@ -1297,17 +1286,16 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
       final local = await readLocalChatAttachment(trimmed);
       if (local == null) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(context.t.chat.upload_failed)),
-          );
+          WayoToast.error(context, context.t.chat.upload_failed);
         }
         return true;
       }
       final ext = extensionFromFilename(local.filename) ?? '';
       if (!kChatAttachmentExtensions.contains(ext)) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(context.t.chat.attachment_type_not_allowed)),
+          WayoToast.warning(
+            context,
+            context.t.chat.attachment_type_not_allowed,
           );
         }
         return true;
@@ -1353,9 +1341,7 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
       });
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.t.chat.upload_failed)),
-        );
+        WayoToast.error(context, context.t.chat.upload_failed);
       }
     } finally {
       if (mounted) setState(() => _uploading = false);
@@ -1508,9 +1494,7 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
       }
     }
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.t.chat.upload_failed)),
-      );
+      WayoToast.error(context, context.t.chat.upload_failed);
     }
   }
 
@@ -1535,9 +1519,7 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
     }
     if (size > maxBytes) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.t.chat.file_too_large)),
-        );
+        WayoToast.warning(context, context.t.chat.file_too_large);
       }
       return;
     }
@@ -1613,9 +1595,7 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
             )
             .toList();
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.t.chat.upload_failed)),
-      );
+      WayoToast.error(context, context.t.chat.upload_failed);
     } finally {
       if (mounted) setState(() => _uploading = false);
     }
@@ -1637,9 +1617,7 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
       );
     } on MissingPluginException catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(t.chat.file_picker_restart_hint)),
-        );
+        WayoToast.info(context, t.chat.file_picker_restart_hint);
       }
       return;
     }
@@ -1651,9 +1629,7 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
     }
     if (!kChatAttachmentExtensions.contains(ext)) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(t.chat.attachment_type_not_allowed)),
-        );
+        WayoToast.warning(context, t.chat.attachment_type_not_allowed);
       }
       return;
     }
@@ -1672,9 +1648,7 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
     }
     if (bytes == null || bytes.isEmpty) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(t.chat.upload_failed)));
+        WayoToast.error(context, t.chat.upload_failed);
       }
       return;
     }

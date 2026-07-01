@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 
 import '../../../core/errors/auth_exceptions.dart';
 import '../../../core/result.dart';
+import '../domain/entities/admin_transaction.dart';
 import '../domain/entities/admin_user.dart';
 import '../domain/entities/ai_usage.dart';
 import '../domain/entities/announcement.dart';
@@ -20,6 +21,14 @@ abstract interface class ISuperadminRepository {
     int limit = 50,
     String? reason,
   });
+
+  Future<Result<AdminTransactionsPage>> getAdminTransactionsPage({
+    int page = 1,
+    int limit = 20,
+    String? reason,
+  });
+
+  Future<Result<TrafficQualitySummary>> getTrafficQualitySummary();
   
   Future<Result<PayoutStats>> getPayoutStats();
 
@@ -132,6 +141,38 @@ final class SuperadminRepository implements ISuperadminRepository {
         reason: reason,
       );
       return Success(stats);
+    } on DioException catch (e) {
+      return Failure(_mapDioError(e));
+    } catch (e) {
+      return Failure(ServerException(e.toString()));
+    }
+  }
+
+  @override
+  Future<Result<AdminTransactionsPage>> getAdminTransactionsPage({
+    int page = 1,
+    int limit = 20,
+    String? reason,
+  }) async {
+    try {
+      final pageResult = await _remote.fetchAdminTransactionsPage(
+        page: page,
+        limit: limit,
+        reason: reason,
+      );
+      return Success(pageResult);
+    } on DioException catch (e) {
+      return Failure(_mapDioError(e));
+    } catch (e) {
+      return Failure(ServerException(e.toString()));
+    }
+  }
+
+  @override
+  Future<Result<TrafficQualitySummary>> getTrafficQualitySummary() async {
+    try {
+      final summary = await _remote.fetchTrafficQualitySummary();
+      return Success(summary);
     } on DioException catch (e) {
       return Failure(_mapDioError(e));
     } catch (e) {

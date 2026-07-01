@@ -66,6 +66,24 @@ abstract final class AppTheme {
         titleTextStyle: AppTextStyles.pageTitleForTheme(onSurface),
         iconTheme: IconThemeData(color: onSurface),
       ),
+      // Baseline for any remaining raw SnackBars; WayoToast renders its own card.
+      snackBarTheme: SnackBarThemeData(
+        behavior: SnackBarBehavior.floating,
+        elevation: 6,
+        backgroundColor: brightness == Brightness.dark
+            ? const Color(0xFF17171F)
+            : const Color(0xFF1F2430),
+        contentTextStyle: GoogleFonts.dmSans(
+          color: Colors.white,
+          fontWeight: FontWeight.w600,
+          fontSize: 14,
+        ),
+        actionTextColor: AppColors.primarySoft,
+        insetPadding: const EdgeInsets.fromLTRB(12, 0, 12, 88),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+      ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: fill,

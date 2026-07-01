@@ -3,14 +3,21 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:url_launcher/url_launcher.dart';
 
+import '../../../../core/campaigns/campaign_detail_metadata.dart';
 import '../../../../core/format/campaign_finance_display.dart';
 import '../../../../core/format/money_formatter.dart';
 import '../../../../core/layout/wayo_black_bottom_bar.dart';
+import '../../../../core/network/wayo_ads_public_url.dart';
 import '../../../../core/providers/app_providers.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/ui/wayo_toast.dart';
+import '../../../../core/widgets/campaign_cover_image.dart';
+import '../../../../core/widgets/campaign_detail/campaign_detail_assets_link.dart';
+import '../../../../core/widgets/campaign_detail/campaign_detail_budget_usage_card.dart';
+import '../../../../core/widgets/campaign_detail/campaign_detail_info_card.dart';
+import '../../../../core/widgets/campaign_detail/campaign_detail_requirements.dart';
 import '../../../../i18n/strings.g.dart';
 import '../../../advertiser_campaigns/domain/campaign_niche_catalog.dart';
 import '../../../creator_dashboard/domain/creator_application.dart';
@@ -19,6 +26,7 @@ import '../../domain/creator_campaign_detail.dart';
 import '../providers/creator_campaigns_providers.dart';
 import '../widgets/creator_apply_sheet.dart';
 import '../widgets/creator_tracking_link_section.dart';
+import '../../../dashboard/domain/entities/campaign_status.dart';
 import '../../../dashboard/presentation/theme/campaign_detail_premium_palette.dart';
 import '../theme/creator_campaigns_chrome.dart';
 
@@ -80,6 +88,7 @@ class CreatorCampaignDetailScreen extends ConsumerWidget {
           await ref.read(creatorCampaignDetailProvider(id).future);
         },
         child: async.when(
+          skipLoadingOnReload: true,
           loading: () => ListView(
             physics: const AlwaysScrollableScrollPhysics(),
             children: [
@@ -158,6 +167,13 @@ class _Body extends ConsumerWidget {
       ),
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 140),
       children: [
+        CampaignCoverImage(
+          coverUrl: normalizeWayoAdsMediaUrl(c.coverUrl),
+          brandLogoUrl: resolveWayoAdsPublicUrl(c.brandLogoUrl),
+          fallbackIcon: _typeIcon(c.type),
+          accent: CreatorCampaignsChrome.amber(context),
+        ),
+        const SizedBox(height: 14),
         _PremiumCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -183,10 +199,16 @@ class _Body extends ConsumerWidget {
                 spacing: 8,
                 runSpacing: 8,
                 children: [
+                  _CampaignStatusPill(status: CampaignStatus.fromString(c.status)),
                   _Pill(
                     label: _typeLabel(t, c.type),
                     color: CreatorCampaignsChrome.amber(context),
                     icon: _typeIcon(c.type),
+                  ),
+                  _Pill(
+                    label: campaignDetailPlatformLabel(t, c.platform),
+                    color: const Color(0xFF8B5CF6),
+                    icon: Icons.public_outlined,
                   ),
                   _ApplicationStatusPill(status: c.myApplicationStatus),
                 ],
@@ -195,7 +217,28 @@ class _Body extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: 14),
-        _PremiumCard(child: _CampaignNicheLocationSummary(campaign: c, t: t)),
+        CampaignDetailInfoCard(
+          platformLabel: campaignDetailPlatformLabel(t, c.platform),
+          nicheLabel: (c.niche != null && c.niche!.trim().isNotEmpty)
+              ? campaignNicheFallbackLabel(c.niche!)
+              : '—',
+          locationLabel:
+              (c.location != null && c.location!.trim().isNotEmpty)
+                  ? c.location!
+                  : '—',
+          objectiveLabel: campaignDetailObjectiveLabel(t, c.campaignObjective),
+          campaignTypeLabel: campaignDetailTypeLabel(t, c.type),
+        ),
+        if (c.totalBudgetCents > 0) ...[
+          const SizedBox(height: 14),
+          CampaignDetailBudgetUsageCard(
+            totalCents: c.totalBudgetCents,
+            spentCents: c.spentBudgetCents,
+            remainingCents: c.remainingBudgetCents,
+            moneyLocale: moneyLocale,
+            approvedCreators: c.approvedCreators,
+          ),
+        ],
         const SizedBox(height: 14),
         _PremiumCard(
           child: _RewardsBlock(campaign: c, moneyLocale: moneyLocale),
@@ -233,27 +276,28 @@ class _Body extends ConsumerWidget {
         if (c.type.requiresVideoSubmission) ...[
           const SizedBox(height: 14),
           _PremiumCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  t.creator.campaigns.requirements_title,
-                  style: CampaignDetailPremiumPalette.sectionTitle(context),
-                ),
-                const SizedBox(height: 10),
-                _RequirementsBlock(campaign: c),
-              ],
+            child: CampaignDetailRequirements(
+              type: c.type,
+              requiredPlatform: c.requiredPlatform,
+              videoMinDurationMinutes: c.videoMinDurationMinutes,
+              shortsMaxDurationSeconds: c.shortsMaxDurationSeconds,
+              shortsRequireVertical: c.shortsRequireVertical,
             ),
           ),
         ],
+        const SizedBox(height: 14),
+        _PremiumCard(
+          child: _CampaignPerformanceBlock(campaign: c, moneyLocale: moneyLocale),
+        ),
         if (c.assetsUrl != null && c.assetsUrl!.isNotEmpty) ...[
           const SizedBox(height: 14),
-          _AssetsLink(url: c.assetsUrl!),
+          CampaignDetailAssetsLink(url: c.assetsUrl!),
         ],
         if (linksAsync != null) ...[
           const SizedBox(height: 14),
           _PremiumCard(
             child: linksAsync.when(
+              skipLoadingOnReload: true,
               loading: () => const CreatorTrackingLinkSection(
                 links: [],
                 loading: true,
@@ -318,88 +362,140 @@ class _PremiumCard extends StatelessWidget {
   }
 }
 
-class _CampaignNicheLocationSummary extends StatelessWidget {
-  const _CampaignNicheLocationSummary({
-    required this.campaign,
-    required this.t,
-  });
+class _CampaignStatusPill extends StatelessWidget {
+  const _CampaignStatusPill({required this.status});
 
-  final CreatorCampaignDetail campaign;
-  final Translations t;
+  final CampaignStatus status;
 
   @override
   Widget build(BuildContext context) {
-    final nicheLabel =
-        (campaign.niche != null && campaign.niche!.trim().isNotEmpty)
-            ? campaignNicheFallbackLabel(campaign.niche!)
-            : '—';
-    final locationLabel =
-        (campaign.location != null && campaign.location!.trim().isNotEmpty)
-            ? campaign.location!
-            : '—';
+    final t = context.t;
+    final label = switch (status) {
+      CampaignStatus.active => t.advertiser_campaigns.status.active,
+      CampaignStatus.paused => t.advertiser_campaigns.status.paused,
+      CampaignStatus.completed => t.advertiser_campaigns.status.completed,
+      CampaignStatus.draft => t.advertiser_campaigns.status.draft,
+      CampaignStatus.unknown => t.advertiser_campaigns.status.other,
+    };
+    final color = switch (status) {
+      CampaignStatus.active => const Color(0xFF22C55E),
+      CampaignStatus.paused => const Color(0xFFF59E0B),
+      CampaignStatus.completed => const Color(0xFF8B5CF6),
+      CampaignStatus.draft => CampaignDetailPremiumPalette.muted(context),
+      CampaignStatus.unknown => CampaignDetailPremiumPalette.muted(context),
+    };
+    final icon = switch (status) {
+      CampaignStatus.active => Icons.circle,
+      CampaignStatus.paused => Icons.pause_circle_outline,
+      CampaignStatus.completed => Icons.check_circle_outline,
+      CampaignStatus.draft => Icons.edit_note_rounded,
+      CampaignStatus.unknown => Icons.help_outline,
+    };
+    return _Pill(label: label, color: color, icon: icon);
+  }
+}
+
+class _CampaignPerformanceBlock extends StatelessWidget {
+  const _CampaignPerformanceBlock({
+    required this.campaign,
+    required this.moneyLocale,
+  });
+
+  final CreatorCampaignDetail campaign;
+  final String moneyLocale;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.t;
+    final c = campaign;
+    String fmt(int cents) => MoneyFormatter.format(
+          cents / 100.0,
+          currency: kWayoPublicCurrency,
+          locale: moneyLocale,
+        );
+
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        Text(
+          t.advertiser_campaigns.detail.metrics_title,
+          style: CampaignDetailPremiumPalette.sectionTitle(context),
+        ),
+        const SizedBox(height: 12),
         Row(
           children: [
-            Icon(
-              Icons.category_outlined,
-              size: 18,
-              color: CreatorCampaignsChrome.amber(context).withValues(alpha: 0.9),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              t.advertiser_campaigns.detail.niche_label,
-              style: GoogleFonts.dmSans(
-                fontSize: 12,
-                color: CreatorCampaignsChrome.label(context),
-                fontWeight: FontWeight.w600,
+            Expanded(
+              child: _PerformanceStat(
+                icon: Icons.visibility_outlined,
+                label: t.advertiser_campaigns.detail.valid_views,
+                value: '${c.validViews}',
               ),
             ),
-            const SizedBox(width: 8),
             Expanded(
-              child: Text(
-                nicheLabel,
-                textAlign: TextAlign.end,
-                style: GoogleFonts.dmSans(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  color: CampaignDetailPremiumPalette.value(context),
-                ),
+              child: _PerformanceStat(
+                icon: Icons.ads_click_outlined,
+                label: t.advertiser_campaigns.detail.valid_clicks,
+                value: '${c.validClicks}',
               ),
             ),
           ],
         ),
-        const SizedBox(height: 10),
-        Row(
-          children: [
-            Icon(
-              Icons.place_outlined,
-              size: 18,
-              color: CreatorCampaignsChrome.amber(context).withValues(alpha: 0.9),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              t.advertiser_campaigns.detail.location_label,
-              style: GoogleFonts.dmSans(
-                fontSize: 12,
-                color: CreatorCampaignsChrome.label(context),
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                locationLabel,
-                textAlign: TextAlign.end,
-                style: GoogleFonts.dmSans(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
+        if (c.lockedBudgetCents > 0) ...[
+          const SizedBox(height: 12),
+          Divider(
+            height: 1,
+            color: CampaignDetailPremiumPalette.rowSeparator(context),
+          ),
+          const SizedBox(height: 10),
+          _PerformanceStat(
+            icon: Icons.lock_clock_outlined,
+            label: t.advertiser_campaigns.card.locked,
+            value: fmt(c.lockedBudgetCents),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _PerformanceStat extends StatelessWidget {
+  const _PerformanceStat({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, size: 20, color: CreatorCampaignsChrome.amber(context)),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                value,
+                style: GoogleFonts.sora(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
                   color: CampaignDetailPremiumPalette.value(context),
                 ),
               ),
-            ),
-          ],
+              Text(
+                label,
+                style: GoogleFonts.dmSans(
+                  fontSize: 11,
+                  color: CreatorCampaignsChrome.label(context),
+                ),
+              ),
+            ],
+          ),
         ),
       ],
     );
@@ -594,14 +690,16 @@ class _RewardsBlock extends StatelessWidget {
           );
       }
     }
-    items.add(
-      _RewardTile(
-        label: t.creator.campaigns.budget_remaining_label,
-        value: fmt(c.remainingBudgetCents),
-        icon: Icons.account_balance_wallet_outlined,
-        accent: const Color(0xFF8B5CF6),
-      ),
-    );
+    if (items.isEmpty) {
+      items.add(
+        _RewardTile(
+          label: t.creator.campaigns.requirement_none,
+          value: '—',
+          icon: Icons.paid_rounded,
+          accent: CreatorCampaignsChrome.amber(context),
+        ),
+      );
+    }
     return Column(
       children: [
         for (var i = 0; i < items.length; i++) ...[
@@ -657,170 +755,6 @@ class _RewardTile extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _RequirementsBlock extends StatelessWidget {
-  const _RequirementsBlock({required this.campaign});
-
-  final CreatorCampaignDetail campaign;
-
-  @override
-  Widget build(BuildContext context) {
-    final t = context.t;
-    final rows = <Widget>[];
-    if (campaign.requiredPlatform != null) {
-      rows.add(
-        _RequirementRow(
-          icon: Icons.videocam_outlined,
-          label: t.creator.campaigns.requirement_platform(
-            platform: campaign.requiredPlatform!,
-          ),
-        ),
-      );
-    }
-    if (campaign.videoMinDurationMinutes != null &&
-        campaign.videoMinDurationMinutes! > 0) {
-      rows.add(
-        _RequirementRow(
-          icon: Icons.timer_outlined,
-          label: t.creator.campaigns.requirement_min_duration(
-            minutes: campaign.videoMinDurationMinutes!,
-          ),
-        ),
-      );
-    }
-    if (campaign.type == CreatorCampaignType.shorts &&
-        campaign.shortsMaxDurationSeconds != null) {
-      rows.add(
-        _RequirementRow(
-          icon: Icons.short_text_rounded,
-          label: t.creator.campaigns.requirement_shorts_max(
-            seconds: campaign.shortsMaxDurationSeconds!,
-          ),
-        ),
-      );
-    }
-    if (campaign.shortsRequireVertical == true) {
-      rows.add(
-        _RequirementRow(
-          icon: Icons.crop_portrait_rounded,
-          label: t.creator.campaigns.requirement_vertical,
-        ),
-      );
-    }
-    if (rows.isEmpty) {
-      rows.add(
-        _RequirementRow(
-          icon: Icons.check_circle_outline,
-          label: t.creator.campaigns.requirement_none,
-        ),
-      );
-    }
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        for (final r in rows) ...[r, const SizedBox(height: 6)],
-      ],
-    );
-  }
-}
-
-class _RequirementRow extends StatelessWidget {
-  const _RequirementRow({required this.icon, required this.label});
-
-  final IconData icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Icon(icon, size: 18, color: CreatorCampaignsChrome.amber(context)),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            label,
-            style: GoogleFonts.dmSans(
-              fontSize: 14,
-              height: 1.35,
-              color: CampaignDetailPremiumPalette.value(context)
-                  .withValues(alpha: 0.88),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _AssetsLink extends StatelessWidget {
-  const _AssetsLink({required this.url});
-
-  final String url;
-
-  Future<void> _open() async {
-    final uri = Uri.tryParse(url);
-    if (uri == null) return;
-    await launchUrl(uri, mode: LaunchMode.externalApplication);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final t = context.t;
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(14),
-        onTap: () {
-          HapticFeedback.selectionClick();
-          _open();
-        },
-        child: Ink(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
-            color: CreatorCampaignsChrome.amber(context).withValues(alpha: 0.08),
-            border: Border.all(
-              color: CreatorCampaignsChrome.amber(context).withValues(alpha: 0.3),
-            ),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          child: Row(
-            children: [
-              Icon(
-                Icons.folder_open_rounded,
-                color: CreatorCampaignsChrome.amber(context),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      t.creator.campaigns.assets_title,
-                      style: AppTextStyles.labelLarge(
-                        context,
-                      ).copyWith(fontSize: 14),
-                    ),
-                    Text(
-                      t.creator.campaigns.assets_subtitle,
-                      style: AppTextStyles.caption(
-                        context,
-                      ).copyWith(color: AppColors.textSecondaryOf(context)),
-                    ),
-                  ],
-                ),
-              ),
-              Icon(
-                Icons.open_in_new_rounded,
-                color: CreatorCampaignsChrome.amber(context),
-                size: 18,
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
@@ -924,12 +858,7 @@ class _ActionBar extends ConsumerWidget {
               campaignTitle: c.title,
             );
             if (ok == true && context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(t.creator.campaigns.apply_success),
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
+              WayoToast.success(context, t.creator.campaigns.apply_success);
             }
           },
           style: ElevatedButton.styleFrom(

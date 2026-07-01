@@ -14,11 +14,13 @@ import '../../creator_wallet/presentation/providers/creator_wallet_providers.dar
 import '../../wallet/presentation/providers/advertiser_wallet_providers.dart';
 import '../../../../core/network/auth_force_logout_hub.dart';
 import '../../../../core/network/auth_remote.dart';
+import '../../../../core/push/account_deletion_refresh_hub.dart';
 import '../../../../core/push/session_revocation_refresh_hub.dart';
 import '../../../../core/push/superadmin_withdrawals_refresh_hub.dart';
 import '../../../../core/storage/secure_storage.dart';
 import '../../app_settings/presentation/providers/active_sessions_providers.dart';
 import '../../superadmin/presentation/providers/superadmin_providers.dart';
+import '../../profile/presentation/providers/user_profile_providers.dart';
 import 'providers/dashboard_state_providers.dart';
 import 'providers/notifications_feed_providers.dart';
 
@@ -77,6 +79,15 @@ class _RealtimeDashboardWireState extends ConsumerState<RealtimeDashboardWire>
       ref.invalidate(activeSessionsProvider);
       unawaited(_runSessionRevocationCheck());
     });
+    setAccountDeletionRefreshHandler((payload) {
+      if (!mounted) return;
+      final notifier = ref.read(accountDeletionScheduledAtProvider.notifier);
+      if (payload != null && payload.isNotEmpty) {
+        notifier.applyRealtimeSignal(payload);
+      } else {
+        unawaited(notifier.syncFromRemote());
+      }
+    });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       final s = ref.read(authNotifierProvider).valueOrNull;
@@ -92,6 +103,7 @@ class _RealtimeDashboardWireState extends ConsumerState<RealtimeDashboardWire>
   void dispose() {
     clearSuperadminWithdrawalsRefreshHandler();
     clearSessionsChangedHandler();
+    clearAccountDeletionRefreshHandler();
     _foregroundPollTimer?.cancel();
     _foregroundPollTimer = null;
     _stopSessionWatchdog();
@@ -195,6 +207,7 @@ class _RealtimeDashboardWireState extends ConsumerState<RealtimeDashboardWire>
     unawaited(
       ref.read(accountDeletionScheduledAtProvider.notifier).syncFromRemote(),
     );
+    unawaited(ref.read(userProfileProvider.notifier).syncRemoteAndAuth());
     ref.invalidate(dashboardStreamProvider);
     ref.invalidate(notificationsListProvider);
     ref.invalidate(notificationsUnreadCountsProvider);

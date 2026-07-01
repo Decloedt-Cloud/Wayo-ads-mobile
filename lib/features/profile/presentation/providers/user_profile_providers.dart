@@ -1,12 +1,50 @@
 import 'dart:async';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/network/wayo_ads_dio.dart';
 import '../../../../core/network/wayo_ads_public_url.dart';
+import '../../../auth/data/models/app_user.dart';
 import '../../../auth/domain/auth_notifier.dart';
 import '../../data/user_profile_remote_datasource.dart';
 import '../../domain/wayo_ads_user_profile.dart';
+
+/// Avatar for settings drawer / headers — Wayo-ads profile wins over Auth session.
+String? resolveProfileAvatarForDisplay({
+  WayoAdsUserProfile? profile,
+  AppUser? authUser,
+}) {
+  if (profile != null && !profile.isPlaceholder) {
+    final normalized = normalizeWayoAdsMediaUrl(profile.image);
+    if (normalized != null) return normalized;
+    if (profile.image == null || profile.image!.trim().isEmpty) {
+      return null;
+    }
+  }
+  return normalizeWayoAdsMediaUrl(authUser?.avatar);
+}
+
+/// Display name for settings drawer — Wayo-ads profile wins over Auth session.
+String resolveProfileDisplayName({
+  required WayoAdsUserProfile? profile,
+  required AppUser? authUser,
+  required String fallback,
+}) {
+  final fromProfile = profile?.name?.trim();
+  if (fromProfile != null && fromProfile.isNotEmpty) {
+    return fromProfile;
+  }
+  final fromAuth = authUser?.name?.trim();
+  if (fromAuth != null && fromAuth.isNotEmpty) {
+    return fromAuth;
+  }
+  final email = authUser?.email.trim();
+  if (email != null && email.isNotEmpty) {
+    return email;
+  }
+  return fallback;
+}
 
 /// Warm the profile cache before navigating to [ProfileSettingsScreen].
 void prefetchUserProfile(WidgetRef ref) {
@@ -110,6 +148,7 @@ class UserProfileNotifier extends AsyncNotifier<WayoAdsUserProfile> {
     bool removeImage = false,
   }) async {
     final trimmed = name.trim();
+    final previousImageUrl = normalizeWayoAdsMediaUrl(state.valueOrNull?.image);
     final updated = await ref.read(userProfileRemoteProvider).updateProfile(
           name: trimmed,
           image: imageBase64,
@@ -117,6 +156,18 @@ class UserProfileNotifier extends AsyncNotifier<WayoAdsUserProfile> {
         );
     state = AsyncData(updated);
     await _mirrorProfileIntoAuth(updated);
+    final nextImageUrl = normalizeWayoAdsMediaUrl(updated.image);
+    if (nextImageUrl != null) {
+      if (previousImageUrl == null || previousImageUrl != nextImageUrl) {
+        if (previousImageUrl != null) {
+          unawaited(CachedNetworkImage.evictFromCache(previousImageUrl));
+        }
+      } else {
+        unawaited(CachedNetworkImage.evictFromCache(nextImageUrl));
+      }
+    } else if (previousImageUrl != null) {
+      unawaited(CachedNetworkImage.evictFromCache(previousImageUrl));
+    }
     await ref
         .read(authNotifierProvider.notifier)
         .refreshProfileFromAuthServer(force: true);

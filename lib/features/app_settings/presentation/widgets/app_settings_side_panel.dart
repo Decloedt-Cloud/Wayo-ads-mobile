@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/push/push_notifications_status_provider.dart';
 import '../../../../i18n/strings.g.dart';
+import '../../../profile/presentation/providers/user_profile_providers.dart';
 import 'app_settings_panel_content.dart';
 
 /// Opens a premium **trailing** settings panel (not the default Material drawer).
@@ -13,6 +14,7 @@ import 'app_settings_panel_content.dart';
 /// `AlignmentDirectional` (correct on RTL).
 Future<void> showAppSettingsSidePanel(BuildContext context) {
   final container = ProviderScope.containerOf(context, listen: false);
+  unawaited(container.read(userProfileProvider.notifier).syncFromRemote());
   final barrierLabel = MaterialLocalizations.of(
     context,
   ).modalBarrierDismissLabel;

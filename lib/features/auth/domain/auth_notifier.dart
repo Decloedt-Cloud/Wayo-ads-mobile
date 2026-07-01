@@ -347,7 +347,10 @@ class AuthNotifier extends _$AuthNotifier {
       final result = await ref.read(authRepositoryProvider).fetchCurrentUser();
       switch (result) {
         case Success(:final data):
-          final merged = _preserveExistingRoleIfNeeded(currentUser, data);
+          final merged = _mergeAuthRefreshPreservingSessionProfile(
+            currentUser,
+            data,
+          );
           await _persistUserOnly(merged);
           _lastProfileRefreshUtc = DateTime.now().toUtc();
         case Failure():
@@ -363,6 +366,33 @@ class AuthNotifier extends _$AuthNotifier {
         _profileRefreshFut = null;
       }
     }
+  }
+
+  /// Auth_Wayo `GET /user` can lag behind a fresh Wayo-ads profile PATCH (avatar/name).
+  AppUser _mergeAuthRefreshPreservingSessionProfile(
+    AppUser current,
+    AppUser fresh,
+  ) {
+    final merged = _preserveExistingRoleIfNeeded(current, fresh);
+    final sessionAvatar = current.avatar?.trim();
+    final authAvatar = merged.avatar?.trim();
+    final sessionName = current.name?.trim();
+    final authName = merged.name?.trim();
+
+    return AppUser(
+      id: merged.id,
+      email: merged.email,
+      name: sessionName != null &&
+              sessionName.isNotEmpty &&
+              sessionName != authName
+          ? current.name
+          : merged.name,
+      avatar: sessionAvatar != authAvatar ? current.avatar : merged.avatar,
+      wayoAdsRole: merged.wayoAdsRole,
+      appRoles: merged.appRoles,
+      emailVerified: merged.emailVerified,
+      pendingOnboarding: merged.pendingOnboarding,
+    );
   }
 
   /// If [freshUser] has no role but [currentUser] does, keep the existing role.

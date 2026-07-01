@@ -13,6 +13,7 @@ import '../../../../core/ui/wayo_toast.dart';
 import '../../../auth/presentation/providers/current_account_providers.dart';
 import '../../../../core/network/wayo_ads_public_url.dart';
 import '../../../../i18n/strings.g.dart';
+import '../../../profile/presentation/providers/user_profile_providers.dart';
 import 'app_settings_notifications_tile.dart';
 import 'profile_settings_entry_tile.dart';
 import '../../../account_deletion/presentation/widgets/account_deletion_settings_section.dart';
@@ -29,17 +30,25 @@ class AppSettingsPanelContent extends ConsumerWidget {
     final themeMode = ref.watch(themeModeProvider);
     final locale = ref.watch(localeProvider);
     final user = ref.watch(currentAppUserProvider);
+    final profile = ref.watch(userProfileProvider).valueOrNull;
+    final avatarUrl = resolveProfileAvatarForDisplay(
+      profile: profile,
+      authUser: user,
+    );
+    final displayName = resolveProfileDisplayName(
+      profile: profile,
+      authUser: user,
+      fallback: t.app_settings.profile_fallback,
+    );
 
     final core = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _PanelHeader(
           onClose: onClose,
-          displayName: user?.name?.trim().isNotEmpty == true
-              ? user!.name!.trim()
-              : (user?.email ?? t.app_settings.profile_fallback),
+          displayName: displayName,
           email: user?.email,
-          avatarUrl: user?.avatar,
+          avatarUrl: avatarUrl,
         ),
         Expanded(
           child: SingleChildScrollView(
@@ -417,7 +426,9 @@ class _Avatar extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: networkUrl != null
           ? CachedNetworkImage(
+              key: ValueKey<String>(networkUrl),
               imageUrl: networkUrl,
+              cacheKey: networkUrl,
               fit: BoxFit.cover,
               placeholder: (BuildContext context, String _) => Center(
                 child: Text(

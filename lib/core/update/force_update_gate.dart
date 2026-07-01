@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
+import '../ui/wayo_toast.dart';
 import '../../i18n/strings.g.dart';
 import 'force_update_config.dart';
 import 'force_update_service.dart';
@@ -60,9 +61,7 @@ class _ForceUpdateGateState extends State<ForceUpdateGate>
     final uri = Uri.parse(url);
     if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(t.force_update.action_update)),
-      );
+      WayoToast.error(context, t.force_update.action_update);
     }
   }
 

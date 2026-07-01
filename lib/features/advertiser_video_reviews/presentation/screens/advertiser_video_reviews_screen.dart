@@ -13,6 +13,7 @@ import '../../../../core/errors/auth_exceptions.dart';
 import '../../../../core/layout/wayo_black_bottom_bar.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/ui/wayo_toast.dart';
 import '../../../../i18n/strings.g.dart';
 import '../../data/advertiser_video_reviews_repository.dart';
 import '../../domain/advertiser_submitted_video.dart';
@@ -101,17 +102,13 @@ class _AdvertiserVideoReviewsScreenState
           .approveVideo(video.id);
       if (!mounted) return;
       invalidateAdvertiserVideoReviews(ref);
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text(t.approve_success)));
+      WayoToast.success(context, t.approve_success);
     } catch (e) {
       if (!mounted) return;
       final msg = e is ServerException && e.message.isNotEmpty
           ? e.message
           : t.action_failed;
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text(msg)));
+      WayoToast.error(context, msg);
     } finally {
       if (mounted) setState(() => _processingVideoId = null);
     }
@@ -131,17 +128,13 @@ class _AdvertiserVideoReviewsScreenState
           .rejectVideo(video.id, reason: reason.trim());
       if (!mounted) return;
       invalidateAdvertiserVideoReviews(ref);
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text(t.reject_success)));
+      WayoToast.success(context, t.reject_success);
     } catch (e) {
       if (!mounted) return;
       final msg = e is ServerException && e.message.isNotEmpty
           ? e.message
           : t.action_failed;
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text(msg)));
+      WayoToast.error(context, msg);
     } finally {
       if (mounted) setState(() => _processingVideoId = null);
     }
@@ -748,9 +741,7 @@ class _RejectReasonDialogState extends State<_RejectReasonDialog> {
           onPressed: () {
             final reason = _ctrl.text.trim();
             if (reason.isEmpty) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(t.reject_reason_required)),
-              );
+              WayoToast.warning(context, t.reject_reason_required);
               return;
             }
             Navigator.of(context).pop(reason);

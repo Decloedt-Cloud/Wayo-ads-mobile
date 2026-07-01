@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+import '../../../core/campaigns/campaign_recency.dart';
 import '../../../core/network/wayo_ads_public_url.dart';
 import '../../advertiser_campaigns/domain/campaign_niche_catalog.dart';
 
@@ -67,6 +68,7 @@ final class CreatorBrowseCampaign extends Equatable {
     this.requiredPlatform,
     this.niche,
     this.location,
+    this.createdAt,
   });
 
   final String id;
@@ -103,6 +105,9 @@ final class CreatorBrowseCampaign extends Equatable {
 
   /// Optional geo / location label when the API provides one (`targetLocation`, `location`, …).
   final String? location;
+
+  /// Campaign creation timestamp (`createdAt`) — drives the "New" badge.
+  final DateTime? createdAt;
 
   factory CreatorBrowseCampaign.fromJson(Map<String, dynamic> m) {
     final advertiser = m['advertiser'];
@@ -192,6 +197,9 @@ final class CreatorBrowseCampaign extends Equatable {
         m,
         debugSource: 'creatorBrowseList',
       ),
+      createdAt: parseCampaignTimestamp(
+        m['createdAt'] ?? m['created_at'] ?? m['createdat'],
+      ),
     );
   }
 
@@ -216,5 +224,6 @@ final class CreatorBrowseCampaign extends Equatable {
     requiredPlatform,
     niche,
     location,
+    createdAt,
   ];
 }

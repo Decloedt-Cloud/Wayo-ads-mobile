@@ -278,10 +278,10 @@ class _CreatorWithdrawSheetState extends ConsumerState<_CreatorWithdrawSheet> {
             ),
             if (estimateCreatorWithdrawalFees(
                   grossCents: _amountCents(),
-                  limits: limits,
                   profile: widget.businessProfile,
                 )
-                case final estimate?) ...[
+                case final estimate?
+                when estimate.hasTax) ...[
               const SizedBox(height: 14),
               CreatorWithdrawFeeBreakdown(
                 estimate: estimate,

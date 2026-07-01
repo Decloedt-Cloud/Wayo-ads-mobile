@@ -9,6 +9,7 @@ import '../../../../core/errors/auth_exceptions.dart';
 import '../../../../core/providers/app_providers.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/ui/wayo_toast.dart';
 import '../../../../i18n/strings.g.dart';
 import '../controllers/forgot_password_controller.dart';
 import '../widgets/animated_mesh_background.dart';
@@ -78,9 +79,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
       if (next is FpOtpSent && prev is FpLoading) {
         context.push('/forgot-password/otp', extra: next.email);
       } else if (next is FpError && next.error is! RateLimitedException) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(localizeAuthError(next.error, t))),
-        );
+        WayoToast.error(context, localizeAuthError(next.error, t));
       }
     });
 

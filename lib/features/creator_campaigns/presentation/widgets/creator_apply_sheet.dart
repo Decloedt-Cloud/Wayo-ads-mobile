@@ -7,6 +7,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/creator_colors.dart';
 import '../../../../i18n/strings.g.dart';
+import '../../../auth/domain/auth_notifier.dart';
 import '../../../creator_dashboard/presentation/providers/creator_dashboard_providers.dart';
 import '../../data/creator_campaigns_remote_datasource.dart';
 import '../providers/creator_campaigns_providers.dart';
@@ -58,6 +59,27 @@ class _ApplySheetState extends ConsumerState<_ApplySheet> {
     super.dispose();
   }
 
+  Future<void> _submitApplication() async {
+    final repo = ref.read(creatorCampaignsRepositoryProvider);
+    final msg = _messageCtrl.text.trim();
+    await repo.applyToCampaign(
+      widget.campaignId,
+      message: msg.isEmpty ? null : msg,
+    );
+    ref.invalidate(creatorApplicationsProvider);
+    ref.invalidate(creatorBrowseCampaignsPagedProvider);
+    ref.invalidate(creatorCampaignDetailProvider(widget.campaignId));
+    HapticFeedback.mediumImpact();
+    if (!mounted) return;
+    Navigator.of(context).pop(true);
+  }
+
+  bool _needsCreatorRoleTokenRefresh(CreatorCampaignsApiException e) {
+    if (e.statusCode == 403) return true;
+    final msg = e.message.toLowerCase();
+    return msg.contains('creator role') || msg.contains('requires creator');
+  }
+
   Future<void> _submit() async {
     if (_submitting) return;
     setState(() {
@@ -65,24 +87,33 @@ class _ApplySheetState extends ConsumerState<_ApplySheet> {
       _error = null;
     });
     try {
-      final repo = ref.read(creatorCampaignsRepositoryProvider);
-      final msg = _messageCtrl.text.trim();
-      await repo.applyToCampaign(
-        widget.campaignId,
-        message: msg.isEmpty ? null : msg,
-      );
-      ref.invalidate(creatorApplicationsProvider);
-      ref.invalidate(creatorBrowseCampaignsPagedProvider);
-      ref.invalidate(creatorCampaignDetailProvider(widget.campaignId));
-      HapticFeedback.mediumImpact();
-      if (!mounted) return;
-      Navigator.of(context).pop(true);
+      await _submitApplication();
     } on CreatorCampaignsApiException catch (e) {
+      if (_needsCreatorRoleTokenRefresh(e)) {
+        final refreshed = await ref
+            .read(authNotifierProvider.notifier)
+            .refreshAuthSessionAfterRoleChange();
+        if (refreshed) {
+          try {
+            await _submitApplication();
+            return;
+          } on CreatorCampaignsApiException catch (retryError) {
+            if (!mounted) return;
+            setState(() {
+              _error = retryError.message;
+              _submitting = false;
+            });
+            return;
+          }
+        }
+      }
+      if (!mounted) return;
       setState(() {
         _error = e.message;
         _submitting = false;
       });
     } catch (_) {
+      if (!mounted) return;
       setState(() {
         _error = context.t.creator.campaigns.apply_error;
         _submitting = false;

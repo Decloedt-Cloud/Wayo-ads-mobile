@@ -14,6 +14,7 @@ import '../../../../core/format/money_formatter.dart';
 import '../../../../core/providers/app_providers.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/ui/wayo_toast.dart';
 import '../../../../i18n/strings.g.dart';
 import '../../../auth/presentation/providers/current_account_providers.dart';
 import '../../../creator_wallet/domain/creator_business_profile.dart';
@@ -131,9 +132,7 @@ class _AdvertiserWalletTabContentState
     if (!mounted) {
       return;
     }
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(msg)));
+    WayoToast.info(context, msg);
   }
 
   String _txLabel(String type, Translations t) {

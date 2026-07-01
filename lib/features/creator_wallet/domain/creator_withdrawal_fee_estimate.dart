@@ -1,8 +1,7 @@
 import 'creator_business_profile.dart';
 import 'creator_tax_rates.dart';
-import 'creator_wallet_models.dart';
 
-/// Fee breakdown shown in the withdraw sheet (matches web wallet dialog).
+/// Tax breakdown shown in the withdraw sheet when VAT applies.
 final class CreatorWithdrawalFeeEstimate {
   const CreatorWithdrawalFeeEstimate({
     required this.grossCents,
@@ -26,13 +25,14 @@ final class CreatorWithdrawalFeeEstimate {
 
 CreatorWithdrawalFeeEstimate? estimateCreatorWithdrawalFees({
   required int? grossCents,
-  required CreatorPlatformLimits limits,
   CreatorBusinessProfile? profile,
 }) {
   if (grossCents == null || grossCents <= 0) return null;
 
-  final feeRate = limits.platformFeeRate;
-  final platformFeeCents = (grossCents * feeRate).round();
+  // Platform fee is deducted when views/clicks are validated (earnings), not
+  // again at withdrawal — available balance is already net of that fee.
+  const platformFeeCents = 0;
+  const platformFeeRate = 0.0;
 
   final isIndividual =
       profile?.businessType == CreatorBusinessType.personal ||
@@ -48,7 +48,7 @@ CreatorWithdrawalFeeEstimate? estimateCreatorWithdrawalFees({
       ? ((taxCents / grossCents) * 10000).round() / 100
       : 0.0;
 
-  final netCents = grossCents - platformFeeCents - taxCents;
+  final netCents = grossCents - taxCents;
   if (netCents < 0) return null;
 
   return CreatorWithdrawalFeeEstimate(
@@ -56,7 +56,7 @@ CreatorWithdrawalFeeEstimate? estimateCreatorWithdrawalFees({
     platformFeeCents: platformFeeCents,
     taxCents: taxCents,
     netCents: netCents,
-    platformFeeRate: feeRate,
+    platformFeeRate: platformFeeRate,
     taxRatePercent: taxRatePercent,
   );
 }

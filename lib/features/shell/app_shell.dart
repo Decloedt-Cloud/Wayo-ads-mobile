@@ -17,6 +17,7 @@ import '../account_deletion/presentation/widgets/pending_account_deletion_banner
 import '../dashboard/presentation/providers/dashboard_state_providers.dart';
 import '../onboarding/presentation/shell_tutorial_controller.dart';
 import 'presentation/widgets/shell_tutorial_replay_scope.dart';
+import '../../core/ui/wayo_system_nav_bar.dart';
 import 'widgets/wayo_bottom_nav.dart';
 
 /// Main shell with bottom navigation (Dashboard, Campaigns, Wallet, Invoices, Chat).
@@ -272,16 +273,8 @@ class _AppShellState extends ConsumerState<AppShell>
         ? context.t.nav.invoices_creator
         : context.t.nav.invoices;
 
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final systemNav = SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
-      systemNavigationBarColor: Colors.transparent,
-      systemNavigationBarDividerColor: Colors.transparent,
-      systemNavigationBarContrastEnforced: false,
-      systemNavigationBarIconBrightness:
-          isDark ? Brightness.light : Brightness.dark,
-    );
+    final navBarBg = wayoSystemNavBarColor(context);
+    final systemNav = wayoSystemNavBarOverlay(context);
 
     final keyboardOpen = wayoShellKeyboardOpen(context);
     final shellCoachAccent = authState is AuthAuthenticated &&
@@ -319,7 +312,7 @@ class _AppShellState extends ConsumerState<AppShell>
         bottomNavigationBar: keyboardOpen
             ? null
             : Material(
-                color: Theme.of(context).scaffoldBackgroundColor,
+                color: navBarBg,
                 elevation: 0,
                 shadowColor: Colors.transparent,
                 surfaceTintColor: Colors.transparent,

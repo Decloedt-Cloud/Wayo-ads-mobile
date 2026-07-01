@@ -1,6 +1,82 @@
+import 'dart:convert';
+
 import '../../../../core/push/mobile_push_route_utils.dart';
+import '../../../../core/push/wayo_push_intent.dart';
 import '../../../auth/domain/wayo_ads_account_role.dart';
 import '../../domain/entities/notification_item.dart';
+
+/// Builds a [NotificationItem] from flattened FCM / local notification payload data.
+NotificationItem notificationItemFromPushData(Map<String, dynamic> data) {
+  final flat = flattenPushPayloadMap(data);
+  final type = _pushTrimmed(flat['type']) ??
+      _pushTrimmed(flat['notificationType']) ??
+      _pushTrimmed(flat['notification_type']);
+  final actionUrl =
+      _pushTrimmed(flat['actionUrl']) ?? _pushTrimmed(flat['action_url']);
+  final title = _pushTrimmed(flat['title']) ?? 'Notification';
+  final body = _pushTrimmed(flat['body']) ?? ' ';
+  final id = _pushTrimmed(flat['notificationId']) ??
+      _pushTrimmed(flat['notification_id']) ??
+      'push';
+
+  final metadata = <String, dynamic>{};
+  final nestedMeta = flat['metadata'];
+  if (nestedMeta is Map) {
+    metadata.addAll(Map<String, dynamic>.from(nestedMeta));
+  } else if (nestedMeta is String && nestedMeta.trim().isNotEmpty) {
+    try {
+      final decoded = jsonDecode(nestedMeta);
+      if (decoded is Map) {
+        metadata.addAll(Map<String, dynamic>.from(decoded));
+      }
+    } catch (_) {}
+  }
+  for (final key in const [
+    'campaignId',
+    'campaign_id',
+    'applicationId',
+    'application_id',
+  ]) {
+    final v = flat[key];
+    if (v != null) metadata.putIfAbsent(key, () => v);
+  }
+
+  return NotificationItem(
+    id: id,
+    title: title,
+    body: body,
+    isRead: false,
+    type: type,
+    actionUrl: actionUrl,
+    metadata: metadata.isEmpty ? null : metadata,
+  );
+}
+
+String? _pushTrimmed(dynamic v) {
+  if (v == null) return null;
+  final s = v.toString().trim();
+  return s.isEmpty ? null : s;
+}
+
+/// Role-aware FCM / tray route — same rules as the in-app notification center.
+String? resolvePushRouteForRole({
+  Map<String, dynamic>? data,
+  String? payload,
+  required WayoAdsAccountRole role,
+}) {
+  Map<String, dynamic>? payloadData = data;
+  payloadData ??= wayoRoutePushPayloadDataFromLocalPayload(payload);
+
+  if (payloadData != null && role != WayoAdsAccountRole.unknown) {
+    final route = resolveNotificationMobileRoute(
+      notificationItemFromPushData(payloadData),
+      role,
+    );
+    if (route != null) return route;
+  }
+
+  return resolveWayoPushRoute(data: data, payload: payload);
+}
 
 /// Best mobile route for a notification (URL, metadata, type, role).
 String? resolveNotificationMobileRoute(
@@ -45,7 +121,8 @@ String remapCampaignRouteForRole(
     if (advMatch != null) {
       final id = advMatch.group(1)!;
       if (base.contains('application') ||
-          (item.metadataApplicationId?.isNotEmpty ?? false)) {
+          (item.metadataApplicationId?.isNotEmpty ?? false) ||
+          isCreatorOwnApplicationNotification(item)) {
         return '/creator/campaigns/$id/application';
       }
       return '/creator/campaigns/$id';
@@ -78,8 +155,12 @@ String? _routeFromMetadata(
       campId.isNotEmpty &&
       (item.isCreatorAppliedNotification ||
           type.contains('CREATOR_APPLIED') ||
+          type.contains('VIDEO_SUBMITTED') ||
           type.contains('APPLICATION'))) {
     if (role == WayoAdsAccountRole.creator) {
+      if (isCreatorOwnApplicationNotification(item)) {
+        return '/creator/campaigns/$campId/application';
+      }
       if (appId != null && appId.isNotEmpty) {
         return '/creator/campaigns/$campId/application';
       }
@@ -128,6 +209,21 @@ String? _routeFromMetadata(
   }
 
   return null;
+}
+
+/// Creator-facing application / submission status alerts.
+bool isCreatorOwnApplicationNotification(NotificationItem item) {
+  final type = (item.type ?? '').toUpperCase();
+  if (type.contains('CREATOR_APPLICATION')) return true;
+  if (type.contains('APPLICATION_APPROVED') && !type.contains('CREATOR_APPLIED')) {
+    return true;
+  }
+  if (type.contains('APPLICATION_REJECTED')) return true;
+  if (type.contains('APPLICATION_PENDING')) return true;
+  if (type.contains('VIDEO_APPROVED')) return true;
+  if (type.contains('VIDEO_REJECTED')) return true;
+  if (type.contains('VIDEO_FLAGGED')) return true;
+  return false;
 }
 
 /// Creator marketplace alerts (e.g. `CAMPAIGN_ACTIVATED` role broadcast).

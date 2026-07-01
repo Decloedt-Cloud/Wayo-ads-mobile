@@ -8,6 +8,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../../core/ui/wayo_toast.dart';
 import '../../../../i18n/strings.g.dart';
 import '../../data/chat_attachment_share.dart';
 import '../../data/chat_media_utils.dart';
@@ -102,9 +103,7 @@ class _CinematicMessageBubbleState extends State<CinematicMessageBubble> {
       isPdf: isPdf,
     );
     if (!ok && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.t.chat.share_failed)),
-      );
+      WayoToast.error(context, context.t.chat.share_failed);
     }
   }
 
@@ -255,8 +254,9 @@ class _CinematicMessageBubbleState extends State<CinematicMessageBubble> {
             ],
     );
 
-    final canEdit = isMine && m.type == 'text' && !m.pending && !m.failed;
-    final canDelete = isMine && !m.pending;
+    final canEdit =
+        isMine && m.type == 'text' && !m.pending && !m.failed && !m.isDeleted;
+    final canDelete = isMine && !m.pending && !m.isDeleted;
     final showCopy =
         chatMessageHasCopyableText(m) && widget.onCopyRequest != null;
     final showForward =
@@ -264,7 +264,18 @@ class _CinematicMessageBubbleState extends State<CinematicMessageBubble> {
 
     final bubbleContent = Padding(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      child: Column(
+      child: m.isDeleted
+          ? Text(
+              context.t.chat.message_deleted,
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontStyle: FontStyle.italic,
+                color: isMine
+                    ? Colors.white.withValues(alpha: 0.72)
+                    : ct.muted,
+              ),
+            )
+          : Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (threaded != null) ...[
@@ -671,7 +682,7 @@ class _CinematicMessageBubbleState extends State<CinematicMessageBubble> {
     final bubbleStack = GestureDetector(
       behavior: HitTestBehavior.translucent,
       onTap: () {
-        if (m.pending || m.failed) return;
+        if (m.pending || m.failed || m.isDeleted) return;
         HapticFeedback.selectionClick();
         if (widget.selected) {
           widget.onDismissSelection?.call();
@@ -680,7 +691,7 @@ class _CinematicMessageBubbleState extends State<CinematicMessageBubble> {
         }
       },
       onLongPress:
-          (!m.pending && !m.failed)
+          (!m.pending && !m.failed && !m.isDeleted)
               ? () {
                   HapticFeedback.mediumImpact();
                   if (isMine &&

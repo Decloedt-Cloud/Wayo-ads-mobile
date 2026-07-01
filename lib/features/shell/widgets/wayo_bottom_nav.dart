@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/layout/wayo_black_bottom_bar.dart';
+import '../../../core/layout/wayo_system_insets.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/ui/wayo_system_nav_bar.dart';
 import '../../../i18n/strings.g.dart';
 import '../../onboarding/presentation/shell_tutorial_highlight.dart';
 
@@ -26,6 +29,54 @@ double wayoFloatingBottomNavReserve(BuildContext context, {double extraGap = 12}
       extraGap;
 }
 
+/// Whether an ancestor [Scaffold] hosts the main shell tab bar (not system inset only).
+bool wayoContextHasShellTabBar(BuildContext context) {
+  var found = false;
+  context.visitAncestorElements((element) {
+    if (element.widget is! Scaffold) return true;
+    final bar = (element.widget as Scaffold).bottomNavigationBar;
+    if (bar == null) return true;
+    if (bar is WayoSystemNavBarFill || bar is WayoBlackBottomBar) {
+      return true;
+    }
+    found = true;
+    return false;
+  });
+  return found;
+}
+
+/// Height from the physical screen bottom to the top of bottom chrome (tab bar,
+/// system inset filler, etc.) — used to pin toasts flush above it.
+double wayoBottomChromeHeightForToast(BuildContext context) {
+  var chromeHeight = wayoSystemBottomInset(context);
+  context.visitAncestorElements((element) {
+    if (element.widget is! Scaffold) return true;
+    final bar = (element.widget as Scaffold).bottomNavigationBar;
+    if (bar == null) return true;
+
+    if (bar is WayoBlackBottomBar) {
+      chromeHeight = WayoBlackBottomBar.totalHeight(context);
+      return false;
+    }
+    if (bar is WayoSystemNavBarFill) {
+      chromeHeight = wayoSystemBottomInset(context);
+      return false;
+    }
+    // App shell tab bar: SafeArea inset + tab content.
+    chromeHeight = wayoSystemBottomInset(context) + kWayoBottomNavBarHeight;
+    return false;
+  });
+  return chromeHeight;
+}
+
+/// SnackBar margin from the screen bottom — above shell tab bar or keyboard.
+double wayoToastBottomMargin(BuildContext context, {double gap = 0}) {
+  final keyboard = MediaQuery.viewInsetsOf(context).bottom;
+  if (keyboard > 0) return keyboard + gap;
+
+  return wayoBottomChromeHeightForToast(context) + gap;
+}
+
 /// Shell body padding — drops nav reserve while the keyboard is open so a
 /// dark gap does not appear between content and the keyboard.
 double wayoShellBodyBottomPadding(BuildContext context, {double extraGap = 12}) {
@@ -36,6 +87,9 @@ double wayoShellBodyBottomPadding(BuildContext context, {double extraGap = 12}) 
 bool wayoShellKeyboardOpen(BuildContext context) {
   return MediaQuery.viewInsetsOf(context).bottom > 0;
 }
+
+/// Background for the shell bottom nav bar (opaque — includes system inset).
+Color wayoBottomNavBackground(BuildContext context) => wayoSystemNavBarColor(context);
 
 /// Professional bottom nav 2026 — clean, minimal, with badges and onboarding support.
 class WayoBottomNav extends StatefulWidget {
@@ -99,25 +153,28 @@ class _WayoBottomNavState extends State<WayoBottomNav> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final idx = widget.navigationShell.currentIndex;
     final coachAccent = widget.coachAccentColor;
+    final navBg = wayoBottomNavBackground(context);
 
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF0D0D0D) : Colors.white,
-        border: Border(
-          top: BorderSide(
-            color: isDark 
-                ? Colors.white.withOpacity(0.06) 
-                : Colors.black.withOpacity(0.06),
-            width: 1,
-          ),
-        ),
-      ),
+    return ColoredBox(
+      color: navBg,
       child: SafeArea(
         top: false,
-        child: Container(
-          height: kWayoBottomNavBarHeight,
-          padding: const EdgeInsets.symmetric(horizontal: 4),
-          child: ValueListenableBuilder<ShellTutorialTarget?>(
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            border: Border(
+              top: BorderSide(
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.08)
+                    : Colors.black.withValues(alpha: 0.08),
+                width: 1,
+              ),
+            ),
+          ),
+          child: SizedBox(
+            height: kWayoBottomNavBarHeight,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: ValueListenableBuilder<ShellTutorialTarget?>(
           valueListenable: shellTutorialHighlightTab,
           builder: (context, coachTarget, _) {
             return Stack(
@@ -210,6 +267,8 @@ class _WayoBottomNavState extends State<WayoBottomNav> {
             );
           },
         ),
+            ),
+          ),
         ),
       ),
     );
@@ -431,9 +490,7 @@ class WayoProNavTabItem extends StatelessWidget {
                                 color: AppColors.error,
                                 shape: BoxShape.circle,
                                 border: Border.all(
-                                  color: isDark
-                                      ? const Color(0xFF0D0D0D)
-                                      : Colors.white,
+                                  color: wayoBottomNavBackground(context),
                                   width: 1.5,
                                 ),
                                 boxShadow: [

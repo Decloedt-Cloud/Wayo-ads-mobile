@@ -917,6 +917,12 @@ final class ChatRepository {
         updatedAt: m['updated_at'] as String? ?? m['updatedAt'] as String?,
         editedAt: m['edited_at'] as String? ?? m['editedAt'] as String?,
         isEdited: m['is_edited'] == true || m['isEdited'] == true,
+        isDeleted:
+            m['is_deleted'] == true ||
+            m['isDeleted'] == true ||
+            m['deleted_at'] != null ||
+            m['deletedAt'] != null,
+        deletedAt: m['deleted_at'] as String? ?? m['deletedAt'] as String?,
         fileUrl: m['file_url'] as String? ?? m['fileUrl'] as String?,
         fileName: m['file_name'] as String? ?? m['fileName'] as String?,
         fileSize:

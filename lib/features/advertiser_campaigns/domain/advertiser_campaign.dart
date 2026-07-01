@@ -26,6 +26,7 @@ final class AdvertiserCampaign extends Equatable {
     this.currency = 'USD',
     this.niche,
     this.location,
+    this.createdAt,
   });
 
   final String id;
@@ -64,6 +65,9 @@ final class AdvertiserCampaign extends Equatable {
   final String? niche;
   final String? location;
 
+  /// Campaign creation timestamp (`createdAt`) — drives the "New" badge.
+  final DateTime? createdAt;
+
   /// Only live campaigns (not draft). Drafts are under [matchesDraftTab].
   bool get matchesActiveTab => status == CampaignStatus.active;
 
@@ -96,5 +100,6 @@ final class AdvertiserCampaign extends Equatable {
     currency,
     niche,
     location,
+    createdAt,
   ];
 }

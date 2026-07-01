@@ -8,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/creator_colors.dart';
+import '../../../../core/ui/wayo_toast.dart';
 import '../../../../i18n/strings.g.dart';
 import '../../data/creator_wallet_remote_datasource.dart';
 import '../../domain/creator_wallet_models.dart';
@@ -93,24 +94,19 @@ class _CreatorStripeConnectCardState
           error.message.isNotEmpty ? error.message : t.creator.wallet.stripe_error;
       final showFixAction = error.mayBeFixedViaBusinessProfileEdit &&
           widget.onBusinessInfoCorrection != null;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: AppColors.error,
-          content: Text(
-            msg,
-            style: const TextStyle(color: Colors.white),
-          ),
-          action: showFixAction
-              ? SnackBarAction(
-                  label: t.creator.wallet.stripe_edit_business_action,
-                  textColor: Colors.white,
-                  onPressed: () {
-                    // ignore: discarded_futures
-                    widget.onBusinessInfoCorrection!();
-                  },
-                )
-              : null,
-        ),
+      WayoToast.error(
+        context,
+        msg,
+        action: showFixAction
+            ? SnackBarAction(
+                label: t.creator.wallet.stripe_edit_business_action,
+                textColor: Colors.white,
+                onPressed: () {
+                  // ignore: discarded_futures
+                  widget.onBusinessInfoCorrection!();
+                },
+              )
+            : null,
       );
       return;
     }
@@ -119,14 +115,9 @@ class _CreatorStripeConnectCardState
 
   void _showError(String msg) {
     final t = context.t;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        backgroundColor: AppColors.error,
-        content: Text(
-          msg.isEmpty ? t.creator.wallet.stripe_error : msg,
-          style: const TextStyle(color: Colors.white),
-        ),
-      ),
+    WayoToast.error(
+      context,
+      msg.isEmpty ? t.creator.wallet.stripe_error : msg,
     );
   }
 

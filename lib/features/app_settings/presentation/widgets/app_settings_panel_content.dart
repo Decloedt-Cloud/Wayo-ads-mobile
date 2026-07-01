@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:ui';
 
 import 'package:cached_network_image/cached_network_image.dart';
@@ -10,11 +9,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/providers/app_providers.dart';
 import '../../../../core/review/app_review_service.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/ui/wayo_toast.dart';
 import '../../../auth/presentation/providers/current_account_providers.dart';
+import '../../../../core/network/wayo_ads_public_url.dart';
 import '../../../../i18n/strings.g.dart';
 import 'app_settings_notifications_tile.dart';
-import 'app_settings_active_sessions_section.dart';
+import 'profile_settings_entry_tile.dart';
 import '../../../account_deletion/presentation/widgets/account_deletion_settings_section.dart';
+import '../../../security/presentation/widgets/security_settings_entry_tile.dart';
 
 class AppSettingsPanelContent extends ConsumerWidget {
   const AppSettingsPanelContent({super.key, required this.onClose});
@@ -46,6 +48,11 @@ class AppSettingsPanelContent extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                ProfileSettingsEntryTile(onClose: onClose)
+                    .animate()
+                    .fadeIn(duration: 200.ms)
+                    .slideY(begin: 0.03),
+                const SizedBox(height: 22),
                 _SectionTitle(
                       icon: Icons.palette_outlined,
                       text: t.app_settings.section_appearance,
@@ -121,25 +128,9 @@ class AppSettingsPanelContent extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: 22),
-                _SectionTitle(
-                      icon: Icons.shield_outlined,
-                      text: t.app_settings.section_security,
-                    )
+                SecuritySettingsEntryTile(onClose: onClose)
                     .animate()
-                    .fadeIn(delay: 108.ms, duration: 220.ms)
-                    .slideX(begin: 0.04, curve: Curves.easeOutCubic),
-                const SizedBox(height: 6),
-                Text(
-                  t.app_settings.sessions_desc,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    height: 1.35,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                const AppSettingsActiveSessionsSection()
-                    .animate()
-                    .fadeIn(delay: 112.ms, duration: 260.ms)
+                    .fadeIn(delay: 108.ms, duration: 260.ms)
                     .slideY(begin: 0.03),
                 const SizedBox(height: 22),
                 _SectionTitle(
@@ -153,9 +144,17 @@ class AppSettingsPanelContent extends ConsumerWidget {
                 _RateAppTile(
                       title: t.app_settings.rate_app,
                       subtitle: t.app_settings.rate_app_sub,
-                      onTap: () {
+                      onTap: () async {
                         HapticFeedback.selectionClick();
-                        unawaited(AppReviewService.instance.openStoreListing());
+                        final ok =
+                            await AppReviewService.instance.openStoreListing();
+                        if (!context.mounted) return;
+                        if (!ok) {
+                          WayoToast.error(
+                            context,
+                            t.app_settings.rate_app_error,
+                          );
+                        }
                       },
                     )
                     .animate()
@@ -405,10 +404,7 @@ class _Avatar extends StatelessWidget {
         ? String.fromCharCode(label.runes.first).toUpperCase()
         : '?';
     final raw = avatarUrl?.trim();
-    final networkUrl =
-        raw != null && (raw.startsWith('http://') || raw.startsWith('https://'))
-        ? raw
-        : null;
+    final networkUrl = normalizeWayoAdsMediaUrl(raw);
 
     return Container(
       width: 52,

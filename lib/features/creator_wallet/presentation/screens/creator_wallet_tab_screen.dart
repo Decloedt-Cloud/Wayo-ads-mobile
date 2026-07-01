@@ -12,6 +12,7 @@ import '../../../auth/domain/auth_notifier.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/creator_colors.dart';
+import '../../../../core/ui/wayo_toast.dart';
 import '../../../../i18n/strings.g.dart';
 import '../../../dashboard/presentation/widgets/error_banner.dart';
 import '../../../creator/presentation/providers/creator_session_gate.dart';
@@ -341,14 +342,9 @@ class _BalanceBlock extends ConsumerWidget {
                     businessProfile: profile,
                   );
                   if (ok && context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        backgroundColor: AppColors.success,
-                        content: Text(
-                          t.creator.wallet.withdraw_success,
-                          style: const TextStyle(color: Colors.white),
-                        ),
-                      ),
+                    WayoToast.success(
+                      context,
+                      t.creator.wallet.withdraw_success,
                     );
                     final auth = ref.read(authNotifierProvider).valueOrNull;
                     if (auth is AuthAuthenticated) {
@@ -544,9 +540,7 @@ class _CardSkeleton extends StatelessWidget {
   }
 }
 
-/// Read-only card summarising the platform withdrawal rules (minimum amount,
-/// platform fee, processing time). Values come from `GET /api/creator/withdrawal`
-/// so they stay in sync with the backend; the processing time is a static SLA.
+/// Read-only card summarising withdrawal rules (minimum amount, processing time).
 class _WithdrawalConditionsCard extends StatelessWidget {
   const _WithdrawalConditionsCard({
     required this.limits,
@@ -557,20 +551,6 @@ class _WithdrawalConditionsCard extends StatelessWidget {
   final CreatorPlatformLimits limits;
   final String currency;
   final String moneyLocale;
-
-  String _formatFee(BuildContext context) {
-    final t = context.t;
-    final rate = limits.platformFeeRate;
-    final percent = rate <= 1 ? rate * 100.0 : rate;
-    final rounded = percent.toStringAsFixed(
-      percent.truncateToDouble() == percent ? 0 : 1,
-    );
-    final description = limits.platformFeeDescription?.trim();
-    if (description != null && description.isNotEmpty) {
-      return description;
-    }
-    return t.creator.wallet.conditions_fee_value(percent: '$rounded%');
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -630,12 +610,6 @@ class _WithdrawalConditionsCard extends StatelessWidget {
             icon: Icons.payments_outlined,
             label: t.creator.wallet.conditions_min_label,
             value: minAmount,
-          ),
-          const SizedBox(height: 8),
-          _ConditionRow(
-            icon: Icons.percent_rounded,
-            label: t.creator.wallet.conditions_fee_label,
-            value: _formatFee(context),
           ),
           const SizedBox(height: 8),
           _ConditionRow(

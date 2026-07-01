@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../domain/entities/admin_transaction.dart';
 import '../../domain/entities/dashboard_stats.dart';
 import '../../../chat/presentation/providers/chat_providers.dart';
 import '../../../creator/presentation/providers/creator_session_gate.dart';
@@ -26,67 +26,47 @@ class _SuperadminDashboardScreenState
   static final _currencyFormat =
       NumberFormat.currency(symbol: '\$', decimalDigits: 2);
   static final _numberFormat = NumberFormat.compact();
+  static final _dateFormat = DateFormat.yMMMd().add_jm();
 
   @override
   Widget build(BuildContext context) {
     final dashboardAsync = ref.watch(dashboardStatsProvider);
-    final payoutAsync = ref.watch(payoutStatsProvider);
+    final trafficAsync = ref.watch(trafficQualitySummaryProvider);
+    final txPageAsync = ref.watch(adminRecentTransactionsProvider);
 
     ref.listen(chatPostLoginGateProvider, (previous, gateAt) {
       if (gateAt == null) return;
       scheduleSessionRetryAfterBootstrap(ref, () {
         if (!mounted) return;
-        if (ref.read(payoutStatsProvider).hasError) {
-          ref.invalidate(payoutStatsProvider);
-        }
-        if (ref.read(dashboardStatsProvider).hasError) {
-          ref.invalidate(dashboardStatsProvider);
-        }
+        ref.invalidate(dashboardStatsProvider);
+        ref.invalidate(trafficQualitySummaryProvider);
+        ref.invalidate(adminRecentTransactionsProvider);
       });
     });
 
     return Scaffold(
       backgroundColor: AppColors.surfaceOf(context),
       body: RefreshIndicator(
-        onRefresh: () async {
-          ref.invalidate(dashboardStatsProvider);
-          ref.invalidate(payoutStatsProvider);
-          ref.invalidate(notificationsListProvider);
-          ref.invalidate(notificationsUnreadCountsProvider);
-        },
+        onRefresh: _refreshAll,
         child: CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(
             parent: BouncingScrollPhysics(),
           ),
           slivers: [
-            _buildHeader(context, ref),
+            _buildHeader(context),
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+              padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
               sliver: SliverToBoxAdapter(
-                child: _buildQuickActions(context),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
-                child: payoutAsync.when(
-                  data: (stats) => _buildPayoutStats(context, stats),
+                child: trafficAsync.when(
+                  data: (tq) => _buildTrafficQualitySection(context, tq),
                   loading: () => const _StatsLoadingGrid(),
-                  error: (e, _) {
-                    if (shouldSuppressSessionLoadError(ref, e)) {
-                      return const _StatsLoadingGrid();
-                    }
-                    return _ErrorCard(
-                      message: 'Erreur stats payouts: $e',
-                      onRetry: () => ref.invalidate(payoutStatsProvider),
-                    );
-                  },
+                  error: (_, _) => const SizedBox.shrink(),
                 ),
               ),
             ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
+              sliver: SliverToBoxAdapter(
                 child: dashboardAsync.when(
                   data: (stats) => _buildTransactionStats(context, stats),
                   loading: () => const _StatsLoadingGrid(),
@@ -95,7 +75,7 @@ class _SuperadminDashboardScreenState
                       return const _StatsLoadingGrid();
                     }
                     return _ErrorCard(
-                      message: 'Erreur transactions: $e',
+                      message: 'Could not load transactions',
                       onRetry: () => ref.invalidate(dashboardStatsProvider),
                     );
                   },
@@ -103,6 +83,19 @@ class _SuperadminDashboardScreenState
               ),
             ),
             ..._topCampaignSlivers(dashboardAsync, _currencyFormat),
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
+              sliver: SliverToBoxAdapter(
+                child: txPageAsync.when(
+                  data: (page) => _buildRecentTransactions(context, page),
+                  loading: () => const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 24),
+                    child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                  ),
+                  error: (_, _) => const SizedBox.shrink(),
+                ),
+              ),
+            ),
             const SliverToBoxAdapter(child: SizedBox(height: 100)),
           ],
         ),
@@ -110,13 +103,21 @@ class _SuperadminDashboardScreenState
     );
   }
 
-  Widget _buildHeader(BuildContext context, WidgetRef ref) {
+  Future<void> _refreshAll() async {
+    ref.invalidate(dashboardStatsProvider);
+    ref.invalidate(trafficQualitySummaryProvider);
+    ref.invalidate(adminRecentTransactionsProvider);
+    ref.invalidate(notificationsListProvider);
+    ref.invalidate(notificationsUnreadCountsProvider);
+  }
+
+  Widget _buildHeader(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final topInset = MediaQuery.paddingOf(context).top;
 
     return SliverToBoxAdapter(
       child: Container(
-        padding: EdgeInsets.fromLTRB(20, topInset + 12, 20, 24),
+        padding: EdgeInsets.fromLTRB(20, topInset + 12, 20, 20),
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
@@ -127,135 +128,92 @@ class _SuperadminDashboardScreenState
             ],
           ),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
           children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    gradient: AppColors.primaryGradient,
-                    borderRadius: BorderRadius.circular(14),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.primary.withValues(alpha: 0.3),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                gradient: AppColors.primaryGradient,
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.primary.withValues(alpha: 0.3),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
                   ),
-                  child: const Icon(
-                    Icons.shield_rounded,
-                    color: Colors.white,
-                    size: 22,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Superadmin',
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.textPrimaryOf(context),
-                          letterSpacing: -0.5,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        'Platform overview & management',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SuperadminChromeActions(showNotifications: true),
-              ],
+                ],
+              ),
+              child: const Icon(
+                Icons.shield_rounded,
+                color: Colors.white,
+                size: 22,
+              ),
             ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Superadmin',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textPrimaryOf(context),
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Platform overview',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SuperadminChromeActions(showNotifications: true),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildQuickActions(BuildContext context) {
-    final actions = [
-      ('Withdrawals', Icons.account_balance_wallet_rounded, '/superadmin/withdrawals'),
-      ('Banned Users', Icons.block_rounded, '/superadmin/banned-users'),
-      ('Announcements', Icons.campaign_rounded, '/superadmin/announcements'),
-      ('AI Usage', Icons.auto_awesome_rounded, '/superadmin/ai-usage'),
-      ('Ledger', Icons.receipt_long_rounded, '/superadmin/ledger'),
-    ];
-
+  Widget _buildTrafficQualitySection(
+    BuildContext context,
+    TrafficQualitySummary tq,
+  ) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Quick Actions',
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textMutedOf(context),
-            letterSpacing: 0.5,
-          ),
-        ),
-        const SizedBox(height: 12),
-        SizedBox(
-          height: 44,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            itemCount: actions.length,
-            separatorBuilder: (_, _) => const SizedBox(width: 8),
-            itemBuilder: (context, index) {
-              final (label, icon, route) = actions[index];
-              return _QuickActionButton(
-                label: label,
-                icon: icon,
-                onTap: () => context.push(route),
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPayoutStats(BuildContext context, PayoutStats stats) {
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         AdminSectionHeader(
-          title: 'Payout Statistics',
-          subtitle: 'Overview of all platform payouts',
+          title: 'Traffic Quality Monitoring',
+          subtitle: 'Creator traffic anomaly detection and risk assessment',
           padding: EdgeInsets.zero,
         ),
         const SizedBox(height: 12),
         Row(
           children: [
             Expanded(
-              child: AdminStatCard(
-                title: 'Pending',
-                value: _numberFormat.format(stats.totalPending),
-                icon: Icons.hourglass_bottom_rounded,
-                iconColor: const Color(0xFFF59E0B),
+              child: _ColoredMetricCard(
+                label: 'Flagged Creators',
+                value: '${tq.flaggedCreators}',
+                subtitle: 'of ${tq.totalCreators} total',
+                color: const Color(0xFFF59E0B),
+                icon: Icons.shield_outlined,
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: AdminStatCard(
-                title: 'Frozen',
-                value: _numberFormat.format(stats.totalFrozen),
-                icon: Icons.ac_unit_rounded,
-                iconColor: const Color(0xFF3B82F6),
+              child: _ColoredMetricCard(
+                label: 'Avg Validation',
+                value: '${tq.avgValidationRatePercent}%',
+                subtitle: 'across all creators',
+                color: const Color(0xFF2563EB),
+                icon: Icons.people_outline_rounded,
               ),
             ),
           ],
@@ -264,20 +222,22 @@ class _SuperadminDashboardScreenState
         Row(
           children: [
             Expanded(
-              child: AdminStatCard(
-                title: 'Released',
-                value: _numberFormat.format(stats.totalReleased),
-                icon: Icons.check_circle_rounded,
-                iconColor: AppColors.success,
+              child: _ColoredMetricCard(
+                label: 'High Risk Score',
+                value: '${tq.maxAnomalyScore}',
+                subtitle: 'max anomaly score',
+                color: const Color(0xFF16A34A),
+                icon: Icons.trending_up_rounded,
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: AdminStatCard(
-                title: 'Eligible Now',
-                value: _numberFormat.format(stats.eligibleNow),
-                icon: Icons.schedule_rounded,
-                iconColor: AppColors.primary,
+              child: _ColoredMetricCard(
+                label: 'Avg Fraud Score',
+                value: '${tq.avgFraudScore}',
+                subtitle: 'lower is better',
+                color: const Color(0xFF8B5CF6),
+                icon: Icons.analytics_outlined,
               ),
             ),
           ],
@@ -287,15 +247,8 @@ class _SuperadminDashboardScreenState
   }
 
   Widget _buildTransactionStats(BuildContext context, DashboardStats stats) {
-    final viewPayout = _reasonSummary(stats, const [
-      'VIEW_PAYOUT',
-      'VIEW',
-    ]);
-    final conversion = _reasonSummary(stats, const [
-      'CONVERSION_PAYOUT',
-      'CONVERSION_FEE',
-      'CONVERSION',
-    ]);
+    final viewStats = _reasonSummary(stats, const ['VIEW']);
+    final conversionStats = _reasonSummary(stats, const ['CONVERSION']);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -306,33 +259,50 @@ class _SuperadminDashboardScreenState
           padding: EdgeInsets.zero,
         ),
         const SizedBox(height: 12),
-        AdminStatCard(
-          title: 'Total Transactions',
-          value: _currencyFormat.format(stats.totalAmountUsd),
-          subtitle: '${_numberFormat.format(stats.totalTransactions)} transactions',
-          icon: Icons.receipt_rounded,
-          iconColor: AppColors.primary,
+        Row(
+          children: [
+            Expanded(
+              child: AdminStatCard(
+                title: 'Total Payouts',
+                value: _currencyFormat.format(stats.totalAmountUsd),
+                subtitle:
+                    '${_numberFormat.format(stats.totalTransactions)} transactions',
+                icon: Icons.receipt_rounded,
+                iconColor: AppColors.primary,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: AdminStatCard(
+                title: 'View Payouts',
+                value: _currencyFormat.format(viewStats?.totalUsd ?? 0),
+                subtitle: '${viewStats?.count ?? 0} views',
+                icon: Icons.visibility_rounded,
+                iconColor: const Color(0xFF14B8A6),
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 12),
         Row(
           children: [
             Expanded(
               child: AdminStatCard(
-                title: 'View Payouts',
-                value: _currencyFormat.format(viewPayout?.totalUsd ?? 0),
-                subtitle: '${viewPayout?.count ?? 0} payouts',
-                icon: Icons.visibility_rounded,
-                iconColor: const Color(0xFF14B8A6),
+                title: 'Conversions',
+                value: _currencyFormat.format(conversionStats?.totalUsd ?? 0),
+                subtitle: '${conversionStats?.count ?? 0} conversions',
+                icon: Icons.sync_alt_rounded,
+                iconColor: const Color(0xFF8B5CF6),
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: AdminStatCard(
-                title: 'Conversions',
-                value: _currencyFormat.format(conversion?.totalUsd ?? 0),
-                subtitle: '${conversion?.count ?? 0} conversions',
-                icon: Icons.sync_alt_rounded,
-                iconColor: const Color(0xFF8B5CF6),
+                title: 'Active Campaigns',
+                value: '${stats.topCampaigns.length}',
+                subtitle: 'campaigns with payouts',
+                icon: Icons.campaign_outlined,
+                iconColor: const Color(0xFF7C3AED),
               ),
             ),
           ],
@@ -340,59 +310,199 @@ class _SuperadminDashboardScreenState
       ],
     );
   }
+
+  Widget _buildRecentTransactions(
+    BuildContext context,
+    AdminTransactionsPage page,
+  ) {
+    if (page.transactions.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        AdminSectionHeader(
+          title: 'Recent Transactions',
+          subtitle: 'Latest platform payout events',
+          padding: EdgeInsets.zero,
+        ),
+        const SizedBox(height: 12),
+        ...page.transactions.map((tx) => _TransactionRow(
+              tx: tx,
+              dateFormat: _dateFormat,
+              currencyFormat: _currencyFormat,
+            )),
+      ],
+    );
+  }
 }
 
-class _QuickActionButton extends StatelessWidget {
-  const _QuickActionButton({
+class _ColoredMetricCard extends StatelessWidget {
+  const _ColoredMetricCard({
     required this.label,
+    required this.value,
+    required this.subtitle,
+    required this.color,
     required this.icon,
-    required this.onTap,
   });
 
   final String label;
+  final String value;
+  final String subtitle;
+  final Color color;
   final IconData icon;
-  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withValues(alpha: 0.35)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 16, color: color),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: color,
+                  ),
+                  maxLines: 2,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
+              color: color,
+              letterSpacing: -0.5,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            subtitle,
+            style: TextStyle(
+              fontSize: 11,
+              color: AppColors.textMutedOf(context),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TransactionRow extends StatelessWidget {
+  const _TransactionRow({
+    required this.tx,
+    required this.dateFormat,
+    required this.currencyFormat,
+  });
+
+  final AdminTransaction tx;
+  final DateFormat dateFormat;
+  final NumberFormat currencyFormat;
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isView = tx.reason.toUpperCase() == 'VIEW';
+    final badgeColor = isView ? const Color(0xFF2563EB) : AppColors.success;
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                AppColors.primary.withValues(alpha: isDark ? 0.15 : 0.08),
-                AppColors.primarySoft.withValues(alpha: isDark ? 0.05 : 0.02),
-              ],
-            ),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: AppColors.primary.withValues(alpha: 0.25),
-            ),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: isDark
+            ? AppColors.surfaceElevated.withValues(alpha: 0.5)
+            : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: AppColors.borderOf(context).withValues(alpha: 0.3),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             children: [
-              Icon(icon, size: 18, color: AppColors.primary),
-              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: badgeColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  tx.reason.toUpperCase(),
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: badgeColor,
+                  ),
+                ),
+              ),
+              const Spacer(),
               Text(
-                label,
+                currencyFormat.format(tx.amountUsd),
                 style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w800,
                   color: AppColors.primary,
                 ),
               ),
             ],
           ),
-        ),
+          const SizedBox(height: 8),
+          if (tx.campaignTitle?.isNotEmpty == true)
+            Text(
+              tx.campaignTitle!,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimaryOf(context),
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          const SizedBox(height: 4),
+          Text(
+            dateFormat.format(tx.createdAt.toLocal()),
+            style: TextStyle(
+              fontSize: 12,
+              color: AppColors.textMutedOf(context),
+            ),
+          ),
+          if (tx.creatorName?.isNotEmpty == true ||
+              tx.advertiserName?.isNotEmpty == true) ...[
+            const SizedBox(height: 6),
+            Text(
+              [
+                if (tx.advertiserName?.isNotEmpty == true)
+                  'Adv: ${tx.advertiserName}',
+                if (tx.creatorName?.isNotEmpty == true)
+                  'Creator: ${tx.creatorName}',
+              ].join(' · '),
+              style: TextStyle(
+                fontSize: 11,
+                color: AppColors.textSecondaryOf(context),
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ],
       ),
     );
   }
@@ -424,13 +534,6 @@ class _TopCampaignCard extends StatelessWidget {
         border: Border.all(
           color: AppColors.borderOf(context).withValues(alpha: 0.3),
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.15 : 0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
       ),
       child: Row(
         children: [
@@ -489,7 +592,7 @@ class _TopCampaignCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: AppColors.success.withValues(alpha: 0.1),
+              color: AppColors.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
@@ -497,7 +600,7 @@ class _TopCampaignCard extends StatelessWidget {
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.bold,
-                color: AppColors.success,
+                color: AppColors.primary,
               ),
             ),
           ),
@@ -622,7 +725,7 @@ List<Widget> _topCampaignSlivers(
   if (stats == null || stats.topCampaigns.isEmpty) {
     return const <Widget>[];
   }
-  final list = stats.topCampaigns.take(5).toList(growable: false);
+  final list = stats.topCampaigns.take(10).toList(growable: false);
   return <Widget>[
     SliverToBoxAdapter(
       child: AdminSectionHeader(

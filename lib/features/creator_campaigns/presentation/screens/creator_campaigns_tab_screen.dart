@@ -15,6 +15,8 @@ import '../../../../core/widgets/campaigns_explorer_toolbar.dart';
 import '../../../../i18n/strings.g.dart';
 import '../../../advertiser_campaigns/domain/campaign_niche_catalog.dart';
 import '../../../creator_dashboard/domain/creator_application.dart';
+import '../../../chat/presentation/providers/chat_providers.dart';
+import '../../../creator/presentation/providers/creator_session_gate.dart';
 import '../../../creator_dashboard/presentation/providers/creator_dashboard_providers.dart';
 import '../../domain/creator_browse_campaign.dart';
 import '../../domain/creator_browse_page_result.dart';
@@ -169,6 +171,31 @@ class _CreatorCampaignsTabScreenState
       next.whenData(
         (page) => _sanitizeCreatorBrowseFilters(ref, page.campaigns),
       );
+      next.whenOrNull(
+        error: (e, _) {
+          if (!isTransientSessionError(e) &&
+              !shouldSuppressCreatorLoadError(ref, e)) {
+            return;
+          }
+          scheduleCreatorRetryAfterBootstrap(ref, () {
+            if (!context.mounted) return;
+            ref.invalidate(creatorBrowseCampaignsPagedProvider(browseKey));
+          });
+        },
+      );
+    });
+
+    ref.listen(chatPostLoginGateProvider, (previous, gateAt) {
+      if (gateAt == null) return;
+      scheduleCreatorRetryAfterBootstrap(ref, () {
+        if (!context.mounted) return;
+        if (ref.read(creatorBrowseCampaignsPagedProvider(browseKey)).hasError) {
+          ref.invalidate(creatorBrowseCampaignsPagedProvider(browseKey));
+        }
+        if (ref.read(creatorApplicationsProvider).hasError) {
+          ref.invalidate(creatorApplicationsProvider);
+        }
+      });
     });
 
     ref.listen<int>(creatorBrowseCampaignPageProvider, (previous, next) {
@@ -359,12 +386,17 @@ class _CreatorCampaignsTabScreenState
             const SizedBox(height: 14),
             browseAsync.when(
               loading: () => const _LoadingBlock(),
-              error: (err, _) => _ErrorBlock(
-                message: t.creator.campaigns.load_error,
-                onRetry: () => ref.invalidate(
-                  creatorBrowseCampaignsPagedProvider(browseKey),
-                ),
-              ),
+              error: (err, _) {
+                if (shouldSuppressCreatorLoadError(ref, err)) {
+                  return const _LoadingBlock();
+                }
+                return _ErrorBlock(
+                  message: t.creator.campaigns.load_error,
+                  onRetry: () => ref.invalidate(
+                    creatorBrowseCampaignsPagedProvider(browseKey),
+                  ),
+                );
+              },
               data: (pageResult) {
                 final list = pageResult.campaigns;
                 final filtered = _filterCreatorBrowsePage(

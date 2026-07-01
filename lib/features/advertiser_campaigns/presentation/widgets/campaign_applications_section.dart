@@ -10,6 +10,7 @@ import 'package:shimmer/shimmer.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/ui/wayo_toast.dart';
 import '../../../../i18n/strings.g.dart';
 import '../../../dashboard/presentation/theme/campaign_detail_premium_palette.dart';
 import '../../data/advertiser_campaigns_repository.dart';
@@ -63,6 +64,7 @@ class CampaignApplicationsSection extends ConsumerWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return async.when(
+      skipLoadingOnReload: true,
       data: (list) => premiumChrome
           ? _PremiumDataBody(campaignId: campaignId, list: list)
           : _ClassicDataBody(
@@ -575,21 +577,11 @@ class _PremiumApplicationCardState extends ConsumerState<_PremiumApplicationCard
       ref.invalidate(campaignApplicationsProvider(widget.campaignId));
       ref.invalidate(advertiserCampaignDetailProvider(widget.campaignId));
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(context.t.dashboard.application_approved),
-            backgroundColor: Colors.green.shade600,
-          ),
-        );
+        WayoToast.success(context, context.t.dashboard.application_approved);
       }
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(context.t.dashboard.application_action_failed),
-            backgroundColor: Colors.red.shade600,
-          ),
-        );
+        WayoToast.error(context, context.t.dashboard.application_action_failed);
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -606,21 +598,11 @@ class _PremiumApplicationCardState extends ConsumerState<_PremiumApplicationCard
       ref.invalidate(campaignApplicationsProvider(widget.campaignId));
       ref.invalidate(advertiserCampaignDetailProvider(widget.campaignId));
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(context.t.dashboard.application_rejected),
-            backgroundColor: Colors.orange.shade600,
-          ),
-        );
+        WayoToast.warning(context, context.t.dashboard.application_rejected);
       }
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(context.t.dashboard.application_action_failed),
-            backgroundColor: Colors.red.shade600,
-          ),
-        );
+        WayoToast.error(context, context.t.dashboard.application_action_failed);
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -943,21 +925,11 @@ class _ApplicationDetailSheetState extends ConsumerState<_ApplicationDetailSheet
       ref.invalidate(advertiserCampaignDetailProvider(widget.campaignId));
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(context.t.dashboard.application_approved),
-            backgroundColor: Colors.green.shade600,
-          ),
-        );
+        WayoToast.success(context, context.t.dashboard.application_approved);
       }
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(context.t.dashboard.application_action_failed),
-            backgroundColor: Colors.red.shade600,
-          ),
-        );
+        WayoToast.error(context, context.t.dashboard.application_action_failed);
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -975,21 +947,11 @@ class _ApplicationDetailSheetState extends ConsumerState<_ApplicationDetailSheet
       ref.invalidate(advertiserCampaignDetailProvider(widget.campaignId));
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(context.t.dashboard.application_rejected),
-            backgroundColor: Colors.orange.shade600,
-          ),
-        );
+        WayoToast.warning(context, context.t.dashboard.application_rejected);
       }
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(context.t.dashboard.application_action_failed),
-            backgroundColor: Colors.red.shade600,
-          ),
-        );
+        WayoToast.error(context, context.t.dashboard.application_action_failed);
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -1375,21 +1337,11 @@ class _ApplicationTileState extends ConsumerState<_ApplicationTile> {
       ref.invalidate(campaignApplicationsProvider(widget.campaignId));
       ref.invalidate(advertiserCampaignDetailProvider(widget.campaignId));
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(context.t.dashboard.application_approved),
-            backgroundColor: Colors.green.shade600,
-          ),
-        );
+        WayoToast.success(context, context.t.dashboard.application_approved);
       }
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(context.t.dashboard.application_action_failed),
-            backgroundColor: Colors.red.shade600,
-          ),
-        );
+        WayoToast.error(context, context.t.dashboard.application_action_failed);
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -1405,21 +1357,11 @@ class _ApplicationTileState extends ConsumerState<_ApplicationTile> {
       await repo.rejectApplication(widget.campaignId, widget.app.id);
       ref.invalidate(campaignApplicationsProvider(widget.campaignId));
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(context.t.dashboard.application_rejected),
-            backgroundColor: Colors.orange.shade600,
-          ),
-        );
+        WayoToast.warning(context, context.t.dashboard.application_rejected);
       }
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(context.t.dashboard.application_action_failed),
-            backgroundColor: Colors.red.shade600,
-          ),
-        );
+        WayoToast.error(context, context.t.dashboard.application_action_failed);
       }
     } finally {
       if (mounted) setState(() => _busy = false);

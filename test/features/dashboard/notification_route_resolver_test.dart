@@ -58,7 +58,7 @@ void main() {
     expect(route, '/campaigns/camp-9');
   });
 
-  test('web campaign link remapped for creator role', () {
+  test('CREATOR_APPLICATION_APPROVED opens creator application screen', () {
     final route = resolveNotificationMobileRoute(
       _item(
         type: 'CREATOR_APPLICATION_APPROVED',
@@ -68,6 +68,18 @@ void main() {
       ),
       WayoAdsAccountRole.creator,
     );
-    expect(route, '/creator/campaigns/camp-55');
+    expect(route, '/creator/campaigns/camp-55/application');
+  });
+
+  test('resolvePushRouteForRole remaps CAMPAIGN_ACTIVATED for advertiser', () {
+    final route = resolvePushRouteForRole(
+      data: {
+        'type': 'CAMPAIGN_ACTIVATED',
+        'actionUrl': '/campaigns/camp-123',
+        'campaignId': 'camp-123',
+      },
+      role: WayoAdsAccountRole.advertiser,
+    );
+    expect(route, '/campaigns');
   });
 }

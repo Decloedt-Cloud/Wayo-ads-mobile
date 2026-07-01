@@ -7,7 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/push/wayo_push_intent.dart';
 import '../../../../core/push/wayo_push_service.dart';
 import '../../../../core/realtime/realtime_signal.dart';
-import '../../../../core/ui/root_scaffold_messenger_key.dart';
+import '../../../../core/ui/wayo_toast.dart';
 import '../../../../i18n/strings.g.dart';
 import '../../../../router/app_router.dart';
 import '../../../auth/domain/wayo_ads_account_role.dart';
@@ -72,63 +72,36 @@ class _RealtimeNotificationToastHostState
     final parsed = _parsePayload(sig.raw);
     final title = parsed.$1;
     final body = parsed.$2;
-    final messenger = rootScaffoldMessengerKey.currentState;
-    if (messenger == null) return;
     final headline = (title != null && title.trim().isNotEmpty)
         ? title.trim()
         : isSuperadminWithdrawal
         ? 'New withdrawal request'
         : t.dashboard.notification_incoming;
-    messenger.hideCurrentSnackBar();
-    messenger.showSnackBar(
-      SnackBar(
-        behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.fromLTRB(12, 0, 12, 88),
-        duration: const Duration(seconds: 5),
-        showCloseIcon: true,
-        content: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              headline,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
-            ),
-            if (body != null && body.trim().isNotEmpty) ...[
-              const SizedBox(height: 4),
-              Text(
-                body.trim(),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w400,
-                ),
-              ),
-            ],
-          ],
-        ),
-        action: SnackBarAction(
-          label: role == WayoAdsAccountRole.superAdmin && isSuperadminWithdrawal
-              ? 'View payouts'
-              : t.dashboard.notification_view,
-          onPressed: () {
-            if (role == WayoAdsAccountRole.superAdmin && isSuperadminWithdrawal) {
-              invalidateSuperadminWithdrawalData(ref);
-              ref.read(goRouterProvider).go(kSuperadminWithdrawalsRoute);
-              return;
-            }
-            final r = switch (role) {
-              WayoAdsAccountRole.creator => 'creator',
-              WayoAdsAccountRole.advertiser => 'advertiser',
-              WayoAdsAccountRole.superAdmin => 'superadmin',
-              _ => 'app',
-            };
-            ref.read(goRouterProvider).push('/notifications?role=$r');
-          },
-        ),
+    final hasBody = body != null && body.trim().isNotEmpty;
+    WayoToast.show(
+      context,
+      variant: WayoToastVariant.info,
+      title: hasBody ? headline : null,
+      message: hasBody ? body.trim() : headline,
+      duration: const Duration(seconds: 5),
+      action: SnackBarAction(
+        label: role == WayoAdsAccountRole.superAdmin && isSuperadminWithdrawal
+            ? 'View payouts'
+            : t.dashboard.notification_view,
+        onPressed: () {
+          if (role == WayoAdsAccountRole.superAdmin && isSuperadminWithdrawal) {
+            invalidateSuperadminWithdrawalData(ref);
+            ref.read(goRouterProvider).go(kSuperadminWithdrawalsRoute);
+            return;
+          }
+          final r = switch (role) {
+            WayoAdsAccountRole.creator => 'creator',
+            WayoAdsAccountRole.advertiser => 'advertiser',
+            WayoAdsAccountRole.superAdmin => 'superadmin',
+            _ => 'app',
+          };
+          ref.read(goRouterProvider).push('/notifications?role=$r');
+        },
       ),
     );
   }

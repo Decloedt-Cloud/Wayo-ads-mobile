@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:gal/gal.dart';
 
+import '../../../../core/ui/wayo_toast.dart';
 import '../../../../i18n/strings.g.dart';
 import 'chat_image_browser_download_stub.dart'
     if (dart.library.html) 'chat_image_browser_download_web.dart';
@@ -179,10 +180,7 @@ class _ChatFullscreenImagePageState extends State<_ChatFullscreenImagePage> {
     if (!mounted) return;
 
     if (!granted) {
-      ScaffoldMessenger.maybeOf(context)?.hideCurrentSnackBar();
-      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-        SnackBar(content: Text(chat.image_permission_denied)),
-      );
+      WayoToast.warning(context, chat.image_permission_denied);
       return;
     }
 
@@ -204,10 +202,7 @@ class _ChatFullscreenImagePageState extends State<_ChatFullscreenImagePage> {
     }
 
     if (!mounted) return;
-    ScaffoldMessenger.maybeOf(context)?.hideCurrentSnackBar();
-    ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-      SnackBar(content: Text(chat.image_saved_to_gallery)),
-    );
+    WayoToast.success(context, chat.image_saved_to_gallery);
   }
 
   Future<void> _onDownloadTap() async {
@@ -228,29 +223,22 @@ class _ChatFullscreenImagePageState extends State<_ChatFullscreenImagePage> {
           mime,
           'wayo_chat_${DateTime.now().millisecondsSinceEpoch}$ext',
         );
-        ScaffoldMessenger.maybeOf(context)?.hideCurrentSnackBar();
-        ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-          SnackBar(content: Text(chatLoc.image_saved_downloads_browser)),
-        );
+        WayoToast.success(context, chatLoc.image_saved_downloads_browser);
         return;
       }
 
       await _persistToGalleryNative(bytes);
     } on GalException catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.maybeOf(context)?.hideCurrentSnackBar();
       final msg = e.type == GalExceptionType.accessDenied
           ? chatLoc.image_permission_denied
           : (kDebugMode
               ? '${chatLoc.image_download_failed} (${e.type.code})'
               : chatLoc.image_download_failed);
-      ScaffoldMessenger.maybeOf(context)?.showSnackBar(SnackBar(content: Text(msg)));
+      WayoToast.error(context, msg);
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.maybeOf(context)?.hideCurrentSnackBar();
-      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-        SnackBar(content: Text(chatLoc.image_download_failed)),
-      );
+      WayoToast.error(context, chatLoc.image_download_failed);
     } finally {
       if (mounted) {
         setState(() => _saving = false);

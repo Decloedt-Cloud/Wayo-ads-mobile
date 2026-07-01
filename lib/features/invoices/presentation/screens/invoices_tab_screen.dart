@@ -11,6 +11,7 @@ import 'package:skeletonizer/skeletonizer.dart';
 import '../../../../core/errors/auth_exceptions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/ui/wayo_toast.dart';
 import '../../../../i18n/strings.g.dart';
 import '../../../auth/data/models/app_user.dart';
 import '../../../auth/domain/wayo_ads_account_role.dart';
@@ -111,65 +112,34 @@ class _InvoicesTabBodyState extends ConsumerState<_InvoicesTabBody>
 
   Future<void> _onDownloadPdf(Invoice invoice) async {
     final t = context.t;
-    final messenger = ScaffoldMessenger.of(context);
     final pdfService = ref.read(invoicePdfServiceProvider);
 
-    messenger.showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const SizedBox(
-              width: 18,
-              height: 18,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: Colors.white,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(child: Text(t.invoices.download_progress)),
-          ],
-        ),
-        duration: const Duration(seconds: 12),
-      ),
+    WayoToast.info(
+      context,
+      t.invoices.download_progress,
+      duration: const Duration(seconds: 12),
     );
 
     try {
       final File file = await pdfService.downloadAndSave(invoice);
-      messenger
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          SnackBar(
-            content: Text(
-              t.invoices.download_success.replaceAll(
-                '{filename}',
-                file.path.split(Platform.pathSeparator).last,
-              ),
-            ),
-            action: SnackBarAction(
-              label: t.invoices.action_open_pdf,
-              onPressed: () => pdfService.open(file),
-            ),
-          ),
-        );
+      if (!mounted) return;
+      WayoToast.success(
+        context,
+        t.invoices.download_success.replaceAll(
+          '{filename}',
+          file.path.split(Platform.pathSeparator).last,
+        ),
+        action: SnackBarAction(
+          label: t.invoices.action_open_pdf,
+          onPressed: () => pdfService.open(file),
+        ),
+      );
     } on AuthException catch (_) {
-      messenger
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          SnackBar(
-            content: Text(t.invoices.download_error),
-            backgroundColor: AppColors.error,
-          ),
-        );
+      if (!mounted) return;
+      WayoToast.error(context, t.invoices.download_error);
     } catch (_) {
-      messenger
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          SnackBar(
-            content: Text(t.invoices.download_error),
-            backgroundColor: AppColors.error,
-          ),
-        );
+      if (!mounted) return;
+      WayoToast.error(context, t.invoices.download_error);
     }
   }
 
@@ -481,9 +451,7 @@ class _InvoicesTabBodyState extends ConsumerState<_InvoicesTabBody>
                   final text = _invoicesErrorDebugText(error);
                   await Clipboard.setData(ClipboardData(text: text));
                   if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Copied debug details')),
-                    );
+                    WayoToast.success(context, 'Copied debug details');
                   }
                 },
                 icon: const Icon(Icons.copy_all_rounded, size: 18),

@@ -4,21 +4,28 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/maintenance/maintenance_providers.dart';
+import '../../core/maintenance/maintenance_recovery_hub.dart';
 import '../../core/maintenance/maintenance_service.dart';
 import '../../core/providers/app_providers.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../core/ui/wayo_toast.dart';
 import '../../features/dashboard/presentation/providers/dashboard_state_providers.dart';
 import '../../i18n/strings.g.dart';
+import 'wayo_ads_brand_mark.dart';
 
-/// Poll interval while the maintenance overlay is shown.
-const _kMaintenanceActiveProbeInterval = Duration(seconds: 8);
+/// Safety-net poll while the maintenance overlay is shown.
+///
+/// Real-time recovery is delivered by push (Reverb `maintenance.ended` /
+/// `platform.available` in foreground, FCM data in background). This slow poll
+/// + the immediate probe on resume only catch the rare case where both were
+/// missed.
+const _kMaintenanceActiveProbeInterval = Duration(seconds: 60);
 
 /// Background poll when the app is healthy (catch deploy mid-session).
-const _kMaintenanceIdleProbeInterval = Duration(minutes: 1);
+const _kMaintenanceIdleProbeInterval = Duration(seconds: 60);
 
 /// Full-screen blocker when Wayo-ads (or Auth) is in maintenance.
 class MaintenanceGate extends ConsumerStatefulWidget {
@@ -39,6 +46,11 @@ class _MaintenanceGateState extends ConsumerState<MaintenanceGate>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    // Reverb / FCM maintenance-recovery control messages → immediate health probe.
+    setMaintenanceRecoveryProbeHandler(() {
+      if (!mounted) return;
+      unawaited(_runProbe());
+    });
     _wasMaintenanceActive = MaintenanceServiceHolder.instance.isActive;
     MaintenanceServiceHolder.instance.addListener(_onMaintenanceChanged);
     unawaited(_runProbe());
@@ -48,6 +60,7 @@ class _MaintenanceGateState extends ConsumerState<MaintenanceGate>
   @override
   void dispose() {
     MaintenanceServiceHolder.instance.removeListener(_onMaintenanceChanged);
+    clearMaintenanceRecoveryProbeHandler();
     _periodicProbe?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
@@ -146,7 +159,7 @@ class _MaintenanceScreen extends ConsumerWidget {
                 child: _MaintenancePreferences(),
               ),
               const SizedBox(height: 32),
-              const _MaintenanceBrandMark(),
+              const WayoAdsBrandMark(),
               const Spacer(),
               _PulseIcon(probing: probing),
               const SizedBox(height: 28),
@@ -207,73 +220,6 @@ class _MaintenanceScreen extends ConsumerWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-/// Theme-aware wordmark — the bundled PNG has a baked-in black bar that clashes
-/// with the light scaffold; dark mode keeps the full horizontal asset.
-class _MaintenanceBrandMark extends StatelessWidget {
-  const _MaintenanceBrandMark();
-
-  static const _amber = Color(0xFFF47A1F);
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final onSurface = Theme.of(context).colorScheme.onSurface;
-
-    if (isDark) {
-      return Image.asset(
-        'assets/images/wayo_ads_logo.png',
-        height: 44,
-        fit: BoxFit.contain,
-        errorBuilder: (context, error, stackTrace) => Text(
-          'Wayo Ads',
-          style: AppTextStyles.headlineMedium(context).copyWith(
-            color: onSurface,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-      );
-    }
-
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        SvgPicture.asset(
-          'assets/branding/wayo_splash_p1.svg',
-          height: 36,
-          width: 36,
-        ),
-        const SizedBox(width: 10),
-        Text.rich(
-          TextSpan(
-            children: [
-              TextSpan(
-                text: 'Wayo ',
-                style: TextStyle(
-                  color: _amber,
-                  fontSize: 22,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: -0.3,
-                  height: 1.1,
-                ),
-              ),
-              TextSpan(
-                text: 'Ads',
-                style: TextStyle(
-                  color: onSurface,
-                  fontSize: 22,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: -0.3,
-                  height: 1.1,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
     );
   }
 }
@@ -450,9 +396,7 @@ class _SupportEmailLink extends StatelessWidget {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } catch (_) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text(email)));
+      WayoToast.info(context, email);
     }
   }
 

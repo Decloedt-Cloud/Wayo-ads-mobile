@@ -17,6 +17,8 @@ import '../../../../core/widgets/campaigns_explorer_toolbar.dart';
 import '../../../../i18n/strings.g.dart';
 import '../../../creator_campaigns/domain/creator_browse_campaign.dart';
 import '../../../dashboard/presentation/widgets/error_banner.dart';
+import '../../../chat/presentation/providers/chat_providers.dart';
+import '../../../creator/presentation/providers/creator_session_gate.dart';
 import '../../domain/advertiser_campaign.dart';
 import '../../domain/campaign_niche_catalog.dart';
 import '../providers/advertiser_campaigns_providers.dart';
@@ -258,6 +260,30 @@ class _MineCampaignsBody extends ConsumerWidget {
     final key = (tab: tab, page: pageIdx, search: searchQ);
     final pageAsync = ref.watch(advertiserCampaignsPagedProvider(key));
     final countsAsync = ref.watch(advertiserCampaignsCountsProvider);
+
+    ref.listen(chatPostLoginGateProvider, (previous, gateAt) {
+      if (gateAt == null) return;
+      scheduleSessionRetryAfterBootstrap(ref, () {
+        if (ref.read(advertiserCampaignsPagedProvider(key)).hasError) {
+          ref.invalidate(advertiserCampaignsPagedProvider);
+        }
+        if (ref.read(advertiserCampaignsCountsProvider).hasError) {
+          ref.invalidate(advertiserCampaignsCountsProvider);
+        }
+      });
+    });
+
+    ref.listen(advertiserCampaignsPagedProvider(key), (previous, next) {
+      next.whenOrNull(
+        error: (e, _) {
+          if (!shouldSuppressSessionLoadError(ref, e)) return;
+          scheduleSessionRetryAfterBootstrap(ref, () {
+            ref.invalidate(advertiserCampaignsPagedProvider(key));
+          });
+        },
+      );
+    });
+
     Future<void> refresh() async {
       ref.invalidate(advertiserCampaignsPagedProvider);
       await ref.read(advertiserCampaignsPagedProvider(key).future);
@@ -323,13 +349,18 @@ class _MineCampaignsBody extends ConsumerWidget {
         totalPages: pageResult.totalPages,
       ),
       loading: () => _LoadingShell(t: t),
-      error: (e, _) => _ErrorShell(
-        t: t,
-        message: _errorMessage(context, e),
-        onRetry: () {
-          ref.invalidate(advertiserCampaignsPagedProvider);
-        },
-      ),
+      error: (e, _) {
+        if (shouldSuppressSessionLoadError(ref, e)) {
+          return _LoadingShell(t: t);
+        }
+        return _ErrorShell(
+          t: t,
+          message: _errorMessage(context, e),
+          onRetry: () {
+            ref.invalidate(advertiserCampaignsPagedProvider);
+          },
+        );
+      },
     );
   }
 }

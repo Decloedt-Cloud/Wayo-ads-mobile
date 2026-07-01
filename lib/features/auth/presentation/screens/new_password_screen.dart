@@ -9,6 +9,7 @@ import '../../../../core/errors/auth_exceptions.dart';
 import '../../../../core/providers/app_providers.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/ui/wayo_toast.dart';
 import '../../../../i18n/strings.g.dart';
 import '../controllers/forgot_password_controller.dart';
 import '../widgets/animated_mesh_background.dart';
@@ -58,9 +59,7 @@ class _NewPasswordScreenState extends ConsumerState<NewPasswordScreen> {
   Future<void> _submit(Translations t) async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
     if (_pwdCtrl.text != _confirmCtrl.text) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(t.validation.mismatch)));
+      WayoToast.error(context, t.validation.mismatch);
       return;
     }
     HapticFeedback.mediumImpact();
@@ -91,14 +90,10 @@ class _NewPasswordScreenState extends ConsumerState<NewPasswordScreen> {
     ) {
       if (next is FpSuccess && prev is FpLoading) {
         ref.read(forgotPasswordControllerProvider.notifier).reset();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(t.reset_password.password_updated)),
-        );
+        WayoToast.success(context, t.reset_password.password_updated);
         context.go('/login');
       } else if (next is FpError && next.error is! RateLimitedException) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(localizeAuthError(next.error, t))),
-        );
+        WayoToast.error(context, localizeAuthError(next.error, t));
       }
     });
 

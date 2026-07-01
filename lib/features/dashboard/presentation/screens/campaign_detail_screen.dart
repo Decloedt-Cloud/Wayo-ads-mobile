@@ -1,18 +1,22 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shimmer/shimmer.dart';
 
 import '../../../../core/errors/auth_exceptions.dart';
+import '../../../../core/campaigns/campaign_detail_metadata.dart';
 import '../../../../core/format/campaign_finance_display.dart';
 import '../../../../core/format/money_formatter.dart';
 import '../../../../core/layout/wayo_black_bottom_bar.dart';
+import '../../../../core/network/wayo_ads_public_url.dart';
 import '../../../../core/providers/app_providers.dart';
 import '../../../../core/push/mobile_push_route_utils.dart';
+import '../../../../core/widgets/campaign_cover_image.dart';
+import '../../../../core/widgets/campaign_detail/campaign_detail_assets_link.dart';
+import '../../../../core/widgets/campaign_detail/campaign_detail_budget_usage_card.dart';
+import '../../../../core/widgets/campaign_detail/campaign_detail_info_card.dart';
+import '../../../../core/widgets/campaign_detail/campaign_detail_requirements.dart';
 import '../../../../i18n/strings.g.dart';
 import '../../../shell/widgets/wayo_bottom_nav.dart';
 import '../../../advertiser_campaigns/domain/campaign_niche_catalog.dart';
@@ -29,46 +33,6 @@ import '../theme/campaign_detail_premium_palette.dart';
 import '../widgets/error_banner.dart';
 
 String _moneyLocale(AppLocale l) => wayoPublicMoneyLocale(l);
-
-String _campaignDetailPlatformKey(Map<String, dynamic> json) {
-  final shorts = json['shortsPlatform'] as String?;
-  if (shorts != null && shorts.trim().isNotEmpty) return shorts.trim();
-  final platforms = json['platforms'] as String?;
-  if (platforms != null && platforms.trim().isNotEmpty) {
-    return platforms.split(',').first.trim();
-  }
-  final type = json['type'] as String?;
-  if (type == 'VIDEO' || type == 'SHORTS') return 'youtube';
-  return '';
-}
-
-String _platformLabel(Translations t, CampaignPlatform p) => switch (p) {
-      CampaignPlatform.youtube => t.advertiser_campaigns.platform.youtube,
-      CampaignPlatform.tiktok => t.advertiser_campaigns.platform.tiktok,
-      CampaignPlatform.instagram => t.advertiser_campaigns.platform.instagram,
-      CampaignPlatform.unknown => t.advertiser_campaigns.platform.other,
-    };
-
-String _campaignKindLabel(Translations t, CreatorCampaignType k) =>
-    switch (k) {
-      CreatorCampaignType.link => t.creator.campaigns.type_link,
-      CreatorCampaignType.video => t.creator.campaigns.type_video,
-      CreatorCampaignType.shorts => t.creator.campaigns.type_shorts,
-      CreatorCampaignType.unknown => '—',
-    };
-
-String _campaignObjectiveDetailLabel(Translations t, String? raw) {
-  switch ((raw ?? '').trim().toUpperCase()) {
-    case 'AWARENESS':
-      return t.advertiser_campaigns.detail.objective_awareness;
-    case 'TRAFFIC':
-      return t.advertiser_campaigns.detail.objective_traffic;
-    case 'CONVERSION':
-      return t.advertiser_campaigns.detail.objective_conversion;
-    default:
-      return '—';
-  }
-}
 
 String _advertiserCampaignDetailLocationLabel(Map<String, dynamic> json) {
   return campaignLocationFromCampaignJson(
@@ -102,6 +66,13 @@ final class _ParsedCampaignDetail {
     required this.campaignKind,
     required this.showCpmMetric,
     required this.topCreators,
+    this.coverUrl,
+    this.brandLogoUrl,
+    this.assetsUrl,
+    this.requiredPlatform,
+    this.videoMinDurationMinutes,
+    this.shortsMaxDurationSeconds,
+    this.shortsRequireVertical,
   });
 
   final String title;
@@ -126,6 +97,13 @@ final class _ParsedCampaignDetail {
   final CreatorCampaignType campaignKind;
   final bool showCpmMetric;
   final List<CampaignTopCreator> topCreators;
+  final String? coverUrl;
+  final String? brandLogoUrl;
+  final String? assetsUrl;
+  final String? requiredPlatform;
+  final int? videoMinDurationMinutes;
+  final int? shortsMaxDurationSeconds;
+  final bool? shortsRequireVertical;
 
   factory _ParsedCampaignDetail.fromJson(
     Map<String, dynamic> json,
@@ -141,7 +119,12 @@ final class _ParsedCampaignDetail {
             : (fallbackTitle ?? '');
 
     final status = CampaignStatus.fromString(json['status'] as String?);
-    final platform = CampaignPlatform.fromString(_campaignDetailPlatformKey(json));
+    final platform = CampaignPlatform.fromString(campaignDetailPlatformKey(json));
+
+    final videoReq = json['videoRequirements'];
+    final videoReqMap = videoReq is Map
+        ? Map<String, dynamic>.from(videoReq)
+        : null;
 
     Map<String, dynamic>? f;
     final finance = json['finance'];
@@ -212,17 +195,17 @@ final class _ParsedCampaignDetail {
     return _ParsedCampaignDetail(
       title: title,
       status: status,
-      platformLabel: _platformLabel(t, platform),
+      platformLabel: campaignDetailPlatformLabel(t, platform),
       nicheLabel:
           ((json['niche'] as String?)?.trim().isNotEmpty ?? false)
               ? campaignNicheFallbackLabel((json['niche'] as String?)!.trim())
               : '—',
       locationLabel: _advertiserCampaignDetailLocationLabel(json),
-      objectiveLabel: _campaignObjectiveDetailLabel(
+      objectiveLabel: campaignDetailObjectiveLabel(
         t,
         json['campaignObjective'] as String?,
       ),
-      campaignKindLabel: _campaignKindLabel(t, campaignKind),
+      campaignKindLabel: campaignDetailTypeLabel(t, campaignKind),
       desc: json['description'] as String?,
       totalCents: total,
       remainingCents: remaining,
@@ -238,6 +221,15 @@ final class _ParsedCampaignDetail {
       campaignKind: campaignKind,
       showCpmMetric: showCpmMetric,
       topCreators: campaignTopCreatorsFromCampaignDetail(json) ?? const [],
+      coverUrl: normalizeWayoAdsMediaUrl(parseCampaignCoverUrlFromJson(json)),
+      brandLogoUrl: resolveWayoAdsPublicUrl(parseCampaignBrandLogoFromJson(json)),
+      assetsUrl: json['assetsUrl'] as String?,
+      requiredPlatform: videoReqMap?['requiredPlatform'] as String?,
+      videoMinDurationMinutes:
+          (json['videoMinDurationMinutes'] as num?)?.toInt(),
+      shortsMaxDurationSeconds:
+          (json['shortsMaxDurationSeconds'] as num?)?.toInt(),
+      shortsRequireVertical: json['shortsRequireVertical'] as bool?,
     );
   }
 }
@@ -275,10 +267,38 @@ class CampaignDetailScreen extends ConsumerWidget {
       backgroundColor: CampaignDetailPremiumPalette.bg(context),
       bottomNavigationBar:
           showBlackBottomBar ? const WayoBlackBottomBar() : null,
+      appBar: AppBar(
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
+        backgroundColor: CampaignDetailPremiumPalette.bg(context),
+        foregroundColor: CampaignDetailPremiumPalette.value(context),
+        iconTheme: IconThemeData(
+          color: CampaignDetailPremiumPalette.value(context),
+        ),
+        leading: IconButton(
+          onPressed: () {
+            HapticFeedback.lightImpact();
+            popOrGoShellParent(context, '/campaigns/$id');
+          },
+          icon: const Icon(Icons.arrow_back_rounded),
+        ),
+        title: Text(
+          title ?? t.advertiser_campaigns.detail.fallback_title,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: GoogleFonts.sora(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: CampaignDetailPremiumPalette.value(context),
+          ),
+        ),
+      ),
       body: async.when(
+        skipLoadingOnReload: true,
         data: (json) {
           final parsed = _ParsedCampaignDetail.fromJson(json, title, t);
-          return _CampaignPremiumScrollBody(
+          return _Body(
             id: id,
             parsed: parsed,
             moneyLocale: moneyLocale,
@@ -356,103 +376,73 @@ class _CampaignDetailLoadingSkeleton extends StatelessWidget {
         child: child,
       );
 
+  Widget _block(BuildContext context, double height, {double radius = 20}) =>
+      _shine(
+        context,
+        Container(
+          height: height,
+          decoration: BoxDecoration(
+            color: CampaignDetailPremiumPalette.surface1(context),
+            borderRadius: BorderRadius.circular(radius),
+          ),
+        ),
+      );
+
   @override
   Widget build(BuildContext context) {
-    final shimHint = CampaignDetailPremiumPalette.value(context).withValues(alpha: 0.12);
-    return CustomScrollView(
+    final shimHint =
+        CampaignDetailPremiumPalette.value(context).withValues(alpha: 0.12);
+    return ListView(
       physics: const NeverScrollableScrollPhysics(),
-      slivers: [
-        SliverToBoxAdapter(
-          child: _shine(
-            context,
-            Container(
-              height: 164,
-              width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 120),
+      children: [
+        // Cover image placeholder (16:9).
+        _shine(
+          context,
+          AspectRatio(
+            aspectRatio: 16 / 9,
+            child: Container(
               decoration: BoxDecoration(
-                gradient:
-                    CampaignDetailPremiumPalette.accentGradient.multiplyAlpha(0.35),
+                color: CampaignDetailPremiumPalette.surfaceGlass(context),
+                borderRadius: BorderRadius.circular(20),
               ),
             ),
           ),
         ),
-        SliverPadding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 120),
-          sliver: SliverList(
-            delegate: SliverChildListDelegate.fixed([
-              _shine(
-                context,
-                Container(
-                  height: 180,
-                  decoration: BoxDecoration(
-                    color: CampaignDetailPremiumPalette.surfaceGlass(context),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 14),
-              _shine(
-                context,
-                Container(
-                  height: 92,
-                  decoration: BoxDecoration(
-                    color: CampaignDetailPremiumPalette.surface1(context),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              _shine(
-                context,
-                Container(height: 20, width: 160, color: shimHint),
-              ),
-              const SizedBox(height: 14),
-              _shine(
-                context,
-                Container(
-                  height: 110,
-                  decoration: BoxDecoration(
-                    color: CampaignDetailPremiumPalette.surface1(context),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 10),
-              _shine(
-                context,
-                Container(
-                  height: 110,
-                  decoration: BoxDecoration(
-                    color: CampaignDetailPremiumPalette.surface1(context),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                ),
-              ),
-            ]),
-          ),
+        const SizedBox(height: 14),
+        _block(context, 110),
+        const SizedBox(height: 14),
+        _block(context, 180),
+        const SizedBox(height: 20),
+        _shine(
+          context,
+          Container(height: 20, width: 160, color: shimHint),
+        ),
+        const SizedBox(height: 14),
+        Row(
+          children: [
+            Expanded(child: _block(context, 90, radius: 16)),
+            const SizedBox(width: 10),
+            Expanded(child: _block(context, 90, radius: 16)),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Expanded(child: _block(context, 90, radius: 16)),
+            const SizedBox(width: 10),
+            Expanded(child: _block(context, 90, radius: 16)),
+          ],
         ),
       ],
     );
   }
 }
 
-extension _SoftLinearGradient on LinearGradient {
-  LinearGradient multiplyAlpha(double a) {
-    return LinearGradient(
-      begin: begin,
-      end: end,
-      colors: colors.map((c) {
-        final blend = (c.a * a).clamp(0.0, 1.0);
-        return c.withValues(alpha: blend);
-      }).toList(),
-      stops: stops,
-    );
-  }
-}
-
 enum _MetricDot { gray, amber, green }
 
-class _CampaignPremiumScrollBody extends ConsumerStatefulWidget {
-  const _CampaignPremiumScrollBody({
+class _Body extends ConsumerWidget {
+  const _Body({
     required this.id,
     required this.parsed,
     required this.moneyLocale,
@@ -465,50 +455,15 @@ class _CampaignPremiumScrollBody extends ConsumerStatefulWidget {
   final Translations t;
 
   @override
-  ConsumerState<_CampaignPremiumScrollBody> createState() =>
-      _CampaignPremiumScrollBodyState();
-}
-
-class _CampaignPremiumScrollBodyState extends ConsumerState<_CampaignPremiumScrollBody> {
-  late final ScrollController _scroll;
-  bool _showCollapsedTitle = false;
-  static const double _titleRevealOffset = 96;
-  static const double _appBarToolbarHeight = 52;
-
-  @override
-  void initState() {
-    super.initState();
-    _scroll = ScrollController()..addListener(_onScroll);
-  }
-
-  void _onScroll() {
-    if (!_scroll.hasClients) return;
-    final next = _scroll.offset >= _titleRevealOffset;
-    if (next != _showCollapsedTitle) {
-      setState(() => _showCollapsedTitle = next);
-    }
-  }
-
-  @override
-  void dispose() {
-    _scroll.removeListener(_onScroll);
-    _scroll.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final parsed = widget.parsed;
-    final t = widget.t;
+  Widget build(BuildContext context, WidgetRef ref) {
     final auth = ref.watch(authNotifierProvider).valueOrNull;
     final role = auth is AuthAuthenticated ? auth.user.wayoAdsRole : null;
     final isSuperadmin = role == WayoAdsAccountRole.superAdmin;
-    final showBlackBottomBar = isSuperadmin;
 
     String moneyStr(int cents) => MoneyFormatter.format(
           cents / 100.0,
           currency: kWayoPublicCurrency,
-          locale: widget.moneyLocale,
+          locale: moneyLocale,
         );
 
     final primaryRate = resolveCampaignPayoutMetric(
@@ -542,14 +497,13 @@ class _CampaignPremiumScrollBodyState extends ConsumerState<_CampaignPremiumScro
       return _MetricDot.green;
     }
 
-    final metricsRecords = <
-        (IconData, String, String, _MetricDot, bool)>[
+    final metrics = <(IconData, String, String, _MetricDot, bool)>[
       (
         Icons.payments_outlined,
         t.advertiser_campaigns.card.budget_total,
-        moneyStr(parsed.totalCents),
-        parsed.totalCents > 0 ? _MetricDot.green : _MetricDot.gray,
-        parsed.totalCents > 0,
+        moneyStr(total),
+        total > 0 ? _MetricDot.green : _MetricDot.gray,
+        total > 0,
       ),
       (
         Icons.savings_outlined,
@@ -595,487 +549,243 @@ class _CampaignPremiumScrollBodyState extends ConsumerState<_CampaignPremiumScro
       ),
     ];
 
-    final toolbarOnLightCollapsed =
-        Theme.of(context).brightness == Brightness.light && _showCollapsedTitle;
-    final toolbarFg = toolbarOnLightCollapsed
-        ? CampaignDetailPremiumPalette.value(context)
-        : Colors.white.withValues(alpha: 0.95);
-
-    final metrics = <
-        (IconData, String, String, _MetricDot, bool)>[
-      metricsRecords[0],
-      metricsRecords[1],
-      metricsRecords[2],
-      metricsRecords[3],
-      metricsRecords[4],
-      metricsRecords[5],
-      metricsRecords[6],
-    ];
+    final hasDesc = parsed.desc != null && parsed.desc!.trim().isNotEmpty;
+    final showOwnerSections = !isSuperadmin && parsed.isOwner;
 
     return RefreshIndicator.adaptive(
       color: CampaignDetailPremiumPalette.amber,
       backgroundColor: CampaignDetailPremiumPalette.surface1(context),
       onRefresh: () async {
         HapticFeedback.lightImpact();
-        ref.invalidate(advertiserCampaignDetailProvider(widget.id));
+        ref.invalidate(advertiserCampaignDetailProvider(id));
         if (!isSuperadmin) {
-          ref.invalidate(campaignApplicationsProvider(widget.id));
+          ref.invalidate(campaignApplicationsProvider(id));
         }
-        await ref.read(advertiserCampaignDetailProvider(widget.id).future);
+        await ref.read(advertiserCampaignDetailProvider(id).future);
       },
-      child: CustomScrollView(
-        controller: _scroll,
-        physics: const AlwaysScrollableScrollPhysics(
-          parent: BouncingScrollPhysics(),
+      child: ListView(
+        physics: const BouncingScrollPhysics(
+          parent: AlwaysScrollableScrollPhysics(),
         ),
-        slivers: [
-          SliverAppBar(
-            pinned: true,
-            stretch: true,
-            toolbarHeight: _appBarToolbarHeight,
-            backgroundColor: CampaignDetailPremiumPalette.bg(context),
-            elevation: 0,
-            scrolledUnderElevation: 0,
-            leading: IconButton(
-              onPressed: () {
-                HapticFeedback.lightImpact();
-                popOrGoShellParent(context, '/campaigns/${widget.id}');
-              },
-              icon: Icon(
-                Icons.arrow_back_rounded,
-                color: toolbarFg,
-              ),
-            ),
-            titleSpacing: _showCollapsedTitle ? 0 : 8,
-            title: AnimatedOpacity(
-              opacity: _showCollapsedTitle ? 1 : 0,
-              duration: const Duration(milliseconds: 220),
-              child: IgnorePointer(
-                ignoring: !_showCollapsedTitle,
-                child: Text(
+        padding: EdgeInsets.fromLTRB(
+          20,
+          8,
+          20,
+          40 + wayoShellBodyBottomPadding(context),
+        ),
+        children: [
+          CampaignCoverImage(
+            coverUrl: parsed.coverUrl,
+            brandLogoUrl: parsed.brandLogoUrl,
+            fallbackIcon: Icons.campaign_outlined,
+            accent: CampaignDetailPremiumPalette.amber,
+          ),
+          const SizedBox(height: 14),
+          _PremiumCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
                   parsed.title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                   style: GoogleFonts.sora(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w700,
-                    color: toolbarFg,
+                    fontSize: 24,
+                    fontWeight: FontWeight.w800,
+                    color: CampaignDetailPremiumPalette.value(context),
+                    height: 1.15,
                   ),
                 ),
-              ),
-            ),
-            expandedHeight: 252,
-            flexibleSpace: FlexibleSpaceBar(
-              collapseMode: CollapseMode.parallax,
-              stretchModes: const [
-                StretchMode.zoomBackground,
+                const SizedBox(height: 14),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    _StatusPill(status: parsed.status, t: t),
+                    _Pill(
+                      label: parsed.campaignKindLabel,
+                      color: CampaignDetailPremiumPalette.amber,
+                      icon: Icons.interests_outlined,
+                    ),
+                    _Pill(
+                      label: parsed.platformLabel,
+                      color: const Color(0xFF8B5CF6),
+                      icon: Icons.public_outlined,
+                    ),
+                  ],
+                ),
               ],
-              background: DecoratedBox(
-                decoration: BoxDecoration(gradient: CampaignDetailPremiumPalette.accentGradient),
-                child: SafeArea(
-                  bottom: false,
-                  child: Padding(
-                    padding: EdgeInsets.fromLTRB(
-                      20,
-                      _appBarToolbarHeight + 4,
-                      20,
-                      18,
-                    ),
-                    child: Align(
-                      alignment: Alignment.topLeft,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          AnimatedOpacity(
-                            opacity: _showCollapsedTitle ? 0 : 1,
-                            duration: const Duration(milliseconds: 220),
-                            child: Text(
-                              parsed.title,
-                              maxLines: 3,
-                              overflow: TextOverflow.ellipsis,
-                              style: GoogleFonts.sora(
-                                fontSize: 23,
-                                fontWeight: FontWeight.w800,
-                                color: Colors.white,
-                                height: 1.2,
-                                shadows: [
-                                  Shadow(
-                                    color: Colors.black.withValues(alpha: 0.35),
-                                    offset: const Offset(0, 2),
-                                    blurRadius: 10,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          _HeroCampaignStatusPulse(status: parsed.status, t: t),
-                          const SizedBox(height: 10),
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: [
-                              _HeroMetaChip(label: parsed.campaignKindLabel),
-                              _HeroMetaChip(label: parsed.platformLabel),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+            ),
+          ),
+          const SizedBox(height: 14),
+          CampaignDetailInfoCard(
+            platformLabel: parsed.platformLabel,
+            nicheLabel: parsed.nicheLabel,
+            locationLabel: parsed.locationLabel,
+            objectiveLabel: parsed.objectiveLabel,
+            campaignTypeLabel: parsed.campaignKindLabel,
+          ),
+          if (total > 0) ...[
+            const SizedBox(height: 14),
+            CampaignDetailBudgetUsageCard(
+              totalCents: total,
+              spentCents: spent,
+              remainingCents: rem,
+              moneyLocale: moneyLocale,
+              approvedCreators: parsed.approved,
+            ),
+          ],
+          if (hasDesc) ...[
+            const SizedBox(height: 14),
+            _DescriptionPremiumBlock(text: parsed.desc, t: t),
+          ],
+          if (parsed.campaignKind.requiresVideoSubmission) ...[
+            const SizedBox(height: 14),
+            _PremiumCard(
+              child: CampaignDetailRequirements(
+                type: parsed.campaignKind,
+                requiredPlatform: parsed.requiredPlatform,
+                videoMinDurationMinutes: parsed.videoMinDurationMinutes,
+                shortsMaxDurationSeconds: parsed.shortsMaxDurationSeconds,
+                shortsRequireVertical: parsed.shortsRequireVertical,
+              ),
+            ),
+          ],
+          if (parsed.assetsUrl != null && parsed.assetsUrl!.trim().isNotEmpty) ...[
+            const SizedBox(height: 14),
+            CampaignDetailAssetsLink(url: parsed.assetsUrl!.trim()),
+          ],
+          const SizedBox(height: 18),
+          _PerformanceTitle(t: t),
+          const SizedBox(height: 12),
+          GridView.count(
+            crossAxisCount: 2,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisSpacing: 10,
+            mainAxisSpacing: 10,
+            childAspectRatio: 1.6,
+            children: [
+              for (var i = 0; i < metrics.length; i++)
+                _PremiumMetricTile(
+                  icon: metrics[i].$1,
+                  label: metrics[i].$2,
+                  value: metrics[i].$3,
+                  dot: metrics[i].$4,
+                  leftAccent: metrics[i].$5,
                 ),
-              ),
-            ),
+            ],
           ),
-          SliverPadding(
-            padding: CampaignDetailPremiumPalette.kScreenPadding.copyWith(bottom: 0),
-            sliver: SliverList(
-              delegate: SliverChildListDelegate.fixed([
-                const SizedBox(height: 10),
-                _FrostedInfoCard(parsed: parsed, t: t),
-                SizedBox(height: CampaignDetailPremiumPalette.kSectionGap),
-                _DescriptionPremiumBlock(text: parsed.desc, t: t),
-                SizedBox(height: CampaignDetailPremiumPalette.kSectionGap),
-                _PerformanceTitle(t: t),
-                const SizedBox(height: 12),
-              ]),
+          if (showOwnerSections) ...[
+            const SizedBox(height: 24),
+            CampaignTopCreatorsSection(
+              creators: parsed.topCreators,
+              moneyLocale: moneyLocale,
             ),
-          ),
-          SliverPadding(
-            padding: CampaignDetailPremiumPalette.kScreenPadding,
-            sliver: SliverGrid(
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 10,
-                mainAxisSpacing: 10,
-                childAspectRatio: 1.6,
-              ),
-              delegate: SliverChildBuilderDelegate(
-                childCount: metrics.length,
-                (context, index) {
-                  final m = metrics[index];
-                  return _PremiumMetricTile(
-                    icon: m.$1,
-                    label: m.$2,
-                    value: m.$3,
-                    dot: m.$4,
-                    leftAccent: m.$5,
-                  )
-                      .animate(delay: Duration(milliseconds: 60 * index))
-                      .fadeIn(duration: 420.ms, curve: Curves.easeOutCubic)
-                      .slideY(
-                          begin: 0.15, end: 0, curve: Curves.easeOutCubic);
-                },
-              ),
+            const SizedBox(height: 24),
+            CampaignApplicationsSection(
+              campaignId: id,
+              premiumChrome: true,
             ),
-          ),
-          if (!isSuperadmin && parsed.isOwner)
-            SliverPadding(
-              padding:
-                  CampaignDetailPremiumPalette.kScreenPadding.copyWith(top: 24),
-              sliver: SliverToBoxAdapter(
-                child: CampaignTopCreatorsSection(
-                  creators: parsed.topCreators,
-                  moneyLocale: widget.moneyLocale,
-                )
-                    .animate()
-                    .fadeIn(duration: 400.ms, curve: Curves.easeOutCubic)
-                    .slideY(begin: 0.06, curve: Curves.easeOutCubic),
-              ),
-            ),
-          if (!isSuperadmin && parsed.isOwner)
-            SliverPadding(
-              padding: CampaignDetailPremiumPalette.kScreenPadding
-                  .copyWith(
-                    top: 24,
-                    bottom: 40 + wayoShellBodyBottomPadding(context),
-                  ),
-              sliver: SliverToBoxAdapter(
-                child: CampaignApplicationsSection(
-                  campaignId: widget.id,
-                  premiumChrome: true,
-                )
-                    .animate()
-                    .fadeIn(duration: 400.ms, curve: Curves.easeOutCubic)
-                    .slideY(begin: 0.06, curve: Curves.easeOutCubic),
-              ),
-            ),
-          if (showBlackBottomBar)
-            const SliverToBoxAdapter(
-              child: SizedBox(height: 16),
-            ),
+          ],
         ],
       ),
     );
   }
 }
 
-class _HeroMetaChip extends StatelessWidget {
-  const _HeroMetaChip({required this.label});
+/// Flat surface card matching the creator campaign detail layout.
+class _PremiumCard extends StatelessWidget {
+  const _PremiumCard({required this.child});
 
-  final String label;
+  final Widget child;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      width: double.infinity,
+      padding: const EdgeInsets.all(CampaignDetailPremiumPalette.kCardPadding),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(22),
-        color: Colors.black.withValues(alpha: 0.25),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.22)),
-      ),
-      child: Text(
-        label,
-        style: GoogleFonts.dmSans(
-          fontSize: 13,
-          fontWeight: FontWeight.w700,
-          color: Colors.white,
+        color: CampaignDetailPremiumPalette.surface1(context),
+        borderRadius:
+            BorderRadius.circular(CampaignDetailPremiumPalette.kCardRadius),
+        border: Border.all(
+          color: CampaignDetailPremiumPalette.divider(context)
+              .withValues(alpha: 0.9),
         ),
+        boxShadow: CampaignDetailPremiumPalette.cardShadow(context, 0.12),
       ),
+      child: child,
     );
   }
 }
 
-class _HeroCampaignStatusPulse extends StatelessWidget {
-  const _HeroCampaignStatusPulse({
-    required this.status,
-    required this.t,
-  });
+class _Pill extends StatelessWidget {
+  const _Pill({required this.label, required this.color, this.icon});
 
-  final CampaignStatus status;
-  final Translations t;
-
-  String _label() => switch (status) {
-        CampaignStatus.active => t.advertiser_campaigns.status.active,
-        CampaignStatus.paused => t.advertiser_campaigns.status.paused,
-        CampaignStatus.completed => t.advertiser_campaigns.status.completed,
-        CampaignStatus.draft => t.advertiser_campaigns.status.draft,
-        CampaignStatus.unknown => t.advertiser_campaigns.status.other,
-      };
-
-  bool get _active => status == CampaignStatus.active;
+  final String label;
+  final Color color;
+  final IconData? icon;
 
   @override
   Widget build(BuildContext context) {
-    final pill = Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        color: Colors.black.withValues(alpha: 0.22),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
-        boxShadow: _active
-            ? [
-                BoxShadow(
-                  color: const Color(0xFF22C55E).withValues(alpha: 0.45),
-                  blurRadius: 16,
-                  spreadRadius: 0,
-                  offset: const Offset(0, 2),
-                ),
-              ]
-            : null,
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            Icons.circle,
-            size: 10,
-            color: status == CampaignStatus.active ? const Color(0xFFBBF7D0) : Colors.grey.shade400,
-          ),
-          const SizedBox(width: 8),
+          if (icon != null) ...[
+            Icon(icon, color: color, size: 13),
+            const SizedBox(width: 5),
+          ],
           Text(
-            _label(),
-            style: GoogleFonts.dmSans(
-              fontSize: 13,
+            label,
+            style: TextStyle(
+              color: color,
               fontWeight: FontWeight.w700,
-              color: Colors.white,
+              fontSize: 11,
               letterSpacing: 0.2,
             ),
           ),
         ],
       ),
     );
-
-    if (!_active) return pill;
-    return pill
-        .animate(onPlay: (c) => c.repeat(reverse: true))
-        .scaleXY(begin: 1, end: 1.04, duration: 1200.ms, curve: Curves.easeInOut);
   }
 }
 
-class _FrostedInfoCard extends StatelessWidget {
-  const _FrostedInfoCard({
-    required this.parsed,
-    required this.t,
-  });
+class _StatusPill extends StatelessWidget {
+  const _StatusPill({required this.status, required this.t});
 
-  final _ParsedCampaignDetail parsed;
+  final CampaignStatus status;
   final Translations t;
 
   @override
   Widget build(BuildContext context) {
-    final rows = [
-      (
-        Icons.public_outlined,
-        t.advertiser_campaigns.detail.platform_label,
-        parsed.platformLabel,
-      ),
-      (
-        Icons.category_outlined,
-        t.advertiser_campaigns.detail.niche_label,
-        parsed.nicheLabel,
-      ),
-      (
-        Icons.place_outlined,
-        t.advertiser_campaigns.detail.location_label,
-        parsed.locationLabel,
-      ),
-      (
-        Icons.flag_outlined,
-        t.advertiser_campaigns.detail.objective_label,
-        parsed.objectiveLabel,
-      ),
-      (
-        Icons.interests_outlined,
-        t.advertiser_campaigns.detail.campaign_type_label,
-        parsed.campaignKindLabel,
-      ),
-    ];
-
-    Widget buildBody(BoxConstraints constraints) {
-      final twoCol = constraints.maxWidth >= 400;
-      if (!twoCol) {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            for (var i = 0; i < rows.length; i++) ...[
-              if (i > 0)
-                Divider(
-                  height: 1,
-                  thickness: 1,
-                  color: CampaignDetailPremiumPalette.rowSeparator(context),
-                ),
-              Padding(
-                padding: EdgeInsets.only(top: i > 0 ? 10 : 0, bottom: 10),
-                child: _MiniInfoTile(icon: rows[i].$1, label: rows[i].$2, value: rows[i].$3),
-              ),
-            ],
-          ],
-        );
-      }
-
-      return Column(
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(child: _MiniInfoTile(icon: rows[0].$1, label: rows[0].$2, value: rows[0].$3)),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: SizedBox(
-                  width: 1,
-                  height: 44,
-                  child: ColoredBox(color: CampaignDetailPremiumPalette.rowSeparator(context)),
-                ),
-              ),
-              Expanded(child: _MiniInfoTile(icon: rows[1].$1, label: rows[1].$2, value: rows[1].$3)),
-            ],
-          ),
-          Divider(
-            height: 1,
-            thickness: 1,
-            color: CampaignDetailPremiumPalette.rowSeparator(context),
-          ),
-          const SizedBox(height: 10),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(child: _MiniInfoTile(icon: rows[2].$1, label: rows[2].$2, value: rows[2].$3)),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: SizedBox(
-                  width: 1,
-                  height: 44,
-                  child: ColoredBox(color: CampaignDetailPremiumPalette.rowSeparator(context)),
-                ),
-              ),
-              Expanded(child: _MiniInfoTile(icon: rows[3].$1, label: rows[3].$2, value: rows[3].$3)),
-            ],
-          ),
-          Divider(
-            height: 1,
-            thickness: 1,
-            color: CampaignDetailPremiumPalette.rowSeparator(context),
-          ),
-          const SizedBox(height: 10),
-          _MiniInfoTile(icon: rows[4].$1, label: rows[4].$2, value: rows[4].$3),
-        ],
-      );
-    }
-
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(16),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 320),
-          curve: Curves.easeOutCubic,
-          decoration: BoxDecoration(
-            color: CampaignDetailPremiumPalette.surfaceGlass(context)
-                .withValues(alpha: Theme.of(context).brightness == Brightness.dark ? 0.8 : 0.95),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: CampaignDetailPremiumPalette.divider(context).withValues(alpha: 0.75),
-            ),
-            boxShadow: CampaignDetailPremiumPalette.cardShadow(context, 0.15),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-            child: LayoutBuilder(builder: (context, c) => buildBody(c)),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _MiniInfoTile extends StatelessWidget {
-  const _MiniInfoTile({
-    required this.icon,
-    required this.label,
-    required this.value,
-  });
-
-  final IconData icon;
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Icon(icon, size: 18, color: CampaignDetailPremiumPalette.amber.withValues(alpha: 0.92)),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: CampaignDetailPremiumPalette.infoLabel(context),
-          ),
-        ),
-        const SizedBox(width: 8),
-        Text(
-          value,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          textAlign: TextAlign.end,
-          style: CampaignDetailPremiumPalette.infoValue(context),
-        ),
-      ],
-    );
+    final label = switch (status) {
+      CampaignStatus.active => t.advertiser_campaigns.status.active,
+      CampaignStatus.paused => t.advertiser_campaigns.status.paused,
+      CampaignStatus.completed => t.advertiser_campaigns.status.completed,
+      CampaignStatus.draft => t.advertiser_campaigns.status.draft,
+      CampaignStatus.unknown => t.advertiser_campaigns.status.other,
+    };
+    final color = switch (status) {
+      CampaignStatus.active => const Color(0xFF22C55E),
+      CampaignStatus.paused => const Color(0xFFF59E0B),
+      CampaignStatus.completed => const Color(0xFF8B5CF6),
+      CampaignStatus.draft => CampaignDetailPremiumPalette.muted(context),
+      CampaignStatus.unknown => CampaignDetailPremiumPalette.muted(context),
+    };
+    final icon = switch (status) {
+      CampaignStatus.active => Icons.circle,
+      CampaignStatus.paused => Icons.pause_circle_outline,
+      CampaignStatus.completed => Icons.check_circle_outline,
+      CampaignStatus.draft => Icons.edit_note_rounded,
+      CampaignStatus.unknown => Icons.help_outline,
+    };
+    return _Pill(label: label, color: color, icon: icon);
   }
 }
 
@@ -1296,10 +1006,19 @@ class _PremiumMetricTile extends StatelessWidget {
                     children: [
                       Row(
                         children: [
-                          Icon(
-                            icon,
-                            size: 19,
-                            color: CampaignDetailPremiumPalette.amber.withValues(alpha: 0.95),
+                          Container(
+                            width: 30,
+                            height: 30,
+                            decoration: BoxDecoration(
+                              color: CampaignDetailPremiumPalette.amber
+                                  .withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(9),
+                            ),
+                            child: Icon(
+                              icon,
+                              size: 17,
+                              color: CampaignDetailPremiumPalette.amber,
+                            ),
                           ),
                           const SizedBox(width: 8),
                           Expanded(

@@ -5,7 +5,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../i18n/strings.g.dart';
 import '../../domain/creator_withdrawal_fee_estimate.dart';
 
-/// Gross / platform fee / VAT / net — same layout as web creator wallet dialog.
+/// Withdrawal amount / VAT (if applicable) / net received.
 class CreatorWithdrawFeeBreakdown extends StatelessWidget {
   const CreatorWithdrawFeeBreakdown({
     super.key,
@@ -27,8 +27,7 @@ class CreatorWithdrawFeeBreakdown extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = context.t.creator.wallet;
-    final feePct = (estimate.platformFeeRate * 100).toStringAsFixed(1);
-    final feeColor = const Color(0xFFD97706);
+    final deductionColor = const Color(0xFFD97706);
     final netColor = const Color(0xFF10B981);
 
     return Container(
@@ -47,27 +46,18 @@ class CreatorWithdrawFeeBreakdown extends StatelessWidget {
           const SizedBox(height: 6),
           _row(
             context,
-            t.withdraw_platform_fee.replaceAll('{percent}', feePct),
-            '-${_fmt(estimate.platformFeeCents)}',
-            valueColor: feeColor,
-          ),
-          if (estimate.hasTax) ...[
-            const SizedBox(height: 6),
-            _row(
-              context,
-              t.withdraw_tax_vat.replaceAll(
-                '{percent}',
-                estimate.taxRatePercent.toStringAsFixed(
-                  estimate.taxRatePercent.truncateToDouble() ==
-                          estimate.taxRatePercent
-                      ? 0
-                      : 1,
-                ),
+            t.withdraw_tax_vat.replaceAll(
+              '{percent}',
+              estimate.taxRatePercent.toStringAsFixed(
+                estimate.taxRatePercent.truncateToDouble() ==
+                        estimate.taxRatePercent
+                    ? 0
+                    : 1,
               ),
-              '-${_fmt(estimate.taxCents)}',
-              valueColor: feeColor,
             ),
-          ],
+            '-${_fmt(estimate.taxCents)}',
+            valueColor: deductionColor,
+          ),
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 8),
             child: Divider(

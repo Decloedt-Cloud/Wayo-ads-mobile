@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/layout/wayo_black_bottom_bar.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/ui/wayo_toast.dart';
 import '../../domain/entities/country_tax_rate.dart';
 import '../providers/superadmin_providers.dart';
 import '../widgets/superadmin_chrome_actions.dart';
@@ -63,9 +64,7 @@ class _TaxRatesScreenState extends ConsumerState<TaxRatesScreen> {
         return true;
       },
       failure: (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString())),
-        );
+        WayoToast.error(context, e.toString());
         return false;
       },
     );
@@ -99,9 +98,7 @@ class _TaxRatesScreenState extends ConsumerState<TaxRatesScreen> {
   Future<void> _onSaveCountry(CountryTaxRate item) async {
     final rate = _parseRateInput(_editController.text);
     if (rate == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Enter a rate between 0 and 100')),
-      );
+      WayoToast.info(context, 'Enter a rate between 0 and 100');
       return;
     }
     final ok = await _saveRate(
@@ -115,9 +112,7 @@ class _TaxRatesScreenState extends ConsumerState<TaxRatesScreen> {
   Future<void> _onSaveSubdivision(TaxSubdivisionRate item) async {
     final rate = _parseRateInput(_editController.text);
     if (rate == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Enter a rate between 0 and 100')),
-      );
+      WayoToast.info(context, 'Enter a rate between 0 and 100');
       return;
     }
     final ok = await _saveRate(

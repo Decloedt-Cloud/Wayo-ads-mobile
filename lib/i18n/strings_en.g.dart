@@ -62,6 +62,8 @@ class Translations implements BaseTranslations<AppLocale, Translations> {
 	late final TranslationsPrivacyPolicyEn privacy_policy = TranslationsPrivacyPolicyEn.internal(_root);
 	late final TranslationsTermsAndConditionsEn terms_and_conditions = TranslationsTermsAndConditionsEn.internal(_root);
 	late final TranslationsAppSettingsEn app_settings = TranslationsAppSettingsEn.internal(_root);
+	late final TranslationsProfileEn profile = TranslationsProfileEn.internal(_root);
+	late final TranslationsSecurityEn security = TranslationsSecurityEn.internal(_root);
 	late final TranslationsAccountDeletionEn account_deletion = TranslationsAccountDeletionEn.internal(_root);
 	late final TranslationsOnboardingEn onboarding = TranslationsOnboardingEn.internal(_root);
 }
@@ -666,6 +668,7 @@ class TranslationsChatEn {
 	String get forward_failed => 'Forward failed.';
 	String get forward_view => 'Open';
 	String get edited => 'edited';
+	String get message_deleted => 'This message was deleted';
 	String get seen => 'Seen';
 	String get delivered => 'Delivered';
 	String get edit_mode_title => 'Editing message';
@@ -895,6 +898,70 @@ class TranslationsAppSettingsEn {
 	String get section_about => 'About';
 	String get rate_app => 'Rate Wayo Ads';
 	String get rate_app_sub => 'Open the App Store or Google Play';
+	String get rate_app_error => 'Could not open the store. Try again in a moment.';
+}
+
+// Path: profile
+class TranslationsProfileEn {
+	TranslationsProfileEn.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+	String get nav_title => 'Profile';
+	String get entry_title => 'Edit profile';
+	String get entry_sub => 'Photo, display name and account info';
+	String get section_info_title => 'Profile information';
+	String get section_info_desc => 'Update your personal information and profile picture.';
+	String get section_details_title => 'Account details';
+	String get section_details_desc => 'Your account information and roles.';
+	String get display_name => 'Display name';
+	String get display_name_hint => 'How others see you on Wayo Ads';
+	String get display_name_required => 'Display name is required';
+	String get save_changes => 'Save changes';
+	String get saving => 'Saving…';
+	String get saved => 'Profile updated';
+	String get save_error => 'Could not save profile. Try again.';
+	String get load_error => 'Could not load profile.';
+	String get name_taken => 'This name is already taken. Please choose another one.';
+	String get name_invalid => 'This name mixes characters from different alphabets, which is not allowed.';
+	String get avatar_upload => 'Upload photo';
+	String get avatar_remove => 'Remove';
+	String get avatar_hint => 'JPG, PNG or GIF — max 500 KB';
+	String get avatar_pick_error => 'Could not pick image.';
+	String get avatar_too_large => 'Image is too large (max 500 KB).';
+	String get email => 'Email address';
+	String get roles => 'Roles';
+	String get member_since => 'Member since';
+	String get role_creator => 'Creator';
+	String get role_advertiser => 'Advertiser';
+	String get role_user => 'User';
+}
+
+// Path: security
+class TranslationsSecurityEn {
+	TranslationsSecurityEn.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+	String get nav_title => 'Security';
+	String get entry_title => 'Password & sessions';
+	String get entry_sub => 'Change password and manage connected devices';
+	String get change_password_title => 'Change password';
+	String get password_management_title => 'Password';
+	String get current_password => 'Current password';
+	String get new_password => 'New password';
+	String get confirm_password => 'Confirm new password';
+	String get update_password => 'Update password';
+	String get updating_password => 'Updating…';
+	String get password_updated => 'Password updated successfully.';
+	String get password_oauth_message => 'You signed in with Google or Apple. Password management is handled by your provider. To change your password, please use your provider\'s account settings.';
+	String get all_fields_required => 'All fields are required.';
+	String get password_min_length => 'At least 8 characters.';
+	String get password_same_as_current => 'New password must differ from the current one.';
+	String get password_wrong_current => 'Current password is incorrect.';
+	String get password_change_error => 'Could not update password. Try again.';
 }
 
 // Path: account_deletion
@@ -934,8 +1001,15 @@ class TranslationsAccountDeletionEn {
 	String get password_hint => 'At least 8 characters';
 	String get forgot_password => 'Forgot password?';
 	String get oauth_note => 'If you only sign in with Google or Apple, set a password first (Forgot password).';
-	String get oauth_deletion_intro => 'You use Google or Apple to sign in. After you continue, confirm in the next step — no password required.';
+	String get oauth_deletion_intro => 'You use Google or Apple to sign in. For your security, you will re-authenticate with your provider before deletion is scheduled.';
 	String get oauth_deletion_step_hint => 'Your identity was confirmed when you signed in with Google or Apple. Tap below to review the final confirmation sheet.';
+	String get oauth_reauth_intro => 'For your security, confirm it\'s you by signing in again with the provider you use for Wayo Ads. Deletion is scheduled right after.';
+	String get oauth_reauth_google => 'Re-authenticate with Google';
+	String get oauth_reauth_apple => 'Re-authenticate with Apple';
+	String get oauth_reauth_cancelled => 'Re-authentication was cancelled.';
+	String get oauth_reauth_failed => 'Re-authentication failed. Please try again.';
+	String get oauth_reauth_mismatch => 'Please re-authenticate with the same account you use for Wayo Ads.';
+	String get error_reauth_required => 'Re-authentication is required to delete your account. Please sign in again with your provider.';
 	String legal_recap({required Object date}) => 'You will start a 30-day grace period before permanent deletion. You can cancel until ${date}.';
 	String get next_review => 'Review and confirm';
 	String get dialog_title => 'Are you sure?';
@@ -1100,6 +1174,7 @@ class TranslationsAdvertiserCampaignsCardEn {
 	String get spent => 'Spent';
 	String get cpc => 'CPC';
 	String get cpm => 'CPM';
+	String get badge_new => 'New';
 	String get valid_engagements => '{count} validated views';
 	String get list_row_views => '{count} views';
 	String get list_row_clicks => '{count} clicks';
@@ -1142,6 +1217,9 @@ class TranslationsAdvertiserCampaignsDetailEn {
 	// Translations
 	String get fallback_title => 'Campaign';
 	String get metrics_title => 'Performance';
+	String get budget_usage_title => 'Budget usage';
+	String get budget_usage_spent => 'Spent';
+	String get budget_usage_remaining => 'Remaining';
 	String get valid_views => 'Validated views';
 	String get valid_clicks => 'Valid clicks';
 	String get approved_creators => 'Approved creators';
@@ -1739,6 +1817,7 @@ extension on Translations {
 			case 'advertiser_campaigns.card.spent': return 'Spent';
 			case 'advertiser_campaigns.card.cpc': return 'CPC';
 			case 'advertiser_campaigns.card.cpm': return 'CPM';
+			case 'advertiser_campaigns.card.badge_new': return 'New';
 			case 'advertiser_campaigns.card.valid_engagements': return '{count} validated views';
 			case 'advertiser_campaigns.card.list_row_views': return '{count} views';
 			case 'advertiser_campaigns.card.list_row_clicks': return '{count} clicks';
@@ -1754,6 +1833,9 @@ extension on Translations {
 			case 'advertiser_campaigns.platform.other': return 'Platform';
 			case 'advertiser_campaigns.detail.fallback_title': return 'Campaign';
 			case 'advertiser_campaigns.detail.metrics_title': return 'Performance';
+			case 'advertiser_campaigns.detail.budget_usage_title': return 'Budget usage';
+			case 'advertiser_campaigns.detail.budget_usage_spent': return 'Spent';
+			case 'advertiser_campaigns.detail.budget_usage_remaining': return 'Remaining';
 			case 'advertiser_campaigns.detail.valid_views': return 'Validated views';
 			case 'advertiser_campaigns.detail.valid_clicks': return 'Valid clicks';
 			case 'advertiser_campaigns.detail.approved_creators': return 'Approved creators';
@@ -2255,6 +2337,7 @@ extension on Translations {
 			case 'chat.forward_failed': return 'Forward failed.';
 			case 'chat.forward_view': return 'Open';
 			case 'chat.edited': return 'edited';
+			case 'chat.message_deleted': return 'This message was deleted';
 			case 'chat.seen': return 'Seen';
 			case 'chat.delivered': return 'Delivered';
 			case 'chat.edit_mode_title': return 'Editing message';
@@ -2439,6 +2522,52 @@ extension on Translations {
 			case 'app_settings.section_about': return 'About';
 			case 'app_settings.rate_app': return 'Rate Wayo Ads';
 			case 'app_settings.rate_app_sub': return 'Open the App Store or Google Play';
+			case 'app_settings.rate_app_error': return 'Could not open the store. Try again in a moment.';
+			case 'profile.nav_title': return 'Profile';
+			case 'profile.entry_title': return 'Edit profile';
+			case 'profile.entry_sub': return 'Photo, display name and account info';
+			case 'profile.section_info_title': return 'Profile information';
+			case 'profile.section_info_desc': return 'Update your personal information and profile picture.';
+			case 'profile.section_details_title': return 'Account details';
+			case 'profile.section_details_desc': return 'Your account information and roles.';
+			case 'profile.display_name': return 'Display name';
+			case 'profile.display_name_hint': return 'How others see you on Wayo Ads';
+			case 'profile.display_name_required': return 'Display name is required';
+			case 'profile.save_changes': return 'Save changes';
+			case 'profile.saving': return 'Saving…';
+			case 'profile.saved': return 'Profile updated';
+			case 'profile.save_error': return 'Could not save profile. Try again.';
+			case 'profile.load_error': return 'Could not load profile.';
+			case 'profile.name_taken': return 'This name is already taken. Please choose another one.';
+			case 'profile.name_invalid': return 'This name mixes characters from different alphabets, which is not allowed.';
+			case 'profile.avatar_upload': return 'Upload photo';
+			case 'profile.avatar_remove': return 'Remove';
+			case 'profile.avatar_hint': return 'JPG, PNG or GIF — max 500 KB';
+			case 'profile.avatar_pick_error': return 'Could not pick image.';
+			case 'profile.avatar_too_large': return 'Image is too large (max 500 KB).';
+			case 'profile.email': return 'Email address';
+			case 'profile.roles': return 'Roles';
+			case 'profile.member_since': return 'Member since';
+			case 'profile.role_creator': return 'Creator';
+			case 'profile.role_advertiser': return 'Advertiser';
+			case 'profile.role_user': return 'User';
+			case 'security.nav_title': return 'Security';
+			case 'security.entry_title': return 'Password & sessions';
+			case 'security.entry_sub': return 'Change password and manage connected devices';
+			case 'security.change_password_title': return 'Change password';
+			case 'security.password_management_title': return 'Password';
+			case 'security.current_password': return 'Current password';
+			case 'security.new_password': return 'New password';
+			case 'security.confirm_password': return 'Confirm new password';
+			case 'security.update_password': return 'Update password';
+			case 'security.updating_password': return 'Updating…';
+			case 'security.password_updated': return 'Password updated successfully.';
+			case 'security.password_oauth_message': return 'You signed in with Google or Apple. Password management is handled by your provider. To change your password, please use your provider\'s account settings.';
+			case 'security.all_fields_required': return 'All fields are required.';
+			case 'security.password_min_length': return 'At least 8 characters.';
+			case 'security.password_same_as_current': return 'New password must differ from the current one.';
+			case 'security.password_wrong_current': return 'Current password is incorrect.';
+			case 'security.password_change_error': return 'Could not update password. Try again.';
 			case 'account_deletion.nav_title': return 'Delete account';
 			case 'account_deletion.title': return 'Delete my Wayo Ads account';
 			case 'account_deletion.danger_zone_chip': return 'Danger Zone';
@@ -2469,8 +2598,15 @@ extension on Translations {
 			case 'account_deletion.password_hint': return 'At least 8 characters';
 			case 'account_deletion.forgot_password': return 'Forgot password?';
 			case 'account_deletion.oauth_note': return 'If you only sign in with Google or Apple, set a password first (Forgot password).';
-			case 'account_deletion.oauth_deletion_intro': return 'You use Google or Apple to sign in. After you continue, confirm in the next step — no password required.';
+			case 'account_deletion.oauth_deletion_intro': return 'You use Google or Apple to sign in. For your security, you will re-authenticate with your provider before deletion is scheduled.';
 			case 'account_deletion.oauth_deletion_step_hint': return 'Your identity was confirmed when you signed in with Google or Apple. Tap below to review the final confirmation sheet.';
+			case 'account_deletion.oauth_reauth_intro': return 'For your security, confirm it\'s you by signing in again with the provider you use for Wayo Ads. Deletion is scheduled right after.';
+			case 'account_deletion.oauth_reauth_google': return 'Re-authenticate with Google';
+			case 'account_deletion.oauth_reauth_apple': return 'Re-authenticate with Apple';
+			case 'account_deletion.oauth_reauth_cancelled': return 'Re-authentication was cancelled.';
+			case 'account_deletion.oauth_reauth_failed': return 'Re-authentication failed. Please try again.';
+			case 'account_deletion.oauth_reauth_mismatch': return 'Please re-authenticate with the same account you use for Wayo Ads.';
+			case 'account_deletion.error_reauth_required': return 'Re-authentication is required to delete your account. Please sign in again with your provider.';
 			case 'account_deletion.legal_recap': return ({required Object date}) => 'You will start a 30-day grace period before permanent deletion. You can cancel until ${date}.';
 			case 'account_deletion.next_review': return 'Review and confirm';
 			case 'account_deletion.dialog_title': return 'Are you sure?';

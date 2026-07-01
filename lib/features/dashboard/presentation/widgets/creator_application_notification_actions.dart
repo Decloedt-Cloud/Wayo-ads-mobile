@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/errors/auth_exceptions.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/ui/wayo_toast.dart';
 import '../../../../i18n/strings.g.dart';
 import '../../../advertiser_campaigns/data/advertiser_campaigns_repository.dart';
 import '../../../advertiser_campaigns/presentation/providers/advertiser_campaigns_providers.dart';
@@ -90,14 +91,11 @@ class _ApproveRejectRowState extends ConsumerState<_ApproveRejectRow> {
     if (!mounted) {
       return;
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          approved
-              ? t.dashboard.application_approved
-              : t.dashboard.application_rejected,
-        ),
-      ),
+    WayoToast.success(
+      context,
+      approved
+          ? t.dashboard.application_approved
+          : t.dashboard.application_rejected,
     );
   }
 
@@ -123,9 +121,7 @@ class _ApproveRejectRowState extends ConsumerState<_ApproveRejectRow> {
       await _afterSuccess(t, approved: true);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(_err(e, t))));
+        WayoToast.error(context, _err(e, t));
       }
     } finally {
       if (mounted) {
@@ -146,9 +142,7 @@ class _ApproveRejectRowState extends ConsumerState<_ApproveRejectRow> {
       await _afterSuccess(t, approved: false);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(_err(e, t))));
+        WayoToast.error(context, _err(e, t));
       }
     } finally {
       if (mounted) {

@@ -68,6 +68,15 @@ class AuthInterceptor extends QueuedInterceptor {
     notifyAuthForceLogout();
   }
 
+  /// Wayo-ads returns this when the local user row was purged / anonymized.
+  static bool _isDeletedAccount401(DioException err) {
+    final data = err.response?.data;
+    if (data is! Map) return false;
+    final error = (data['error'] ?? data['message'] ?? '').toString().toLowerCase();
+    return error.contains('account deleted') ||
+        error.contains('account has been deleted');
+  }
+
   /// Authoritative check (with short positive cache + coalescing) asking
   /// Auth_Wayo whether the current access token is still accepted.
   Future<TokenValidity> _verifyTokenAuthoritative(String token) {
@@ -188,6 +197,20 @@ class AuthInterceptor extends QueuedInterceptor {
 
     if (status != 401) {
       return handler.next(err);
+    }
+
+    if (_isDeletedAccount401(err)) {
+      if (kDebugMode) {
+        debugPrint('[auth] 401 on ${req.uri.path} — account deleted on Wayo-ads, forcing logout');
+      }
+      _forceLogoutOnce();
+      return handler.reject(
+        DioException(
+          requestOptions: err.requestOptions,
+          error: const SessionExpiredException(),
+          type: DioExceptionType.unknown,
+        ),
+      );
     }
 
     if (req.extra[kSkipAuthInjection] == true ||

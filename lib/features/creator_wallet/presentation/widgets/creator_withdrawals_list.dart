@@ -9,6 +9,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/format/money_formatter.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/ui/wayo_toast.dart';
 import '../../../../i18n/strings.g.dart';
 import '../../data/creator_wallet_remote_datasource.dart';
 import '../../domain/creator_wallet_models.dart';
@@ -166,31 +167,13 @@ class _WithdrawalTileState extends ConsumerState<_WithdrawalTile> {
       HapticFeedback.mediumImpact();
       // ignore: unused_result
       ref.refresh(creatorWalletPageProvider);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: AppColors.success,
-          content: Text(
-            t.creator.wallet.cancel_success,
-            style: const TextStyle(color: Colors.white),
-          ),
-        ),
-      );
+      WayoToast.success(context, t.creator.wallet.cancel_success);
     } on CreatorWalletApiException catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: AppColors.error,
-          content: Text(e.message, style: const TextStyle(color: Colors.white)),
-        ),
-      );
+      WayoToast.error(context, e.message);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: AppColors.error,
-          content: Text('$e', style: const TextStyle(color: Colors.white)),
-        ),
-      );
+      WayoToast.error(context, '$e');
     } finally {
       if (mounted) setState(() => _cancelling = false);
     }

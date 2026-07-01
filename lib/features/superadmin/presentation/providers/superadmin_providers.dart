@@ -6,6 +6,7 @@ import '../../../creator/presentation/providers/creator_session_gate.dart';
 import '../../../dashboard/presentation/providers/dashboard_state_providers.dart';
 import '../../data/superadmin_remote_datasource.dart';
 import '../../data/superadmin_repository.dart';
+import '../../domain/entities/admin_transaction.dart';
 import '../../domain/entities/admin_user.dart';
 import '../../domain/entities/ai_usage.dart';
 import '../../domain/entities/announcement.dart';
@@ -40,6 +41,42 @@ Future<DashboardStats> dashboardStats(DashboardStatsRef ref) async {
       final result = await repo.getDashboardStats();
       return result.when(
         success: (stats) => stats,
+        failure: (e) => throw e,
+      );
+    },
+  );
+}
+
+@riverpod
+Future<AdminTransactionsPage> adminRecentTransactions(
+  AdminRecentTransactionsRef ref,
+) async {
+  await awaitPostLoginBootstrap(ref);
+  final repo = ref.watch(superadminRepositoryProvider);
+  return fetchWithSessionRetry(
+    ref,
+    () async {
+      final result = await repo.getAdminTransactionsPage(limit: 15);
+      return result.when(
+        success: (page) => page,
+        failure: (e) => throw e,
+      );
+    },
+  );
+}
+
+@riverpod
+Future<TrafficQualitySummary> trafficQualitySummary(
+  TrafficQualitySummaryRef ref,
+) async {
+  await awaitPostLoginBootstrap(ref);
+  final repo = ref.watch(superadminRepositoryProvider);
+  return fetchWithSessionRetry(
+    ref,
+    () async {
+      final result = await repo.getTrafficQualitySummary();
+      return result.when(
+        success: (summary) => summary,
         failure: (e) => throw e,
       );
     },
@@ -480,6 +517,9 @@ void invalidateSuperadminWithdrawalData(dynamic ref) {
 void invalidateSuperadminRealtimePanels(dynamic ref) {
   invalidateSuperadminWithdrawalData(ref);
   invalidateSuperadminBrowseCampaigns(ref);
+  ref.invalidate(trafficQualitySummaryProvider);
+  ref.invalidate(adminRecentTransactionsProvider);
+  ref.invalidate(aiUsageProvider(period: '30d'));
   ref.invalidate(notificationsListProvider);
   ref.invalidate(notificationsUnreadCountsProvider);
 }

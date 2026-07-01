@@ -4,6 +4,8 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/maintenance/maintenance_recovery_hub.dart';
+import '../../../../core/maintenance/maintenance_service.dart';
 import '../../../../core/push/wayo_push_intent.dart';
 
 import '../../../auth/data/repositories/auth_repository.dart';
@@ -21,10 +23,13 @@ import '../../data/repositories/notifications_repository.dart';
 import '../../domain/advertiser_campaigns_page_result.dart';
 import '../../domain/entities/notification_item.dart';
 import '../../domain/entities/notifications_page_result.dart';
+import '../../../account_deletion/domain/account_deletion_realtime.dart'
+    as deletion_rt;
 import '../../../account_deletion/presentation/providers/account_deletion_providers.dart';
 import '../../../advertiser_campaigns/presentation/providers/advertiser_campaigns_providers.dart';
 import '../../../advertiser_video_reviews/presentation/providers/advertiser_video_reviews_providers.dart';
 import '../../../advertiser_video_reviews/presentation/providers/advertiser_video_reviews_realtime.dart';
+import '../../../creator/presentation/providers/creator_session_gate.dart';
 import '../../../creator_campaigns/presentation/providers/creator_campaigns_providers.dart';
 import '../../../creator_dashboard/presentation/providers/creator_dashboard_providers.dart';
 import '../../../creator_wallet/presentation/providers/creator_wallet_providers.dart';
@@ -33,6 +38,7 @@ import '../../../wallet/presentation/providers/advertiser_wallet_providers.dart'
 import '../../../auth/domain/auth_notifier.dart';
 import '../../../auth/domain/wayo_ads_account_role.dart';
 import '../../../superadmin/presentation/providers/superadmin_providers.dart';
+import '../../../profile/presentation/providers/user_profile_providers.dart';
 
 final requestDeduplicatorProvider = Provider<RequestDeduplicator>((ref) {
   ref.keepAlive();
@@ -82,9 +88,13 @@ final advertiserDashboardCampaignPageProvider = StateProvider<int>((ref) => 1);
 /// Single page of advertiser campaigns for the dashboard (10 per page).
 final advertiserDashboardCampaignsPageFetchProvider = FutureProvider.autoDispose
     .family<AdvertiserCampaignsPageResult, int>((ref, page) async {
-      return ref
-          .watch(dashboardRemoteDatasourceProvider)
-          .fetchCampaignsPage(page: page, limit: 10);
+      await awaitPostLoginBootstrap(ref);
+      return fetchWithSessionRetry(
+        ref,
+        () => ref
+            .watch(dashboardRemoteDatasourceProvider)
+            .fetchCampaignsPage(page: page, limit: 10),
+      );
     });
 
 /// SWR stream for dashboard (Hive + network + rate limits).
@@ -139,14 +149,49 @@ Map<String, dynamic> _realtimeSignalPayloadMap(Object? raw) {
   return const {};
 }
 
+/// Applies an instant banner update when the payload carries
+/// `deletionRequestedAt`, then confirms via profile GET (web parity).
+void _refreshAccountDeletionFromRealtime(Ref ref, Map<String, dynamic> payload) {
+  applyAccountDeletionRealtimeSignal(ref, payload);
+}
+
+/// Reads a `revokedSessionId` hint from a `sessions.changed` payload (web sends
+/// it so the revoked device can log out instantly without a round-trip).
+String? _revokedSessionIdFromPayload(Map<String, dynamic> payload) {
+  for (final key in const ['revokedSessionId', 'revoked_session_id']) {
+    final v = payload[key];
+    if (v is String && v.trim().isNotEmpty) return v.trim();
+  }
+  return null;
+}
+
+bool _isProfileUpdatedRealtimeEvent(String name, Map<String, dynamic> payload) {
+  final type = (payload['type'] as String?)?.toLowerCase() ?? '';
+  if (type == 'profile.updated') return true;
+  final lower = name.toLowerCase();
+  if (lower == 'profile.updated') return true;
+  return lower.contains('profile') && lower.contains('updat');
+}
+
 /// Authoritative session re-check used by the realtime watchdog. Mirrors the
 /// web `SessionRevocationWatchdog`: only an explicit Auth_Wayo rejection
 /// (`TokenValidity.invalid`) ends the session — network/timeout/5xx
 /// (`indeterminate`) must never force logout. Valid tokens (e.g. when THIS
 /// device merely revoked *another* session) are left untouched.
-Future<void> _recheckSessionRevocation(Ref ref) async {
+///
+/// [revokedSessionId] — when the realtime payload names the revoked session and
+/// it matches this device's stored session id, log out immediately (fast path).
+Future<void> _recheckSessionRevocation(Ref ref, {String? revokedSessionId}) async {
   try {
-    final token = await ref.read(secureStorageProvider).getAccessToken();
+    final storage = ref.read(secureStorageProvider);
+    if (revokedSessionId != null && revokedSessionId.isNotEmpty) {
+      final localId = await storage.getMobileSessionId();
+      if (localId != null && localId.isNotEmpty && localId == revokedSessionId) {
+        notifyAuthForceLogout();
+        return;
+      }
+    }
+    final token = await storage.getAccessToken();
     if (token == null || token.isEmpty) return;
     final validity = await AuthRemote.verifyAccessToken(token);
     if (validity == TokenValidity.invalid) {
@@ -179,15 +224,35 @@ final realtimeInvalidationProvider = Provider<void>((ref) {
     // the backend publishes `sessions.changed` on the per-user notification
     // channel whenever a session is registered or revoked. We react regardless
     // of the broadcast event name by also inspecting the payload.
+    final payload = _realtimeSignalPayloadMap(sig.raw);
     final sessionsChangedEvent =
         (lower.contains('session') && lower.contains('chang')) ||
-        isSessionsChangedRealtimePayload(_realtimeSignalPayloadMap(sig.raw));
+        isSessionsChangedRealtimePayload(payload);
     if (sessionsChangedEvent) {
       // G2 — live-refresh the active sessions list (drop the revoked/added row).
       ref.invalidate(activeSessionsProvider);
-      // G1 — if THIS device's token was the one revoked, end the session now
+      // G1 — if THIS device's session was the one revoked, end the session now
       // instead of waiting for the next authenticated API call to 401.
-      unawaited(_recheckSessionRevocation(ref));
+      unawaited(
+        _recheckSessionRevocation(
+          ref,
+          revokedSessionId: _revokedSessionIdFromPayload(payload),
+        ),
+      );
+    }
+
+    final maintenanceRecoveryEvent =
+        isMaintenanceRecoveryRealtimePayload(payload) ||
+        (lower.contains('maintenance') &&
+            (lower.contains('end') || lower.contains('recover'))) ||
+        (lower.contains('platform') && lower.contains('available'));
+    if (maintenanceRecoveryEvent) {
+      notifyMaintenanceRecoveryProbe();
+    }
+    if (isMaintenanceStartedRealtimePayload(payload) ||
+        (lower.contains('maintenance') && lower.contains('start')) ||
+        (lower.contains('platform') && lower.contains('down'))) {
+      MaintenanceServiceHolder.instance.enterMaintenance();
     }
 
     final notif = _isNotificationCreatedRealtimeEvent(name);
@@ -249,12 +314,8 @@ final realtimeInvalidationProvider = Provider<void>((ref) {
       ref.invalidate(notificationsListProvider);
       ref.invalidate(notificationsUnreadCountsProvider);
       final payload = _realtimeSignalPayloadMap(sig.raw);
-      if (isAccountDeletionScheduledNotificationPayload(payload)) {
-        unawaited(
-          ref
-              .read(accountDeletionScheduledAtProvider.notifier)
-              .syncFromRemote(),
-        );
+      if (deletion_rt.isAccountDeletionStateChangedPayload(payload)) {
+        _refreshAccountDeletionFromRealtime(ref, payload);
       }
       final auth = ref.read(authNotifierProvider).valueOrNull;
       final isSuperadmin = auth is AuthAuthenticated &&
@@ -304,7 +365,8 @@ final realtimeInvalidationProvider = Provider<void>((ref) {
     if (fromCreatorChannel ||
         submissionEvent ||
         applicationEvent ||
-        creatorVideoStatusEvent) {
+        creatorVideoStatusEvent ||
+        statsEvent) {
       ref.invalidate(creatorCampaignDetailProvider);
       ref.invalidate(creatorMySubmissionsProvider);
     }
@@ -328,13 +390,13 @@ final realtimeInvalidationProvider = Provider<void>((ref) {
       ref.invalidate(creatorBusinessProfileProvider);
     }
 
-    final accountDeletionEvent = lower.contains('deletion') ||
-        (lower.contains('account') &&
-            (lower.contains('delete') || lower.contains('purge')));
-    if (accountDeletionEvent) {
-      unawaited(
-        ref.read(accountDeletionScheduledAtProvider.notifier).syncFromRemote(),
-      );
+    if (deletion_rt.isAccountDeletionRealtimeEventName(name) ||
+        deletion_rt.isAccountDeletionStateChangedPayload(payload)) {
+      _refreshAccountDeletionFromRealtime(ref, payload);
+    }
+
+    if (_isProfileUpdatedRealtimeEvent(name, payload)) {
+      unawaited(syncUserProfileFromRemote(ref));
     }
   });
   ref.onDispose(sub.cancel);
@@ -360,6 +422,7 @@ void invalidateCreatorSessionProviders(Ref ref) {
 /// Clears advertiser dashboard reads after logout / account switch.
 void invalidateAdvertiserSessionProviders(Ref ref) {
   ref.read(dashboardRateLimiterProvider).reset();
+  ref.read(requestDeduplicatorProvider).clear();
   ref.read(advertiserDashboardCampaignPageProvider.notifier).state = 1;
   ref.read(advertiserCampaignsViewModeProvider.notifier).state =
       AdvertiserCampaignsViewMode.mine;
@@ -388,4 +451,5 @@ void invalidateRoleSessionProviders(Ref ref) {
   invalidateCreatorWalletProviders(ref);
   invalidateAdvertiserSessionProviders(ref);
   invalidateSuperadminSessionProviders(ref);
+  ref.invalidate(userProfileProvider);
 }

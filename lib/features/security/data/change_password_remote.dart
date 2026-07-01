@@ -13,23 +13,40 @@ class ChangePasswordException implements Exception {
   String toString() => message;
 }
 
-/// [PATCH /api/user/password](Wayo-ads) — same contract as web settings.
+/// Change password — Auth Bearer first, Wayo-ads proxy fallback on 404.
 final class ChangePasswordRemote {
-  ChangePasswordRemote(this._dio);
+  ChangePasswordRemote(this._authDio, this._wayoAdsDio);
 
-  final Dio _dio;
-
-  String get _path =>
-      AuthRuntimeConfig.instance.wayoAdsRequestPath(ApiEndpoints.userPassword);
+  final Dio _authDio;
+  final Dio _wayoAdsDio;
 
   Future<void> changePassword({
     required String currentPassword,
     required String newPassword,
     required String confirmation,
   }) async {
+    final authPath =
+        AuthRuntimeConfig.instance.authHttpPath('change-password');
     try {
-      await _dio.patch<void>(
-        _path,
+      await _authDio.patch<void>(
+        authPath,
+        data: {
+          'current_password': currentPassword,
+          'new_password': newPassword,
+          'new_password_confirmation': confirmation,
+        },
+      );
+      return;
+    } on DioException catch (e) {
+      if (e.response?.statusCode != 404) {
+        throw _fromDio(e);
+      }
+    }
+
+    // Auth route not deployed yet — fall back to Wayo-ads (web contract).
+    try {
+      await _wayoAdsDio.patch<void>(
+        AuthRuntimeConfig.instance.wayoAdsRequestPath(ApiEndpoints.userPassword),
         data: {
           'currentPassword': currentPassword,
           'newPassword': newPassword,
@@ -37,16 +54,20 @@ final class ChangePasswordRemote {
         },
       );
     } on DioException catch (e) {
-      final status = e.response?.statusCode;
-      final data = e.response?.data;
-      var msg = '';
-      if (data is Map) {
-        msg = (data['error'] ?? data['message'] ?? '').toString();
-      }
-      if (msg.isEmpty) {
-        msg = e.message ?? 'Failed to change password';
-      }
-      throw ChangePasswordException(msg, statusCode: status);
+      throw _fromDio(e);
     }
+  }
+
+  ChangePasswordException _fromDio(DioException e) {
+    final status = e.response?.statusCode;
+    final data = e.response?.data;
+    var msg = '';
+    if (data is Map) {
+      msg = (data['message'] ?? data['error'] ?? '').toString();
+    }
+    if (msg.isEmpty) {
+      msg = e.message ?? 'Failed to change password';
+    }
+    return ChangePasswordException(msg, statusCode: status);
   }
 }

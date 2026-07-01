@@ -124,14 +124,24 @@ class _SecuritySettingsScreenState extends ConsumerState<SecuritySettingsScreen>
       WayoToast.success(context, t.password_updated);
     } on ChangePasswordException catch (e) {
       if (!mounted) return;
-      final msg = e.statusCode == 403
-          ? t.password_wrong_current
-          : (e.message.isNotEmpty ? e.message : t.password_change_error);
+      final sessionExpired = context.t.login.session_expired_snack;
+      final lower = e.message.toLowerCase();
+      final msg = switch (e.statusCode) {
+        401 => sessionExpired,
+        403 => lower.contains('oauth')
+            ? t.password_oauth_message
+            : t.password_wrong_current,
+        422 => lower.contains('current password') ||
+                lower.contains('mot de passe actuel')
+            ? t.password_wrong_current
+            : (e.message.isNotEmpty ? e.message : t.password_change_error),
+        _ => lower == 'unauthorized' ? sessionExpired : (
+            e.message.isNotEmpty ? e.message : t.password_change_error),
+      };
       setState(() {
         _saving = false;
         _formError = msg;
       });
-      WayoToast.error(context, msg);
     } catch (_) {
       if (!mounted) return;
       setState(() {

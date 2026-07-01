@@ -103,8 +103,10 @@ abstract final class WayoToast {
     IconData? icon,
     double? bottomInset,
   }) {
-    final messenger = ScaffoldMessenger.maybeOf(context) ??
-        rootScaffoldMessengerKey.currentState;
+    // Always prefer the app-root messenger so nested Scaffolds (settings screens,
+    // keyboard open) do not double-count viewInsets and push toasts to the top.
+    final messenger = rootScaffoldMessengerKey.currentState ??
+        ScaffoldMessenger.maybeOf(context);
     if (messenger == null) return;
 
     final resolvedBottomInset =

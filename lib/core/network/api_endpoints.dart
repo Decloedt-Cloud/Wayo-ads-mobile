@@ -70,8 +70,11 @@ abstract final class ApiEndpoints {
   /// [GET /api/user/profile](Wayo-ads) — Bearer (mobile) or session (web).
   static const String userProfile = 'api/user/profile';
 
-  /// [PATCH /api/user/password](Wayo-ads) — change password while signed in.
+  /// [PATCH /api/user/password](Wayo-ads) — change password while signed in (web).
   static const String userPassword = 'api/user/password';
+
+  /// [PATCH /api/auth/change-password](Auth_Wayo) — mobile Bearer change password.
+  static const String authChangePassword = 'api/auth/change-password';
 
   /// [GET/POST /api/user/sessions](Wayo-ads) — active browser sessions (mobile).
   static const String userSessions = 'api/user/sessions';

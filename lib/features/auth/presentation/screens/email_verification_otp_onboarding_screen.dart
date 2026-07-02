@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/errors/auth_error_localizer.dart';
+import '../../../../core/errors/auth_exceptions.dart';
 import '../../../../core/result.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/ui/wayo_toast.dart';
@@ -83,7 +84,13 @@ class _EmailVerificationOtpOnboardingScreenState
         _startCooldown(data.clamp(30, 600));
         setState(() => _codeSentBanner = true);
       case Failure(:final error):
-        _sendError = localizeAuthError(error, context.t);
+        if (error is RateLimitedException) {
+          final seconds = error.retryAfterSeconds.clamp(1, 600);
+          _startCooldown(seconds);
+          _sendError = context.t.login.rate_limit_remaining(seconds: seconds);
+        } else {
+          _sendError = localizeAuthError(error, context.t);
+        }
     }
     setState(() => _sending = false);
   }

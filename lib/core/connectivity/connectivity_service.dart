@@ -2,7 +2,9 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:dio/dio.dart';
 
+import '../config/auth_runtime_config.dart';
 import '../observability/app_log.dart';
 import 'connectivity_status.dart';
 
@@ -57,9 +59,17 @@ class ConnectivityService {
   bool _radioUp = false;
 
   /// Failed probes required before showing offline (avoids resume DNS blips).
-  static const int kOfflineAfterFailedProbes = 2;
+  static const int kOfflineAfterFailedProbes = 3;
+
+  /// Grace after a successful online probe — transient API/DNS blips stay non-blocking.
+  static const Duration kOnlineGrace = Duration(seconds: 45);
 
   ConnectivityStatus get status => _status;
+
+  /// Whether the OS reports an active network interface (Wi‑Fi, mobile, etc.).
+  bool get radioUp => _radioUp;
+
+  DateTime? _lastOnlineAt;
 
   /// Broadcast stream — emits only when the status actually changes.
   Stream<ConnectivityStatus> get onStatusChange => _controller.stream;
@@ -178,7 +188,7 @@ class ConnectivityService {
         return;
       }
       final sw = Stopwatch()..start();
-      final ok = await _ping();
+      final ok = await _probeReachability();
       sw.stop();
       if (!ok) {
         _consecutiveProbeFailures++;
@@ -192,20 +202,30 @@ class ConnectivityService {
           _emit(ConnectivityStatus.offline);
           return;
         }
-        if (_consecutiveProbeFailures >= kOfflineAfterFailedProbes) {
+        final inGrace = _lastOnlineAt != null &&
+            DateTime.now().difference(_lastOnlineAt!) < kOnlineGrace;
+        final threshold = inGrace
+            ? kOfflineAfterFailedProbes + 1
+            : kOfflineAfterFailedProbes;
+        if (_consecutiveProbeFailures >= threshold) {
           _consecutiveProbeFailures = 0;
           _confirmOfflineTimer?.cancel();
           _emit(ConnectivityStatus.offline);
           return;
         }
+        if (_status == ConnectivityStatus.online ||
+            _status == ConnectivityStatus.weak) {
+          _emit(ConnectivityStatus.weak);
+        }
         _confirmOfflineTimer?.cancel();
-        _confirmOfflineTimer = Timer(const Duration(seconds: 2), () {
+        _confirmOfflineTimer = Timer(const Duration(seconds: 3), () {
           unawaited(_probeNow(reason: 'confirm_offline'));
         });
         return;
       }
       _consecutiveProbeFailures = 0;
       _confirmOfflineTimer?.cancel();
+      _lastOnlineAt = DateTime.now();
       if (sw.elapsedMilliseconds >= kWeakLatencyMs) {
         _emit(ConnectivityStatus.weak);
       } else {
@@ -220,7 +240,12 @@ class ConnectivityService {
     }
   }
 
-  Future<bool> _ping() async {
+  Future<bool> _probeReachability() async {
+    if (await _pingDns()) return true;
+    return _probeHttpEndpoints();
+  }
+
+  Future<bool> _pingDns() async {
     for (final host in _probeHosts) {
       try {
         final result = await InternetAddress.lookup(
@@ -238,6 +263,66 @@ class ConnectivityService {
       }
     }
     return false;
+  }
+
+  /// DNS can fail on some carriers while HTTPS to our API still works.
+  Future<bool> _probeHttpEndpoints() async {
+    final runtime = AuthRuntimeConfig.instance;
+    final origins = <String>{};
+    void addOrigin(String? raw) {
+      final trimmed = raw?.trim() ?? '';
+      if (trimmed.isEmpty) return;
+      origins.add(_originOnly(trimmed));
+    }
+
+    addOrigin(runtime.authWayoBaseUrl);
+    addOrigin(runtime.resolvedWayoAdsBaseUrl);
+    addOrigin(runtime.resolvedWayoAdsPublicAssetOrigin);
+    if (origins.isEmpty) return false;
+
+    final dio = Dio(
+      BaseOptions(
+        connectTimeout: _probeTimeout,
+        receiveTimeout: _probeTimeout,
+        sendTimeout: _probeTimeout,
+        followRedirects: true,
+        maxRedirects: 2,
+        validateStatus: (code) => code != null && code < 500,
+        headers: const {
+          'Accept': '*/*',
+          'X-Client': 'wayo-ads-go',
+        },
+      ),
+    );
+    try {
+      for (final origin in origins) {
+        for (final path in const ['/', '/api/health', '/health']) {
+          try {
+            final response = await dio.get<dynamic>('$origin$path');
+            if (response.statusCode != null && response.statusCode! < 500) {
+              return true;
+            }
+          } on DioException catch (e) {
+            if (e.response != null && e.response!.statusCode != null) {
+              if (e.response!.statusCode! < 500) return true;
+            }
+            continue;
+          } catch (_) {
+            continue;
+          }
+        }
+      }
+    } finally {
+      dio.close(force: true);
+    }
+    return false;
+  }
+
+  String _originOnly(String url) {
+    final uri = Uri.tryParse(url);
+    if (uri == null || !uri.hasScheme || uri.host.isEmpty) return url;
+    final port = uri.hasPort ? ':${uri.port}' : '';
+    return '${uri.scheme}://${uri.host}$port';
   }
 
   bool _hasUsableRadio(List<ConnectivityResult> results) {

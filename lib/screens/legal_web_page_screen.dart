@@ -125,6 +125,7 @@ class _LegalWebPageScreenState extends ConsumerState<LegalWebPageScreen> {
   String _title(Translations t) => switch (widget.document) {
         WayoLegalDocument.terms => t.login.terms,
         WayoLegalDocument.privacy => t.login.privacy,
+        WayoLegalDocument.cookies => t.signup.cookie_policy,
       };
 
   Future<void> _openInBrowser() async {

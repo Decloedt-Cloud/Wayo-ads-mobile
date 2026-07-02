@@ -26,7 +26,7 @@ abstract class IAuthRepository {
     required String password,
   });
 
-  /// `POST /api/auth/register` — email/password signup with optional role + app_key.
+  /// `POST /api/auth/register` — email/password signup with role (no app_key; web parity).
   Future<Result<RegisterResponse>> register(RegisterRequest request);
 
   /// Public `POST /api/auth/verify-email` — no session required (post-register OTP).
@@ -117,7 +117,8 @@ class AuthRepositoryImpl implements IAuthRepository {
           password: request.password,
           role: request.role,
           app: request.app ?? (cfg.authAppName.isNotEmpty ? cfg.authAppName : null),
-          appKey: request.appKey ?? (cfg.wayoAdsAppKey.isNotEmpty ? cfg.wayoAdsAppKey : null),
+          // Do not send app_key on register — Auth treats it as trusted and may skip
+          // the verification email (web signup always receives OTP).
         ).toJson(),
       );
       final options = Options(extra: {kSkipAuthInjection: true})..disableRetry = true;

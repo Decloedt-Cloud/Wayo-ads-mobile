@@ -12,6 +12,10 @@ class RegisterResponse {
   /// Present when email is auto-verified (trusted `app_key`) — same as login.
   final AuthResponse? auth;
 
+  /// Web parity: email/password signup always requires OTP before first login.
+  /// Ignores `app_key` auto-verify flags on the register payload.
+  bool get requiresEmailVerificationBeforeUse => true;
+
   factory RegisterResponse.fromJson(Map<String, dynamic> json) {
     Map<String, dynamic> payload = json;
     if (json['data'] is Map<String, dynamic>) {

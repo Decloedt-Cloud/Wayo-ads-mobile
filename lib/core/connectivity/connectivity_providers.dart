@@ -15,6 +15,11 @@ final connectivityServiceProvider = Provider<ConnectivityService>((ref) {
   return service;
 });
 
+/// Whether the OS still reports Wi‑Fi / mobile data (vs airplane mode).
+final connectivityRadioUpProvider = Provider<bool>((ref) {
+  return ref.watch(connectivityServiceProvider).radioUp;
+});
+
 /// Broadcast current status; UI watches this.
 final connectivityStatusProvider = StreamProvider<ConnectivityStatus>((ref) {
   final service = ref.watch(connectivityServiceProvider);

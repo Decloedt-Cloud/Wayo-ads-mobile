@@ -1,6 +1,53 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
+/// Full app icon (black squircle + orange play mark) — same as launcher / store.
+class WayoAppIcon extends StatelessWidget {
+  const WayoAppIcon({super.key, this.size = 72});
+
+  static const String assetPath = 'assets/wayo ads mobile new.png';
+
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final radius = BorderRadius.circular(size * 0.28);
+    final inset = size * 0.055;
+    final inner = size - 2 * inset;
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        borderRadius: radius,
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFF47A1F).withValues(alpha: 0.42),
+            blurRadius: 24,
+            spreadRadius: -4,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: radius,
+        child: ColoredBox(
+          color: Colors.black,
+          child: Padding(
+            padding: EdgeInsets.all(inset),
+            child: Image.asset(
+              assetPath,
+              width: inner,
+              height: inner,
+              fit: BoxFit.contain,
+              filterQuality: FilterQuality.high,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// Orange Wayo Ads icon mark only (no wordmark). Used in dashboard headers.
 class WayoAdsBrandIcon extends StatelessWidget {
   const WayoAdsBrandIcon({super.key, this.size = 36});

@@ -259,15 +259,9 @@ class AuthNotifier extends _$AuthNotifier {
         ),
       );
       switch (result) {
-        case Success(:final data):
-          final auth = data.auth;
-          if (auth != null) {
-            await _finalizeSuccessfulLogin(
-              auth,
-              loginMethod: AuthLoginMethod.email,
-            );
-            return RegisterOutcome.authenticated;
-          }
+        case Success():
+          // Web parity: register never opens a session — OTP first, then login
+          // (mobile `app_key` can return tokens + email_verified before OTP).
           state = const AsyncValue.data(AuthUnauthenticated());
           return RegisterOutcome.needsEmailVerification;
         case Failure(:final error):

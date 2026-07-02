@@ -15,14 +15,16 @@
   },
   "connectivity": {
     "offline_title": "لا يوجد اتصال بالإنترنت",
-    "offline_subtitle": "يرجى التحقق من الشبكة ثم المحاولة مرة أخرى.",
+    "offline_subtitle": "تحقق من Wi‑Fi أو بيانات الجوال ثم أعد المحاولة.",
+    "offline_subtitle_radio_up": "يبدو أن الشبكة متصلة، لكننا لا نصل إلى الإنترنت أو خوادم Wayo. أعد المحاولة أو افتح إعدادات الشبكة.",
     "reconnecting_title": "إعادة الاتصال…",
     "reconnecting_subtitle": "جاري محاولة استعادة الاتصال.",
     "weak_title": "اتصال ضعيف",
     "weak_subtitle": "قد تكون بعض الإجراءات أبطأ من المعتاد.",
     "restored": "تم استعادة الاتصال",
     "action_retry": "إعادة المحاولة",
-    "action_settings": "الإعدادات"
+    "action_settings": "إعدادات الشبكة",
+    "settings_unavailable": "تعذّر فتح إعدادات النظام."
   },
   "campaigns_explorer": {
     "filter_all_types": "كل الأنواع",
@@ -110,7 +112,16 @@
     "email_taken": "هذا البريد الإلكتروني مسجّل بالفعل. سجّل الدخول بدلاً من ذلك.",
     "disposable_email": "عناوين البريد الإلكتروني المؤقتة غير مسموح بها.",
     "name_check_failed": "تعذّر التحقق من هذا الاسم الآن. يرجى المحاولة مرة أخرى.",
-    "email_check_failed": "تعذّر التحقق من هذا البريد الإلكتروني الآن. يرجى المحاولة مرة أخرى."
+    "email_check_failed": "تعذّر التحقق من هذا البريد الإلكتروني الآن. يرجى المحاولة مرة أخرى.",
+    "legal_prefix": "لقد قرأت وأوافق على ",
+    "terms_of_service": "شروط الخدمة",
+    "privacy_policy": "سياسة الخصوصية",
+    "cookie_policy": "سياسة ملفات تعريف الارتباط",
+    "legal_comma": " و",
+    "legal_and": " و",
+    "legal_dot": ".",
+    "legal_required": "يرجى قبول الشروط لإنشاء حسابك.",
+    "back_cta": "رجوع"
   },
   "verify_email": {
     "title": "أكّد بريدك الإلكتروني",

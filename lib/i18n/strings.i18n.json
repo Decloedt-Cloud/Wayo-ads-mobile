@@ -15,14 +15,16 @@
   },
   "connectivity": {
     "offline_title": "No Internet Connection",
-    "offline_subtitle": "Please check your network and try again.",
+    "offline_subtitle": "Check Wi‑Fi or mobile data, then try again.",
+    "offline_subtitle_radio_up": "Your network looks connected, but we can't reach the internet or Wayo servers. Try again or open network settings.",
     "reconnecting_title": "Reconnecting…",
     "reconnecting_subtitle": "Trying to restore your connection.",
     "weak_title": "Weak connection",
     "weak_subtitle": "Some actions may be slower than usual.",
     "restored": "Connection restored",
-    "action_retry": "Retry",
-    "action_settings": "Settings"
+    "action_retry": "Try again",
+    "action_settings": "Network settings",
+    "settings_unavailable": "Could not open system settings."
   },
   "campaigns_explorer": {
     "filter_all_types": "All types",
@@ -110,7 +112,16 @@
     "email_taken": "This email address is already registered. Sign in instead.",
     "disposable_email": "Disposable / temporary email addresses are not allowed.",
     "name_check_failed": "Unable to verify this name right now. Please try again.",
-    "email_check_failed": "Unable to verify this email right now. Please try again."
+    "email_check_failed": "Unable to verify this email right now. Please try again.",
+    "legal_prefix": "I have read and agree to the ",
+    "terms_of_service": "Terms of Service",
+    "privacy_policy": "Privacy Policy",
+    "cookie_policy": "Cookie Policy",
+    "legal_comma": ", ",
+    "legal_and": " and ",
+    "legal_dot": ".",
+    "legal_required": "Please accept the terms to create your account.",
+    "back_cta": "Back"
   },
   "verify_email": {
     "title": "Confirm your email",

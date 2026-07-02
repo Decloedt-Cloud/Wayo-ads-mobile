@@ -7,6 +7,7 @@ InputDecoration loginPremiumInputDecoration(
   BuildContext context, {
   required String labelText,
   Widget? suffixIcon,
+  bool showErrorBorder = false,
 }) {
   final isDark = Theme.of(context).brightness == Brightness.dark;
   final fill = isDark
@@ -15,12 +16,17 @@ InputDecoration loginPremiumInputDecoration(
   final border = isDark
       ? Colors.white.withValues(alpha: 0.08)
       : AppColors.borderOf(context);
+  final enabledSide = showErrorBorder
+      ? const BorderSide(color: AppColors.error, width: 1.2)
+      : BorderSide(color: border, width: 1);
 
   return InputDecoration(
     labelText: labelText,
     floatingLabelBehavior: FloatingLabelBehavior.auto,
     labelStyle: AppTextStyles.bodyLarge(context).copyWith(
-      color: AppColors.textSecondaryOf(context),
+      color: showErrorBorder
+          ? AppColors.error
+          : AppColors.textSecondaryOf(context),
       fontWeight: FontWeight.w500,
     ),
     filled: true,
@@ -28,11 +34,11 @@ InputDecoration loginPremiumInputDecoration(
     contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
     border: OutlineInputBorder(
       borderRadius: BorderRadius.circular(18),
-      borderSide: BorderSide(color: border, width: 1),
+      borderSide: enabledSide,
     ),
     enabledBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(18),
-      borderSide: BorderSide(color: border, width: 1),
+      borderSide: enabledSide,
     ),
     focusedBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(18),

@@ -91,6 +91,27 @@
     "web_session_disconnecting": "جارٍ قطع الاتصال…",
     "web_session_cancel": "إلغاء"
   },
+  "signup": {
+    "role_title": "إنشاء حساب Wayo Ads",
+    "role_subtitle": "اختر كيف ستستخدم Wayo Ads — نفس الخطوة على الموقع.",
+    "create_account": "إنشاء حساب",
+    "create_account_link": "إنشاء حساب",
+    "no_account_yet": "ليس لديك حساب؟",
+    "register_subtitle": "سجّل كـ $role بالبريد أو تابع مع Google أو Apple.",
+    "name_label": "الاسم الكامل",
+    "name_required": "الاسم مطلوب",
+    "confirm_password_label": "تأكيد كلمة المرور",
+    "password_need_symbol": "مطلوب رمز (!@#%…)",
+    "register_cta": "إنشاء حساب",
+    "already_have_account": "لديك حساب بالفعل؟",
+    "sign_in_link": "تسجيل الدخول",
+    "verify_then_sign_in": "تم تأكيد البريد. سجّل الدخول بكلمة المرور.",
+    "name_taken": "هذا الاسم مستخدم بالفعل. يرجى اختيار اسم آخر.",
+    "email_taken": "هذا البريد الإلكتروني مسجّل بالفعل. سجّل الدخول بدلاً من ذلك.",
+    "disposable_email": "عناوين البريد الإلكتروني المؤقتة غير مسموح بها.",
+    "name_check_failed": "تعذّر التحقق من هذا الاسم الآن. يرجى المحاولة مرة أخرى.",
+    "email_check_failed": "تعذّر التحقق من هذا البريد الإلكتروني الآن. يرجى المحاولة مرة أخرى."
+  },
   "verify_email": {
     "title": "أكّد بريدك الإلكتروني",
     "subtitle": "يتطلب Wayo ID عنوانًا مُؤكدًا (كما على الموقع). افتح الرابط الذي أرسلناه إلى:",
@@ -99,6 +120,18 @@
     "still_pending": "ما زالت التحقق قيد الانتظار. راجع الوارد أو الرسائل غير المرغوبة ثم أعد المحاولة.",
     "open_mail_failed": "تعذّر فتح تطبيق البريد.",
     "sign_out": "تسجيل الخروج"
+  },
+  "verify": {
+    "title": "تحقق من بريدك الإلكتروني",
+    "subtitle": "أرسلنا رمزًا من 6 أرقام إلى بريدك. أدخله أدناه للتحقق من حسابك.",
+    "code_label": "رمز التحقق",
+    "verify_btn": "تحقق",
+    "code_sent": "تم إرسال رمز التحقق إلى بريدك الإلكتروني.",
+    "or_label": "أو",
+    "resend": "إعادة إرسال الرمز",
+    "resend_in": "إعادة إرسال الرمز ($seconds ث)",
+    "spam": "لم تستلم الرمز؟ تحقق من مجلد البريد المزعج أو أعد الإرسال.",
+    "different_account": "تسجيل الدخول بحساب مختلف"
   },
   "forgot_password": {
     "title": "إعادة تعيين\nكلمة المرور",
@@ -130,6 +163,19 @@
     "need_upper": "يلزم حرف كبير واحد على الأقل",
     "need_digit": "يلزم رقم واحد على الأقل",
     "mismatch": "كلمتا المرور غير متطابقتين"
+  },
+  "password_req": {
+    "hint": "يجب أن تحتوي كلمة المرور على:",
+    "length": "8 أحرف على الأقل",
+    "uppercase": "حرف كبير واحد على الأقل (A–Z)",
+    "lowercase": "حرف صغير واحد على الأقل (a–z)",
+    "number": "رقم واحد على الأقل (0–9)",
+    "symbol": "رمز واحد على الأقل (!@#%…)",
+    "very_weak": "ضعيف جدًا",
+    "weak": "ضعيف",
+    "fair": "مقبول",
+    "good": "جيد",
+    "strong": "قوي"
   },
   "home": {
     "title": "وايو أدز",
@@ -685,18 +731,44 @@
       "type_company_subtitle": "أعمل تحت كيان قانوني مسجّل.",
       "company_name": "اسم الشركة",
       "vat_number": "الرقم الضريبي",
+      "address": "العنوان",
       "address_line1": "العنوان (سطر 1)",
       "address_line2": "العنوان (سطر 2، اختياري)",
       "city": "المدينة",
       "postal_code": "الرمز البريدي",
       "state_region": "المنطقة (اختياري)",
+      "state": "الولاية / المقاطعة",
       "country": "البلد",
       "currency": "عملة الدفع",
+      "billing_currency": "العملة المفضّلة",
+      "vat_optional": "الرقم الضريبي (اختياري)",
+      "section_billing": "بلد وعملة الفوترة",
       "error_required": "حقل مطلوب",
       "save_and_continue": "حفظ ومتابعة",
       "submitting": "جارٍ الحفظ…",
       "footer_info": "تُرسل هذه المعلومات إلى Stripe لتفعيل حساب الدفع. لن تصل إلينا بياناتك المصرفية أبدًا.",
-      "save_error": "تعذّر حفظ المعلومات. يرجى المحاولة مجددًا."
+      "footer_info_global": "تُستخدم للفواتير وشحن المحفظة. تتم معالجة المدفوعات بأمان عبر Stripe.",
+      "save_error": "تعذّر حفظ المعلومات. يرجى المحاولة مجددًا.",
+      "validation": {
+        "address_required": "العنوان مطلوب",
+        "address_line_invalid": "العنوان يحتوي على أحرف غير صالحة",
+        "city_required": "المدينة مطلوبة",
+        "city_invalid": "المدينة تحتوي على أحرف غير صالحة",
+        "postal_code_required": "الرمز البريدي مطلوب",
+        "postal_code_invalid": "الرمز البريدي غير صالح",
+        "country_required": "البلد مطلوب",
+        "country_stripe_only": "البلد غير مدعوم لمدفوعات Stripe",
+        "country_global_invalid": "البلد غير مدعوم للفوترة",
+        "currency_required": "العملة مطلوبة",
+        "currency_stripe_only": "العملة غير مدعومة لمدفوعات Stripe",
+        "currency_global_invalid": "العملة غير مدعومة للفوترة",
+        "company_name_required": "اسم الشركة مطلوب",
+        "company_name_invalid": "اسم الشركة يحتوي على أحرف غير صالحة",
+        "vat_number_required": "الرقم الضريبي مطلوب",
+        "vat_number_invalid": "صيغة الرقم الضريبي غير صالحة",
+        "state_required": "الولاية / المقاطعة مطلوبة",
+        "state_invalid": "الولاية / المنطقة غير صالحة"
+      }
     }
   },
   "advertiser_wallet": {

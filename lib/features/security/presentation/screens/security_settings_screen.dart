@@ -9,7 +9,7 @@ import '../../../../core/ui/wayo_system_nav_bar.dart';
 import '../../../../core/ui/wayo_toast.dart';
 import '../../../../i18n/strings.g.dart';
 import '../../../../router/app_router.dart';
-import '../../../auth/presentation/widgets/password_strength_indicator.dart';
+import '../../../auth/presentation/widgets/password_requirements_panel.dart';
 import '../../../app_settings/presentation/providers/active_sessions_providers.dart';
 import '../../../profile/domain/wayo_ads_user_profile.dart';
 import '../../../profile/presentation/providers/user_profile_providers.dart';
@@ -69,10 +69,7 @@ class _SecuritySettingsScreenState extends ConsumerState<SecuritySettingsScreen>
   String? _validateNewPassword(String? v, Translations t) {
     final s = v ?? '';
     if (s.isEmpty) return t.validation.required;
-    if (s.length < 8) return t.validation.min8;
-    if (!RegExp(r'[A-Z]').hasMatch(s)) return t.validation.need_upper;
-    if (!RegExp(r'[0-9]').hasMatch(s)) return t.validation.need_digit;
-    return null;
+    return passwordRequirementsValidationError(s, t);
   }
 
   Future<void> _submitPassword() async {
@@ -244,7 +241,7 @@ class _SecuritySettingsScreenState extends ConsumerState<SecuritySettingsScreen>
                             ),
                             if (_newCtrl.text.isNotEmpty) ...[
                               const SizedBox(height: 8),
-                              PasswordStrengthIndicator(
+                              PasswordRequirementsPanel(
                                 password: _newCtrl.text,
                               ),
                             ],

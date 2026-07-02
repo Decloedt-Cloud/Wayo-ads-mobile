@@ -15,7 +15,7 @@ import '../controllers/forgot_password_controller.dart';
 import '../widgets/animated_mesh_background.dart';
 import '../widgets/noise_overlay.dart';
 import '../widgets/password_reset_top_bar.dart';
-import '../widgets/password_strength_indicator.dart';
+import '../widgets/password_requirements_panel.dart';
 import '../widgets/rate_limit_cooldown_banner.dart';
 import '../widgets/wayo_login_button.dart';
 
@@ -49,11 +49,7 @@ class _NewPasswordScreenState extends ConsumerState<NewPasswordScreen> {
   }
 
   String? _validatePassword(String? v, Translations t) {
-    final s = v ?? '';
-    if (s.length < 8) return t.validation.min8;
-    if (!RegExp(r'[A-Z]').hasMatch(s)) return t.validation.need_upper;
-    if (!RegExp(r'[0-9]').hasMatch(s)) return t.validation.need_digit;
-    return null;
+    return passwordRequirementsValidationError(v ?? '', t);
   }
 
   Future<void> _submit(Translations t) async {
@@ -178,7 +174,7 @@ class _NewPasswordScreenState extends ConsumerState<NewPasswordScreen> {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      PasswordStrengthIndicator(password: _pwdCtrl.text),
+                      PasswordRequirementsPanel(password: _pwdCtrl.text),
                       const SizedBox(height: 16),
                       IgnorePointer(
                         ignoring: rate != null,

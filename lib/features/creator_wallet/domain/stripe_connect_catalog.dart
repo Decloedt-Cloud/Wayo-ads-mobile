@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart';
 
+import 'creator_business_profile.dart';
+
 /// Single entry in a picker (country or currency).
 @immutable
 final class StripeConnectOption {
@@ -87,6 +89,48 @@ abstract final class StripeConnectCatalog {
     StripeConnectOption(code: 'AED', name: 'UAE Dirham (AED)'),
     StripeConnectOption(code: 'MYR', name: 'Malaysian Ringgit (MYR)'),
   ];
+
+  /// Stripe Express: `company` only — not `individual`.
+  /// @see https://docs.stripe.com/connect/express-accounts#business-type
+  static const Set<String> companyOnlyCountryCodes = {
+    'AE',
+    'BR',
+    'MY',
+    'TH',
+    'JP',
+    'MX',
+    'HK',
+    'SG',
+  };
+
+  static final Set<String> countryCodes = {
+    for (final c in countries) c.code,
+  };
+
+  static final Set<String> currencyCodes = {
+    for (final c in currencies) c.code,
+  };
+
+  static bool isCountryCode(String code) =>
+      countryCodes.contains(code.trim().toUpperCase());
+
+  static bool isCurrencyCode(String code) =>
+      currencyCodes.contains(code.trim().toUpperCase());
+
+  static bool isCompanyOnlyCountry(String code) =>
+      companyOnlyCountryCodes.contains(code.trim().toUpperCase());
+
+  /// Creator Stripe scope: personal accounts cannot pick company-only countries.
+  static List<StripeConnectOption> countriesForBusinessType(
+    CreatorBusinessType businessType,
+  ) {
+    if (businessType == CreatorBusinessType.registeredCompany) {
+      return countries;
+    }
+    return countries
+        .where((c) => !companyOnlyCountryCodes.contains(c.code))
+        .toList(growable: false);
+  }
 
   static String? countryName(String? code) {
     if (code == null) return null;

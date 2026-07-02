@@ -29,6 +29,7 @@ import '../data/auth_login_method_store.dart';
 import '../data/google_sign_in_facade.dart';
 import '../data/models/app_user.dart';
 import '../data/models/auth_response.dart';
+import '../data/models/register_request.dart';
 import '../../app_settings/data/mobile_session_register.dart';
 import '../data/repositories/auth_repository.dart';
 import 'wayo_ads_account_role.dart';
@@ -54,6 +55,12 @@ final class AuthAuthenticated extends AuthState {
 
 final class AuthUnauthenticated extends AuthState {
   const AuthUnauthenticated();
+}
+
+/// Outcome of email/password registration (before optional OTP step).
+enum RegisterOutcome {
+  authenticated,
+  needsEmailVerification,
 }
 
 @Riverpod(keepAlive: true)
@@ -226,6 +233,86 @@ class AuthNotifier extends _$AuthNotifier {
       }
     } finally {
       _credentialLoginInFlight = false;
+    }
+  }
+
+  /// Email/password signup — role is chosen before this step (web parity).
+  Future<RegisterOutcome?> register({
+    required String name,
+    required String email,
+    required String password,
+    required String role,
+  }) async {
+    if (_credentialLoginInFlight) {
+      return null;
+    }
+    _credentialLoginInFlight = true;
+    try {
+      state = const AsyncValue.data(AuthLoading());
+      final repo = ref.read(authRepositoryProvider);
+      final result = await repo.register(
+        RegisterRequest(
+          name: name.trim(),
+          email: email.trim(),
+          password: password,
+          role: role,
+        ),
+      );
+      switch (result) {
+        case Success(:final data):
+          final auth = data.auth;
+          if (auth != null) {
+            await _finalizeSuccessfulLogin(
+              auth,
+              loginMethod: AuthLoginMethod.email,
+            );
+            return RegisterOutcome.authenticated;
+          }
+          state = const AsyncValue.data(AuthUnauthenticated());
+          return RegisterOutcome.needsEmailVerification;
+        case Failure(:final error):
+          state = AsyncValue.error(error, StackTrace.current);
+          return null;
+      }
+    } finally {
+      _credentialLoginInFlight = false;
+    }
+  }
+
+  /// OAuth signup after role pick — applies role when Auth returns `unknown`.
+  Future<void> signupWithGoogle(String idToken, String role) async {
+    await loginWithGoogle(idToken);
+    if (state.hasError) return;
+    await _ensureWayoAdsRoleAfterSignup(role);
+  }
+
+  Future<void> signupWithApple({
+    required String role,
+    required String identityToken,
+    required String rawNonce,
+    String? authorizationCode,
+    String? appleUserId,
+  }) async {
+    await loginWithApple(
+      identityToken: identityToken,
+      rawNonce: rawNonce,
+      authorizationCode: authorizationCode,
+      appleUserId: appleUserId,
+    );
+    if (state.hasError) return;
+    await _ensureWayoAdsRoleAfterSignup(role);
+  }
+
+  Future<void> _ensureWayoAdsRoleAfterSignup(String role) async {
+    final snap = state.valueOrNull;
+    if (snap is! AuthAuthenticated) return;
+    if (snap.user.wayoAdsRole != WayoAdsAccountRole.unknown) return;
+    final r = await ref.read(authRepositoryProvider).setWayoAdsAppRole(role);
+    switch (r) {
+      case Success(:final data):
+        await applyOnboardingUser(data);
+      case Failure():
+        break;
     }
   }
 

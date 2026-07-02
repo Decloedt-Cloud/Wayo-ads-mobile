@@ -91,6 +91,27 @@
     "web_session_disconnecting": "Déconnexion…",
     "web_session_cancel": "Annuler"
   },
+  "signup": {
+    "role_title": "Créer votre compte Wayo Ads",
+    "role_subtitle": "Choisissez comment vous utiliserez Wayo Ads — même étape que sur le site.",
+    "create_account": "Créer un compte",
+    "create_account_link": "Créer un compte",
+    "no_account_yet": "Pas encore de compte ?",
+    "register_subtitle": "Inscrivez-vous en tant que $role par e-mail ou continuez avec Google ou Apple.",
+    "name_label": "Nom complet",
+    "name_required": "Le nom est obligatoire",
+    "confirm_password_label": "Confirmer le mot de passe",
+    "password_need_symbol": "Un symbole est requis (!@#%…)",
+    "register_cta": "Créer un compte",
+    "already_have_account": "Vous avez déjà un compte ?",
+    "sign_in_link": "Se connecter",
+    "verify_then_sign_in": "E-mail vérifié. Connectez-vous avec votre mot de passe.",
+    "name_taken": "Ce nom est déjà utilisé. Veuillez en choisir un autre.",
+    "email_taken": "Cette adresse email est déjà utilisée. Connectez-vous plutôt.",
+    "disposable_email": "Les adresses email jetables ou temporaires ne sont pas autorisées.",
+    "name_check_failed": "Impossible de vérifier ce nom pour le moment. Réessayez.",
+    "email_check_failed": "Impossible de vérifier cette adresse email pour le moment. Réessayez."
+  },
   "verify_email": {
     "title": "Confirmez votre email",
     "subtitle": "Wayo ID exige une adresse vérifiée (comme sur le site). Ouvrez le lien envoyé à :",
@@ -99,6 +120,18 @@
     "still_pending": "Vérification toujours en attente. Vérifiez la boîte de réception ou les spams, puis réessayez.",
     "open_mail_failed": "Impossible d’ouvrir l’application mail.",
     "sign_out": "Se déconnecter"
+  },
+  "verify": {
+    "title": "Vérifiez votre email",
+    "subtitle": "Nous avons envoyé un code à 6 chiffres à votre email. Entrez-le ci-dessous pour vérifier votre compte.",
+    "code_label": "Code de vérification",
+    "verify_btn": "Vérifier",
+    "code_sent": "Un code de vérification a été envoyé à votre email.",
+    "or_label": "ou",
+    "resend": "Renvoyer le code",
+    "resend_in": "Renvoyer le code ($seconds s)",
+    "spam": "Vous n'avez pas reçu le code ? Vérifiez vos spams ou renvoyez-le.",
+    "different_account": "Se connecter avec un autre compte"
   },
   "forgot_password": {
     "title": "Réinitialiser\nle mot de passe",
@@ -130,6 +163,19 @@
     "need_upper": "Une majuscule est requise",
     "need_digit": "Un chiffre est requis",
     "mismatch": "Les mots de passe ne correspondent pas"
+  },
+  "password_req": {
+    "hint": "Votre mot de passe doit contenir :",
+    "length": "Au moins 8 caractères",
+    "uppercase": "Au moins une majuscule (A–Z)",
+    "lowercase": "Au moins une minuscule (a–z)",
+    "number": "Au moins un chiffre (0–9)",
+    "symbol": "Au moins un symbole (!@#%…)",
+    "very_weak": "Très faible",
+    "weak": "Faible",
+    "fair": "Correct",
+    "good": "Bon",
+    "strong": "Fort"
   },
   "home": {
     "title": "Wayo Ads",
@@ -686,18 +732,44 @@
       "type_company_subtitle": "J’opère sous une entité juridique enregistrée.",
       "company_name": "Nom de la société",
       "vat_number": "Numéro de TVA",
+      "address": "Adresse",
       "address_line1": "Adresse ligne 1",
       "address_line2": "Adresse ligne 2 (optionnel)",
       "city": "Ville",
       "postal_code": "Code postal",
       "state_region": "Région (optionnel)",
+      "state": "État / Province",
       "country": "Pays",
       "currency": "Devise de paiement",
+      "billing_currency": "Devise préférée",
+      "vat_optional": "TVA / N° fiscal (optionnel)",
+      "section_billing": "Pays et devise de facturation",
       "error_required": "Champ requis",
       "save_and_continue": "Enregistrer et continuer",
       "submitting": "Enregistrement…",
       "footer_info": "Ces informations sont transmises à Stripe pour activer votre compte de paiement. Vos coordonnées bancaires ne nous sont jamais transmises.",
-      "save_error": "Impossible d’enregistrer vos infos. Veuillez réessayer."
+      "footer_info_global": "Utilisées pour les factures et les recharges du portefeuille. Les paiements sont traités de façon sécurisée par Stripe.",
+      "save_error": "Impossible d’enregistrer vos infos. Veuillez réessayer.",
+      "validation": {
+        "address_required": "L’adresse est requise",
+        "address_line_invalid": "L’adresse contient des caractères invalides",
+        "city_required": "La ville est requise",
+        "city_invalid": "La ville contient des caractères invalides",
+        "postal_code_required": "Le code postal est requis",
+        "postal_code_invalid": "Code postal invalide",
+        "country_required": "Le pays est requis",
+        "country_stripe_only": "Ce pays n’est pas pris en charge pour les paiements Stripe",
+        "country_global_invalid": "Pays non pris en charge pour la facturation",
+        "currency_required": "La devise est requise",
+        "currency_stripe_only": "Cette devise n’est pas prise en charge pour les paiements Stripe",
+        "currency_global_invalid": "Devise non prise en charge pour la facturation",
+        "company_name_required": "Le nom de la société est requis",
+        "company_name_invalid": "Le nom de la société contient des caractères invalides",
+        "vat_number_required": "Le numéro de TVA / fiscal est requis",
+        "vat_number_invalid": "Format de TVA / n° fiscal invalide",
+        "state_required": "L’état / la province est requis",
+        "state_invalid": "État / région invalide"
+      }
     }
   },
   "advertiser_wallet": {

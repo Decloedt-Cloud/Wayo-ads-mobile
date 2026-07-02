@@ -13,6 +13,9 @@ import '../../../../core/storage/secure_storage.dart';
 import '../models/app_user.dart';
 import '../models/auth_response.dart';
 import '../models/login_request.dart';
+import '../models/register_request.dart';
+import '../models/register_response.dart';
+import '../../domain/register_field_check.dart';
 import '../../domain/wayo_ads_account_role.dart';
 
 part 'auth_repository.g.dart';
@@ -22,6 +25,21 @@ abstract class IAuthRepository {
     required String email,
     required String password,
   });
+
+  /// `POST /api/auth/register` — email/password signup with optional role + app_key.
+  Future<Result<RegisterResponse>> register(RegisterRequest request);
+
+  /// Public `POST /api/auth/verify-email` — no session required (post-register OTP).
+  Future<Result<void>> confirmSignupEmailOtp({
+    required String email,
+    required String otp,
+  });
+
+  /// Live signup checks (web: `register/check-email`).
+  Future<Result<RegisterFieldAvailability>> checkRegisterEmail(String email);
+
+  /// Live signup checks (web: `register/check-name`).
+  Future<Result<RegisterFieldAvailability>> checkRegisterName(String name);
   Future<Result<AuthResponse>> loginWithGoogle({required String idToken});
   Future<Result<AuthResponse>> loginWithApple({
     required String identityToken,
@@ -86,6 +104,175 @@ class AuthRepositoryImpl implements IAuthRepository {
   /// TTL for cached [fetchCurrentUser] result (avoids rate limits on rapid refreshes).
   /// Set to 15 seconds to give more buffer against 429 during post-login flows.
   static const Duration _fetchCurrentUserCacheTtl = Duration(seconds: 15);
+
+  @override
+  Future<Result<RegisterResponse>> register(RegisterRequest request) async {
+    try {
+      final cfg = AuthRuntimeConfig.instance;
+      final path = cfg.authHttpPath('register');
+      final body = mergeWayoAuthPayload(
+        RegisterRequest(
+          name: request.name,
+          email: request.email,
+          password: request.password,
+          role: request.role,
+          app: request.app ?? (cfg.authAppName.isNotEmpty ? cfg.authAppName : null),
+          appKey: request.appKey ?? (cfg.wayoAdsAppKey.isNotEmpty ? cfg.wayoAdsAppKey : null),
+        ).toJson(),
+      );
+      final options = Options(extra: {kSkipAuthInjection: true})..disableRetry = true;
+      final res = await _dio.post<Map<String, dynamic>>(
+        path,
+        data: body,
+        options: options,
+      );
+      final data = res.data;
+      if (data == null) {
+        return const Failure(ServerException('Empty response'));
+      }
+      if (data['success'] == false) {
+        final msg = data['message'] as String? ?? 'Registration failed';
+        return Failure(InvalidCredentialsException(msg));
+      }
+      return Success(RegisterResponse.fromJson(data));
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 422) {
+        return Failure(_mapRegisterValidation(e));
+      }
+      return Failure(_mapDioLogin(e));
+    } catch (e) {
+      return Failure(ServerException('$e'));
+    }
+  }
+
+  @override
+  Future<Result<RegisterFieldAvailability>> checkRegisterEmail(
+    String email,
+  ) {
+    return _postRegisterFieldCheck(
+      apiPath: 'register/check-email',
+      webPath: 'register/check-email',
+      body: {'email': email.trim()},
+    );
+  }
+
+  @override
+  Future<Result<RegisterFieldAvailability>> checkRegisterName(String name) {
+    return _postRegisterFieldCheck(
+      apiPath: 'register/check-name',
+      webPath: 'register/check-name',
+      body: {'name': name.trim()},
+    );
+  }
+
+  Future<Result<RegisterFieldAvailability>> _postRegisterFieldCheck({
+    required String apiPath,
+    required String webPath,
+    required Map<String, dynamic> body,
+  }) async {
+    try {
+      return await _postRegisterFieldCheckAt(
+        AuthRuntimeConfig.instance.authHttpPath(apiPath),
+        body,
+      );
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        final abs = _authServerWebAbsoluteUrl(webPath);
+        if (abs != null) {
+          try {
+            return await _postRegisterFieldCheckAbsolute(abs, body);
+          } on DioException catch (e2) {
+            return Failure(_mapDioLogin(e2));
+          }
+        }
+      }
+      return Failure(_mapDioLogin(e));
+    } catch (e) {
+      return Failure(ServerException('$e'));
+    }
+  }
+
+  Future<Result<RegisterFieldAvailability>> _postRegisterFieldCheckAt(
+    String path,
+    Map<String, dynamic> body,
+  ) async {
+    final options = Options(extra: {kSkipAuthInjection: true})..disableRetry = true;
+    final res = await _dio.post<Map<String, dynamic>>(
+      path,
+      data: body,
+      options: options,
+    );
+    return _parseRegisterFieldCheckResponse(res.data);
+  }
+
+  Future<Result<RegisterFieldAvailability>> _postRegisterFieldCheckAbsolute(
+    String absoluteUrl,
+    Map<String, dynamic> body,
+  ) async {
+    final options = Options(extra: {kSkipAuthInjection: true})..disableRetry = true;
+    final res = await _dio.post<Map<String, dynamic>>(
+      absoluteUrl,
+      data: body,
+      options: options,
+    );
+    return _parseRegisterFieldCheckResponse(res.data);
+  }
+
+  Result<RegisterFieldAvailability> _parseRegisterFieldCheckResponse(
+    Map<String, dynamic>? data,
+  ) {
+    if (data == null) {
+      return const Failure(ServerException('Empty response'));
+    }
+    if (data['available'] is bool) {
+      return Success(RegisterFieldAvailability.fromJson(data));
+    }
+    final msg = data['message'] as String? ?? 'Check failed';
+    return Failure(InvalidCredentialsException(msg));
+  }
+
+  String? _authServerWebAbsoluteUrl(String path) {
+    var base = AuthRuntimeConfig.instance.resolvedDioBaseUrl
+        .trim()
+        .replaceAll(RegExp(r'/+$'), '');
+    if (base.endsWith('/api')) {
+      base = base.substring(0, base.length - 4);
+    }
+    if (base.isEmpty) return null;
+    final segment = path.replaceAll(RegExp(r'^/+'), '');
+    return '$base/$segment';
+  }
+
+  @override
+  Future<Result<void>> confirmSignupEmailOtp({
+    required String email,
+    required String otp,
+  }) async {
+    try {
+      final path = AuthRuntimeConfig.instance.authHttpPath('verify-email');
+      final res = await _dio.post<Map<String, dynamic>>(
+        path,
+        data: mergeWayoAuthPayload(<String, dynamic>{
+          'email': email.trim(),
+          'code': otp.trim(),
+        }),
+        options: Options(extra: {kSkipAuthInjection: true})..disableRetry = true,
+      );
+      final data = res.data;
+      if (data == null) {
+        return const Failure(ServerException('Empty response'));
+      }
+      if (data['success'] == false) {
+        final msg = data['message'] as String? ?? 'Verification failed';
+        return Failure(InvalidCredentialsException(msg));
+      }
+      return const Success(null);
+    } on DioException catch (e) {
+      return Failure(_mapDioLogin(e));
+    } catch (e) {
+      return Failure(ServerException('$e'));
+    }
+  }
 
   @override
   Future<Result<AuthResponse>> login({
@@ -466,8 +653,9 @@ class AuthRepositoryImpl implements IAuthRepository {
           'email': email,
           if (cfg.authAppName.isNotEmpty) 'app': cfg.authAppName,
         }),
-        options: Options(extra: {kSkipAuthInjection: false})
-          ..disableRetry = true,
+        options: Options(
+          extra: {kSkipAuthInjection: email.trim().isNotEmpty},
+        )..disableRetry = true,
       );
       return _parseSendEmailOtpResponse(res.data);
     } on DioException catch (e) {
@@ -681,6 +869,23 @@ class AuthRepositoryImpl implements IAuthRepository {
     } catch (_) {
       // Fire-and-forget: ignore network failures on logout.
     }
+  }
+
+  AuthException _mapRegisterValidation(DioException e) {
+    final body = e.response?.data;
+    if (body is Map && body['errors'] is Map) {
+      final errors = Map<String, dynamic>.from(body['errors'] as Map);
+      for (final field in ['email', 'name', 'password']) {
+        final raw = errors[field];
+        if (raw is List && raw.isNotEmpty) {
+          return InvalidCredentialsException('${raw.first}');
+        }
+      }
+    }
+    final message = body is Map && body['message'] is String
+        ? body['message'] as String
+        : 'Validation failed';
+    return InvalidCredentialsException(message);
   }
 
   AuthException _mapDioLogin(DioException e) {

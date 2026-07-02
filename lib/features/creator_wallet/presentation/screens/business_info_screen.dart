@@ -9,7 +9,10 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/creator_colors.dart';
 import '../../../../i18n/strings.g.dart';
 import '../../data/creator_wallet_remote_datasource.dart';
+import '../../domain/business_profile_validation.dart';
+import '../../domain/business_subdivisions.dart';
 import '../../domain/creator_business_profile.dart';
+import '../../domain/major_billing_catalog.dart';
 import '../../domain/stripe_connect_catalog.dart';
 import '../providers/creator_wallet_providers.dart';
 
@@ -18,7 +21,6 @@ const _businessProfileApiFieldKeys = <String>{
   'companyName',
   'vatNumber',
   'addressLine1',
-  'addressLine2',
   'city',
   'postalCode',
   'state',
@@ -66,7 +68,6 @@ class _BusinessInfoScreenState extends ConsumerState<BusinessInfoScreen> {
   late TextEditingController _companyName;
   late TextEditingController _vatNumber;
   late TextEditingController _addressLine1;
-  late TextEditingController _addressLine2;
   late TextEditingController _city;
   late TextEditingController _postalCode;
   late TextEditingController _state;
@@ -83,13 +84,22 @@ class _BusinessInfoScreenState extends ConsumerState<BusinessInfoScreen> {
     _businessType = p.businessType;
     _companyName = TextEditingController(text: p.companyName ?? '');
     _vatNumber = TextEditingController(text: p.vatNumber ?? '');
-    _addressLine1 = TextEditingController(text: p.addressLine1 ?? '');
-    _addressLine2 = TextEditingController(text: p.addressLine2 ?? '');
+    _addressLine1 = TextEditingController(
+      text: _initialAddressText(p),
+    );
     _city = TextEditingController(text: p.city ?? '');
     _postalCode = TextEditingController(text: p.postalCode ?? '');
     _state = TextEditingController(text: p.state ?? '');
     _countryCode = _validCountry(p.countryCode);
-    _currency = _validCurrency(p.currency) ?? 'USD';
+    _currency = _validCurrency(p.currency) ??
+        (widget.useGlobalBilling ? 'USD' : 'USD');
+    final normalizedState = BusinessSubdivisions.normalizeStored(
+      _countryCode,
+      p.state,
+    );
+    if (normalizedState != null) {
+      _state.text = normalizedState;
+    }
   }
 
   @override
@@ -97,27 +107,86 @@ class _BusinessInfoScreenState extends ConsumerState<BusinessInfoScreen> {
     _companyName.dispose();
     _vatNumber.dispose();
     _addressLine1.dispose();
-    _addressLine2.dispose();
     _city.dispose();
     _postalCode.dispose();
     _state.dispose();
     super.dispose();
   }
 
+  String _initialAddressText(CreatorBusinessProfile p) {
+    final line1 = p.addressLine1?.trim() ?? '';
+    final line2 = p.addressLine2?.trim() ?? '';
+    if (line1.isEmpty) return line2;
+    if (line2.isEmpty) return line1;
+    return '$line1, $line2';
+  }
+
+  List<StripeConnectOption> get _countryOptions => widget.useGlobalBilling
+      ? MajorBillingCatalog.countries
+      : StripeConnectCatalog.countriesForBusinessType(_businessType);
+
+  List<StripeConnectOption> get _currencyOptions => widget.useGlobalBilling
+      ? MajorBillingCatalog.currencies
+      : StripeConnectCatalog.currencies;
+
+  bool get _stateUsesDropdown =>
+      BusinessSubdivisions.countryUsesDropdown(_countryCode);
+
   String? _validCountry(String? v) {
     if (v == null) return null;
-    for (final o in StripeConnectCatalog.countries) {
-      if (o.code == v) return o.code;
+    final code = v.trim().toUpperCase();
+    for (final o in _countryOptions) {
+      if (o.code == code) return o.code;
     }
     return null;
   }
 
   String? _validCurrency(String? v) {
     if (v == null) return null;
-    for (final o in StripeConnectCatalog.currencies) {
-      if (o.code == v) return o.code;
+    final code = v.trim().toUpperCase();
+    for (final o in _currencyOptions) {
+      if (o.code == code) return o.code;
     }
     return null;
+  }
+
+  void _onBusinessTypeChanged(CreatorBusinessType v) {
+    setState(() {
+      _businessType = v;
+      _serverFieldErrors.remove('businessType');
+      if (!widget.useGlobalBilling &&
+          _countryCode != null &&
+          v == CreatorBusinessType.personal &&
+          StripeConnectCatalog.isCompanyOnlyCountry(_countryCode!)) {
+        _countryCode = null;
+        _serverFieldErrors.remove('countryCode');
+      }
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _formKey.currentState?.validate();
+    });
+  }
+
+  void _onCountryChanged(String? v) {
+    setState(() {
+      _countryCode = v;
+      _serverFieldErrors.remove('countryCode');
+      if (BusinessSubdivisions.countryUsesDropdown(v)) {
+        final normalized = BusinessSubdivisions.normalizeStored(
+          v,
+          _state.text,
+        );
+        if (normalized == null ||
+            !BusinessSubdivisions.isValidCode(v, normalized)) {
+          _state.clear();
+        } else {
+          _state.text = normalized;
+        }
+      }
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _formKey.currentState?.validate();
+    });
   }
 
   Future<void> _submit() async {
@@ -132,9 +201,6 @@ class _BusinessInfoScreenState extends ConsumerState<BusinessInfoScreen> {
     final input = CreatorBusinessProfileInput(
       businessType: _businessType,
       addressLine1: _addressLine1.text.trim(),
-      addressLine2: _addressLine2.text.trim().isEmpty
-          ? null
-          : _addressLine2.text.trim(),
       city: _city.text.trim(),
       postalCode: _postalCode.text.trim(),
       state: _state.text.trim().isEmpty ? null : _state.text.trim(),
@@ -241,19 +307,7 @@ class _BusinessInfoScreenState extends ConsumerState<BusinessInfoScreen> {
                             value: _businessType,
                             serverError:
                                 _serverFieldErrors['businessType'],
-                            onChanged: (v) {
-                              setState(() {
-                                _businessType = v;
-                                _serverFieldErrors
-                                    .remove('businessType');
-                              });
-                              WidgetsBinding.instance
-                                  .addPostFrameCallback((_) {
-                                if (mounted) {
-                                  _formKey.currentState?.validate();
-                                }
-                              });
-                            },
+                            onChanged: _onBusinessTypeChanged,
                           ),
                           const SizedBox(height: 20),
                           if (_businessType ==
@@ -266,24 +320,49 @@ class _BusinessInfoScreenState extends ConsumerState<BusinessInfoScreen> {
                             _RequiredField(
                               controller: _companyName,
                               label: t.creator.business.company_name,
-                              validatorKey:
-                                  t.creator.business.error_required,
                               serverError:
                                   _serverFieldErrors['companyName'],
                               onClearServerError: () =>
                                   _onFieldEdited('companyName'),
+                              validate: (v) =>
+                                  BusinessProfileValidation.validateCompanyName(
+                                    t,
+                                    required: true,
+                                    value: v,
+                                  ),
                             ),
                             const SizedBox(height: 12),
                             _RequiredField(
                               controller: _vatNumber,
                               label: t.creator.business.vat_number,
-                              validatorKey:
-                                  t.creator.business.error_required,
                               capitalize: true,
                               serverError:
                                   _serverFieldErrors['vatNumber'],
                               onClearServerError: () =>
                                   _onFieldEdited('vatNumber'),
+                              validate: (v) => BusinessProfileValidation
+                                  .validateVat(
+                                    t,
+                                    required: true,
+                                    value: v,
+                                  ),
+                            ),
+                            const SizedBox(height: 20),
+                          ] else ...[
+                            _OptionalField(
+                              controller: _vatNumber,
+                              label: t.creator.business.vat_optional,
+                              capitalize: true,
+                              serverError:
+                                  _serverFieldErrors['vatNumber'],
+                              onClearServerError: () =>
+                                  _onFieldEdited('vatNumber'),
+                              validate: (v) => BusinessProfileValidation
+                                  .validateVat(
+                                    t,
+                                    required: false,
+                                    value: v,
+                                  ),
                             ),
                             const SizedBox(height: 20),
                           ],
@@ -293,23 +372,16 @@ class _BusinessInfoScreenState extends ConsumerState<BusinessInfoScreen> {
                           const SizedBox(height: 8),
                           _RequiredField(
                             controller: _addressLine1,
-                            label: t.creator.business.address_line1,
-                            validatorKey:
-                                t.creator.business.error_required,
+                            label: t.creator.business.address,
                             serverError:
                                 _serverFieldErrors['addressLine1'],
                             onClearServerError: () =>
                                 _onFieldEdited('addressLine1'),
-                          ),
-                          const SizedBox(height: 12),
-                          _OptionalField(
-                            controller: _addressLine2,
-                            label:
-                                t.creator.business.address_line2,
-                            serverError:
-                                _serverFieldErrors['addressLine2'],
-                            onClearServerError: () =>
-                                _onFieldEdited('addressLine2'),
+                            validate: (v) =>
+                                BusinessProfileValidation.validateAddressLine1(
+                                  t,
+                                  v,
+                                ),
                           ),
                           const SizedBox(height: 12),
                           Row(
@@ -318,12 +390,15 @@ class _BusinessInfoScreenState extends ConsumerState<BusinessInfoScreen> {
                                 child: _RequiredField(
                                   controller: _city,
                                   label: t.creator.business.city,
-                                  validatorKey:
-                                      t.creator.business.error_required,
                                   serverError:
                                       _serverFieldErrors['city'],
                                   onClearServerError: () =>
                                       _onFieldEdited('city'),
+                                  validate: (v) =>
+                                      BusinessProfileValidation.validateCity(
+                                        t,
+                                        v,
+                                      ),
                                 ),
                               ),
                               const SizedBox(width: 12),
@@ -332,74 +407,106 @@ class _BusinessInfoScreenState extends ConsumerState<BusinessInfoScreen> {
                                   controller: _postalCode,
                                   label:
                                       t.creator.business.postal_code,
-                                  validatorKey:
-                                      t.creator.business.error_required,
                                   serverError:
                                       _serverFieldErrors[
                                           'postalCode'],
                                   onClearServerError: () =>
                                       _onFieldEdited('postalCode'),
+                                  validate: (v) =>
+                                      BusinessProfileValidation.validatePostal(
+                                        t,
+                                        v,
+                                      ),
                                 ),
                               ),
                             ],
                           ),
                           const SizedBox(height: 12),
-                          _OptionalField(
-                            controller: _state,
-                            label:
-                                t.creator.business.state_region,
-                            serverError: _serverFieldErrors['state'],
-                            onClearServerError: () =>
-                                _onFieldEdited('state'),
-                          ),
+                          if (_stateUsesDropdown)
+                            _StateDropdownField(
+                              key: ValueKey('state_${_countryCode ?? '∅'}'),
+                              countryCode: _countryCode,
+                              value: _state.text.trim().isEmpty
+                                  ? null
+                                  : _state.text.trim(),
+                              label: t.creator.business.state,
+                              errorRequired:
+                                  t.creator.business.validation.state_required,
+                              serverError: _serverFieldErrors['state'],
+                              onChanged: (v) {
+                                _state.text = v ?? '';
+                                _onFieldEdited('state');
+                              },
+                              validate: (v) =>
+                                  BusinessProfileValidation.validateState(
+                                    t,
+                                    countryCode: _countryCode,
+                                    value: v,
+                                  ),
+                            )
+                          else
+                            _OptionalField(
+                              controller: _state,
+                              label:
+                                  t.creator.business.state_region,
+                              serverError: _serverFieldErrors['state'],
+                              onClearServerError: () =>
+                                  _onFieldEdited('state'),
+                              validate: (v) =>
+                                  BusinessProfileValidation.validateState(
+                                    t,
+                                    countryCode: _countryCode,
+                                    value: v,
+                                  ),
+                            ),
                           const SizedBox(height: 20),
                           _SectionLabel(
-                            label:
-                                t.creator.business.section_stripe,
+                            label: widget.useGlobalBilling
+                                ? t.creator.business.section_billing
+                                : t.creator.business.section_stripe,
                           ),
                           const SizedBox(height: 8),
                           _ModernConnectSelect(
                             key: ValueKey(
-                              'country_${_countryCode ?? '∅'}',
+                              'country_${_countryCode ?? '∅'}_${_businessType.name}',
                             ),
                             label: t.creator.business.country,
                             errorRequired:
-                                t.creator.business.error_required,
-                            items:
-                                StripeConnectCatalog.countries,
+                                t.creator.business.validation.country_required,
+                            items: _countryOptions,
                             value: _countryCode,
                             showCountryFlag: true,
                             serverError:
                                 _serverFieldErrors['countryCode'],
-                            onChanged: (v) {
-                              setState(() {
-                                _countryCode = v;
-                                _serverFieldErrors
-                                    .remove('countryCode');
-                              });
-                              WidgetsBinding.instance
-                                  .addPostFrameCallback((_) {
-                                if (mounted) {
-                                  _formKey.currentState
-                                      ?.validate();
-                                }
-                              });
-                            },
+                            validate: (v) =>
+                                BusinessProfileValidation.validateCountry(
+                                  t,
+                                  useGlobalBilling: widget.useGlobalBilling,
+                                  value: v,
+                                ),
+                            onChanged: _onCountryChanged,
                           ),
                           const SizedBox(height: 12),
                           _ModernConnectSelect(
                             key: ValueKey(
-                              'currency_${_currency ?? '∅'}',
+                              'currency_${_currency ?? '∅'}_${widget.useGlobalBilling}',
                             ),
-                            label: t.creator.business.currency,
+                            label: widget.useGlobalBilling
+                                ? t.creator.business.billing_currency
+                                : t.creator.business.currency,
                             errorRequired:
-                                t.creator.business.error_required,
-                            items:
-                                StripeConnectCatalog.currencies,
+                                t.creator.business.validation.currency_required,
+                            items: _currencyOptions,
                             value: _currency,
                             showCountryFlag: false,
                             serverError:
                                 _serverFieldErrors['currency'],
+                            validate: (v) =>
+                                BusinessProfileValidation.validateCurrency(
+                                  t,
+                                  useGlobalBilling: widget.useGlobalBilling,
+                                  value: v,
+                                ),
                             onChanged: (v) {
                               setState(() {
                                 _currency = v;
@@ -419,6 +526,7 @@ class _BusinessInfoScreenState extends ConsumerState<BusinessInfoScreen> {
                           _FormFooter(
                             apiError: _apiError,
                             submitting: _submitting,
+                            useGlobalBilling: widget.useGlobalBilling,
                             onSubmit: _submit,
                           ),
         ],
@@ -461,11 +569,13 @@ class _FormFooter extends StatelessWidget {
   const _FormFooter({
     required this.apiError,
     required this.submitting,
+    required this.useGlobalBilling,
     required this.onSubmit,
   });
 
   final String? apiError;
   final bool submitting;
+  final bool useGlobalBilling;
   final VoidCallback onSubmit;
 
   @override
@@ -545,7 +655,9 @@ class _FormFooter extends StatelessWidget {
         ),
         const SizedBox(height: 6),
         Text(
-          t.creator.business.footer_info,
+          useGlobalBilling
+              ? t.creator.business.footer_info_global
+              : t.creator.business.footer_info,
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
             color: AppColors.textMutedOf(context),
@@ -634,7 +746,7 @@ class _RequiredField extends StatelessWidget {
   const _RequiredField({
     required this.controller,
     required this.label,
-    required this.validatorKey,
+    required this.validate,
     this.capitalize = false,
     this.serverError,
     this.onClearServerError,
@@ -642,7 +754,7 @@ class _RequiredField extends StatelessWidget {
 
   final TextEditingController controller;
   final String label;
-  final String validatorKey;
+  final String? Function(String?) validate;
   final bool capitalize;
   final String? serverError;
   final VoidCallback? onClearServerError;
@@ -664,7 +776,7 @@ class _RequiredField extends StatelessWidget {
       validator: (v) {
         final se = serverError?.trim();
         if (se != null && se.isNotEmpty) return se;
-        return (v == null || v.trim().isEmpty) ? validatorKey : null;
+        return validate(v);
       },
     );
   }
@@ -674,21 +786,27 @@ class _OptionalField extends StatelessWidget {
   const _OptionalField({
     required this.controller,
     required this.label,
+    this.capitalize = false,
     this.serverError,
     this.onClearServerError,
+    this.validate,
   });
 
   final TextEditingController controller;
   final String label;
+  final bool capitalize;
   final String? serverError;
   final VoidCallback? onClearServerError;
+  final String? Function(String?)? validate;
 
   @override
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
     return TextFormField(
       controller: controller,
-      textCapitalization: TextCapitalization.words,
+      textCapitalization: capitalize
+          ? TextCapitalization.characters
+          : TextCapitalization.words,
       scrollPadding: EdgeInsets.only(bottom: bottomInset + 24),
       decoration: InputDecoration(
         labelText: label,
@@ -698,8 +816,43 @@ class _OptionalField extends StatelessWidget {
       validator: (v) {
         final se = serverError?.trim();
         if (se != null && se.isNotEmpty) return se;
-        return null;
+        return validate?.call(v);
       },
+    );
+  }
+}
+
+class _StateDropdownField extends StatelessWidget {
+  const _StateDropdownField({
+    super.key,
+    required this.countryCode,
+    required this.value,
+    required this.label,
+    required this.errorRequired,
+    required this.onChanged,
+    required this.validate,
+    this.serverError,
+  });
+
+  final String? countryCode;
+  final String? value;
+  final String label;
+  final String errorRequired;
+  final ValueChanged<String?> onChanged;
+  final String? Function(String?) validate;
+  final String? serverError;
+
+  @override
+  Widget build(BuildContext context) {
+    return _ModernConnectSelect(
+      label: label,
+      errorRequired: errorRequired,
+      items: BusinessSubdivisions.pickerOptions(countryCode),
+      value: value,
+      showCountryFlag: false,
+      serverError: serverError,
+      validate: validate,
+      onChanged: onChanged,
     );
   }
 }
@@ -714,6 +867,7 @@ class _ModernConnectSelect extends StatefulWidget {
     required this.value,
     required this.onChanged,
     required this.showCountryFlag,
+    required this.validate,
     this.serverError,
   });
 
@@ -723,6 +877,7 @@ class _ModernConnectSelect extends StatefulWidget {
   final String? value;
   final ValueChanged<String?> onChanged;
   final bool showCountryFlag;
+  final String? Function(String?) validate;
   final String? serverError;
 
   @override
@@ -776,6 +931,8 @@ class _ModernConnectSelectState extends State<_ModernConnectSelect>
       validator: (v) {
         final se = widget.serverError?.trim();
         if (se != null && se.isNotEmpty) return se;
+        final custom = widget.validate(v);
+        if (custom != null) return custom;
         return (v == null || v.isEmpty) ? widget.errorRequired : null;
       },
       builder: (field) {

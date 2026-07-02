@@ -489,6 +489,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             ),
                           ),
                           const SizedBox(height: 12),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                t.signup.no_account_yet,
+                                style: AppTextStyles.bodyLarge(context).copyWith(
+                                  color: AppColors.textSecondaryOf(context),
+                                ),
+                              ),
+                              TextButton(
+                                onPressed: formLocked
+                                    ? null
+                                    : () => context.go('/signup'),
+                                child: Text(t.signup.create_account_link),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
                           _wrapEntrance(
                             reduce,
                             const LoginFooter(),

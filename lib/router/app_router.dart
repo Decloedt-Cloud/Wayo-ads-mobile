@@ -10,7 +10,11 @@ import '../features/auth/presentation/screens/forgot_password_screen.dart';
 import '../features/auth/presentation/screens/login_screen.dart';
 import '../features/auth/domain/onboarding_gate.dart';
 import '../features/auth/presentation/screens/email_verification_otp_onboarding_screen.dart';
+import '../features/auth/presentation/screens/signup_email_verification_screen.dart';
+import '../features/auth/presentation/screens/signup_register_screen.dart';
+import '../features/auth/presentation/screens/signup_role_screen.dart';
 import '../features/auth/presentation/screens/wayo_ads_role_onboarding_screen.dart';
+import '../features/auth/presentation/models/signup_verify_payload.dart';
 import '../features/auth/presentation/screens/new_password_screen.dart';
 import '../features/auth/presentation/screens/otp_verification_screen.dart';
 import '../features/creator_campaigns/presentation/screens/creator_application_detail_screen.dart';
@@ -86,6 +90,10 @@ Page<void> _advertiserCampaignDetailPage(GoRouterState state) {
 bool _isAuthOnboardingPath(String loc) {
   return loc == '/onboarding/wayo-ads-role' ||
       loc == '/onboarding/verify-email-otp';
+}
+
+bool _isSignupPath(String loc) {
+  return loc == '/signup' || loc.startsWith('/signup/');
 }
 
 /// Paths that never require an auth redirect away from the shell.
@@ -188,6 +196,9 @@ GoRouter goRouter(GoRouterRef ref) {
             if (loc == '/login') {
               return isSuperAdmin ? '/superadmin' : '/dashboard';
             }
+            if (_isSignupPath(loc)) {
+              return isSuperAdmin ? '/superadmin' : '/dashboard';
+            }
             // Superadmin panel + shared deep links (notifications, etc.)
             if (isSuperAdmin && !_superadminAllowedPath(loc)) {
               return '/superadmin';
@@ -197,15 +208,22 @@ GoRouter goRouter(GoRouterRef ref) {
           if (loc == '/login') {
             return null;
           }
+          if (_isSignupPath(loc)) {
+            return null;
+          }
           if (_isAuthOnboardingPath(loc)) {
             return '/login';
           }
           return '/login';
         },
         loading: () =>
-            loc == '/login' || _isAuthOnboardingPath(loc) ? null : '/login',
+            loc == '/login' || _isSignupPath(loc) || _isAuthOnboardingPath(loc)
+                ? null
+                : '/login',
         error: (Object? err, StackTrace? stack) =>
-            loc == '/login' || _isAuthOnboardingPath(loc) ? null : '/login',
+            loc == '/login' || _isSignupPath(loc) || _isAuthOnboardingPath(loc)
+                ? null
+                : '/login',
       );
     },
     routes: [
@@ -235,6 +253,34 @@ GoRouter goRouter(GoRouterRef ref) {
         builder: (context, state) => const TermsAndConditionsScreen(),
       ),
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
+      GoRoute(
+        path: '/signup',
+        builder: (context, state) => const SignupRoleScreen(),
+        routes: [
+          GoRoute(
+            path: 'register',
+            builder: (context, state) {
+              final role =
+                  state.uri.queryParameters['role']?.trim().toUpperCase() ??
+                      '';
+              if (role != 'CREATOR' && role != 'ADVERTISER') {
+                return const SignupRoleScreen();
+              }
+              return SignupRegisterScreen(role: role);
+            },
+          ),
+          GoRoute(
+            path: 'verify-otp',
+            builder: (context, state) {
+              final extra = state.extra;
+              if (extra is! SignupVerifyPayload) {
+                return const SignupRoleScreen();
+              }
+              return SignupEmailVerificationScreen(payload: extra);
+            },
+          ),
+        ],
+      ),
       GoRoute(
         path: '/onboarding/wayo-ads-role',
         builder: (context, state) => const WayoAdsRoleOnboardingScreen(),

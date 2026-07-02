@@ -91,6 +91,27 @@
     "web_session_disconnecting": "Disconnecting…",
     "web_session_cancel": "Cancel"
   },
+  "signup": {
+    "role_title": "Create your Wayo Ads account",
+    "role_subtitle": "Choose how you will use Wayo Ads — same step as on the website.",
+    "create_account": "Create account",
+    "create_account_link": "Create account",
+    "no_account_yet": "Don't have an account?",
+    "register_subtitle": "Sign up as $role with email or continue with Google or Apple.",
+    "name_label": "Full name",
+    "name_required": "Name is required",
+    "confirm_password_label": "Confirm password",
+    "password_need_symbol": "Needs a symbol (!@#%…)",
+    "register_cta": "Create account",
+    "already_have_account": "Already have an account?",
+    "sign_in_link": "Sign in",
+    "verify_then_sign_in": "Email verified. Please sign in with your password.",
+    "name_taken": "This name is already taken. Please choose another one.",
+    "email_taken": "This email address is already registered. Sign in instead.",
+    "disposable_email": "Disposable / temporary email addresses are not allowed.",
+    "name_check_failed": "Unable to verify this name right now. Please try again.",
+    "email_check_failed": "Unable to verify this email right now. Please try again."
+  },
   "verify_email": {
     "title": "Confirm your email",
     "subtitle": "Wayo ID needs a verified address (same step as on the website). Open the link we sent to:",
@@ -99,6 +120,18 @@
     "still_pending": "Still waiting for verification. Check your inbox or spam, then try again.",
     "open_mail_failed": "Could not open the email app.",
     "sign_out": "Sign out"
+  },
+  "verify": {
+    "title": "Verify your email",
+    "subtitle": "We sent a 6-digit code to your email. Enter it below to verify your account.",
+    "code_label": "Verification code",
+    "verify_btn": "Verify",
+    "code_sent": "A verification code has been sent to your email.",
+    "or_label": "or",
+    "resend": "Resend code",
+    "resend_in": "Resend code ($seconds s)",
+    "spam": "Didn't receive the code? Check your spam folder or resend.",
+    "different_account": "Sign in with a different account"
   },
   "forgot_password": {
     "title": "Reset\npassword",
@@ -130,6 +163,19 @@
     "need_upper": "Needs an uppercase letter",
     "need_digit": "Needs a digit",
     "mismatch": "Passwords do not match"
+  },
+  "password_req": {
+    "hint": "Your password must contain:",
+    "length": "At least 8 characters",
+    "uppercase": "At least one uppercase letter (A–Z)",
+    "lowercase": "At least one lowercase letter (a–z)",
+    "number": "At least one number (0–9)",
+    "symbol": "At least one symbol (!@#%…)",
+    "very_weak": "Very weak",
+    "weak": "Weak",
+    "fair": "Fair",
+    "good": "Good",
+    "strong": "Strong"
   },
   "home": {
     "title": "Wayo Ads",
@@ -686,18 +732,44 @@
       "type_company_subtitle": "I operate under a registered legal entity.",
       "company_name": "Company name",
       "vat_number": "VAT number",
+      "address": "Address",
       "address_line1": "Address line 1",
       "address_line2": "Address line 2 (optional)",
       "city": "City",
       "postal_code": "Postal code",
       "state_region": "State / Region (optional)",
+      "state": "State / Province",
       "country": "Country",
       "currency": "Payout currency",
+      "billing_currency": "Preferred currency",
+      "vat_optional": "VAT / Tax ID (optional)",
+      "section_billing": "Billing country & currency",
       "error_required": "Required",
       "save_and_continue": "Save & continue",
       "submitting": "Saving…",
       "footer_info": "This information is shared with Stripe to enable your payout account. We never see your banking details.",
-      "save_error": "We couldn't save your business info. Please try again."
+      "footer_info_global": "Used for invoices and wallet top-ups. Payment details are handled securely by Stripe.",
+      "save_error": "We couldn't save your business info. Please try again.",
+      "validation": {
+        "address_required": "Address is required",
+        "address_line_invalid": "Address contains invalid characters",
+        "city_required": "City is required",
+        "city_invalid": "City contains invalid characters",
+        "postal_code_required": "Postal code is required",
+        "postal_code_invalid": "Postal code is invalid",
+        "country_required": "Country is required",
+        "country_stripe_only": "Country must be supported for Stripe payouts",
+        "country_global_invalid": "Country is not supported for billing",
+        "currency_required": "Currency is required",
+        "currency_stripe_only": "Currency must be supported for Stripe payouts",
+        "currency_global_invalid": "Currency is not supported for billing",
+        "company_name_required": "Company name is required",
+        "company_name_invalid": "Company name contains invalid characters",
+        "vat_number_required": "VAT / tax ID is required",
+        "vat_number_invalid": "VAT / tax ID format is invalid",
+        "state_required": "State / province is required",
+        "state_invalid": "State / region is invalid"
+      }
     }
   },
   "advertiser_wallet": {

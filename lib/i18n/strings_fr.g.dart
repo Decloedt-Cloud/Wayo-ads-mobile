@@ -40,11 +40,14 @@ class TranslationsFr extends Translations {
 	@override late final _TranslationsConnectivityFr connectivity = _TranslationsConnectivityFr._(_root);
 	@override late final _TranslationsCampaignsExplorerFr campaigns_explorer = _TranslationsCampaignsExplorerFr._(_root);
 	@override late final _TranslationsLoginFr login = _TranslationsLoginFr._(_root);
+	@override late final _TranslationsSignupFr signup = _TranslationsSignupFr._(_root);
 	@override late final _TranslationsVerifyEmailFr verify_email = _TranslationsVerifyEmailFr._(_root);
+	@override late final _TranslationsVerifyFr verify = _TranslationsVerifyFr._(_root);
 	@override late final _TranslationsForgotPasswordFr forgot_password = _TranslationsForgotPasswordFr._(_root);
 	@override late final _TranslationsOtpFr otp = _TranslationsOtpFr._(_root);
 	@override late final _TranslationsResetPasswordFr reset_password = _TranslationsResetPasswordFr._(_root);
 	@override late final _TranslationsValidationFr validation = _TranslationsValidationFr._(_root);
+	@override late final _TranslationsPasswordReqFr password_req = _TranslationsPasswordReqFr._(_root);
 	@override late final _TranslationsHomeFr home = _TranslationsHomeFr._(_root);
 	@override late final _TranslationsDashboardFr dashboard = _TranslationsDashboardFr._(_root);
 	@override late final _TranslationsAdvertiserCampaignsFr advertiser_campaigns = _TranslationsAdvertiserCampaignsFr._(_root);
@@ -193,6 +196,34 @@ class _TranslationsLoginFr extends TranslationsLoginEn {
 	@override String get web_session_cancel => 'Annuler';
 }
 
+// Path: signup
+class _TranslationsSignupFr extends TranslationsSignupEn {
+	_TranslationsSignupFr._(TranslationsFr root) : this._root = root, super.internal(root);
+
+	final TranslationsFr _root; // ignore: unused_field
+
+	// Translations
+	@override String get role_title => 'Créer votre compte Wayo Ads';
+	@override String get role_subtitle => 'Choisissez comment vous utiliserez Wayo Ads — même étape que sur le site.';
+	@override String get create_account => 'Créer un compte';
+	@override String get create_account_link => 'Créer un compte';
+	@override String get no_account_yet => 'Pas encore de compte ?';
+	@override String register_subtitle({required Object role}) => 'Inscrivez-vous en tant que ${role} par e-mail ou continuez avec Google ou Apple.';
+	@override String get name_label => 'Nom complet';
+	@override String get name_required => 'Le nom est obligatoire';
+	@override String get confirm_password_label => 'Confirmer le mot de passe';
+	@override String get password_need_symbol => 'Un symbole est requis (!@#%…)';
+	@override String get register_cta => 'Créer un compte';
+	@override String get already_have_account => 'Vous avez déjà un compte ?';
+	@override String get sign_in_link => 'Se connecter';
+	@override String get verify_then_sign_in => 'E-mail vérifié. Connectez-vous avec votre mot de passe.';
+	@override String get name_taken => 'Ce nom est déjà utilisé. Veuillez en choisir un autre.';
+	@override String get email_taken => 'Cette adresse email est déjà utilisée. Connectez-vous plutôt.';
+	@override String get disposable_email => 'Les adresses email jetables ou temporaires ne sont pas autorisées.';
+	@override String get name_check_failed => 'Impossible de vérifier ce nom pour le moment. Réessayez.';
+	@override String get email_check_failed => 'Impossible de vérifier cette adresse email pour le moment. Réessayez.';
+}
+
 // Path: verify_email
 class _TranslationsVerifyEmailFr extends TranslationsVerifyEmailEn {
 	_TranslationsVerifyEmailFr._(TranslationsFr root) : this._root = root, super.internal(root);
@@ -207,6 +238,25 @@ class _TranslationsVerifyEmailFr extends TranslationsVerifyEmailEn {
 	@override String get still_pending => 'Vérification toujours en attente. Vérifiez la boîte de réception ou les spams, puis réessayez.';
 	@override String get open_mail_failed => 'Impossible d’ouvrir l’application mail.';
 	@override String get sign_out => 'Se déconnecter';
+}
+
+// Path: verify
+class _TranslationsVerifyFr extends TranslationsVerifyEn {
+	_TranslationsVerifyFr._(TranslationsFr root) : this._root = root, super.internal(root);
+
+	final TranslationsFr _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'Vérifiez votre email';
+	@override String get subtitle => 'Nous avons envoyé un code à 6 chiffres à votre email. Entrez-le ci-dessous pour vérifier votre compte.';
+	@override String get code_label => 'Code de vérification';
+	@override String get verify_btn => 'Vérifier';
+	@override String get code_sent => 'Un code de vérification a été envoyé à votre email.';
+	@override String get or_label => 'ou';
+	@override String get resend => 'Renvoyer le code';
+	@override String resend_in({required Object seconds}) => 'Renvoyer le code (${seconds} s)';
+	@override String get spam => 'Vous n\'avez pas reçu le code ? Vérifiez vos spams ou renvoyez-le.';
+	@override String get different_account => 'Se connecter avec un autre compte';
 }
 
 // Path: forgot_password
@@ -266,6 +316,26 @@ class _TranslationsValidationFr extends TranslationsValidationEn {
 	@override String get need_upper => 'Une majuscule est requise';
 	@override String get need_digit => 'Un chiffre est requis';
 	@override String get mismatch => 'Les mots de passe ne correspondent pas';
+}
+
+// Path: password_req
+class _TranslationsPasswordReqFr extends TranslationsPasswordReqEn {
+	_TranslationsPasswordReqFr._(TranslationsFr root) : this._root = root, super.internal(root);
+
+	final TranslationsFr _root; // ignore: unused_field
+
+	// Translations
+	@override String get hint => 'Votre mot de passe doit contenir :';
+	@override String get length => 'Au moins 8 caractères';
+	@override String get uppercase => 'Au moins une majuscule (A–Z)';
+	@override String get lowercase => 'Au moins une minuscule (a–z)';
+	@override String get number => 'Au moins un chiffre (0–9)';
+	@override String get symbol => 'Au moins un symbole (!@#%…)';
+	@override String get very_weak => 'Très faible';
+	@override String get weak => 'Faible';
+	@override String get fair => 'Correct';
+	@override String get good => 'Bon';
+	@override String get strong => 'Fort';
 }
 
 // Path: home
@@ -1548,18 +1618,25 @@ class _TranslationsCreatorBusinessFr extends TranslationsCreatorBusinessEn {
 	@override String get type_company_subtitle => 'J’opère sous une entité juridique enregistrée.';
 	@override String get company_name => 'Nom de la société';
 	@override String get vat_number => 'Numéro de TVA';
+	@override String get address => 'Adresse';
 	@override String get address_line1 => 'Adresse ligne 1';
 	@override String get address_line2 => 'Adresse ligne 2 (optionnel)';
 	@override String get city => 'Ville';
 	@override String get postal_code => 'Code postal';
 	@override String get state_region => 'Région (optionnel)';
+	@override String get state => 'État / Province';
 	@override String get country => 'Pays';
 	@override String get currency => 'Devise de paiement';
+	@override String get billing_currency => 'Devise préférée';
+	@override String get vat_optional => 'TVA / N° fiscal (optionnel)';
+	@override String get section_billing => 'Pays et devise de facturation';
 	@override String get error_required => 'Champ requis';
 	@override String get save_and_continue => 'Enregistrer et continuer';
 	@override String get submitting => 'Enregistrement…';
 	@override String get footer_info => 'Ces informations sont transmises à Stripe pour activer votre compte de paiement. Vos coordonnées bancaires ne nous sont jamais transmises.';
+	@override String get footer_info_global => 'Utilisées pour les factures et les recharges du portefeuille. Les paiements sont traités de façon sécurisée par Stripe.';
 	@override String get save_error => 'Impossible d’enregistrer vos infos. Veuillez réessayer.';
+	@override late final _TranslationsCreatorBusinessValidationFr validation = _TranslationsCreatorBusinessValidationFr._(_root);
 }
 
 // Path: onboarding.advertiser
@@ -1598,6 +1675,33 @@ class _TranslationsOnboardingCreatorFr extends TranslationsOnboardingCreatorEn {
 	@override String get invoices_subtitle => 'Filtrez revenus et virements, téléchargez des PDF signés ou un ZIP — tout se met à jour automatiquement.';
 	@override String get chat_title => 'Discuter avec l\'annonceur';
 	@override String get chat_subtitle => 'Dès l\'approbation, le chat s\'ouvre pour vous aligner avec l\'annonceur sur la livraison.';
+}
+
+// Path: creator.business.validation
+class _TranslationsCreatorBusinessValidationFr extends TranslationsCreatorBusinessValidationEn {
+	_TranslationsCreatorBusinessValidationFr._(TranslationsFr root) : this._root = root, super.internal(root);
+
+	final TranslationsFr _root; // ignore: unused_field
+
+	// Translations
+	@override String get address_required => 'L’adresse est requise';
+	@override String get address_line_invalid => 'L’adresse contient des caractères invalides';
+	@override String get city_required => 'La ville est requise';
+	@override String get city_invalid => 'La ville contient des caractères invalides';
+	@override String get postal_code_required => 'Le code postal est requis';
+	@override String get postal_code_invalid => 'Code postal invalide';
+	@override String get country_required => 'Le pays est requis';
+	@override String get country_stripe_only => 'Ce pays n’est pas pris en charge pour les paiements Stripe';
+	@override String get country_global_invalid => 'Pays non pris en charge pour la facturation';
+	@override String get currency_required => 'La devise est requise';
+	@override String get currency_stripe_only => 'Cette devise n’est pas prise en charge pour les paiements Stripe';
+	@override String get currency_global_invalid => 'Devise non prise en charge pour la facturation';
+	@override String get company_name_required => 'Le nom de la société est requis';
+	@override String get company_name_invalid => 'Le nom de la société contient des caractères invalides';
+	@override String get vat_number_required => 'Le numéro de TVA / fiscal est requis';
+	@override String get vat_number_invalid => 'Format de TVA / n° fiscal invalide';
+	@override String get state_required => 'L’état / la province est requis';
+	@override String get state_invalid => 'État / région invalide';
 }
 
 /// Flat map(s) containing all translations.
@@ -1687,6 +1791,25 @@ extension on TranslationsFr {
 			case 'login.web_session_disconnect': return 'Déconnecter l\'autre appareil';
 			case 'login.web_session_disconnecting': return 'Déconnexion…';
 			case 'login.web_session_cancel': return 'Annuler';
+			case 'signup.role_title': return 'Créer votre compte Wayo Ads';
+			case 'signup.role_subtitle': return 'Choisissez comment vous utiliserez Wayo Ads — même étape que sur le site.';
+			case 'signup.create_account': return 'Créer un compte';
+			case 'signup.create_account_link': return 'Créer un compte';
+			case 'signup.no_account_yet': return 'Pas encore de compte ?';
+			case 'signup.register_subtitle': return ({required Object role}) => 'Inscrivez-vous en tant que ${role} par e-mail ou continuez avec Google ou Apple.';
+			case 'signup.name_label': return 'Nom complet';
+			case 'signup.name_required': return 'Le nom est obligatoire';
+			case 'signup.confirm_password_label': return 'Confirmer le mot de passe';
+			case 'signup.password_need_symbol': return 'Un symbole est requis (!@#%…)';
+			case 'signup.register_cta': return 'Créer un compte';
+			case 'signup.already_have_account': return 'Vous avez déjà un compte ?';
+			case 'signup.sign_in_link': return 'Se connecter';
+			case 'signup.verify_then_sign_in': return 'E-mail vérifié. Connectez-vous avec votre mot de passe.';
+			case 'signup.name_taken': return 'Ce nom est déjà utilisé. Veuillez en choisir un autre.';
+			case 'signup.email_taken': return 'Cette adresse email est déjà utilisée. Connectez-vous plutôt.';
+			case 'signup.disposable_email': return 'Les adresses email jetables ou temporaires ne sont pas autorisées.';
+			case 'signup.name_check_failed': return 'Impossible de vérifier ce nom pour le moment. Réessayez.';
+			case 'signup.email_check_failed': return 'Impossible de vérifier cette adresse email pour le moment. Réessayez.';
 			case 'verify_email.title': return 'Confirmez votre email';
 			case 'verify_email.subtitle': return 'Wayo ID exige une adresse vérifiée (comme sur le site). Ouvrez le lien envoyé à :';
 			case 'verify_email.check_again': return 'C’est fait — continuer';
@@ -1694,6 +1817,16 @@ extension on TranslationsFr {
 			case 'verify_email.still_pending': return 'Vérification toujours en attente. Vérifiez la boîte de réception ou les spams, puis réessayez.';
 			case 'verify_email.open_mail_failed': return 'Impossible d’ouvrir l’application mail.';
 			case 'verify_email.sign_out': return 'Se déconnecter';
+			case 'verify.title': return 'Vérifiez votre email';
+			case 'verify.subtitle': return 'Nous avons envoyé un code à 6 chiffres à votre email. Entrez-le ci-dessous pour vérifier votre compte.';
+			case 'verify.code_label': return 'Code de vérification';
+			case 'verify.verify_btn': return 'Vérifier';
+			case 'verify.code_sent': return 'Un code de vérification a été envoyé à votre email.';
+			case 'verify.or_label': return 'ou';
+			case 'verify.resend': return 'Renvoyer le code';
+			case 'verify.resend_in': return ({required Object seconds}) => 'Renvoyer le code (${seconds} s)';
+			case 'verify.spam': return 'Vous n\'avez pas reçu le code ? Vérifiez vos spams ou renvoyez-le.';
+			case 'verify.different_account': return 'Se connecter avec un autre compte';
 			case 'forgot_password.title': return 'Réinitialiser\nle mot de passe';
 			case 'forgot_password.subtitle': return 'Entrez votre email Wayo. Nous vous enverrons un code à 6 chiffres.';
 			case 'forgot_password.email_label': return 'Email';
@@ -1717,6 +1850,17 @@ extension on TranslationsFr {
 			case 'validation.need_upper': return 'Une majuscule est requise';
 			case 'validation.need_digit': return 'Un chiffre est requis';
 			case 'validation.mismatch': return 'Les mots de passe ne correspondent pas';
+			case 'password_req.hint': return 'Votre mot de passe doit contenir :';
+			case 'password_req.length': return 'Au moins 8 caractères';
+			case 'password_req.uppercase': return 'Au moins une majuscule (A–Z)';
+			case 'password_req.lowercase': return 'Au moins une minuscule (a–z)';
+			case 'password_req.number': return 'Au moins un chiffre (0–9)';
+			case 'password_req.symbol': return 'Au moins un symbole (!@#%…)';
+			case 'password_req.very_weak': return 'Très faible';
+			case 'password_req.weak': return 'Faible';
+			case 'password_req.fair': return 'Correct';
+			case 'password_req.good': return 'Bon';
+			case 'password_req.strong': return 'Fort';
 			case 'home.title': return 'Wayo Ads';
 			case 'home.logout': return 'Déconnexion';
 			case 'home.session_title': return 'Session active';
@@ -2222,18 +2366,42 @@ extension on TranslationsFr {
 			case 'creator.business.type_company_subtitle': return 'J’opère sous une entité juridique enregistrée.';
 			case 'creator.business.company_name': return 'Nom de la société';
 			case 'creator.business.vat_number': return 'Numéro de TVA';
+			case 'creator.business.address': return 'Adresse';
 			case 'creator.business.address_line1': return 'Adresse ligne 1';
 			case 'creator.business.address_line2': return 'Adresse ligne 2 (optionnel)';
 			case 'creator.business.city': return 'Ville';
 			case 'creator.business.postal_code': return 'Code postal';
 			case 'creator.business.state_region': return 'Région (optionnel)';
+			case 'creator.business.state': return 'État / Province';
 			case 'creator.business.country': return 'Pays';
 			case 'creator.business.currency': return 'Devise de paiement';
+			case 'creator.business.billing_currency': return 'Devise préférée';
+			case 'creator.business.vat_optional': return 'TVA / N° fiscal (optionnel)';
+			case 'creator.business.section_billing': return 'Pays et devise de facturation';
 			case 'creator.business.error_required': return 'Champ requis';
 			case 'creator.business.save_and_continue': return 'Enregistrer et continuer';
 			case 'creator.business.submitting': return 'Enregistrement…';
 			case 'creator.business.footer_info': return 'Ces informations sont transmises à Stripe pour activer votre compte de paiement. Vos coordonnées bancaires ne nous sont jamais transmises.';
+			case 'creator.business.footer_info_global': return 'Utilisées pour les factures et les recharges du portefeuille. Les paiements sont traités de façon sécurisée par Stripe.';
 			case 'creator.business.save_error': return 'Impossible d’enregistrer vos infos. Veuillez réessayer.';
+			case 'creator.business.validation.address_required': return 'L’adresse est requise';
+			case 'creator.business.validation.address_line_invalid': return 'L’adresse contient des caractères invalides';
+			case 'creator.business.validation.city_required': return 'La ville est requise';
+			case 'creator.business.validation.city_invalid': return 'La ville contient des caractères invalides';
+			case 'creator.business.validation.postal_code_required': return 'Le code postal est requis';
+			case 'creator.business.validation.postal_code_invalid': return 'Code postal invalide';
+			case 'creator.business.validation.country_required': return 'Le pays est requis';
+			case 'creator.business.validation.country_stripe_only': return 'Ce pays n’est pas pris en charge pour les paiements Stripe';
+			case 'creator.business.validation.country_global_invalid': return 'Pays non pris en charge pour la facturation';
+			case 'creator.business.validation.currency_required': return 'La devise est requise';
+			case 'creator.business.validation.currency_stripe_only': return 'Cette devise n’est pas prise en charge pour les paiements Stripe';
+			case 'creator.business.validation.currency_global_invalid': return 'Devise non prise en charge pour la facturation';
+			case 'creator.business.validation.company_name_required': return 'Le nom de la société est requis';
+			case 'creator.business.validation.company_name_invalid': return 'Le nom de la société contient des caractères invalides';
+			case 'creator.business.validation.vat_number_required': return 'Le numéro de TVA / fiscal est requis';
+			case 'creator.business.validation.vat_number_invalid': return 'Format de TVA / n° fiscal invalide';
+			case 'creator.business.validation.state_required': return 'L’état / la province est requis';
+			case 'creator.business.validation.state_invalid': return 'État / région invalide';
 			case 'advertiser_wallet.hero_title': return 'Votre solde';
 			case 'advertiser_wallet.hero_subtitle': return 'Ajoutez des fonds pour lancer des campagnes. Paiements sécurisés via Stripe. Apple Pay (iOS) et Google Pay (Android) sont proposés lorsqu’ils sont disponibles.';
 			case 'advertiser_wallet.available': return 'Disponible';

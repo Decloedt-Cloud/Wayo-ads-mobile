@@ -42,11 +42,14 @@ class Translations implements BaseTranslations<AppLocale, Translations> {
 	late final TranslationsConnectivityEn connectivity = TranslationsConnectivityEn.internal(_root);
 	late final TranslationsCampaignsExplorerEn campaigns_explorer = TranslationsCampaignsExplorerEn.internal(_root);
 	late final TranslationsLoginEn login = TranslationsLoginEn.internal(_root);
+	late final TranslationsSignupEn signup = TranslationsSignupEn.internal(_root);
 	late final TranslationsVerifyEmailEn verify_email = TranslationsVerifyEmailEn.internal(_root);
+	late final TranslationsVerifyEn verify = TranslationsVerifyEn.internal(_root);
 	late final TranslationsForgotPasswordEn forgot_password = TranslationsForgotPasswordEn.internal(_root);
 	late final TranslationsOtpEn otp = TranslationsOtpEn.internal(_root);
 	late final TranslationsResetPasswordEn reset_password = TranslationsResetPasswordEn.internal(_root);
 	late final TranslationsValidationEn validation = TranslationsValidationEn.internal(_root);
+	late final TranslationsPasswordReqEn password_req = TranslationsPasswordReqEn.internal(_root);
 	late final TranslationsHomeEn home = TranslationsHomeEn.internal(_root);
 	late final TranslationsDashboardEn dashboard = TranslationsDashboardEn.internal(_root);
 	late final TranslationsAdvertiserCampaignsEn advertiser_campaigns = TranslationsAdvertiserCampaignsEn.internal(_root);
@@ -195,6 +198,34 @@ class TranslationsLoginEn {
 	String get web_session_cancel => 'Cancel';
 }
 
+// Path: signup
+class TranslationsSignupEn {
+	TranslationsSignupEn.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+	String get role_title => 'Create your Wayo Ads account';
+	String get role_subtitle => 'Choose how you will use Wayo Ads — same step as on the website.';
+	String get create_account => 'Create account';
+	String get create_account_link => 'Create account';
+	String get no_account_yet => 'Don\'t have an account?';
+	String register_subtitle({required Object role}) => 'Sign up as ${role} with email or continue with Google or Apple.';
+	String get name_label => 'Full name';
+	String get name_required => 'Name is required';
+	String get confirm_password_label => 'Confirm password';
+	String get password_need_symbol => 'Needs a symbol (!@#%…)';
+	String get register_cta => 'Create account';
+	String get already_have_account => 'Already have an account?';
+	String get sign_in_link => 'Sign in';
+	String get verify_then_sign_in => 'Email verified. Please sign in with your password.';
+	String get name_taken => 'This name is already taken. Please choose another one.';
+	String get email_taken => 'This email address is already registered. Sign in instead.';
+	String get disposable_email => 'Disposable / temporary email addresses are not allowed.';
+	String get name_check_failed => 'Unable to verify this name right now. Please try again.';
+	String get email_check_failed => 'Unable to verify this email right now. Please try again.';
+}
+
 // Path: verify_email
 class TranslationsVerifyEmailEn {
 	TranslationsVerifyEmailEn.internal(this._root);
@@ -209,6 +240,25 @@ class TranslationsVerifyEmailEn {
 	String get still_pending => 'Still waiting for verification. Check your inbox or spam, then try again.';
 	String get open_mail_failed => 'Could not open the email app.';
 	String get sign_out => 'Sign out';
+}
+
+// Path: verify
+class TranslationsVerifyEn {
+	TranslationsVerifyEn.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+	String get title => 'Verify your email';
+	String get subtitle => 'We sent a 6-digit code to your email. Enter it below to verify your account.';
+	String get code_label => 'Verification code';
+	String get verify_btn => 'Verify';
+	String get code_sent => 'A verification code has been sent to your email.';
+	String get or_label => 'or';
+	String get resend => 'Resend code';
+	String resend_in({required Object seconds}) => 'Resend code (${seconds} s)';
+	String get spam => 'Didn\'t receive the code? Check your spam folder or resend.';
+	String get different_account => 'Sign in with a different account';
 }
 
 // Path: forgot_password
@@ -268,6 +318,26 @@ class TranslationsValidationEn {
 	String get need_upper => 'Needs an uppercase letter';
 	String get need_digit => 'Needs a digit';
 	String get mismatch => 'Passwords do not match';
+}
+
+// Path: password_req
+class TranslationsPasswordReqEn {
+	TranslationsPasswordReqEn.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+	String get hint => 'Your password must contain:';
+	String get length => 'At least 8 characters';
+	String get uppercase => 'At least one uppercase letter (A–Z)';
+	String get lowercase => 'At least one lowercase letter (a–z)';
+	String get number => 'At least one number (0–9)';
+	String get symbol => 'At least one symbol (!@#%…)';
+	String get very_weak => 'Very weak';
+	String get weak => 'Weak';
+	String get fair => 'Fair';
+	String get good => 'Good';
+	String get strong => 'Strong';
 }
 
 // Path: home
@@ -1550,18 +1620,25 @@ class TranslationsCreatorBusinessEn {
 	String get type_company_subtitle => 'I operate under a registered legal entity.';
 	String get company_name => 'Company name';
 	String get vat_number => 'VAT number';
+	String get address => 'Address';
 	String get address_line1 => 'Address line 1';
 	String get address_line2 => 'Address line 2 (optional)';
 	String get city => 'City';
 	String get postal_code => 'Postal code';
 	String get state_region => 'State / Region (optional)';
+	String get state => 'State / Province';
 	String get country => 'Country';
 	String get currency => 'Payout currency';
+	String get billing_currency => 'Preferred currency';
+	String get vat_optional => 'VAT / Tax ID (optional)';
+	String get section_billing => 'Billing country & currency';
 	String get error_required => 'Required';
 	String get save_and_continue => 'Save & continue';
 	String get submitting => 'Saving…';
 	String get footer_info => 'This information is shared with Stripe to enable your payout account. We never see your banking details.';
+	String get footer_info_global => 'Used for invoices and wallet top-ups. Payment details are handled securely by Stripe.';
 	String get save_error => 'We couldn\'t save your business info. Please try again.';
+	late final TranslationsCreatorBusinessValidationEn validation = TranslationsCreatorBusinessValidationEn.internal(_root);
 }
 
 // Path: onboarding.advertiser
@@ -1600,6 +1677,33 @@ class TranslationsOnboardingCreatorEn {
 	String get invoices_subtitle => 'Filter earnings and payouts, download signed PDFs or a ZIP — refreshed automatically while you use the app.';
 	String get chat_title => 'Talk to advertisers';
 	String get chat_subtitle => 'Once approved, the chat opens with your advertiser to align on deliverables.';
+}
+
+// Path: creator.business.validation
+class TranslationsCreatorBusinessValidationEn {
+	TranslationsCreatorBusinessValidationEn.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+	String get address_required => 'Address is required';
+	String get address_line_invalid => 'Address contains invalid characters';
+	String get city_required => 'City is required';
+	String get city_invalid => 'City contains invalid characters';
+	String get postal_code_required => 'Postal code is required';
+	String get postal_code_invalid => 'Postal code is invalid';
+	String get country_required => 'Country is required';
+	String get country_stripe_only => 'Country must be supported for Stripe payouts';
+	String get country_global_invalid => 'Country is not supported for billing';
+	String get currency_required => 'Currency is required';
+	String get currency_stripe_only => 'Currency must be supported for Stripe payouts';
+	String get currency_global_invalid => 'Currency is not supported for billing';
+	String get company_name_required => 'Company name is required';
+	String get company_name_invalid => 'Company name contains invalid characters';
+	String get vat_number_required => 'VAT / tax ID is required';
+	String get vat_number_invalid => 'VAT / tax ID format is invalid';
+	String get state_required => 'State / province is required';
+	String get state_invalid => 'State / region is invalid';
 }
 
 /// Flat map(s) containing all translations.
@@ -1689,6 +1793,25 @@ extension on Translations {
 			case 'login.web_session_disconnect': return 'Disconnect Other Device';
 			case 'login.web_session_disconnecting': return 'Disconnecting…';
 			case 'login.web_session_cancel': return 'Cancel';
+			case 'signup.role_title': return 'Create your Wayo Ads account';
+			case 'signup.role_subtitle': return 'Choose how you will use Wayo Ads — same step as on the website.';
+			case 'signup.create_account': return 'Create account';
+			case 'signup.create_account_link': return 'Create account';
+			case 'signup.no_account_yet': return 'Don\'t have an account?';
+			case 'signup.register_subtitle': return ({required Object role}) => 'Sign up as ${role} with email or continue with Google or Apple.';
+			case 'signup.name_label': return 'Full name';
+			case 'signup.name_required': return 'Name is required';
+			case 'signup.confirm_password_label': return 'Confirm password';
+			case 'signup.password_need_symbol': return 'Needs a symbol (!@#%…)';
+			case 'signup.register_cta': return 'Create account';
+			case 'signup.already_have_account': return 'Already have an account?';
+			case 'signup.sign_in_link': return 'Sign in';
+			case 'signup.verify_then_sign_in': return 'Email verified. Please sign in with your password.';
+			case 'signup.name_taken': return 'This name is already taken. Please choose another one.';
+			case 'signup.email_taken': return 'This email address is already registered. Sign in instead.';
+			case 'signup.disposable_email': return 'Disposable / temporary email addresses are not allowed.';
+			case 'signup.name_check_failed': return 'Unable to verify this name right now. Please try again.';
+			case 'signup.email_check_failed': return 'Unable to verify this email right now. Please try again.';
 			case 'verify_email.title': return 'Confirm your email';
 			case 'verify_email.subtitle': return 'Wayo ID needs a verified address (same step as on the website). Open the link we sent to:';
 			case 'verify_email.check_again': return 'I\'ve confirmed — continue';
@@ -1696,6 +1819,16 @@ extension on Translations {
 			case 'verify_email.still_pending': return 'Still waiting for verification. Check your inbox or spam, then try again.';
 			case 'verify_email.open_mail_failed': return 'Could not open the email app.';
 			case 'verify_email.sign_out': return 'Sign out';
+			case 'verify.title': return 'Verify your email';
+			case 'verify.subtitle': return 'We sent a 6-digit code to your email. Enter it below to verify your account.';
+			case 'verify.code_label': return 'Verification code';
+			case 'verify.verify_btn': return 'Verify';
+			case 'verify.code_sent': return 'A verification code has been sent to your email.';
+			case 'verify.or_label': return 'or';
+			case 'verify.resend': return 'Resend code';
+			case 'verify.resend_in': return ({required Object seconds}) => 'Resend code (${seconds} s)';
+			case 'verify.spam': return 'Didn\'t receive the code? Check your spam folder or resend.';
+			case 'verify.different_account': return 'Sign in with a different account';
 			case 'forgot_password.title': return 'Reset\npassword';
 			case 'forgot_password.subtitle': return 'Enter your Wayo email. We will send you a 6-digit code.';
 			case 'forgot_password.email_label': return 'Email';
@@ -1719,6 +1852,17 @@ extension on Translations {
 			case 'validation.need_upper': return 'Needs an uppercase letter';
 			case 'validation.need_digit': return 'Needs a digit';
 			case 'validation.mismatch': return 'Passwords do not match';
+			case 'password_req.hint': return 'Your password must contain:';
+			case 'password_req.length': return 'At least 8 characters';
+			case 'password_req.uppercase': return 'At least one uppercase letter (A–Z)';
+			case 'password_req.lowercase': return 'At least one lowercase letter (a–z)';
+			case 'password_req.number': return 'At least one number (0–9)';
+			case 'password_req.symbol': return 'At least one symbol (!@#%…)';
+			case 'password_req.very_weak': return 'Very weak';
+			case 'password_req.weak': return 'Weak';
+			case 'password_req.fair': return 'Fair';
+			case 'password_req.good': return 'Good';
+			case 'password_req.strong': return 'Strong';
 			case 'home.title': return 'Wayo Ads';
 			case 'home.logout': return 'Log out';
 			case 'home.session_title': return 'Active session';
@@ -2224,18 +2368,42 @@ extension on Translations {
 			case 'creator.business.type_company_subtitle': return 'I operate under a registered legal entity.';
 			case 'creator.business.company_name': return 'Company name';
 			case 'creator.business.vat_number': return 'VAT number';
+			case 'creator.business.address': return 'Address';
 			case 'creator.business.address_line1': return 'Address line 1';
 			case 'creator.business.address_line2': return 'Address line 2 (optional)';
 			case 'creator.business.city': return 'City';
 			case 'creator.business.postal_code': return 'Postal code';
 			case 'creator.business.state_region': return 'State / Region (optional)';
+			case 'creator.business.state': return 'State / Province';
 			case 'creator.business.country': return 'Country';
 			case 'creator.business.currency': return 'Payout currency';
+			case 'creator.business.billing_currency': return 'Preferred currency';
+			case 'creator.business.vat_optional': return 'VAT / Tax ID (optional)';
+			case 'creator.business.section_billing': return 'Billing country & currency';
 			case 'creator.business.error_required': return 'Required';
 			case 'creator.business.save_and_continue': return 'Save & continue';
 			case 'creator.business.submitting': return 'Saving…';
 			case 'creator.business.footer_info': return 'This information is shared with Stripe to enable your payout account. We never see your banking details.';
+			case 'creator.business.footer_info_global': return 'Used for invoices and wallet top-ups. Payment details are handled securely by Stripe.';
 			case 'creator.business.save_error': return 'We couldn\'t save your business info. Please try again.';
+			case 'creator.business.validation.address_required': return 'Address is required';
+			case 'creator.business.validation.address_line_invalid': return 'Address contains invalid characters';
+			case 'creator.business.validation.city_required': return 'City is required';
+			case 'creator.business.validation.city_invalid': return 'City contains invalid characters';
+			case 'creator.business.validation.postal_code_required': return 'Postal code is required';
+			case 'creator.business.validation.postal_code_invalid': return 'Postal code is invalid';
+			case 'creator.business.validation.country_required': return 'Country is required';
+			case 'creator.business.validation.country_stripe_only': return 'Country must be supported for Stripe payouts';
+			case 'creator.business.validation.country_global_invalid': return 'Country is not supported for billing';
+			case 'creator.business.validation.currency_required': return 'Currency is required';
+			case 'creator.business.validation.currency_stripe_only': return 'Currency must be supported for Stripe payouts';
+			case 'creator.business.validation.currency_global_invalid': return 'Currency is not supported for billing';
+			case 'creator.business.validation.company_name_required': return 'Company name is required';
+			case 'creator.business.validation.company_name_invalid': return 'Company name contains invalid characters';
+			case 'creator.business.validation.vat_number_required': return 'VAT / tax ID is required';
+			case 'creator.business.validation.vat_number_invalid': return 'VAT / tax ID format is invalid';
+			case 'creator.business.validation.state_required': return 'State / province is required';
+			case 'creator.business.validation.state_invalid': return 'State / region is invalid';
 			case 'advertiser_wallet.hero_title': return 'Your balance';
 			case 'advertiser_wallet.hero_subtitle': return 'Add funds to run campaigns. Payments are processed securely by Stripe. Apple Pay (iOS) and Google Pay (Android) are available when supported.';
 			case 'advertiser_wallet.available': return 'Available';

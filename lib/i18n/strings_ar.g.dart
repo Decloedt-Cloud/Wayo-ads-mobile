@@ -40,11 +40,14 @@ class TranslationsAr extends Translations {
 	@override late final _TranslationsConnectivityAr connectivity = _TranslationsConnectivityAr._(_root);
 	@override late final _TranslationsCampaignsExplorerAr campaigns_explorer = _TranslationsCampaignsExplorerAr._(_root);
 	@override late final _TranslationsLoginAr login = _TranslationsLoginAr._(_root);
+	@override late final _TranslationsSignupAr signup = _TranslationsSignupAr._(_root);
 	@override late final _TranslationsVerifyEmailAr verify_email = _TranslationsVerifyEmailAr._(_root);
+	@override late final _TranslationsVerifyAr verify = _TranslationsVerifyAr._(_root);
 	@override late final _TranslationsForgotPasswordAr forgot_password = _TranslationsForgotPasswordAr._(_root);
 	@override late final _TranslationsOtpAr otp = _TranslationsOtpAr._(_root);
 	@override late final _TranslationsResetPasswordAr reset_password = _TranslationsResetPasswordAr._(_root);
 	@override late final _TranslationsValidationAr validation = _TranslationsValidationAr._(_root);
+	@override late final _TranslationsPasswordReqAr password_req = _TranslationsPasswordReqAr._(_root);
 	@override late final _TranslationsHomeAr home = _TranslationsHomeAr._(_root);
 	@override late final _TranslationsDashboardAr dashboard = _TranslationsDashboardAr._(_root);
 	@override late final _TranslationsAdvertiserCampaignsAr advertiser_campaigns = _TranslationsAdvertiserCampaignsAr._(_root);
@@ -193,6 +196,34 @@ class _TranslationsLoginAr extends TranslationsLoginEn {
 	@override String get web_session_cancel => 'إلغاء';
 }
 
+// Path: signup
+class _TranslationsSignupAr extends TranslationsSignupEn {
+	_TranslationsSignupAr._(TranslationsAr root) : this._root = root, super.internal(root);
+
+	final TranslationsAr _root; // ignore: unused_field
+
+	// Translations
+	@override String get role_title => 'إنشاء حساب Wayo Ads';
+	@override String get role_subtitle => 'اختر كيف ستستخدم Wayo Ads — نفس الخطوة على الموقع.';
+	@override String get create_account => 'إنشاء حساب';
+	@override String get create_account_link => 'إنشاء حساب';
+	@override String get no_account_yet => 'ليس لديك حساب؟';
+	@override String register_subtitle({required Object role}) => 'سجّل كـ ${role} بالبريد أو تابع مع Google أو Apple.';
+	@override String get name_label => 'الاسم الكامل';
+	@override String get name_required => 'الاسم مطلوب';
+	@override String get confirm_password_label => 'تأكيد كلمة المرور';
+	@override String get password_need_symbol => 'مطلوب رمز (!@#%…)';
+	@override String get register_cta => 'إنشاء حساب';
+	@override String get already_have_account => 'لديك حساب بالفعل؟';
+	@override String get sign_in_link => 'تسجيل الدخول';
+	@override String get verify_then_sign_in => 'تم تأكيد البريد. سجّل الدخول بكلمة المرور.';
+	@override String get name_taken => 'هذا الاسم مستخدم بالفعل. يرجى اختيار اسم آخر.';
+	@override String get email_taken => 'هذا البريد الإلكتروني مسجّل بالفعل. سجّل الدخول بدلاً من ذلك.';
+	@override String get disposable_email => 'عناوين البريد الإلكتروني المؤقتة غير مسموح بها.';
+	@override String get name_check_failed => 'تعذّر التحقق من هذا الاسم الآن. يرجى المحاولة مرة أخرى.';
+	@override String get email_check_failed => 'تعذّر التحقق من هذا البريد الإلكتروني الآن. يرجى المحاولة مرة أخرى.';
+}
+
 // Path: verify_email
 class _TranslationsVerifyEmailAr extends TranslationsVerifyEmailEn {
 	_TranslationsVerifyEmailAr._(TranslationsAr root) : this._root = root, super.internal(root);
@@ -207,6 +238,25 @@ class _TranslationsVerifyEmailAr extends TranslationsVerifyEmailEn {
 	@override String get still_pending => 'ما زالت التحقق قيد الانتظار. راجع الوارد أو الرسائل غير المرغوبة ثم أعد المحاولة.';
 	@override String get open_mail_failed => 'تعذّر فتح تطبيق البريد.';
 	@override String get sign_out => 'تسجيل الخروج';
+}
+
+// Path: verify
+class _TranslationsVerifyAr extends TranslationsVerifyEn {
+	_TranslationsVerifyAr._(TranslationsAr root) : this._root = root, super.internal(root);
+
+	final TranslationsAr _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'تحقق من بريدك الإلكتروني';
+	@override String get subtitle => 'أرسلنا رمزًا من 6 أرقام إلى بريدك. أدخله أدناه للتحقق من حسابك.';
+	@override String get code_label => 'رمز التحقق';
+	@override String get verify_btn => 'تحقق';
+	@override String get code_sent => 'تم إرسال رمز التحقق إلى بريدك الإلكتروني.';
+	@override String get or_label => 'أو';
+	@override String get resend => 'إعادة إرسال الرمز';
+	@override String resend_in({required Object seconds}) => 'إعادة إرسال الرمز (${seconds} ث)';
+	@override String get spam => 'لم تستلم الرمز؟ تحقق من مجلد البريد المزعج أو أعد الإرسال.';
+	@override String get different_account => 'تسجيل الدخول بحساب مختلف';
 }
 
 // Path: forgot_password
@@ -266,6 +316,26 @@ class _TranslationsValidationAr extends TranslationsValidationEn {
 	@override String get need_upper => 'يلزم حرف كبير واحد على الأقل';
 	@override String get need_digit => 'يلزم رقم واحد على الأقل';
 	@override String get mismatch => 'كلمتا المرور غير متطابقتين';
+}
+
+// Path: password_req
+class _TranslationsPasswordReqAr extends TranslationsPasswordReqEn {
+	_TranslationsPasswordReqAr._(TranslationsAr root) : this._root = root, super.internal(root);
+
+	final TranslationsAr _root; // ignore: unused_field
+
+	// Translations
+	@override String get hint => 'يجب أن تحتوي كلمة المرور على:';
+	@override String get length => '8 أحرف على الأقل';
+	@override String get uppercase => 'حرف كبير واحد على الأقل (A–Z)';
+	@override String get lowercase => 'حرف صغير واحد على الأقل (a–z)';
+	@override String get number => 'رقم واحد على الأقل (0–9)';
+	@override String get symbol => 'رمز واحد على الأقل (!@#%…)';
+	@override String get very_weak => 'ضعيف جدًا';
+	@override String get weak => 'ضعيف';
+	@override String get fair => 'مقبول';
+	@override String get good => 'جيد';
+	@override String get strong => 'قوي';
 }
 
 // Path: home
@@ -1547,18 +1617,25 @@ class _TranslationsCreatorBusinessAr extends TranslationsCreatorBusinessEn {
 	@override String get type_company_subtitle => 'أعمل تحت كيان قانوني مسجّل.';
 	@override String get company_name => 'اسم الشركة';
 	@override String get vat_number => 'الرقم الضريبي';
+	@override String get address => 'العنوان';
 	@override String get address_line1 => 'العنوان (سطر 1)';
 	@override String get address_line2 => 'العنوان (سطر 2، اختياري)';
 	@override String get city => 'المدينة';
 	@override String get postal_code => 'الرمز البريدي';
 	@override String get state_region => 'المنطقة (اختياري)';
+	@override String get state => 'الولاية / المقاطعة';
 	@override String get country => 'البلد';
 	@override String get currency => 'عملة الدفع';
+	@override String get billing_currency => 'العملة المفضّلة';
+	@override String get vat_optional => 'الرقم الضريبي (اختياري)';
+	@override String get section_billing => 'بلد وعملة الفوترة';
 	@override String get error_required => 'حقل مطلوب';
 	@override String get save_and_continue => 'حفظ ومتابعة';
 	@override String get submitting => 'جارٍ الحفظ…';
 	@override String get footer_info => 'تُرسل هذه المعلومات إلى Stripe لتفعيل حساب الدفع. لن تصل إلينا بياناتك المصرفية أبدًا.';
+	@override String get footer_info_global => 'تُستخدم للفواتير وشحن المحفظة. تتم معالجة المدفوعات بأمان عبر Stripe.';
 	@override String get save_error => 'تعذّر حفظ المعلومات. يرجى المحاولة مجددًا.';
+	@override late final _TranslationsCreatorBusinessValidationAr validation = _TranslationsCreatorBusinessValidationAr._(_root);
 }
 
 // Path: onboarding.advertiser
@@ -1597,6 +1674,33 @@ class _TranslationsOnboardingCreatorAr extends TranslationsOnboardingCreatorEn {
 	@override String get invoices_subtitle => 'صفِّ الأرباح والتحويلات، وحمّل ملفات PDF المعتمدة أو أرشيف ZIP — يُحدَّث تلقائياً أثناء استخدام التطبيق.';
 	@override String get chat_title => 'تحدث مع المعلن';
 	@override String get chat_subtitle => 'فور الاعتماد، تُفتح الدردشة للتنسيق مع المعلن حول المخرجات.';
+}
+
+// Path: creator.business.validation
+class _TranslationsCreatorBusinessValidationAr extends TranslationsCreatorBusinessValidationEn {
+	_TranslationsCreatorBusinessValidationAr._(TranslationsAr root) : this._root = root, super.internal(root);
+
+	final TranslationsAr _root; // ignore: unused_field
+
+	// Translations
+	@override String get address_required => 'العنوان مطلوب';
+	@override String get address_line_invalid => 'العنوان يحتوي على أحرف غير صالحة';
+	@override String get city_required => 'المدينة مطلوبة';
+	@override String get city_invalid => 'المدينة تحتوي على أحرف غير صالحة';
+	@override String get postal_code_required => 'الرمز البريدي مطلوب';
+	@override String get postal_code_invalid => 'الرمز البريدي غير صالح';
+	@override String get country_required => 'البلد مطلوب';
+	@override String get country_stripe_only => 'البلد غير مدعوم لمدفوعات Stripe';
+	@override String get country_global_invalid => 'البلد غير مدعوم للفوترة';
+	@override String get currency_required => 'العملة مطلوبة';
+	@override String get currency_stripe_only => 'العملة غير مدعومة لمدفوعات Stripe';
+	@override String get currency_global_invalid => 'العملة غير مدعومة للفوترة';
+	@override String get company_name_required => 'اسم الشركة مطلوب';
+	@override String get company_name_invalid => 'اسم الشركة يحتوي على أحرف غير صالحة';
+	@override String get vat_number_required => 'الرقم الضريبي مطلوب';
+	@override String get vat_number_invalid => 'صيغة الرقم الضريبي غير صالحة';
+	@override String get state_required => 'الولاية / المقاطعة مطلوبة';
+	@override String get state_invalid => 'الولاية / المنطقة غير صالحة';
 }
 
 /// Flat map(s) containing all translations.
@@ -1686,6 +1790,25 @@ extension on TranslationsAr {
 			case 'login.web_session_disconnect': return 'قطع اتصال الجهاز الآخر';
 			case 'login.web_session_disconnecting': return 'جارٍ قطع الاتصال…';
 			case 'login.web_session_cancel': return 'إلغاء';
+			case 'signup.role_title': return 'إنشاء حساب Wayo Ads';
+			case 'signup.role_subtitle': return 'اختر كيف ستستخدم Wayo Ads — نفس الخطوة على الموقع.';
+			case 'signup.create_account': return 'إنشاء حساب';
+			case 'signup.create_account_link': return 'إنشاء حساب';
+			case 'signup.no_account_yet': return 'ليس لديك حساب؟';
+			case 'signup.register_subtitle': return ({required Object role}) => 'سجّل كـ ${role} بالبريد أو تابع مع Google أو Apple.';
+			case 'signup.name_label': return 'الاسم الكامل';
+			case 'signup.name_required': return 'الاسم مطلوب';
+			case 'signup.confirm_password_label': return 'تأكيد كلمة المرور';
+			case 'signup.password_need_symbol': return 'مطلوب رمز (!@#%…)';
+			case 'signup.register_cta': return 'إنشاء حساب';
+			case 'signup.already_have_account': return 'لديك حساب بالفعل؟';
+			case 'signup.sign_in_link': return 'تسجيل الدخول';
+			case 'signup.verify_then_sign_in': return 'تم تأكيد البريد. سجّل الدخول بكلمة المرور.';
+			case 'signup.name_taken': return 'هذا الاسم مستخدم بالفعل. يرجى اختيار اسم آخر.';
+			case 'signup.email_taken': return 'هذا البريد الإلكتروني مسجّل بالفعل. سجّل الدخول بدلاً من ذلك.';
+			case 'signup.disposable_email': return 'عناوين البريد الإلكتروني المؤقتة غير مسموح بها.';
+			case 'signup.name_check_failed': return 'تعذّر التحقق من هذا الاسم الآن. يرجى المحاولة مرة أخرى.';
+			case 'signup.email_check_failed': return 'تعذّر التحقق من هذا البريد الإلكتروني الآن. يرجى المحاولة مرة أخرى.';
 			case 'verify_email.title': return 'أكّد بريدك الإلكتروني';
 			case 'verify_email.subtitle': return 'يتطلب Wayo ID عنوانًا مُؤكدًا (كما على الموقع). افتح الرابط الذي أرسلناه إلى:';
 			case 'verify_email.check_again': return 'تم التأكيد — متابعة';
@@ -1693,6 +1816,16 @@ extension on TranslationsAr {
 			case 'verify_email.still_pending': return 'ما زالت التحقق قيد الانتظار. راجع الوارد أو الرسائل غير المرغوبة ثم أعد المحاولة.';
 			case 'verify_email.open_mail_failed': return 'تعذّر فتح تطبيق البريد.';
 			case 'verify_email.sign_out': return 'تسجيل الخروج';
+			case 'verify.title': return 'تحقق من بريدك الإلكتروني';
+			case 'verify.subtitle': return 'أرسلنا رمزًا من 6 أرقام إلى بريدك. أدخله أدناه للتحقق من حسابك.';
+			case 'verify.code_label': return 'رمز التحقق';
+			case 'verify.verify_btn': return 'تحقق';
+			case 'verify.code_sent': return 'تم إرسال رمز التحقق إلى بريدك الإلكتروني.';
+			case 'verify.or_label': return 'أو';
+			case 'verify.resend': return 'إعادة إرسال الرمز';
+			case 'verify.resend_in': return ({required Object seconds}) => 'إعادة إرسال الرمز (${seconds} ث)';
+			case 'verify.spam': return 'لم تستلم الرمز؟ تحقق من مجلد البريد المزعج أو أعد الإرسال.';
+			case 'verify.different_account': return 'تسجيل الدخول بحساب مختلف';
 			case 'forgot_password.title': return 'إعادة تعيين\nكلمة المرور';
 			case 'forgot_password.subtitle': return 'أدخل بريدك الإلكتروني على وايو. سنرسل لك رمزًا من 6 أرقام.';
 			case 'forgot_password.email_label': return 'البريد الإلكتروني';
@@ -1716,6 +1849,17 @@ extension on TranslationsAr {
 			case 'validation.need_upper': return 'يلزم حرف كبير واحد على الأقل';
 			case 'validation.need_digit': return 'يلزم رقم واحد على الأقل';
 			case 'validation.mismatch': return 'كلمتا المرور غير متطابقتين';
+			case 'password_req.hint': return 'يجب أن تحتوي كلمة المرور على:';
+			case 'password_req.length': return '8 أحرف على الأقل';
+			case 'password_req.uppercase': return 'حرف كبير واحد على الأقل (A–Z)';
+			case 'password_req.lowercase': return 'حرف صغير واحد على الأقل (a–z)';
+			case 'password_req.number': return 'رقم واحد على الأقل (0–9)';
+			case 'password_req.symbol': return 'رمز واحد على الأقل (!@#%…)';
+			case 'password_req.very_weak': return 'ضعيف جدًا';
+			case 'password_req.weak': return 'ضعيف';
+			case 'password_req.fair': return 'مقبول';
+			case 'password_req.good': return 'جيد';
+			case 'password_req.strong': return 'قوي';
 			case 'home.title': return 'وايو أدز';
 			case 'home.logout': return 'تسجيل الخروج';
 			case 'home.session_title': return 'جلسة نشطة';
@@ -2220,18 +2364,42 @@ extension on TranslationsAr {
 			case 'creator.business.type_company_subtitle': return 'أعمل تحت كيان قانوني مسجّل.';
 			case 'creator.business.company_name': return 'اسم الشركة';
 			case 'creator.business.vat_number': return 'الرقم الضريبي';
+			case 'creator.business.address': return 'العنوان';
 			case 'creator.business.address_line1': return 'العنوان (سطر 1)';
 			case 'creator.business.address_line2': return 'العنوان (سطر 2، اختياري)';
 			case 'creator.business.city': return 'المدينة';
 			case 'creator.business.postal_code': return 'الرمز البريدي';
 			case 'creator.business.state_region': return 'المنطقة (اختياري)';
+			case 'creator.business.state': return 'الولاية / المقاطعة';
 			case 'creator.business.country': return 'البلد';
 			case 'creator.business.currency': return 'عملة الدفع';
+			case 'creator.business.billing_currency': return 'العملة المفضّلة';
+			case 'creator.business.vat_optional': return 'الرقم الضريبي (اختياري)';
+			case 'creator.business.section_billing': return 'بلد وعملة الفوترة';
 			case 'creator.business.error_required': return 'حقل مطلوب';
 			case 'creator.business.save_and_continue': return 'حفظ ومتابعة';
 			case 'creator.business.submitting': return 'جارٍ الحفظ…';
 			case 'creator.business.footer_info': return 'تُرسل هذه المعلومات إلى Stripe لتفعيل حساب الدفع. لن تصل إلينا بياناتك المصرفية أبدًا.';
+			case 'creator.business.footer_info_global': return 'تُستخدم للفواتير وشحن المحفظة. تتم معالجة المدفوعات بأمان عبر Stripe.';
 			case 'creator.business.save_error': return 'تعذّر حفظ المعلومات. يرجى المحاولة مجددًا.';
+			case 'creator.business.validation.address_required': return 'العنوان مطلوب';
+			case 'creator.business.validation.address_line_invalid': return 'العنوان يحتوي على أحرف غير صالحة';
+			case 'creator.business.validation.city_required': return 'المدينة مطلوبة';
+			case 'creator.business.validation.city_invalid': return 'المدينة تحتوي على أحرف غير صالحة';
+			case 'creator.business.validation.postal_code_required': return 'الرمز البريدي مطلوب';
+			case 'creator.business.validation.postal_code_invalid': return 'الرمز البريدي غير صالح';
+			case 'creator.business.validation.country_required': return 'البلد مطلوب';
+			case 'creator.business.validation.country_stripe_only': return 'البلد غير مدعوم لمدفوعات Stripe';
+			case 'creator.business.validation.country_global_invalid': return 'البلد غير مدعوم للفوترة';
+			case 'creator.business.validation.currency_required': return 'العملة مطلوبة';
+			case 'creator.business.validation.currency_stripe_only': return 'العملة غير مدعومة لمدفوعات Stripe';
+			case 'creator.business.validation.currency_global_invalid': return 'العملة غير مدعومة للفوترة';
+			case 'creator.business.validation.company_name_required': return 'اسم الشركة مطلوب';
+			case 'creator.business.validation.company_name_invalid': return 'اسم الشركة يحتوي على أحرف غير صالحة';
+			case 'creator.business.validation.vat_number_required': return 'الرقم الضريبي مطلوب';
+			case 'creator.business.validation.vat_number_invalid': return 'صيغة الرقم الضريبي غير صالحة';
+			case 'creator.business.validation.state_required': return 'الولاية / المقاطعة مطلوبة';
+			case 'creator.business.validation.state_invalid': return 'الولاية / المنطقة غير صالحة';
 			case 'advertiser_wallet.hero_title': return 'رصيدك';
 			case 'advertiser_wallet.hero_subtitle': return 'أضف رصيداً لتشغيل الحملات. تتم المعالجة بأمان عبر Stripe. يتوفر Apple Pay على iOS وGoogle Pay على Android عند دعمهما.';
 			case 'advertiser_wallet.available': return 'المتاح';

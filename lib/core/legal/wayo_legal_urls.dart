@@ -2,7 +2,7 @@ import '../config/auth_runtime_config.dart';
 import '../../i18n/strings.g.dart';
 
 /// Legal documents hosted on the Wayo-ads web app (same content as wayo-ads.com).
-enum WayoLegalDocument { terms, privacy }
+enum WayoLegalDocument { terms, privacy, cookies }
 
 abstract final class WayoLegalUrls {
   static const String _fallbackOrigin = 'https://wayo-ads.com';
@@ -19,6 +19,7 @@ abstract final class WayoLegalUrls {
     final segment = switch (document) {
       WayoLegalDocument.terms => 'terms',
       WayoLegalDocument.privacy => 'privacy',
+      WayoLegalDocument.cookies => 'cookie-policy',
     };
     if (locale == AppLocale.en) {
       return '/$segment';

@@ -107,14 +107,16 @@ class TranslationsConnectivityEn {
 
 	// Translations
 	String get offline_title => 'No Internet Connection';
-	String get offline_subtitle => 'Please check your network and try again.';
+	String get offline_subtitle => 'Check Wi‑Fi or mobile data, then try again.';
+	String get offline_subtitle_radio_up => 'Your network looks connected, but we can\'t reach the internet or Wayo servers. Try again or open network settings.';
 	String get reconnecting_title => 'Reconnecting…';
 	String get reconnecting_subtitle => 'Trying to restore your connection.';
 	String get weak_title => 'Weak connection';
 	String get weak_subtitle => 'Some actions may be slower than usual.';
 	String get restored => 'Connection restored';
-	String get action_retry => 'Retry';
-	String get action_settings => 'Settings';
+	String get action_retry => 'Try again';
+	String get action_settings => 'Network settings';
+	String get settings_unavailable => 'Could not open system settings.';
 }
 
 // Path: campaigns_explorer
@@ -224,6 +226,15 @@ class TranslationsSignupEn {
 	String get disposable_email => 'Disposable / temporary email addresses are not allowed.';
 	String get name_check_failed => 'Unable to verify this name right now. Please try again.';
 	String get email_check_failed => 'Unable to verify this email right now. Please try again.';
+	String get legal_prefix => 'I have read and agree to the ';
+	String get terms_of_service => 'Terms of Service';
+	String get privacy_policy => 'Privacy Policy';
+	String get cookie_policy => 'Cookie Policy';
+	String get legal_comma => ', ';
+	String get legal_and => ' and ';
+	String get legal_dot => '.';
+	String get legal_required => 'Please accept the terms to create your account.';
+	String get back_cta => 'Back';
 }
 
 // Path: verify_email
@@ -1722,14 +1733,16 @@ extension on Translations {
 			case 'maintenance.support_email': return 'support@wayo.cloud';
 			case 'maintenance.action_retry': return 'Retry';
 			case 'connectivity.offline_title': return 'No Internet Connection';
-			case 'connectivity.offline_subtitle': return 'Please check your network and try again.';
+			case 'connectivity.offline_subtitle': return 'Check Wi‑Fi or mobile data, then try again.';
+			case 'connectivity.offline_subtitle_radio_up': return 'Your network looks connected, but we can\'t reach the internet or Wayo servers. Try again or open network settings.';
 			case 'connectivity.reconnecting_title': return 'Reconnecting…';
 			case 'connectivity.reconnecting_subtitle': return 'Trying to restore your connection.';
 			case 'connectivity.weak_title': return 'Weak connection';
 			case 'connectivity.weak_subtitle': return 'Some actions may be slower than usual.';
 			case 'connectivity.restored': return 'Connection restored';
-			case 'connectivity.action_retry': return 'Retry';
-			case 'connectivity.action_settings': return 'Settings';
+			case 'connectivity.action_retry': return 'Try again';
+			case 'connectivity.action_settings': return 'Network settings';
+			case 'connectivity.settings_unavailable': return 'Could not open system settings.';
 			case 'campaigns_explorer.filter_all_types': return 'All types';
 			case 'campaigns_explorer.filter_all_platforms': return 'All platforms';
 			case 'campaigns_explorer.filter_all_niches': return 'All niches';
@@ -1812,6 +1825,15 @@ extension on Translations {
 			case 'signup.disposable_email': return 'Disposable / temporary email addresses are not allowed.';
 			case 'signup.name_check_failed': return 'Unable to verify this name right now. Please try again.';
 			case 'signup.email_check_failed': return 'Unable to verify this email right now. Please try again.';
+			case 'signup.legal_prefix': return 'I have read and agree to the ';
+			case 'signup.terms_of_service': return 'Terms of Service';
+			case 'signup.privacy_policy': return 'Privacy Policy';
+			case 'signup.cookie_policy': return 'Cookie Policy';
+			case 'signup.legal_comma': return ', ';
+			case 'signup.legal_and': return ' and ';
+			case 'signup.legal_dot': return '.';
+			case 'signup.legal_required': return 'Please accept the terms to create your account.';
+			case 'signup.back_cta': return 'Back';
 			case 'verify_email.title': return 'Confirm your email';
 			case 'verify_email.subtitle': return 'Wayo ID needs a verified address (same step as on the website). Open the link we sent to:';
 			case 'verify_email.check_again': return 'I\'ve confirmed — continue';

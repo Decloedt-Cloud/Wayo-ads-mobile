@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../core/legal/wayo_legal_urls.dart';
 import '../features/auth/data/models/app_user.dart';
 import '../features/auth/domain/auth_notifier.dart';
 import '../features/auth/domain/wayo_ads_account_role.dart';
@@ -14,6 +15,7 @@ import '../features/auth/presentation/screens/signup_email_verification_screen.d
 import '../features/auth/presentation/screens/signup_register_screen.dart';
 import '../features/auth/presentation/screens/signup_role_screen.dart';
 import '../features/auth/presentation/screens/wayo_ads_role_onboarding_screen.dart';
+import '../features/auth/presentation/models/pending_signup_verify_store.dart';
 import '../features/auth/presentation/models/signup_verify_payload.dart';
 import '../features/auth/presentation/screens/new_password_screen.dart';
 import '../features/auth/presentation/screens/otp_verification_screen.dart';
@@ -41,6 +43,7 @@ import '../features/superadmin/presentation/screens/ledger_screen.dart';
 import '../features/superadmin/presentation/screens/banned_users_screen.dart';
 import '../features/superadmin/presentation/screens/superadmin_browse_campaigns_screen.dart';
 import '../features/superadmin/presentation/screens/tax_rates_screen.dart';
+import '../screens/legal_web_page_screen.dart';
 import '../screens/privacy_policy_screen.dart';
 import '../screens/terms_and_conditions_screen.dart';
 import '../features/splash/splash_screen.dart';
@@ -99,7 +102,7 @@ bool _isSignupPath(String loc) {
 /// Paths that never require an auth redirect away from the shell.
 /// Note: [/login] is intentionally omitted — authenticated users must be sent to [/dashboard].
 bool _isPublicPath(String loc) {
-  if (loc == '/privacy' || loc == '/terms') {
+  if (loc == '/privacy' || loc == '/terms' || loc == '/cookie-policy') {
     return true;
   }
   if (loc.startsWith('/forgot-password')) {
@@ -144,7 +147,7 @@ GoRouter goRouter(GoRouterRef ref) {
         return null;
       }
 
-      if (loc == '/privacy' || loc == '/terms') {
+      if (loc == '/privacy' || loc == '/terms' || loc == '/cookie-policy') {
         return null;
       }
 
@@ -197,6 +200,12 @@ GoRouter goRouter(GoRouterRef ref) {
               return isSuperAdmin ? '/superadmin' : '/dashboard';
             }
             if (_isSignupPath(loc)) {
+              if (loc == '/signup/verify-otp') {
+                return null;
+              }
+              if (s.user.emailVerified != true) {
+                return '/onboarding/verify-email-otp';
+              }
               return isSuperAdmin ? '/superadmin' : '/dashboard';
             }
             // Superadmin panel + shared deep links (notifications, etc.)
@@ -252,6 +261,12 @@ GoRouter goRouter(GoRouterRef ref) {
         path: '/terms',
         builder: (context, state) => const TermsAndConditionsScreen(),
       ),
+      GoRoute(
+        path: '/cookie-policy',
+        builder: (context, state) => const LegalWebPageScreen(
+          document: WayoLegalDocument.cookies,
+        ),
+      ),
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(
         path: '/signup',
@@ -273,10 +288,13 @@ GoRouter goRouter(GoRouterRef ref) {
             path: 'verify-otp',
             builder: (context, state) {
               final extra = state.extra;
-              if (extra is! SignupVerifyPayload) {
+              final payload = extra is SignupVerifyPayload
+                  ? extra
+                  : readPendingSignupVerifyPayload();
+              if (payload == null) {
                 return const SignupRoleScreen();
               }
-              return SignupEmailVerificationScreen(payload: extra);
+              return SignupEmailVerificationScreen(payload: payload);
             },
           ),
         ],

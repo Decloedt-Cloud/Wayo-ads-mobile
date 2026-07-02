@@ -105,14 +105,16 @@ class _TranslationsConnectivityAr extends TranslationsConnectivityEn {
 
 	// Translations
 	@override String get offline_title => 'لا يوجد اتصال بالإنترنت';
-	@override String get offline_subtitle => 'يرجى التحقق من الشبكة ثم المحاولة مرة أخرى.';
+	@override String get offline_subtitle => 'تحقق من Wi‑Fi أو بيانات الجوال ثم أعد المحاولة.';
+	@override String get offline_subtitle_radio_up => 'يبدو أن الشبكة متصلة، لكننا لا نصل إلى الإنترنت أو خوادم Wayo. أعد المحاولة أو افتح إعدادات الشبكة.';
 	@override String get reconnecting_title => 'إعادة الاتصال…';
 	@override String get reconnecting_subtitle => 'جاري محاولة استعادة الاتصال.';
 	@override String get weak_title => 'اتصال ضعيف';
 	@override String get weak_subtitle => 'قد تكون بعض الإجراءات أبطأ من المعتاد.';
 	@override String get restored => 'تم استعادة الاتصال';
 	@override String get action_retry => 'إعادة المحاولة';
-	@override String get action_settings => 'الإعدادات';
+	@override String get action_settings => 'إعدادات الشبكة';
+	@override String get settings_unavailable => 'تعذّر فتح إعدادات النظام.';
 }
 
 // Path: campaigns_explorer
@@ -222,6 +224,15 @@ class _TranslationsSignupAr extends TranslationsSignupEn {
 	@override String get disposable_email => 'عناوين البريد الإلكتروني المؤقتة غير مسموح بها.';
 	@override String get name_check_failed => 'تعذّر التحقق من هذا الاسم الآن. يرجى المحاولة مرة أخرى.';
 	@override String get email_check_failed => 'تعذّر التحقق من هذا البريد الإلكتروني الآن. يرجى المحاولة مرة أخرى.';
+	@override String get legal_prefix => 'لقد قرأت وأوافق على ';
+	@override String get terms_of_service => 'شروط الخدمة';
+	@override String get privacy_policy => 'سياسة الخصوصية';
+	@override String get cookie_policy => 'سياسة ملفات تعريف الارتباط';
+	@override String get legal_comma => ' و';
+	@override String get legal_and => ' و';
+	@override String get legal_dot => '.';
+	@override String get legal_required => 'يرجى قبول الشروط لإنشاء حسابك.';
+	@override String get back_cta => 'رجوع';
 }
 
 // Path: verify_email
@@ -1719,14 +1730,16 @@ extension on TranslationsAr {
 			case 'maintenance.support_email': return 'support@wayo.cloud';
 			case 'maintenance.action_retry': return 'إعادة المحاولة';
 			case 'connectivity.offline_title': return 'لا يوجد اتصال بالإنترنت';
-			case 'connectivity.offline_subtitle': return 'يرجى التحقق من الشبكة ثم المحاولة مرة أخرى.';
+			case 'connectivity.offline_subtitle': return 'تحقق من Wi‑Fi أو بيانات الجوال ثم أعد المحاولة.';
+			case 'connectivity.offline_subtitle_radio_up': return 'يبدو أن الشبكة متصلة، لكننا لا نصل إلى الإنترنت أو خوادم Wayo. أعد المحاولة أو افتح إعدادات الشبكة.';
 			case 'connectivity.reconnecting_title': return 'إعادة الاتصال…';
 			case 'connectivity.reconnecting_subtitle': return 'جاري محاولة استعادة الاتصال.';
 			case 'connectivity.weak_title': return 'اتصال ضعيف';
 			case 'connectivity.weak_subtitle': return 'قد تكون بعض الإجراءات أبطأ من المعتاد.';
 			case 'connectivity.restored': return 'تم استعادة الاتصال';
 			case 'connectivity.action_retry': return 'إعادة المحاولة';
-			case 'connectivity.action_settings': return 'الإعدادات';
+			case 'connectivity.action_settings': return 'إعدادات الشبكة';
+			case 'connectivity.settings_unavailable': return 'تعذّر فتح إعدادات النظام.';
 			case 'campaigns_explorer.filter_all_types': return 'كل الأنواع';
 			case 'campaigns_explorer.filter_all_platforms': return 'كل المنصات';
 			case 'campaigns_explorer.filter_all_niches': return 'كل المجالات';
@@ -1809,6 +1822,15 @@ extension on TranslationsAr {
 			case 'signup.disposable_email': return 'عناوين البريد الإلكتروني المؤقتة غير مسموح بها.';
 			case 'signup.name_check_failed': return 'تعذّر التحقق من هذا الاسم الآن. يرجى المحاولة مرة أخرى.';
 			case 'signup.email_check_failed': return 'تعذّر التحقق من هذا البريد الإلكتروني الآن. يرجى المحاولة مرة أخرى.';
+			case 'signup.legal_prefix': return 'لقد قرأت وأوافق على ';
+			case 'signup.terms_of_service': return 'شروط الخدمة';
+			case 'signup.privacy_policy': return 'سياسة الخصوصية';
+			case 'signup.cookie_policy': return 'سياسة ملفات تعريف الارتباط';
+			case 'signup.legal_comma': return ' و';
+			case 'signup.legal_and': return ' و';
+			case 'signup.legal_dot': return '.';
+			case 'signup.legal_required': return 'يرجى قبول الشروط لإنشاء حسابك.';
+			case 'signup.back_cta': return 'رجوع';
 			case 'verify_email.title': return 'أكّد بريدك الإلكتروني';
 			case 'verify_email.subtitle': return 'يتطلب Wayo ID عنوانًا مُؤكدًا (كما على الموقع). افتح الرابط الذي أرسلناه إلى:';
 			case 'verify_email.check_again': return 'تم التأكيد — متابعة';

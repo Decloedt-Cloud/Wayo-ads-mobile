@@ -105,14 +105,16 @@ class _TranslationsConnectivityFr extends TranslationsConnectivityEn {
 
 	// Translations
 	@override String get offline_title => 'Aucune connexion Internet';
-	@override String get offline_subtitle => 'Vérifiez votre réseau puis réessayez.';
+	@override String get offline_subtitle => 'Vérifiez le Wi‑Fi ou les données mobiles, puis réessayez.';
+	@override String get offline_subtitle_radio_up => 'Votre réseau semble connecté, mais nous n’atteignons pas Internet ou les serveurs Wayo. Réessayez ou ouvrez les réglages réseau.';
 	@override String get reconnecting_title => 'Reconnexion…';
 	@override String get reconnecting_subtitle => 'Nous essayons de rétablir votre connexion.';
 	@override String get weak_title => 'Connexion faible';
 	@override String get weak_subtitle => 'Certaines actions peuvent être plus lentes que d’habitude.';
 	@override String get restored => 'Connexion rétablie';
 	@override String get action_retry => 'Réessayer';
-	@override String get action_settings => 'Réglages';
+	@override String get action_settings => 'Réglages réseau';
+	@override String get settings_unavailable => 'Impossible d’ouvrir les réglages système.';
 }
 
 // Path: campaigns_explorer
@@ -222,6 +224,15 @@ class _TranslationsSignupFr extends TranslationsSignupEn {
 	@override String get disposable_email => 'Les adresses email jetables ou temporaires ne sont pas autorisées.';
 	@override String get name_check_failed => 'Impossible de vérifier ce nom pour le moment. Réessayez.';
 	@override String get email_check_failed => 'Impossible de vérifier cette adresse email pour le moment. Réessayez.';
+	@override String get legal_prefix => 'J’ai lu et j’accepte les ';
+	@override String get terms_of_service => 'Conditions d’utilisation';
+	@override String get privacy_policy => 'Politique de confidentialité';
+	@override String get cookie_policy => 'Politique de cookies';
+	@override String get legal_comma => ', la ';
+	@override String get legal_and => ' et la ';
+	@override String get legal_dot => '.';
+	@override String get legal_required => 'Veuillez accepter les conditions pour créer votre compte.';
+	@override String get back_cta => 'Retour';
 }
 
 // Path: verify_email
@@ -1720,14 +1731,16 @@ extension on TranslationsFr {
 			case 'maintenance.support_email': return 'support@wayo.cloud';
 			case 'maintenance.action_retry': return 'Réessayer';
 			case 'connectivity.offline_title': return 'Aucune connexion Internet';
-			case 'connectivity.offline_subtitle': return 'Vérifiez votre réseau puis réessayez.';
+			case 'connectivity.offline_subtitle': return 'Vérifiez le Wi‑Fi ou les données mobiles, puis réessayez.';
+			case 'connectivity.offline_subtitle_radio_up': return 'Votre réseau semble connecté, mais nous n’atteignons pas Internet ou les serveurs Wayo. Réessayez ou ouvrez les réglages réseau.';
 			case 'connectivity.reconnecting_title': return 'Reconnexion…';
 			case 'connectivity.reconnecting_subtitle': return 'Nous essayons de rétablir votre connexion.';
 			case 'connectivity.weak_title': return 'Connexion faible';
 			case 'connectivity.weak_subtitle': return 'Certaines actions peuvent être plus lentes que d’habitude.';
 			case 'connectivity.restored': return 'Connexion rétablie';
 			case 'connectivity.action_retry': return 'Réessayer';
-			case 'connectivity.action_settings': return 'Réglages';
+			case 'connectivity.action_settings': return 'Réglages réseau';
+			case 'connectivity.settings_unavailable': return 'Impossible d’ouvrir les réglages système.';
 			case 'campaigns_explorer.filter_all_types': return 'Tous les types';
 			case 'campaigns_explorer.filter_all_platforms': return 'Toutes les plateformes';
 			case 'campaigns_explorer.filter_all_niches': return 'Toutes les niches';
@@ -1810,6 +1823,15 @@ extension on TranslationsFr {
 			case 'signup.disposable_email': return 'Les adresses email jetables ou temporaires ne sont pas autorisées.';
 			case 'signup.name_check_failed': return 'Impossible de vérifier ce nom pour le moment. Réessayez.';
 			case 'signup.email_check_failed': return 'Impossible de vérifier cette adresse email pour le moment. Réessayez.';
+			case 'signup.legal_prefix': return 'J’ai lu et j’accepte les ';
+			case 'signup.terms_of_service': return 'Conditions d’utilisation';
+			case 'signup.privacy_policy': return 'Politique de confidentialité';
+			case 'signup.cookie_policy': return 'Politique de cookies';
+			case 'signup.legal_comma': return ', la ';
+			case 'signup.legal_and': return ' et la ';
+			case 'signup.legal_dot': return '.';
+			case 'signup.legal_required': return 'Veuillez accepter les conditions pour créer votre compte.';
+			case 'signup.back_cta': return 'Retour';
 			case 'verify_email.title': return 'Confirmez votre email';
 			case 'verify_email.subtitle': return 'Wayo ID exige une adresse vérifiée (comme sur le site). Ouvrez le lien envoyé à :';
 			case 'verify_email.check_again': return 'C’est fait — continuer';

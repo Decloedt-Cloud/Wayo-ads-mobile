@@ -25,12 +25,13 @@ import '../login/widgets/animated_digital_zellij_background.dart';
 import '../login/widgets/login_field_styles.dart';
 import '../login/widgets/premium_apple_sign_in_button.dart';
 import '../login/widgets/premium_google_button.dart';
+import '../models/pending_signup_verify_store.dart';
 import '../models/signup_verify_payload.dart';
-import '../widgets/login_footer.dart';
 import '../widgets/noise_overlay.dart';
 import '../widgets/password_requirements_panel.dart';
 import '../widgets/rate_limit_cooldown_banner.dart';
 import '../widgets/register_field_alert_banner.dart';
+import '../widgets/signup_legal_consent_checkbox.dart';
 import '../widgets/wayo_logo.dart';
 import '../widgets/wayo_login_button.dart';
 
@@ -55,6 +56,8 @@ class _SignupRegisterScreenState extends ConsumerState<SignupRegisterScreen> {
   bool _googleSigningIn = false;
   bool _appleSigningIn = false;
   bool _submitInProgress = false;
+  bool _legalAccepted = false;
+  bool _legalTouched = false;
 
   static const _checkDebounceMs = 450;
   Timer? _nameCheckTimer;
@@ -274,11 +277,19 @@ class _SignupRegisterScreenState extends ConsumerState<SignupRegisterScreen> {
       _emailCheck.state == RegisterFieldCheckState.disposable ||
       _emailCheck.state == RegisterFieldCheckState.error;
 
+  bool _ensureLegalAccepted(Translations t) {
+    if (_legalAccepted) return true;
+    setState(() => _legalTouched = true);
+    WayoToast.error(context, t.signup.legal_required);
+    return false;
+  }
+
   Future<void> _submit(Translations t) async {
     if (_submitInProgress) return;
     _submitInProgress = true;
     try {
       FocusScope.of(context).unfocus();
+      if (!_ensureLegalAccepted(t)) return;
       final ok = _formKey.currentState?.validate() ?? false;
       if (!ok) return;
       if (_password.text != _confirmPassword.text) {
@@ -297,13 +308,18 @@ class _SignupRegisterScreenState extends ConsumerState<SignupRegisterScreen> {
       if (!mounted) return;
       if (ref.read(authNotifierProvider).hasError) return;
       if (outcome == RegisterOutcome.needsEmailVerification) {
-        context.go(
-          '/signup/verify-otp',
-          extra: SignupVerifyPayload(
-            email: _email.text.trim(),
-            password: _password.text,
-          ),
+        final email = _email.text.trim();
+        final dispatch = await _dispatchSignupVerificationEmail(email, t);
+        if (!mounted) return;
+        final payload = SignupVerifyPayload(
+          email: email,
+          password: _password.text,
+          initialCodeSent: dispatch.codeSent,
+          initialCooldownSeconds: dispatch.cooldownSeconds,
+          initialSendError: dispatch.errorMessage,
         );
+        stashPendingSignupVerifyPayload(payload);
+        context.go('/signup/verify-otp', extra: payload);
         return;
       }
       _goAfterAuth(ref);
@@ -314,6 +330,7 @@ class _SignupRegisterScreenState extends ConsumerState<SignupRegisterScreen> {
 
   Future<void> _signInWithGoogle(Translations t) async {
     if (_googleSigningIn) return;
+    if (!_ensureLegalAccepted(t)) return;
     final googleCid = AuthRuntimeConfig.instance.googleServerClientId;
     if (googleCid.isEmpty) {
       WayoToast.error(context, t.login.google_not_configured);
@@ -347,6 +364,7 @@ class _SignupRegisterScreenState extends ConsumerState<SignupRegisterScreen> {
 
   Future<void> _signInWithApple(Translations t) async {
     if (_appleSigningIn) return;
+    if (!_ensureLegalAccepted(t)) return;
     if (kIsWeb || Theme.of(context).platform != TargetPlatform.iOS) return;
     FocusScope.of(context).unfocus();
     setState(() => _appleSigningIn = true);
@@ -400,6 +418,33 @@ class _SignupRegisterScreenState extends ConsumerState<SignupRegisterScreen> {
     context.go(next ?? '/dashboard');
   }
 
+  Future<({
+    bool codeSent,
+    int cooldownSeconds,
+    String? errorMessage,
+  })> _dispatchSignupVerificationEmail(String email, Translations t) async {
+    final r = await ref
+        .read(authRepositoryProvider)
+        .sendEmailVerificationOtp(email: email);
+    return switch (r) {
+      Success(:final data) => (
+          codeSent: true,
+          cooldownSeconds: data.clamp(30, 600),
+          errorMessage: null,
+        ),
+      Failure(:final error) when error is RateLimitedException => (
+          codeSent: true,
+          cooldownSeconds: error.retryAfterSeconds.clamp(1, 600),
+          errorMessage: null,
+        ),
+      Failure(:final error) => (
+          codeSent: false,
+          cooldownSeconds: 60,
+          errorMessage: localizeAuthError(error, t),
+        ),
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
     final t = context.t;
@@ -422,6 +467,7 @@ class _SignupRegisterScreenState extends ConsumerState<SignupRegisterScreen> {
           )
         : null;
     final canSubmit = !formLocked && !_availabilityBlocksSubmit;
+    final canUseOAuth = !formLocked;
     final roleLabel = widget.role == 'ADVERTISER'
         ? t.onboarding.role_advertiser_cta
         : t.onboarding.role_creator_cta;
@@ -453,6 +499,7 @@ class _SignupRegisterScreenState extends ConsumerState<SignupRegisterScreen> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           IconButton(
                             onPressed: formLocked
@@ -460,18 +507,16 @@ class _SignupRegisterScreenState extends ConsumerState<SignupRegisterScreen> {
                                 : () => context.go('/signup'),
                             icon: const Icon(Icons.arrow_back_rounded),
                           ),
-                          const Spacer(),
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          const WayoLogo(size: 44),
-                          const SizedBox(width: 12),
+                          const WayoLogo(size: 40),
+                          const SizedBox(width: 10),
                           Expanded(
                             child: Text(
                               t.signup.create_account,
                               style: AppTextStyles.headlineMedium(context)
-                                  .copyWith(fontWeight: FontWeight.w800),
+                                  .copyWith(
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 20,
+                                  ),
                             ),
                           ),
                         ],
@@ -590,18 +635,60 @@ class _SignupRegisterScreenState extends ConsumerState<SignupRegisterScreen> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 24),
-                      WayoLoginButton(
-                        isLoading: loading,
-                        enabled: canSubmit,
-                        onPressed: () => unawaited(_submit(t)),
-                        label: t.signup.register_cta,
+                      const SizedBox(height: 20),
+                      SignupLegalConsentCheckbox(
+                        value: _legalAccepted,
+                        showError: _legalTouched && !_legalAccepted,
+                        onChanged: formLocked
+                            ? null
+                            : (v) => setState(() {
+                                  _legalAccepted = v;
+                                  if (v) _legalTouched = false;
+                                }),
+                      ),
+                      const SizedBox(height: 20),
+                      Row(
+                        children: [
+                          OutlinedButton(
+                            onPressed: formLocked
+                                ? null
+                                : () => context.go('/signup'),
+                            style: OutlinedButton.styleFrom(
+                              minimumSize: const Size(96, 52),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 18,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              side: BorderSide(
+                                color: AppColors.borderOf(context),
+                              ),
+                            ),
+                            child: Text(
+                              t.signup.back_cta,
+                              style: TextStyle(
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.textPrimaryOf(context),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: WayoLoginButton(
+                              isLoading: loading,
+                              enabled: canSubmit,
+                              onPressed: () => unawaited(_submit(t)),
+                              label: t.signup.register_cta,
+                            ),
+                          ),
+                        ],
                       ),
                       if (showApple) ...[
                         const SizedBox(height: 14),
                         PremiumAppleSignInButton(
                           busy: _appleSigningIn,
-                          enabled: !formLocked,
+                          enabled: canUseOAuth,
                           label: t.login.apple_cta,
                           onPressed: () => unawaited(_signInWithApple(t)),
                         ),
@@ -609,7 +696,7 @@ class _SignupRegisterScreenState extends ConsumerState<SignupRegisterScreen> {
                       const SizedBox(height: 14),
                       PremiumGoogleSignInButton(
                         busy: _googleSigningIn,
-                        enabled: !formLocked,
+                        enabled: canUseOAuth,
                         label: t.login.google_cta,
                         onPressed: () => unawaited(_signInWithGoogle(t)),
                       ),
@@ -631,7 +718,6 @@ class _SignupRegisterScreenState extends ConsumerState<SignupRegisterScreen> {
                         ],
                       ),
                       SizedBox(height: media.size.height * 0.02),
-                      const LoginFooter(),
                     ],
                   ),
                 ),

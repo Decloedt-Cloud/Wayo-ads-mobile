@@ -15,14 +15,16 @@
   },
   "connectivity": {
     "offline_title": "Aucune connexion Internet",
-    "offline_subtitle": "Vérifiez votre réseau puis réessayez.",
+    "offline_subtitle": "Vérifiez le Wi‑Fi ou les données mobiles, puis réessayez.",
+    "offline_subtitle_radio_up": "Votre réseau semble connecté, mais nous n’atteignons pas Internet ou les serveurs Wayo. Réessayez ou ouvrez les réglages réseau.",
     "reconnecting_title": "Reconnexion…",
     "reconnecting_subtitle": "Nous essayons de rétablir votre connexion.",
     "weak_title": "Connexion faible",
     "weak_subtitle": "Certaines actions peuvent être plus lentes que d’habitude.",
     "restored": "Connexion rétablie",
     "action_retry": "Réessayer",
-    "action_settings": "Réglages"
+    "action_settings": "Réglages réseau",
+    "settings_unavailable": "Impossible d’ouvrir les réglages système."
   },
   "campaigns_explorer": {
     "filter_all_types": "Tous les types",
@@ -110,7 +112,16 @@
     "email_taken": "Cette adresse email est déjà utilisée. Connectez-vous plutôt.",
     "disposable_email": "Les adresses email jetables ou temporaires ne sont pas autorisées.",
     "name_check_failed": "Impossible de vérifier ce nom pour le moment. Réessayez.",
-    "email_check_failed": "Impossible de vérifier cette adresse email pour le moment. Réessayez."
+    "email_check_failed": "Impossible de vérifier cette adresse email pour le moment. Réessayez.",
+    "legal_prefix": "J’ai lu et j’accepte les ",
+    "terms_of_service": "Conditions d’utilisation",
+    "privacy_policy": "Politique de confidentialité",
+    "cookie_policy": "Politique de cookies",
+    "legal_comma": ", la ",
+    "legal_and": " et la ",
+    "legal_dot": ".",
+    "legal_required": "Veuillez accepter les conditions pour créer votre compte.",
+    "back_cta": "Retour"
   },
   "verify_email": {
     "title": "Confirmez votre email",

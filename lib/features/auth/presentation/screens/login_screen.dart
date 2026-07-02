@@ -294,19 +294,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             LoginHeroPremium(reduceMotion: reduce),
                             baseDelay: 240.ms,
                           ),
-                          const SizedBox(height: 18),
-                          _wrapEntrance(
-                            reduce,
-                            Text(
-                              t.login.subtitle,
-                              style: AppTextStyles.bodyLarge(context).copyWith(
-                                color: AppColors.textSecondaryOf(context),
-                                height: 1.45,
-                                fontSize: 15,
-                              ),
-                            ),
-                            baseDelay: 380.ms,
-                          ),
                           const SizedBox(height: 28),
                           AnimatedContainer(
                             duration: const Duration(milliseconds: 220),

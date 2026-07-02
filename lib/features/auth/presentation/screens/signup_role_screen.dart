@@ -12,7 +12,6 @@ class SignupRoleScreen extends StatefulWidget {
 
 class _SignupRoleScreenState extends State<SignupRoleScreen>
     with TickerProviderStateMixin {
-  String? _selectedRole;
   late AnimationController _animController;
   late Animation<double> _fadeAnim;
 
@@ -37,8 +36,6 @@ class _SignupRoleScreenState extends State<SignupRoleScreen>
   }
 
   void _continueWithRole(String role) {
-    if (_selectedRole != null) return;
-    setState(() => _selectedRole = role);
     context.go('/signup/register?role=$role');
   }
 
@@ -75,24 +72,16 @@ class _SignupRoleScreenState extends State<SignupRoleScreen>
                         icon: Icons.videocam_rounded,
                         title: t.onboarding.role_creator_cta,
                         description: t.onboarding.role_creator_desc,
-                        isSelected: _selectedRole == 'CREATOR',
-                        isLoading: _selectedRole == 'CREATOR',
                         isDark: isDark,
-                        onTap: _selectedRole == null
-                            ? () => _continueWithRole('CREATOR')
-                            : null,
+                        onTap: () => _continueWithRole('CREATOR'),
                       ),
                       const SizedBox(height: 16),
                       _RoleCard(
                         icon: Icons.campaign_rounded,
                         title: t.onboarding.role_advertiser_cta,
                         description: t.onboarding.role_advertiser_desc,
-                        isSelected: _selectedRole == 'ADVERTISER',
-                        isLoading: _selectedRole == 'ADVERTISER',
                         isDark: isDark,
-                        onTap: _selectedRole == null
-                            ? () => _continueWithRole('ADVERTISER')
-                            : null,
+                        onTap: () => _continueWithRole('ADVERTISER'),
                       ),
                     ],
                   ),
@@ -156,8 +145,6 @@ class _RoleCard extends StatelessWidget {
     required this.icon,
     required this.title,
     required this.description,
-    required this.isSelected,
-    required this.isLoading,
     required this.isDark,
     required this.onTap,
   });
@@ -165,10 +152,8 @@ class _RoleCard extends StatelessWidget {
   final IconData icon;
   final String title;
   final String description;
-  final bool isSelected;
-  final bool isLoading;
   final bool isDark;
-  final VoidCallback? onTap;
+  final VoidCallback onTap;
 
   static const _orange = Color(0xFFF97316);
   static const _darkCard = Color(0xFF27272A);
@@ -186,10 +171,7 @@ class _RoleCard extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: isSelected
-                  ? _orange
-                  : (isDark ? _darkBorder : const Color(0xFFE4E4E7)),
-              width: isSelected ? 2 : 1,
+              color: isDark ? _darkBorder : const Color(0xFFE4E4E7),
             ),
           ),
           child: Padding(
@@ -230,18 +212,11 @@ class _RoleCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                if (isLoading)
-                  const SizedBox(
-                    width: 22,
-                    height: 22,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                else
-                  Icon(
-                    Icons.arrow_forward_ios_rounded,
-                    size: 16,
-                    color: isDark ? Colors.white38 : Colors.black26,
-                  ),
+                Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: 16,
+                  color: isDark ? Colors.white38 : Colors.black26,
+                ),
               ],
             ),
           ),

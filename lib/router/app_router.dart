@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../core/legal/wayo_legal_urls.dart';
 import '../features/auth/data/models/app_user.dart';
 import '../features/auth/domain/auth_notifier.dart';
 import '../features/auth/domain/wayo_ads_account_role.dart';
@@ -43,7 +42,7 @@ import '../features/superadmin/presentation/screens/ledger_screen.dart';
 import '../features/superadmin/presentation/screens/banned_users_screen.dart';
 import '../features/superadmin/presentation/screens/superadmin_browse_campaigns_screen.dart';
 import '../features/superadmin/presentation/screens/tax_rates_screen.dart';
-import '../screens/legal_web_page_screen.dart';
+import '../screens/cookie_policy_screen.dart';
 import '../screens/privacy_policy_screen.dart';
 import '../screens/terms_and_conditions_screen.dart';
 import '../features/splash/splash_screen.dart';
@@ -263,9 +262,7 @@ GoRouter goRouter(GoRouterRef ref) {
       ),
       GoRoute(
         path: '/cookie-policy',
-        builder: (context, state) => const LegalWebPageScreen(
-          document: WayoLegalDocument.cookies,
-        ),
+        builder: (context, state) => const CookiePolicyScreen(),
       ),
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(

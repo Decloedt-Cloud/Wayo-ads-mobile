@@ -658,6 +658,135 @@ class LegalBodyText extends StatelessWidget {
   }
 }
 
+class LegalCookieRow {
+  const LegalCookieRow({
+    required this.name,
+    required this.purpose,
+    required this.duration,
+  });
+
+  final String name;
+  final String purpose;
+  final String duration;
+}
+
+class LegalCookieInventoryTable extends StatelessWidget {
+  const LegalCookieInventoryTable({
+    super.key,
+    required this.isDark,
+    required this.colName,
+    required this.colPurpose,
+    required this.colDuration,
+    required this.rows,
+  });
+
+  final bool isDark;
+  final String colName;
+  final String colPurpose;
+  final String colDuration;
+  final List<LegalCookieRow> rows;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (var i = 0; i < rows.length; i++) ...[
+          if (i > 0) const SizedBox(height: 10),
+          _CookieRowCard(
+            isDark: isDark,
+            colName: colName,
+            colPurpose: colPurpose,
+            colDuration: colDuration,
+            row: rows[i],
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _CookieRowCard extends StatelessWidget {
+  const _CookieRowCard({
+    required this.isDark,
+    required this.colName,
+    required this.colPurpose,
+    required this.colDuration,
+    required this.row,
+  });
+
+  final bool isDark;
+  final String colName;
+  final String colPurpose;
+  final String colDuration;
+  final LegalCookieRow row;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: isDark
+            ? const Color(0xFF0F0F0F)
+            : AppColors.surfaceElevatedOf(context),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: AppColors.borderOf(context).withValues(alpha: 0.7),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _CookieField(label: colName, value: row.name, monospace: true),
+          const SizedBox(height: 10),
+          _CookieField(label: colPurpose, value: row.purpose),
+          const SizedBox(height: 10),
+          _CookieField(label: colDuration, value: row.duration),
+        ],
+      ),
+    );
+  }
+}
+
+class _CookieField extends StatelessWidget {
+  const _CookieField({
+    required this.label,
+    required this.value,
+    this.monospace = false,
+  });
+
+  final String label;
+  final String value;
+  final bool monospace;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: AppTextStyles.caption(context).copyWith(
+            fontWeight: FontWeight.w700,
+            color: AppColors.textMutedOf(context),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: AppTextStyles.bodyLarge(context).copyWith(
+            fontSize: 14,
+            height: 1.45,
+            fontFamily: monospace ? 'monospace' : null,
+            fontWeight: monospace ? FontWeight.w600 : null,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class LegalBackHomeFooter extends StatelessWidget {
   const LegalBackHomeFooter({super.key, required this.label, this.onPressed});
 

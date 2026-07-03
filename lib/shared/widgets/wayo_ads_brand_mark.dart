@@ -48,6 +48,43 @@ class WayoAppIcon extends StatelessWidget {
   }
 }
 
+/// Play + wave mark from the Wayo Ads app icon (3-part SVG).
+class WayoPlayWaveIcon extends StatelessWidget {
+  const WayoPlayWaveIcon({
+    super.key,
+    required this.color,
+    this.size = 48,
+  });
+
+  static const _parts = <String>[
+    'assets/branding/wayo_splash_p1.svg',
+    'assets/branding/wayo_splash_p2.svg',
+    'assets/branding/wayo_splash_p3.svg',
+  ];
+
+  final Color color;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: size,
+      height: size,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          for (final path in _parts)
+            SvgPicture.asset(
+              path,
+              fit: BoxFit.contain,
+              colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
 /// Orange Wayo Ads icon mark only (no wordmark). Used in dashboard headers.
 class WayoAdsBrandIcon extends StatelessWidget {
   const WayoAdsBrandIcon({super.key, this.size = 36});

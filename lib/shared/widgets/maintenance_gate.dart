@@ -76,7 +76,7 @@ class _MaintenanceGateState extends ConsumerState<MaintenanceGate>
   void _onMaintenanceChanged() {
     final active = MaintenanceServiceHolder.instance.isActive;
     if (_wasMaintenanceActive && !active && mounted) {
-      ref.invalidate(dashboardStreamProvider);
+      refreshAppDataAfterMaintenanceRecovery(ref);
     }
     if (active != _wasMaintenanceActive) {
       _wasMaintenanceActive = active;
@@ -438,6 +438,8 @@ class _PulseIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const amber = Color(0xFFF47A1F);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final logoColor = isDark ? Colors.black : Colors.white;
     final icon = Container(
       width: 88,
       height: 88,
@@ -456,11 +458,8 @@ class _PulseIcon extends StatelessWidget {
           ),
         ],
       ),
-      child: Icon(
-        probing ? Icons.sync_rounded : Icons.construction_rounded,
-        color: Colors.white,
-        size: 42,
-      ),
+      alignment: Alignment.center,
+      child: WayoPlayWaveIcon(color: logoColor, size: 46),
     );
 
     if (probing) {

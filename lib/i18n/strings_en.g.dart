@@ -181,8 +181,8 @@ class TranslationsLoginEn {
 	String get rate_limit_body => 'Too many login attempts.';
 	String rate_limit_remaining({required Object seconds}) => 'Try again in ${seconds} s';
 	String get forgot_password_link => 'Forgot password?';
-	String get google_cta => 'Continue with Google';
-	String get apple_cta => 'Sign in with Apple';
+	String get google_cta => 'Sign up with Google';
+	String get apple_cta => 'Sign up with Apple';
 	String get apple_unavailable => 'Sign in with Apple is not available on this device.';
 	String get apple_failed => 'Apple sign-in failed. Try again.';
 	String get apple_server_not_configured => 'Sign in with Apple is not enabled on the Wayo ID server yet. Ask your administrator to configure Apple credentials on Auth_Wayo (production), then try again.';
@@ -1876,8 +1876,8 @@ extension on Translations {
 			case 'login.rate_limit_body': return 'Too many login attempts.';
 			case 'login.rate_limit_remaining': return ({required Object seconds}) => 'Try again in ${seconds} s';
 			case 'login.forgot_password_link': return 'Forgot password?';
-			case 'login.google_cta': return 'Continue with Google';
-			case 'login.apple_cta': return 'Sign in with Apple';
+			case 'login.google_cta': return 'Sign up with Google';
+			case 'login.apple_cta': return 'Sign up with Apple';
 			case 'login.apple_unavailable': return 'Sign in with Apple is not available on this device.';
 			case 'login.apple_failed': return 'Apple sign-in failed. Try again.';
 			case 'login.apple_server_not_configured': return 'Sign in with Apple is not enabled on the Wayo ID server yet. Ask your administrator to configure Apple credentials on Auth_Wayo (production), then try again.';

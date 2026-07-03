@@ -61,5 +61,6 @@ app.*.map.json
 /chat-service/
 /Wayo-ads/
 /web/
+/wayo_creator_studio/
 
 /android/build/

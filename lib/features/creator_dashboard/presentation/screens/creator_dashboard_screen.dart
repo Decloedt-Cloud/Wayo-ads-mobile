@@ -46,7 +46,7 @@ String _moneyLocale(AppLocale l) => switch (l) {
 /// Repositories are already rate-limited and deduplicated, so a short interval
 /// here never translates into API spam — if nothing changed on the server the
 /// request is collapsed.
-const Duration _kCreatorDashboardFocusRefreshInterval = Duration(seconds: 6);
+const Duration _kCreatorDashboardFocusRefreshInterval = Duration(seconds: 18);
 
 /// Creator **home** — KPIs + active applications.
 ///

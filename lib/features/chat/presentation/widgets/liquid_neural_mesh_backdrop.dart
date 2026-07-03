@@ -34,14 +34,22 @@ class _LiquidNeuralMeshBackdropState extends State<LiquidNeuralMeshBackdrop>
     if (MediaQuery.disableAnimationsOf(context)) {
       return ColoredBox(color: ln.canvas, child: widget.child);
     }
-    return AnimatedBuilder(
-      animation: _c,
-      builder: (context, _) {
-        return CustomPaint(
-          painter: _MeshPainter(phase: _c.value, theme: ln),
-          child: widget.child,
-        );
-      },
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        RepaintBoundary(
+          child: AnimatedBuilder(
+            animation: _c,
+            builder: (context, _) {
+              return CustomPaint(
+                painter: _MeshPainter(phase: _c.value, theme: ln),
+                size: Size.infinite,
+              );
+            },
+          ),
+        ),
+        RepaintBoundary(child: widget.child),
+      ],
     );
   }
 }
@@ -93,7 +101,7 @@ class _MeshPainter extends CustomPainter {
     );
 
     final grain = Paint()..color = theme.meshGrain;
-    for (var i = 0; i < 80; i++) {
+    for (var i = 0; i < 40; i++) {
       final x = ((i * 73) % size.width).toDouble();
       final y = ((i * 41 + phase * 600) % size.height).toDouble();
       canvas.drawCircle(Offset(x, y), 0.8, grain);

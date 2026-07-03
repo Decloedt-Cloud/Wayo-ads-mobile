@@ -10,11 +10,10 @@ import '../../../../i18n/strings.g.dart';
 import '../../domain/creator_campaign_detail.dart';
 import '../../domain/creator_youtube_status.dart';
 
-/// Whether this campaign needs a linked YouTube channel before submit.
+/// Mobile no longer blocks video/short submission on YouTube OAuth — the API
+/// validates the post URL. Creators can link YouTube on web optionally.
 bool campaignRequiresYoutubeConnection(CreatorCampaignDetail campaign) {
-  if (!campaign.type.requiresVideoSubmission) return false;
-  final platform = (campaign.requiredPlatform ?? 'YOUTUBE').toUpperCase();
-  return platform == 'YOUTUBE';
+  return false;
 }
 
 Future<void> openCreatorYoutubeSettingsWeb() async {

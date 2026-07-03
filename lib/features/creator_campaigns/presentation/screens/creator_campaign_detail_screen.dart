@@ -298,17 +298,22 @@ class _Body extends ConsumerWidget {
           _PremiumCard(
             child: linksAsync.when(
               skipLoadingOnReload: true,
-              loading: () => const CreatorTrackingLinkSection(
-                links: [],
+              loading: () => CreatorTrackingLinkSection(
+                links: const [],
+                landingUrl: c.landingUrl,
                 loading: true,
               ),
               error: (e, _) => CreatorTrackingLinkSection(
                 links: const [],
+                landingUrl: c.landingUrl,
                 error: e,
                 onRetry: () =>
                     ref.invalidate(creatorTrackingLinksProvider(campaignId)),
               ),
-              data: (links) => CreatorTrackingLinkSection(links: links),
+              data: (links) => CreatorTrackingLinkSection(
+                links: links,
+                landingUrl: c.landingUrl,
+              ),
             ),
           ),
         ],
@@ -408,11 +413,56 @@ class _CampaignPerformanceBlock extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = context.t;
     final c = campaign;
+    final isLink = c.type == CreatorCampaignType.link;
     String fmt(int cents) => MoneyFormatter.format(
           cents / 100.0,
           currency: kWayoPublicCurrency,
           locale: moneyLocale,
         );
+
+    if (isLink) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            t.advertiser_campaigns.detail.metrics_title,
+            style: CampaignDetailPremiumPalette.sectionTitle(context),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _PerformanceStat(
+                  icon: Icons.ads_click_outlined,
+                  label: t.advertiser_campaigns.detail.valid_clicks,
+                  value: '${c.validClicks}',
+                ),
+              ),
+              Expanded(
+                child: _PerformanceStat(
+                  icon: Icons.paid_outlined,
+                  label: t.creator.campaigns.reward_cpc_label,
+                  value: c.cpcCents > 0 ? fmt(c.cpcCents) : '—',
+                ),
+              ),
+            ],
+          ),
+          if (c.lockedBudgetCents > 0) ...[
+            const SizedBox(height: 12),
+            Divider(
+              height: 1,
+              color: CampaignDetailPremiumPalette.rowSeparator(context),
+            ),
+            const SizedBox(height: 10),
+            _PerformanceStat(
+              icon: Icons.lock_clock_outlined,
+              label: t.advertiser_campaigns.card.locked,
+              value: fmt(c.lockedBudgetCents),
+            ),
+          ],
+        ],
+      );
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -512,6 +562,7 @@ class _EarningsBlock extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = context.t;
     final c = campaign;
+    final isLink = c.type == CreatorCampaignType.link;
     final views = c.paidViews > 0 ? c.paidViews : c.earningsViews;
 
     String money(int cents) => MoneyFormatter.format(
@@ -519,6 +570,63 @@ class _EarningsBlock extends StatelessWidget {
       currency: kWayoPublicCurrency,
       locale: moneyLocale,
     );
+
+    if (isLink) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            t.creator.campaigns.earnings_card_title,
+            style: CampaignDetailPremiumPalette.sectionTitle(context),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            t.creator.campaigns.earnings_card_subtitle,
+            style: GoogleFonts.dmSans(
+              fontSize: 12,
+              color: CreatorCampaignsChrome.label(context),
+            ),
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(
+                child: _EarningsStat(
+                  label: t.creator.campaigns.earnings_net,
+                  value: money(c.netEarningsCents),
+                ),
+              ),
+              Expanded(
+                child: _EarningsStat(
+                  label: t.creator.campaigns.earnings_valid_clicks,
+                  value: '${c.validatedClicks}',
+                  sub:
+                      '${t.creator.campaigns.earnings_recorded_clicks}: ${c.recordedClicks}',
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _EarningsStat(
+                  label: t.creator.campaigns.earnings_available_balance,
+                  value: money(c.availableBalanceCents),
+                ),
+              ),
+              if (c.cpcCents > 0)
+                Expanded(
+                  child: _EarningsStat(
+                    label: t.creator.campaigns.reward_cpc_label,
+                    value: money(c.cpcCents),
+                  ),
+                ),
+            ],
+          ),
+        ],
+      );
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

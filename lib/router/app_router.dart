@@ -380,7 +380,6 @@ GoRouter goRouter(GoRouterRef ref) {
             ],
           ),
           StatefulShellBranch(
-            preload: true,
             routes: [
               GoRoute(
                 path: '/chat',

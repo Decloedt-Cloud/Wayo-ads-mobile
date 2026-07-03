@@ -22,7 +22,6 @@ class CampaignsTabScreen extends ConsumerWidget {
         if (user.wayoAdsRole == WayoAdsAccountRole.creator) {
           return const CreatorCampaignsTabScreen();
         }
-        ref.watch(dashboardStreamProvider);
         return const AdvertiserCampaignsScreen();
       },
     );

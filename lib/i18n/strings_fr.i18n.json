@@ -706,7 +706,9 @@
       "tracking_link_copied": "Copié !",
       "tracking_link_preparing": "Votre lien unique est en cours de préparation… Tirez pour actualiser dans un instant.",
       "tracking_link_error": "Impossible de charger votre lien de suivi.",
-      "tracking_link_stats": "$validated clics validés · $recorded clics enregistrés"
+      "tracking_link_stats": "$validated clics validés · $recorded clics enregistrés",
+      "tracking_link_destination_title": "URL de destination",
+      "tracking_link_open_destination": "Ouvrir la destination"
     },
     "stats": {
       "earnings_title": "Gains totaux",

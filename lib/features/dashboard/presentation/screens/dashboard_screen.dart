@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
@@ -862,28 +861,25 @@ class _CampaignsSectionState extends ConsumerState<_CampaignsSection> {
           else if (list.isEmpty)
             _EmptyCampaigns()
           else
-            AnimationLimiter(
-              child: Column(
-                children: [
-                  ...List.generate(list.length, (index) {
-                    final c = list[index];
-                    return AnimationConfiguration.staggeredList(
-                      position: index,
-                      duration: const Duration(milliseconds: 420),
-                      child: SlideAnimation(
-                        verticalOffset: 36,
-                        child: FadeInAnimation(
-                          child: Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: _CampaignTile(campaign: c),
-                          ),
-                        ),
-                      ),
-                    );
-                  }),
-                  if (totalPages > 1) ...[
-                    const SizedBox(height: 4),
-                    _DashboardCampaignPaginationBar(
+            ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              addAutomaticKeepAlives: false,
+              addRepaintBoundaries: true,
+              itemCount: list.length,
+              itemBuilder: (context, index) {
+                final c = list[index];
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: RepaintBoundary(
+                    child: _CampaignTile(campaign: c),
+                  ),
+                );
+              },
+            ),
+          if (!loading && !loadingExtra && list.isNotEmpty && totalPages > 1) ...[
+            const SizedBox(height: 4),
+            _DashboardCampaignPaginationBar(
                       page: page,
                       totalPages: totalPages,
                       previousLabel: t.dashboard.campaigns.pagination_previous,
@@ -915,11 +911,8 @@ class _CampaignsSectionState extends ConsumerState<_CampaignsSection> {
                                   .state = page + 1;
                             }
                           : null,
-                    ),
-                  ],
-                ],
-              ),
             ),
+          ],
         ],
       ),
     );

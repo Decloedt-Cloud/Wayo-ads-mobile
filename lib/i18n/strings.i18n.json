@@ -706,7 +706,9 @@
       "tracking_link_copied": "Copied!",
       "tracking_link_preparing": "Your unique link is being prepared… Pull to refresh in a moment.",
       "tracking_link_error": "Couldn't load your tracking link.",
-      "tracking_link_stats": "$validated earnings clicks · $recorded recorded clicks"
+      "tracking_link_stats": "$validated earnings clicks · $recorded recorded clicks",
+      "tracking_link_destination_title": "Destination URL",
+      "tracking_link_open_destination": "Open destination"
     },
     "stats": {
       "earnings_title": "Total earnings",

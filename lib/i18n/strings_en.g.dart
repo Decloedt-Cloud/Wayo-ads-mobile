@@ -1660,6 +1660,8 @@ class TranslationsCreatorCampaignsEn {
 	String get tracking_link_preparing => 'Your unique link is being prepared… Pull to refresh in a moment.';
 	String get tracking_link_error => 'Couldn\'t load your tracking link.';
 	String tracking_link_stats({required Object validated, required Object recorded}) => '${validated} earnings clicks · ${recorded} recorded clicks';
+	String get tracking_link_destination_title => 'Destination URL';
+	String get tracking_link_open_destination => 'Open destination';
 }
 
 // Path: creator.stats
@@ -2446,6 +2448,8 @@ extension on Translations {
 			case 'creator.campaigns.tracking_link_preparing': return 'Your unique link is being prepared… Pull to refresh in a moment.';
 			case 'creator.campaigns.tracking_link_error': return 'Couldn\'t load your tracking link.';
 			case 'creator.campaigns.tracking_link_stats': return ({required Object validated, required Object recorded}) => '${validated} earnings clicks · ${recorded} recorded clicks';
+			case 'creator.campaigns.tracking_link_destination_title': return 'Destination URL';
+			case 'creator.campaigns.tracking_link_open_destination': return 'Open destination';
 			case 'creator.stats.earnings_title': return 'Total earnings';
 			case 'creator.stats.pending': return 'Pending';
 			case 'creator.stats.validated_views': return 'Validated views';

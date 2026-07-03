@@ -23,9 +23,14 @@ import '../../superadmin/presentation/providers/superadmin_providers.dart';
 import '../../profile/presentation/providers/user_profile_providers.dart';
 import 'providers/dashboard_state_providers.dart';
 import 'providers/notifications_feed_providers.dart';
+import '../../shell/presentation/providers/shell_navigation_providers.dart';
 
 /// How often we refresh superadmin panels while the app is foregrounded.
-const Duration _kForegroundSuperadminRefreshInterval = Duration(seconds: 8);
+const Duration _kForegroundSuperadminRefreshInterval = Duration(seconds: 12);
+
+/// Safety-net poll while foregrounded. Reverb push is the fast path; this only
+/// catches missed events and keeps badge counts fresh without hammering every tab.
+const Duration _kForegroundSafetyNetInterval = Duration(seconds: 45);
 
 /// Safety-net interval for the session-revocation watchdog while foregrounded.
 ///
@@ -140,7 +145,7 @@ class _RealtimeDashboardWireState extends ConsumerState<RealtimeDashboardWire>
     final interval = role is AuthAuthenticated &&
             role.user.wayoAdsRole == WayoAdsAccountRole.superAdmin
         ? _kForegroundSuperadminRefreshInterval
-        : const Duration(seconds: 20);
+        : _kForegroundSafetyNetInterval;
     _foregroundPollTimer = Timer.periodic(
       interval,
       (_) {
@@ -148,7 +153,7 @@ class _RealtimeDashboardWireState extends ConsumerState<RealtimeDashboardWire>
         if (_lifecycle != AppLifecycleState.resumed) return;
         final s = ref.read(authNotifierProvider).valueOrNull;
         if (s is! AuthAuthenticated) return;
-        _refreshAdvertiserNow();
+        _refreshForegroundSafetyNet();
       },
     );
   }
@@ -199,10 +204,7 @@ class _RealtimeDashboardWireState extends ConsumerState<RealtimeDashboardWire>
     }
   }
 
-  /// Soft refresh — rate limiters inside each repository prevent API spam.
-  ///
-  /// Invalidates role-specific providers so only the relevant screens
-  /// hit the network (e.g. a creator never fires advertiser campaign fetches).
+  /// Full refresh on resume / explicit pull — invalidates role-specific providers.
   void _refreshAdvertiserNow() {
     unawaited(
       ref.read(accountDeletionScheduledAtProvider.notifier).syncFromRemote(),
@@ -238,6 +240,53 @@ class _RealtimeDashboardWireState extends ConsumerState<RealtimeDashboardWire>
       ref.invalidate(advertiserCampaignsCountsProvider);
       ref.invalidate(advertiserCampaignDetailProvider);
       invalidateAdvertiserVideoReviews(ref);
+    }
+  }
+
+  /// Lightweight periodic refresh — only touches data for the visible tab plus
+  /// global badge counts. Avoids rebuild/API storms on off-screen tabs.
+  void _refreshForegroundSafetyNet() {
+    ref.invalidate(notificationsUnreadCountsProvider);
+    ref.invalidate(dashboardStreamProvider);
+
+    final role = ref.read(authNotifierProvider).valueOrNull is AuthAuthenticated
+        ? (ref.read(authNotifierProvider).valueOrNull as AuthAuthenticated)
+              .user
+              .wayoAdsRole
+        : WayoAdsAccountRole.unknown;
+    final tab = ref.read(shellCurrentIndexProvider);
+
+    switch (tab) {
+      case 0:
+        if (role == WayoAdsAccountRole.creator) {
+          ref.invalidate(creatorStatsProvider);
+          ref.invalidate(creatorApplicationsProvider);
+        } else if (role == WayoAdsAccountRole.superAdmin) {
+          invalidateSuperadminRealtimePanels(ref);
+        } else if (role == WayoAdsAccountRole.advertiser) {
+          ref.invalidate(advertiserWalletPageProvider);
+        }
+      case 1:
+        if (role == WayoAdsAccountRole.creator) {
+          ref.invalidate(creatorBrowseCampaignsPagedProvider);
+          ref.invalidate(creatorApplicationsProvider);
+        } else if (role == WayoAdsAccountRole.advertiser) {
+          ref.invalidate(advertiserCampaignsPagedProvider);
+          ref.invalidate(advertiserCampaignsCountsProvider);
+        }
+      case 2:
+        if (role == WayoAdsAccountRole.creator) {
+          ref.invalidate(creatorWalletPageProvider);
+          ref.invalidate(creatorStripeStatusProvider);
+        } else if (role == WayoAdsAccountRole.advertiser) {
+          ref.invalidate(advertiserWalletPageProvider);
+        }
+      case 3:
+        break;
+      case 4:
+        break;
+      default:
+        break;
     }
   }
 

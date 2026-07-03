@@ -1658,6 +1658,8 @@ class _TranslationsCreatorCampaignsFr extends TranslationsCreatorCampaignsEn {
 	@override String get tracking_link_preparing => 'Votre lien unique est en cours de préparation… Tirez pour actualiser dans un instant.';
 	@override String get tracking_link_error => 'Impossible de charger votre lien de suivi.';
 	@override String tracking_link_stats({required Object validated, required Object recorded}) => '${validated} clics validés · ${recorded} clics enregistrés';
+	@override String get tracking_link_destination_title => 'URL de destination';
+	@override String get tracking_link_open_destination => 'Ouvrir la destination';
 }
 
 // Path: creator.stats
@@ -2444,6 +2446,8 @@ extension on TranslationsFr {
 			case 'creator.campaigns.tracking_link_preparing': return 'Votre lien unique est en cours de préparation… Tirez pour actualiser dans un instant.';
 			case 'creator.campaigns.tracking_link_error': return 'Impossible de charger votre lien de suivi.';
 			case 'creator.campaigns.tracking_link_stats': return ({required Object validated, required Object recorded}) => '${validated} clics validés · ${recorded} clics enregistrés';
+			case 'creator.campaigns.tracking_link_destination_title': return 'URL de destination';
+			case 'creator.campaigns.tracking_link_open_destination': return 'Ouvrir la destination';
 			case 'creator.stats.earnings_title': return 'Gains totaux';
 			case 'creator.stats.pending': return 'En attente';
 			case 'creator.stats.validated_views': return 'Vues validées';

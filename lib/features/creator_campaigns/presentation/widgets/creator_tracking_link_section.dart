@@ -15,12 +15,14 @@ class CreatorTrackingLinkSection extends StatelessWidget {
   const CreatorTrackingLinkSection({
     super.key,
     required this.links,
+    this.landingUrl,
     this.loading = false,
     this.error,
     this.onRetry,
   });
 
   final List<CreatorTrackingLink> links;
+  final String? landingUrl;
   final bool loading;
   final Object? error;
   final VoidCallback? onRetry;
@@ -31,14 +33,23 @@ class CreatorTrackingLinkSection extends StatelessWidget {
 
     if (loading) {
       return _Card(
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 20),
-            child: CircularProgressIndicator(
-              color: CreatorColors.primaryOf(context),
-              strokeWidth: 2,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 20),
+                child: CircularProgressIndicator(
+                  color: CreatorColors.primaryOf(context),
+                  strokeWidth: 2,
+                ),
+              ),
             ),
-          ),
+            if (_hasLandingUrl) ...[
+              const SizedBox(height: 8),
+              _LandingUrlBlock(url: landingUrl!.trim()),
+            ],
+          ],
         ),
       );
     }
@@ -68,6 +79,10 @@ class CreatorTrackingLinkSection extends StatelessWidget {
                 label: Text(t.dashboard.errors.retry),
               ),
             ],
+            if (_hasLandingUrl) ...[
+              const SizedBox(height: 14),
+              _LandingUrlBlock(url: landingUrl!.trim()),
+            ],
           ],
         ),
       );
@@ -90,6 +105,10 @@ class CreatorTrackingLinkSection extends StatelessWidget {
                 fontSize: 13,
               ),
             ),
+            if (_hasLandingUrl) ...[
+              const SizedBox(height: 14),
+              _LandingUrlBlock(url: landingUrl!.trim()),
+            ],
           ],
         ),
       );
@@ -114,6 +133,94 @@ class CreatorTrackingLinkSection extends StatelessWidget {
           (link) => Padding(
             padding: const EdgeInsets.only(bottom: 10),
             child: _LinkTile(link: link),
+          ),
+        ),
+        if (_hasLandingUrl) ...[
+          const SizedBox(height: 4),
+          _LandingUrlBlock(url: landingUrl!.trim()),
+        ],
+      ],
+    );
+  }
+
+  bool get _hasLandingUrl {
+    final url = landingUrl?.trim();
+    return url != null && url.isNotEmpty;
+  }
+}
+
+class _LandingUrlBlock extends StatelessWidget {
+  const _LandingUrlBlock({required this.url});
+
+  final String url;
+
+  Future<void> _openUrl() async {
+    final uri = Uri.tryParse(url);
+    if (uri == null) return;
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.t;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Divider(color: AppColors.borderOf(context), height: 1),
+        const SizedBox(height: 14),
+        Text(
+          t.creator.campaigns.tracking_link_destination_title,
+          style: AppTextStyles.labelLarge(context).copyWith(fontSize: 14),
+        ),
+        const SizedBox(height: 10),
+        _Card(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    Icons.language_rounded,
+                    size: 20,
+                    color: CreatorColors.primaryOf(context),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      url,
+                      style: GoogleFonts.dmSans(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimaryOf(context),
+                      ),
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: _openUrl,
+                  icon: const Icon(Icons.open_in_new_rounded, size: 18),
+                  label: Text(t.creator.campaigns.tracking_link_open_destination),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: CreatorColors.primaryOf(context),
+                    side: BorderSide(
+                      color: CreatorColors.primaryOf(context)
+                          .withValues(alpha: 0.45),
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ],

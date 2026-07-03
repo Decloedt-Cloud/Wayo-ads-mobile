@@ -1657,6 +1657,8 @@ class _TranslationsCreatorCampaignsAr extends TranslationsCreatorCampaignsEn {
 	@override String get tracking_link_preparing => 'يتم إعداد رابطك الفريد… اسحب للتحديث بعد لحظات.';
 	@override String get tracking_link_error => 'تعذّر تحميل رابط التتبع.';
 	@override String tracking_link_stats({required Object validated, required Object recorded}) => '${validated} نقرة مؤهلة · ${recorded} نقرة مسجّلة';
+	@override String get tracking_link_destination_title => 'رابط الصفحة المستهدفة';
+	@override String get tracking_link_open_destination => 'فتح الوجهة';
 }
 
 // Path: creator.stats
@@ -2442,6 +2444,8 @@ extension on TranslationsAr {
 			case 'creator.campaigns.tracking_link_preparing': return 'يتم إعداد رابطك الفريد… اسحب للتحديث بعد لحظات.';
 			case 'creator.campaigns.tracking_link_error': return 'تعذّر تحميل رابط التتبع.';
 			case 'creator.campaigns.tracking_link_stats': return ({required Object validated, required Object recorded}) => '${validated} نقرة مؤهلة · ${recorded} نقرة مسجّلة';
+			case 'creator.campaigns.tracking_link_destination_title': return 'رابط الصفحة المستهدفة';
+			case 'creator.campaigns.tracking_link_open_destination': return 'فتح الوجهة';
 			case 'creator.stats.earnings_title': return 'إجمالي الأرباح';
 			case 'creator.stats.pending': return 'قيد الانتظار';
 			case 'creator.stats.validated_views': return 'المشاهدات المعتمدة';

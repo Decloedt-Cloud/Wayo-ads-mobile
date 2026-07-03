@@ -16,6 +16,7 @@ import '../dashboard/domain/entities/campaign_status.dart';
 import '../account_deletion/presentation/widgets/pending_account_deletion_banner.dart';
 import '../dashboard/presentation/providers/dashboard_state_providers.dart';
 import '../onboarding/presentation/shell_tutorial_controller.dart';
+import 'presentation/providers/shell_navigation_providers.dart';
 import 'presentation/widgets/shell_tutorial_replay_scope.dart';
 import '../../core/ui/wayo_system_nav_bar.dart';
 import 'widgets/wayo_bottom_nav.dart';
@@ -113,8 +114,24 @@ class _AppShellState extends ConsumerState<AppShell>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      _syncShellTabIndex();
       _maybeShowTutorial();
     });
+  }
+
+  void _syncShellTabIndex() {
+    if (!mounted) return;
+    ref.read(shellCurrentIndexProvider.notifier).state =
+        widget.navigationShell.currentIndex;
+  }
+
+  @override
+  void didUpdateWidget(covariant AppShell oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.navigationShell.currentIndex !=
+        widget.navigationShell.currentIndex) {
+      _syncShellTabIndex();
+    }
   }
 
   @override

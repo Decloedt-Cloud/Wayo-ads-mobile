@@ -705,7 +705,9 @@
       "tracking_link_copied": "تم النسخ!",
       "tracking_link_preparing": "يتم إعداد رابطك الفريد… اسحب للتحديث بعد لحظات.",
       "tracking_link_error": "تعذّر تحميل رابط التتبع.",
-      "tracking_link_stats": "$validated نقرة مؤهلة · $recorded نقرة مسجّلة"
+      "tracking_link_stats": "$validated نقرة مؤهلة · $recorded نقرة مسجّلة",
+      "tracking_link_destination_title": "رابط الصفحة المستهدفة",
+      "tracking_link_open_destination": "فتح الوجهة"
     },
     "stats": {
       "earnings_title": "إجمالي الأرباح",

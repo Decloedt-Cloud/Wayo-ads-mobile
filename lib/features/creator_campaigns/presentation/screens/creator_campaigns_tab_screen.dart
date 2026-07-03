@@ -231,10 +231,13 @@ class _CreatorCampaignsTabScreenState
         },
         child: ListView(
           controller: _scrollController,
+          cacheExtent: 640,
           physics: const BouncingScrollPhysics(
             parent: AlwaysScrollableScrollPhysics(),
           ),
           padding: const EdgeInsets.fromLTRB(20, 0, 20, 120),
+          addAutomaticKeepAlives: false,
+          addRepaintBoundaries: true,
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(0, 8, 0, 4),
@@ -433,58 +436,31 @@ class _CreatorCampaignsTabScreenState
                 }
                 final browseItems = <Widget>[
                   if (explorerLayout == CampaignExplorerLayout.grid)
-                    GridView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                          gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            mainAxisSpacing: 12,
-                            crossAxisSpacing: 12,
-                            childAspectRatio: 0.50,
-                          ),
-                      itemCount: filtered.length,
-                      itemBuilder: (ctx, i) {
-                        final c = filtered[i];
-                        return CreatorBrowseCampaignGridTile(
-                          campaign: c,
-                          moneyLocale: moneyLocale,
-                          gridIndex: i,
-                          applicationStatus: statusByCampaign[c.id],
-                          onTap: () {
-                            FocusManager.instance.primaryFocus?.unfocus();
-                            context.push(
-                              '/creator/campaigns/${c.id}',
-                              extra: <String, Object?>{
-                                'title': c.title,
-                              },
-                            );
-                          },
+                    _CreatorBrowseLazyGrid(
+                      campaigns: filtered,
+                      moneyLocale: moneyLocale,
+                      statusByCampaign: statusByCampaign,
+                      onOpen: (c) {
+                        FocusManager.instance.primaryFocus?.unfocus();
+                        context.push(
+                          '/creator/campaigns/${c.id}',
+                          extra: <String, Object?>{'title': c.title},
                         );
                       },
                     )
-                  else ...[
-                    for (var i = 0; i < filtered.length; i++) ...[
-                      CreatorBrowseCampaignCard(
-                        campaign: filtered[i],
-                        moneyLocale: moneyLocale,
-                        listIndex: i,
-                        applicationStatus:
-                            statusByCampaign[filtered[i].id],
-                        onTap: () {
-                          final c = filtered[i];
-                          FocusManager.instance.primaryFocus?.unfocus();
-                          context.push(
-                            '/creator/campaigns/${c.id}',
-                            extra: <String, Object?>{
-                              'title': c.title,
-                            },
-                          );
-                        },
-                      ),
-                      const SizedBox(height: 12),
-                    ],
-                  ],
+                  else
+                    _CreatorBrowseLazyList(
+                      campaigns: filtered,
+                      moneyLocale: moneyLocale,
+                      statusByCampaign: statusByCampaign,
+                      onOpen: (c) {
+                        FocusManager.instance.primaryFocus?.unfocus();
+                        context.push(
+                          '/creator/campaigns/${c.id}',
+                          extra: <String, Object?>{'title': c.title},
+                        );
+                      },
+                    ),
                   if (pageResult.totalPages > 1) ...[
                     const SizedBox(height: 6),
                     _BrowsePaginationBar(
@@ -1009,6 +985,105 @@ class _BrowsePaginationBar extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Lazy 2-column grid rows — avoids building every tile when nested in [ListView].
+class _CreatorBrowseLazyGrid extends StatelessWidget {
+  const _CreatorBrowseLazyGrid({
+    required this.campaigns,
+    required this.moneyLocale,
+    required this.statusByCampaign,
+    required this.onOpen,
+  });
+
+  final List<CreatorBrowseCampaign> campaigns;
+  final String moneyLocale;
+  final Map<String, CreatorApplicationStatus> statusByCampaign;
+  final void Function(CreatorBrowseCampaign campaign) onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    final rowCount = (campaigns.length + 1) ~/ 2;
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      addAutomaticKeepAlives: false,
+      addRepaintBoundaries: true,
+      itemCount: rowCount,
+      itemBuilder: (context, row) {
+        final leftIndex = row * 2;
+        final rightIndex = leftIndex + 1;
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: CreatorBrowseCampaignGridTile(
+                  campaign: campaigns[leftIndex],
+                  moneyLocale: moneyLocale,
+                  gridIndex: leftIndex,
+                  applicationStatus:
+                      statusByCampaign[campaigns[leftIndex].id],
+                  onTap: () => onOpen(campaigns[leftIndex]),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: rightIndex < campaigns.length
+                    ? CreatorBrowseCampaignGridTile(
+                        campaign: campaigns[rightIndex],
+                        moneyLocale: moneyLocale,
+                        gridIndex: rightIndex,
+                        applicationStatus:
+                            statusByCampaign[campaigns[rightIndex].id],
+                        onTap: () => onOpen(campaigns[rightIndex]),
+                      )
+                    : const SizedBox.shrink(),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// Lazy list cards — replaces eager `for` loops inside parent [ListView].
+class _CreatorBrowseLazyList extends StatelessWidget {
+  const _CreatorBrowseLazyList({
+    required this.campaigns,
+    required this.moneyLocale,
+    required this.statusByCampaign,
+    required this.onOpen,
+  });
+
+  final List<CreatorBrowseCampaign> campaigns;
+  final String moneyLocale;
+  final Map<String, CreatorApplicationStatus> statusByCampaign;
+  final void Function(CreatorBrowseCampaign campaign) onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.separated(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      addAutomaticKeepAlives: false,
+      addRepaintBoundaries: true,
+      itemCount: campaigns.length,
+      separatorBuilder: (_, _) => const SizedBox(height: 12),
+      itemBuilder: (context, i) {
+        final c = campaigns[i];
+        return CreatorBrowseCampaignCard(
+          campaign: c,
+          moneyLocale: moneyLocale,
+          listIndex: i,
+          applicationStatus: statusByCampaign[c.id],
+          onTap: () => onOpen(c),
+        );
+      },
     );
   }
 }

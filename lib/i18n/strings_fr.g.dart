@@ -179,8 +179,8 @@ class _TranslationsLoginFr extends TranslationsLoginEn {
 	@override String get rate_limit_body => 'Trop de tentatives de connexion.';
 	@override String rate_limit_remaining({required Object seconds}) => 'Réessayez dans ${seconds} s';
 	@override String get forgot_password_link => 'Mot de passe oublié ?';
-	@override String get google_cta => 'Continuer avec Google';
-	@override String get apple_cta => 'Se connecter avec Apple';
+	@override String get google_cta => 'S\'inscrire avec Google';
+	@override String get apple_cta => 'S\'inscrire avec Apple';
 	@override String get apple_unavailable => 'Connexion avec Apple indisponible sur cet appareil.';
 	@override String get apple_failed => 'Échec de la connexion avec Apple. Réessayez.';
 	@override String get apple_server_not_configured => 'La connexion avec Apple n’est pas encore activée sur le serveur Wayo ID. Demandez à l’administrateur de configurer Apple sur Auth_Wayo (production), puis réessayez.';
@@ -1874,8 +1874,8 @@ extension on TranslationsFr {
 			case 'login.rate_limit_body': return 'Trop de tentatives de connexion.';
 			case 'login.rate_limit_remaining': return ({required Object seconds}) => 'Réessayez dans ${seconds} s';
 			case 'login.forgot_password_link': return 'Mot de passe oublié ?';
-			case 'login.google_cta': return 'Continuer avec Google';
-			case 'login.apple_cta': return 'Se connecter avec Apple';
+			case 'login.google_cta': return 'S\'inscrire avec Google';
+			case 'login.apple_cta': return 'S\'inscrire avec Apple';
 			case 'login.apple_unavailable': return 'Connexion avec Apple indisponible sur cet appareil.';
 			case 'login.apple_failed': return 'Échec de la connexion avec Apple. Réessayez.';
 			case 'login.apple_server_not_configured': return 'La connexion avec Apple n’est pas encore activée sur le serveur Wayo ID. Demandez à l’administrateur de configurer Apple sur Auth_Wayo (production), puis réessayez.';

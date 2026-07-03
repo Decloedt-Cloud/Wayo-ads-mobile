@@ -179,8 +179,8 @@ class _TranslationsLoginAr extends TranslationsLoginEn {
 	@override String get rate_limit_body => 'محاولات تسجيل دخول كثيرة جدًا.';
 	@override String rate_limit_remaining({required Object seconds}) => 'أعد المحاولة خلال ${seconds} ث';
 	@override String get forgot_password_link => 'نسيت كلمة المرور؟';
-	@override String get google_cta => 'المتابعة عبر Google';
-	@override String get apple_cta => 'تسجيل الدخول عبر Apple';
+	@override String get google_cta => 'إنشاء حساب عبر Google';
+	@override String get apple_cta => 'إنشاء حساب عبر Apple';
 	@override String get apple_unavailable => 'تسجيل الدخول عبر Apple غير متاح على هذا الجهاز.';
 	@override String get apple_failed => 'فشل تسجيل الدخول عبر Apple. حاول مرة أخرى.';
 	@override String get apple_server_not_configured => 'تسجيل الدخول عبر Apple غير مفعّل على خادم Wayo ID بعد. اطلب من المسؤول إعداد Apple على Auth_Wayo (الإنتاج)، ثم أعد المحاولة.';
@@ -1873,8 +1873,8 @@ extension on TranslationsAr {
 			case 'login.rate_limit_body': return 'محاولات تسجيل دخول كثيرة جدًا.';
 			case 'login.rate_limit_remaining': return ({required Object seconds}) => 'أعد المحاولة خلال ${seconds} ث';
 			case 'login.forgot_password_link': return 'نسيت كلمة المرور؟';
-			case 'login.google_cta': return 'المتابعة عبر Google';
-			case 'login.apple_cta': return 'تسجيل الدخول عبر Apple';
+			case 'login.google_cta': return 'إنشاء حساب عبر Google';
+			case 'login.apple_cta': return 'إنشاء حساب عبر Apple';
 			case 'login.apple_unavailable': return 'تسجيل الدخول عبر Apple غير متاح على هذا الجهاز.';
 			case 'login.apple_failed': return 'فشل تسجيل الدخول عبر Apple. حاول مرة أخرى.';
 			case 'login.apple_server_not_configured': return 'تسجيل الدخول عبر Apple غير مفعّل على خادم Wayo ID بعد. اطلب من المسؤول إعداد Apple على Auth_Wayo (الإنتاج)، ثم أعد المحاولة.';

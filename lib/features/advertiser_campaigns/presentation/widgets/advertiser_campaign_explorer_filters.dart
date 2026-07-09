@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/campaigns/campaign_marketplace_facets.dart';
 import '../../../../core/widgets/campaign_explorer_filter_menu.dart';
 import '../../../../i18n/strings.g.dart';
 import '../../../creator_campaigns/domain/creator_browse_campaign.dart';
 import '../../domain/advertiser_campaign.dart';
+import '../../domain/advertiser_campaign_status_counts.dart';
 import '../../domain/campaign_niche_catalog.dart';
 import '../providers/advertiser_campaigns_providers.dart';
 
@@ -13,7 +15,8 @@ import '../providers/advertiser_campaigns_providers.dart';
 class AdvertiserCampaignExplorerFilters extends StatelessWidget {
   const AdvertiserCampaignExplorerFilters({
     super.key,
-    required this.campaigns,
+    this.campaigns = const [],
+    this.facets,
     required this.t,
     required this.statusTab,
     required this.statusCounts,
@@ -27,9 +30,10 @@ class AdvertiserCampaignExplorerFilters extends StatelessWidget {
   });
 
   final List<AdvertiserCampaign> campaigns;
+  final CampaignMarketplaceFacets? facets;
   final Translations t;
   final AdvertiserCampaignsTab statusTab;
-  final ({int active, int draft, int paused, int completed}) statusCounts;
+  final AdvertiserCampaignStatusCounts statusCounts;
   final void Function(AdvertiserCampaignsTab) onStatusChanged;
   final CreatorCampaignType? typeFilter;
   final String? nicheFilter;
@@ -68,25 +72,41 @@ class AdvertiserCampaignExplorerFilters extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final afterType = typeFilter == null
-        ? campaigns
-        : campaigns.where((c) => c.campaignType == typeFilter).toList();
+    final typeSet = facets != null && facets!.activeTypes.isNotEmpty
+        ? marketplaceTypesFromFacets(facets!)
+        : _types(campaigns);
 
-    final typeSet = _types(campaigns);
+    final nicheSet = facets != null && facets!.activeNiches.isNotEmpty
+        ? facets!.activeNiches
+              .map(normalizeCampaignNicheApiValue)
+              .whereType<String>()
+              .toSet()
+        : _niches(
+            typeFilter == null
+                ? campaigns
+                : campaigns.where((c) => c.campaignType == typeFilter).toList(),
+          );
 
-    final nicheScope = afterType;
-    final nicheSet = _niches(nicheScope);
-
-    final locScope = (nicheFilter ?? '').isEmpty
-        ? nicheScope
-        : nicheScope
-              .where(
-                (c) =>
-                    normalizeCampaignNicheApiValue(c.niche) ==
-                    normalizeCampaignNicheApiValue(nicheFilter),
-              )
-              .toList();
-    final locSet = _locations(locScope);
+    final locSet = facets != null && facets!.activeCountries.isNotEmpty
+        ? facets!.activeCountries
+              .map(normalizeCampaignLocationValue)
+              .whereType<String>()
+              .toSet()
+        : _locations(
+            (nicheFilter ?? '').isEmpty
+                ? (typeFilter == null
+                      ? campaigns
+                      : campaigns
+                            .where((c) => c.campaignType == typeFilter)
+                            .toList())
+                : campaigns.where((c) {
+                    if (typeFilter != null && c.campaignType != typeFilter) {
+                      return false;
+                    }
+                    return normalizeCampaignNicheApiValue(c.niche) ==
+                        normalizeCampaignNicheApiValue(nicheFilter);
+                  }).toList(),
+          );
 
     final menus = <Widget>[];
 
@@ -128,8 +148,16 @@ class AdvertiserCampaignExplorerFilters extends StatelessWidget {
             '${t.advertiser_campaigns.tabs.paused} (${statusCounts.paused})',
           ),
           (
+            AdvertiserCampaignsTab.underReview.name,
+            '${t.advertiser_campaigns.tabs.under_review} (${statusCounts.underReview})',
+          ),
+          (
             AdvertiserCampaignsTab.completed.name,
             '${t.advertiser_campaigns.tabs.completed} (${statusCounts.completed})',
+          ),
+          (
+            AdvertiserCampaignsTab.cancelled.name,
+            '${t.advertiser_campaigns.tabs.cancelled} (${statusCounts.cancelled})',
           ),
         ],
         onChanged: (raw) {

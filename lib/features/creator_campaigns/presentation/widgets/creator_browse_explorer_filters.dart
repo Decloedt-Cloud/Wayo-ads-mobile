@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/campaigns/campaign_marketplace_facets.dart';
 import '../../../../core/widgets/campaign_explorer_filter_menu.dart';
 import '../../../../i18n/strings.g.dart';
 import '../../../advertiser_campaigns/domain/campaign_niche_catalog.dart';
 import '../../domain/creator_browse_campaign.dart';
 
-/// Web-style dropdown row: options from the **current page**; each menu is
-/// shown when that dimension has **at least one** value (plus “All …”).
+/// Web-style dropdown row. Options come from API facets when available,
+/// available, otherwise from the current result page.
 class CreatorBrowseExplorerFilters extends StatelessWidget {
   const CreatorBrowseExplorerFilters({
     super.key,
-    required this.campaigns,
+    this.campaigns = const [],
+    this.facets,
     required this.t,
     required this.typeFilter,
     required this.nicheFilter,
@@ -21,6 +23,7 @@ class CreatorBrowseExplorerFilters extends StatelessWidget {
   });
 
   final List<CreatorBrowseCampaign> campaigns;
+  final CampaignMarketplaceFacets? facets;
   final Translations t;
   final CreatorCampaignType? typeFilter;
   final String? nicheFilter;
@@ -29,25 +32,71 @@ class CreatorBrowseExplorerFilters extends StatelessWidget {
   final void Function(String?) onNicheChanged;
   final void Function(String?) onLocationChanged;
 
-  static Set<CreatorCampaignType> _types(List<CreatorBrowseCampaign> list) {
+  static Set<CreatorCampaignType> _typesFromCampaigns(
+    List<CreatorBrowseCampaign> list,
+  ) {
     return list
         .map((c) => c.type)
         .where((x) => x != CreatorCampaignType.unknown)
         .toSet();
   }
 
-  static Set<String> _niches(List<CreatorBrowseCampaign> list) {
+  static Set<String> _nichesFromCampaigns(List<CreatorBrowseCampaign> list) {
     return list
         .map((c) => normalizeCampaignNicheApiValue(c.niche))
         .whereType<String>()
         .toSet();
   }
 
-  static Set<String> _locations(List<CreatorBrowseCampaign> list) {
+  static Set<String> _locationsFromCampaigns(
+    List<CreatorBrowseCampaign> list,
+  ) {
     return list
         .map((c) => normalizeCampaignLocationValue(c.location))
         .whereType<String>()
         .toSet();
+  }
+
+  Set<CreatorCampaignType> _typeSet() {
+    if (facets != null && facets!.activeTypes.isNotEmpty) {
+      return marketplaceTypesFromFacets(facets!);
+    }
+    return _typesFromCampaigns(campaigns);
+  }
+
+  Set<String> _nicheSet() {
+    if (facets != null && facets!.activeNiches.isNotEmpty) {
+      return facets!.activeNiches
+          .map(normalizeCampaignNicheApiValue)
+          .whereType<String>()
+          .toSet();
+    }
+    final afterType = typeFilter == null
+        ? campaigns
+        : campaigns.where((c) => c.type == typeFilter).toList();
+    return _nichesFromCampaigns(afterType);
+  }
+
+  Set<String> _locationSet() {
+    if (facets != null && facets!.activeCountries.isNotEmpty) {
+      return facets!.activeCountries
+          .map(normalizeCampaignLocationValue)
+          .whereType<String>()
+          .toSet();
+    }
+    final afterType = typeFilter == null
+        ? campaigns
+        : campaigns.where((c) => c.type == typeFilter).toList();
+    final locScope = (nicheFilter ?? '').isEmpty
+        ? afterType
+        : afterType
+              .where(
+                (c) =>
+                    normalizeCampaignNicheApiValue(c.niche) ==
+                    normalizeCampaignNicheApiValue(nicheFilter),
+              )
+              .toList();
+    return _locationsFromCampaigns(locScope);
   }
 
   String _typeLabel(CreatorCampaignType x) => switch (x) {
@@ -59,25 +108,9 @@ class CreatorBrowseExplorerFilters extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final afterType = typeFilter == null
-        ? campaigns
-        : campaigns.where((c) => c.type == typeFilter).toList();
-
-    final typeSet = _types(campaigns);
-
-    final nicheScope = afterType;
-    final nicheSet = _niches(nicheScope);
-
-    final locScope = (nicheFilter ?? '').isEmpty
-        ? nicheScope
-        : nicheScope
-              .where(
-                (c) =>
-                    normalizeCampaignNicheApiValue(c.niche) ==
-                    normalizeCampaignNicheApiValue(nicheFilter),
-              )
-              .toList();
-    final locSet = _locations(locScope);
+    final typeSet = _typeSet();
+    final nicheSet = _nicheSet();
+    final locSet = _locationSet();
 
     final menus = <Widget>[];
 
@@ -146,7 +179,7 @@ class CreatorBrowseExplorerFilters extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
-    final gap = 10.0;
+    const gap = 10.0;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -156,7 +189,7 @@ class CreatorBrowseExplorerFilters extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               for (var i = 0; i < menus.length; i++) ...[
-                if (i > 0) SizedBox(height: gap),
+                if (i > 0) const SizedBox(height: gap),
                 menus[i],
               ],
             ],
@@ -167,12 +200,12 @@ class CreatorBrowseExplorerFilters extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             for (var i = 0; i < menus.length; i += 2) ...[
-              if (i > 0) SizedBox(height: gap),
+              if (i > 0) const SizedBox(height: gap),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(child: menus[i]),
-                  SizedBox(width: gap),
+                  const SizedBox(width: gap),
                   if (i + 1 < menus.length)
                     Expanded(child: menus[i + 1])
                   else

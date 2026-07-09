@@ -29,8 +29,16 @@ class CreatorCampaignsRepository {
   final RequestDeduplicator _dedup;
   final RateLimiter _rate;
 
-  static String _browseKey(int userId, int page, int limit, String search) =>
-      'creator_browse_${userId}_${page}_${limit}_$search';
+  static String _browseKey(
+    int userId,
+    int page,
+    int limit,
+    String search,
+    String type,
+    String niche,
+    String country,
+  ) =>
+      'creator_browse_${userId}_${page}_${limit}_${search}_${type}_${niche}_$country';
   static String _detailKey(int userId, String id) =>
       'creator_campaign_detail_${userId}_$id';
   static String _submissionsKey(int userId, String campaignId) =>
@@ -43,9 +51,23 @@ class CreatorCampaignsRepository {
     int limit = 10,
     int page = 1,
     String? search,
+    String? type,
+    String? niche,
+    String? countryCode,
   }) async {
     final normalizedSearch = search?.trim() ?? '';
-    final key = _browseKey(sessionUserId, page, limit, normalizedSearch);
+    final normalizedType = type?.trim().toUpperCase() ?? '';
+    final normalizedNiche = niche?.trim() ?? '';
+    final normalizedCountry = countryCode?.trim().toUpperCase() ?? '';
+    final key = _browseKey(
+      sessionUserId,
+      page,
+      limit,
+      normalizedSearch,
+      normalizedType,
+      normalizedNiche,
+      normalizedCountry,
+    );
     final fallback =
         fallbackPage ??
         (fallbackList != null
@@ -66,6 +88,9 @@ class CreatorCampaignsRepository {
         limit: limit,
         page: page,
         search: normalizedSearch.isEmpty ? null : normalizedSearch,
+        type: normalizedType.isEmpty ? null : normalizedType,
+        niche: normalizedNiche.isEmpty ? null : normalizedNiche,
+        countryCode: normalizedCountry.isEmpty ? null : normalizedCountry,
       ),
     );
   }

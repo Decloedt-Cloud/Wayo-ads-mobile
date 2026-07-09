@@ -51,6 +51,7 @@ class ConnectivityService {
   Timer? _debounceTimer;
   Timer? _confirmOfflineTimer;
   Timer? _foregroundProbeTimer;
+  Timer? _radioDownDebounce;
   bool _probeInFlight = false;
   bool _probePending = false;
   int _consecutiveProbeFailures = 0;
@@ -58,7 +59,10 @@ class ConnectivityService {
   ConnectivityStatus _status = ConnectivityStatus.unknown;
   bool _radioUp = false;
 
-  /// Failed probes required before showing offline (avoids resume DNS blips).
+  /// Debounce brief OS "none" blips (common on Android/iOS resume) before blocking UI.
+  static const Duration kRadioDownDebounce = Duration(milliseconds: 2500);
+
+  /// Failed probes required before treating reachability as lost (avoids DNS blips).
   static const int kOfflineAfterFailedProbes = 3;
 
   /// Grace after a successful online probe — transient API/DNS blips stay non-blocking.
@@ -86,11 +90,9 @@ class ConnectivityService {
     _started = true;
 
     final initial = await _connectivity.checkConnectivity();
-    _radioUp = _hasUsableRadio(initial);
+    _applyRadioState(_hasUsableRadio(initial), debounceDown: true);
     if (_radioUp) {
       unawaited(_probeNow(reason: 'start'));
-    } else {
-      _emit(ConnectivityStatus.offline);
     }
 
     _sub = _connectivity.onConnectivityChanged.listen(_onRadioChanged);
@@ -109,6 +111,8 @@ class ConnectivityService {
     _confirmOfflineTimer = null;
     _foregroundProbeTimer?.cancel();
     _foregroundProbeTimer = null;
+    _radioDownDebounce?.cancel();
+    _radioDownDebounce = null;
   }
 
   /// Call when the app returns to foreground — delayed probe avoids false offline
@@ -147,9 +151,9 @@ class ConnectivityService {
   /// Force an immediate probe — call from a "Retry" button.
   Future<ConnectivityStatus> refresh() async {
     final results = await _connectivity.checkConnectivity();
-    _radioUp = _hasUsableRadio(results);
+    _applyRadioState(_hasUsableRadio(results));
     if (!_radioUp) {
-      _emit(ConnectivityStatus.offline);
+      _emitOfflineIfRadioDown();
       return _status;
     }
     if (_status == ConnectivityStatus.offline ||
@@ -161,17 +165,62 @@ class ConnectivityService {
   }
 
   void _onRadioChanged(List<ConnectivityResult> results) {
-    final up = _hasUsableRadio(results);
-    if (up == _radioUp) {
+    _applyRadioState(_hasUsableRadio(results));
+  }
+
+  /// Updates [_radioUp]. Radio-up is immediate; radio-down is debounced to ignore flaps.
+  void _applyRadioState(bool up, {bool debounceDown = false}) {
+    if (up) {
+      _radioDownDebounce?.cancel();
+      _radioDownDebounce = null;
+      if (_radioUp) return;
+      _radioUp = true;
+      _emit(ConnectivityStatus.reconnecting);
+      unawaited(_probeNow(reason: 'radio_up'));
       return;
     }
-    _radioUp = up;
-    if (!up) {
+
+    if (!_radioUp) return;
+
+    void markRadioDown() {
+      _radioUp = false;
+      _consecutiveProbeFailures = 0;
+      _confirmOfflineTimer?.cancel();
+      _emitOfflineIfRadioDown();
+    }
+
+    if (!debounceDown) {
+      markRadioDown();
+      return;
+    }
+
+    _radioDownDebounce?.cancel();
+    _radioDownDebounce = Timer(kRadioDownDebounce, () async {
+      final again = await _connectivity.checkConnectivity();
+      if (_hasUsableRadio(again)) {
+        _applyRadioState(true);
+        return;
+      }
+      markRadioDown();
+    });
+  }
+
+  /// Full-screen offline only when the OS reports no usable network interface.
+  void _emitOfflineIfRadioDown() {
+    if (_radioUp) {
+      _emit(ConnectivityStatus.weak);
+      return;
+    }
+    _emit(ConnectivityStatus.offline);
+  }
+
+  /// Probe failures while Wi‑Fi/mobile is still up → weak banner, not full blocker.
+  void _emitUnreachable() {
+    if (_radioUp) {
+      _emit(ConnectivityStatus.weak);
+    } else {
       _emit(ConnectivityStatus.offline);
-      return;
     }
-    _emit(ConnectivityStatus.reconnecting);
-    unawaited(_probeNow(reason: 'radio_up'));
   }
 
   Future<void> _probeNow({String? reason}) async {
@@ -184,7 +233,7 @@ class ConnectivityService {
       if (!_radioUp) {
         _consecutiveProbeFailures = 0;
         _confirmOfflineTimer?.cancel();
-        _emit(ConnectivityStatus.offline);
+        _emitOfflineIfRadioDown();
         return;
       }
       final sw = Stopwatch()..start();
@@ -198,8 +247,9 @@ class ConnectivityService {
             name: 'wayo.net',
           );
         }
-        if (_status == ConnectivityStatus.offline) {
-          _emit(ConnectivityStatus.offline);
+        if (_status == ConnectivityStatus.offline ||
+            _status == ConnectivityStatus.weak) {
+          _emitUnreachable();
           return;
         }
         final inGrace = _lastOnlineAt != null &&
@@ -210,11 +260,12 @@ class ConnectivityService {
         if (_consecutiveProbeFailures >= threshold) {
           _consecutiveProbeFailures = 0;
           _confirmOfflineTimer?.cancel();
-          _emit(ConnectivityStatus.offline);
+          _emitUnreachable();
           return;
         }
         if (_status == ConnectivityStatus.online ||
-            _status == ConnectivityStatus.weak) {
+            _status == ConnectivityStatus.reconnecting ||
+            _status == ConnectivityStatus.unknown) {
           _emit(ConnectivityStatus.weak);
         }
         _confirmOfflineTimer?.cancel();
@@ -242,7 +293,8 @@ class ConnectivityService {
 
   Future<bool> _probeReachability() async {
     if (await _pingDns()) return true;
-    return _probeHttpEndpoints();
+    if (await _probeHttpEndpoints()) return true;
+    return _probePublicInternet();
   }
 
   Future<bool> _pingDns() async {
@@ -310,6 +362,44 @@ class ConnectivityService {
           } catch (_) {
             continue;
           }
+        }
+      }
+    } finally {
+      dio.close(force: true);
+    }
+    return false;
+  }
+
+  /// Lightweight HTTPS check when DNS or Wayo hosts fail (validates real internet).
+  Future<bool> _probePublicInternet() async {
+    const urls = [
+      'https://cloudflare.com/cdn-cgi/trace',
+      'https://www.google.com/generate_204',
+    ];
+    final dio = Dio(
+      BaseOptions(
+        connectTimeout: _probeTimeout,
+        receiveTimeout: _probeTimeout,
+        sendTimeout: _probeTimeout,
+        followRedirects: true,
+        maxRedirects: 2,
+        validateStatus: (code) => code != null && code < 500,
+        headers: const {'Accept': '*/*', 'X-Client': 'wayo-ads-go'},
+      ),
+    );
+    try {
+      for (final url in urls) {
+        try {
+          final response = await dio.get<dynamic>(url);
+          if (response.statusCode != null && response.statusCode! < 500) {
+            return true;
+          }
+        } on DioException catch (e) {
+          if (e.response != null && e.response!.statusCode != null) {
+            if (e.response!.statusCode! < 500) return true;
+          }
+        } catch (_) {
+          continue;
         }
       }
     } finally {

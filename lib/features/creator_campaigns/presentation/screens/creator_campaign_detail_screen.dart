@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../../core/campaigns/campaign_public_access.dart';
 import '../../../../core/campaigns/campaign_detail_metadata.dart';
 import '../../../../core/format/campaign_finance_display.dart';
 import '../../../../core/format/money_formatter.dart';
@@ -21,6 +22,7 @@ import '../../../../core/widgets/campaign_detail/campaign_detail_requirements.da
 import '../../../../i18n/strings.g.dart';
 import '../../../advertiser_campaigns/domain/campaign_niche_catalog.dart';
 import '../../../creator_dashboard/domain/creator_application.dart';
+import '../../data/creator_campaigns_remote_datasource.dart';
 import '../../domain/creator_browse_campaign.dart';
 import '../../domain/creator_campaign_detail.dart';
 import '../providers/creator_campaigns_providers.dart';
@@ -51,6 +53,19 @@ class CreatorCampaignDetailScreen extends ConsumerWidget {
   final String? title;
 
   String _moneyLocale(AppLocale l) => wayoPublicMoneyLocale(l);
+
+  String _restrictedCampaignMessage(Translations t, String status) {
+    switch (status.toUpperCase()) {
+      case 'CANCELLED':
+        return t.creator.campaigns.cancelled_not_available;
+      case 'COMPLETED':
+        return t.creator.campaigns.completed_not_available;
+      case 'PAUSED':
+        return t.creator.campaigns.paused_not_available;
+      default:
+        return t.creator.campaigns.not_found_desc;
+    }
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -100,7 +115,18 @@ class CreatorCampaignDetailScreen extends ConsumerWidget {
               ),
             ],
           ),
-          error: (err, _) => ListView(
+          error: (err, _) {
+            final isNotFound = err is CreatorCampaignsApiException &&
+                (err.statusCode == 404 ||
+                    err.message.toLowerCase().contains('not found'));
+            if (isNotFound) {
+              return _CampaignUnavailableBody(
+                title: t.creator.campaigns.not_found_title,
+                message: t.creator.campaigns.not_found_desc,
+                onBack: () => context.pop(),
+              );
+            }
+            return ListView(
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.all(24),
             children: [
@@ -130,12 +156,25 @@ class CreatorCampaignDetailScreen extends ConsumerWidget {
                 ),
               ),
             ],
-          ),
-          data: (c) => _Body(
-            campaign: c,
-            moneyLocale: moneyLocale,
-            campaignId: id,
-          ),
+          );
+          },
+          data: (c) {
+            if (shouldBlockCampaignPublicDetail(
+              status: c.status,
+              isOwner: c.isOwner,
+            )) {
+              return _CampaignUnavailableBody(
+                title: t.creator.campaigns.not_found_title,
+                message: _restrictedCampaignMessage(t, c.status),
+                onBack: () => context.pop(),
+              );
+            }
+            return _Body(
+              campaign: c,
+              moneyLocale: moneyLocale,
+              campaignId: id,
+            );
+          },
         ),
       ),
     );
@@ -374,28 +413,9 @@ class _CampaignStatusPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final t = context.t;
-    final label = switch (status) {
-      CampaignStatus.active => t.advertiser_campaigns.status.active,
-      CampaignStatus.paused => t.advertiser_campaigns.status.paused,
-      CampaignStatus.completed => t.advertiser_campaigns.status.completed,
-      CampaignStatus.draft => t.advertiser_campaigns.status.draft,
-      CampaignStatus.unknown => t.advertiser_campaigns.status.other,
-    };
-    final color = switch (status) {
-      CampaignStatus.active => const Color(0xFF22C55E),
-      CampaignStatus.paused => const Color(0xFFF59E0B),
-      CampaignStatus.completed => const Color(0xFF8B5CF6),
-      CampaignStatus.draft => CampaignDetailPremiumPalette.muted(context),
-      CampaignStatus.unknown => CampaignDetailPremiumPalette.muted(context),
-    };
-    final icon = switch (status) {
-      CampaignStatus.active => Icons.circle,
-      CampaignStatus.paused => Icons.pause_circle_outline,
-      CampaignStatus.completed => Icons.check_circle_outline,
-      CampaignStatus.draft => Icons.edit_note_rounded,
-      CampaignStatus.unknown => Icons.help_outline,
-    };
+    final label = campaignStatusLabel(context.t, status);
+    final color = campaignStatusAccentColor(status);
+    final icon = campaignStatusIcon(status);
     return _Pill(label: label, color: color, icon: icon);
   }
 }
@@ -434,8 +454,15 @@ class _CampaignPerformanceBlock extends StatelessWidget {
               Expanded(
                 child: _PerformanceStat(
                   icon: Icons.ads_click_outlined,
-                  label: t.advertiser_campaigns.detail.valid_clicks,
-                  value: '${c.validClicks}',
+                  label: c.isApproved
+                      ? t.creator.campaigns.clicks_validated_label
+                      : t.advertiser_campaigns.detail.valid_clicks,
+                  value: c.isApproved
+                      ? '${c.validatedClicks}'
+                      : '${c.validClicks}',
+                  sub: c.isApproved && c.recordedClicks > 0
+                      ? '${t.creator.campaigns.clicks_recorded_label}: ${c.recordedClicks}'
+                      : null,
                 ),
               ),
               Expanded(
@@ -513,11 +540,13 @@ class _PerformanceStat extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.value,
+    this.sub,
   });
 
   final IconData icon;
   final String label;
   final String value;
+  final String? sub;
 
   @override
   Widget build(BuildContext context) {
@@ -544,12 +573,42 @@ class _PerformanceStat extends StatelessWidget {
                   color: CreatorCampaignsChrome.label(context),
                 ),
               ),
+              if (sub != null && sub!.isNotEmpty) ...[
+                const SizedBox(height: 2),
+                Text(
+                  sub!,
+                  style: GoogleFonts.dmSans(
+                    fontSize: 10,
+                    color: CreatorCampaignsChrome.label(context),
+                  ),
+                ),
+              ],
             ],
           ),
         ),
       ],
     );
   }
+}
+
+String? _earningsViewsSubtitle(
+  Translations t,
+  CreatorCampaignDetail c,
+  int pendingViews,
+) {
+  final parts = <String>[];
+  if (c.type.requiresVideoSubmission && c.platformViews > 0) {
+    parts.add(
+      '${t.creator.campaigns.earnings_platform_views}: ${c.platformViews}',
+    );
+  }
+  if (pendingViews > 0) {
+    parts.add(
+      t.creator.campaigns.submission_pending_views(views: pendingViews),
+    );
+  }
+  if (parts.isEmpty) return null;
+  return parts.join(' · ');
 }
 
 class _EarningsBlock extends StatelessWidget {
@@ -564,6 +623,7 @@ class _EarningsBlock extends StatelessWidget {
     final c = campaign;
     final isLink = c.type == CreatorCampaignType.link;
     final views = c.paidViews > 0 ? c.paidViews : c.earningsViews;
+    final pendingViews = c.pendingViewsFromPosts;
 
     String money(int cents) => MoneyFormatter.format(
       cents / 100.0,
@@ -598,10 +658,11 @@ class _EarningsBlock extends StatelessWidget {
               ),
               Expanded(
                 child: _EarningsStat(
-                  label: t.creator.campaigns.earnings_valid_clicks,
+                  label: t.creator.campaigns.clicks_validated_label,
                   value: '${c.validatedClicks}',
-                  sub:
-                      '${t.creator.campaigns.earnings_recorded_clicks}: ${c.recordedClicks}',
+                  sub: c.recordedClicks > 0
+                      ? '${t.creator.campaigns.clicks_recorded_label}: ${c.recordedClicks}'
+                      : null,
                 ),
               ),
             ],
@@ -656,9 +717,7 @@ class _EarningsBlock extends StatelessWidget {
               child: _EarningsStat(
                 label: t.creator.campaigns.earnings_views,
                 value: '$views',
-                sub: c.type.requiresVideoSubmission
-                    ? '${t.creator.campaigns.earnings_platform_views}: ${c.platformViews}'
-                    : null,
+                sub: _earningsViewsSubtitle(t, c, pendingViews),
               ),
             ),
           ],
@@ -668,10 +727,11 @@ class _EarningsBlock extends StatelessWidget {
           children: [
             Expanded(
               child: _EarningsStat(
-                label: t.creator.campaigns.earnings_valid_clicks,
+                label: t.creator.campaigns.clicks_validated_label,
                 value: '${c.validatedClicks}',
-                sub:
-                    '${t.creator.campaigns.earnings_recorded_clicks}: ${c.recordedClicks}',
+                sub: c.recordedClicks > 0
+                    ? '${t.creator.campaigns.clicks_recorded_label}: ${c.recordedClicks}'
+                    : null,
               ),
             ),
             Expanded(
@@ -1135,5 +1195,60 @@ class _ActionBar extends ConsumerWidget {
 
     // REJECTED / WITHDRAWN / UNKNOWN — read-only state, no primary CTA.
     return const SizedBox.shrink();
+  }
+}
+
+class _CampaignUnavailableBody extends StatelessWidget {
+  const _CampaignUnavailableBody({
+    required this.title,
+    required this.message,
+    required this.onBack,
+  });
+
+  final String title;
+  final String message;
+  final VoidCallback onBack;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.t;
+    return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: const EdgeInsets.fromLTRB(24, 48, 24, 120),
+      children: [
+        Icon(
+          Icons.cancel_outlined,
+          size: 56,
+          color: CampaignDetailPremiumPalette.muted(context),
+        ),
+        const SizedBox(height: 20),
+        Text(
+          title,
+          textAlign: TextAlign.center,
+          style: GoogleFonts.sora(
+            fontSize: 22,
+            fontWeight: FontWeight.w700,
+            color: CampaignDetailPremiumPalette.value(context),
+          ),
+        ),
+        const SizedBox(height: 10),
+        Text(
+          message,
+          textAlign: TextAlign.center,
+          style: AppTextStyles.bodyLarge(context).copyWith(
+            color: AppColors.textSecondaryOf(context),
+            height: 1.45,
+          ),
+        ),
+        const SizedBox(height: 28),
+        Center(
+          child: FilledButton.icon(
+            onPressed: onBack,
+            icon: const Icon(Icons.arrow_back_rounded),
+            label: Text(t.creator.campaigns.browse_title),
+          ),
+        ),
+      ],
+    );
   }
 }

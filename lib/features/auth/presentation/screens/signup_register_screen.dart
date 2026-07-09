@@ -689,7 +689,7 @@ class _SignupRegisterScreenState extends ConsumerState<SignupRegisterScreen> {
                         PremiumAppleSignInButton(
                           busy: _appleSigningIn,
                           enabled: canUseOAuth,
-                          label: t.login.apple_cta,
+                          label: t.signup.apple_cta,
                           onPressed: () => unawaited(_signInWithApple(t)),
                         ),
                       ],
@@ -697,7 +697,7 @@ class _SignupRegisterScreenState extends ConsumerState<SignupRegisterScreen> {
                       PremiumGoogleSignInButton(
                         busy: _googleSigningIn,
                         enabled: canUseOAuth,
-                        label: t.login.google_cta,
+                        label: t.signup.google_cta,
                         onPressed: () => unawaited(_signInWithGoogle(t)),
                       ),
                       const SizedBox(height: 16),

@@ -181,8 +181,8 @@ class TranslationsLoginEn {
 	String get rate_limit_body => 'Too many login attempts.';
 	String rate_limit_remaining({required Object seconds}) => 'Try again in ${seconds} s';
 	String get forgot_password_link => 'Forgot password?';
-	String get google_cta => 'Sign up with Google';
-	String get apple_cta => 'Sign up with Apple';
+	String get google_cta => 'Continue with Google';
+	String get apple_cta => 'Sign in with Apple';
 	String get apple_unavailable => 'Sign in with Apple is not available on this device.';
 	String get apple_failed => 'Apple sign-in failed. Try again.';
 	String get apple_server_not_configured => 'Sign in with Apple is not enabled on the Wayo ID server yet. Ask your administrator to configure Apple credentials on Auth_Wayo (production), then try again.';
@@ -219,6 +219,8 @@ class TranslationsSignupEn {
 	String get confirm_password_label => 'Confirm password';
 	String get password_need_symbol => 'Needs a symbol (!@#%…)';
 	String get register_cta => 'Create account';
+	String get google_cta => 'Sign up with Google';
+	String get apple_cta => 'Sign up with Apple';
 	String get already_have_account => 'Already have an account?';
 	String get sign_in_link => 'Sign in';
 	String get verify_then_sign_in => 'Email verified. Please sign in with your password.';
@@ -1312,7 +1314,9 @@ class TranslationsAdvertiserCampaignsTabsEn {
 	String get active => 'Active';
 	String get draft => 'Draft';
 	String get paused => 'Paused';
+	String get under_review => 'Under review';
 	String get completed => 'Completed';
+	String get cancelled => 'Cancelled';
 }
 
 // Path: advertiser_campaigns.empty
@@ -1357,7 +1361,9 @@ class TranslationsAdvertiserCampaignsStatusEn {
 	// Translations
 	String get active => 'Active';
 	String get paused => 'Paused';
+	String get under_review => 'Under review';
 	String get completed => 'Completed';
+	String get cancelled => 'Cancelled';
 	String get draft => 'Draft';
 	String get other => 'Other';
 }
@@ -1578,6 +1584,12 @@ class TranslationsCreatorCampaignsEn {
 	String get submit_subtitle => 'Once approved, share a public video URL so the advertiser can review it.';
 	String get details_title => 'Campaign details';
 	String get application_title => 'My application';
+	String get not_found_title => 'Campaign unavailable';
+	String get not_found_desc => 'This campaign is not available or may have been removed.';
+	String get cancelled_not_available => 'This campaign has been cancelled and is no longer available.';
+	String get completed_not_available => 'This campaign has ended and is no longer available.';
+	String get paused_not_available => 'This campaign is currently paused and is not available.';
+	String get cancelled_owner_banner => 'This campaign has been cancelled.';
 	String get load_error => 'Couldn\'t load campaigns.';
 	String get empty_title => 'No campaigns right now';
 	String get empty_subtitle => 'New campaigns show up here the moment advertisers launch them.';
@@ -1653,6 +1665,10 @@ class TranslationsCreatorCampaignsEn {
 	String get submission_status_rejected => 'Rejected';
 	String get submission_status_flagged => 'Flagged';
 	String submission_views({required Object views}) => '${views} validated views';
+	String submission_pending_views({required Object views}) => '+${views} pending validation';
+	String submission_platform_views({required Object views}) => '${views} platform views';
+	String get clicks_validated_label => 'Validated clicks';
+	String get clicks_recorded_label => 'Recorded clicks';
 	String get tracking_link_title => 'Your tracking link';
 	String get tracking_link_subtitle => 'Share this short link in your bio, posts or stories. Clicks are tracked automatically.';
 	String get tracking_link_copy => 'Copy link';
@@ -1674,6 +1690,9 @@ class TranslationsCreatorStatsEn {
 	String get earnings_title => 'Total earnings';
 	String get pending => 'Pending';
 	String get validated_views => 'Validated views';
+	String pending_validation({required Object count}) => '+${count} pending validation';
+	String get pending_validation_tooltip => 'Views are being verified by YouTube and will be confirmed within 48 hours before being added to your earnings.';
+	String get total_valid_clicks => 'Valid clicks';
 	String get validation_rate => 'Validation rate';
 	String get approved_campaigns => 'Approved campaigns';
 }
@@ -1876,8 +1895,8 @@ extension on Translations {
 			case 'login.rate_limit_body': return 'Too many login attempts.';
 			case 'login.rate_limit_remaining': return ({required Object seconds}) => 'Try again in ${seconds} s';
 			case 'login.forgot_password_link': return 'Forgot password?';
-			case 'login.google_cta': return 'Sign up with Google';
-			case 'login.apple_cta': return 'Sign up with Apple';
+			case 'login.google_cta': return 'Continue with Google';
+			case 'login.apple_cta': return 'Sign in with Apple';
 			case 'login.apple_unavailable': return 'Sign in with Apple is not available on this device.';
 			case 'login.apple_failed': return 'Apple sign-in failed. Try again.';
 			case 'login.apple_server_not_configured': return 'Sign in with Apple is not enabled on the Wayo ID server yet. Ask your administrator to configure Apple credentials on Auth_Wayo (production), then try again.';
@@ -1905,6 +1924,8 @@ extension on Translations {
 			case 'signup.confirm_password_label': return 'Confirm password';
 			case 'signup.password_need_symbol': return 'Needs a symbol (!@#%…)';
 			case 'signup.register_cta': return 'Create account';
+			case 'signup.google_cta': return 'Sign up with Google';
+			case 'signup.apple_cta': return 'Sign up with Apple';
 			case 'signup.already_have_account': return 'Already have an account?';
 			case 'signup.sign_in_link': return 'Sign in';
 			case 'signup.verify_then_sign_in': return 'Email verified. Please sign in with your password.';
@@ -2059,7 +2080,9 @@ extension on Translations {
 			case 'advertiser_campaigns.tabs.active': return 'Active';
 			case 'advertiser_campaigns.tabs.draft': return 'Draft';
 			case 'advertiser_campaigns.tabs.paused': return 'Paused';
+			case 'advertiser_campaigns.tabs.under_review': return 'Under review';
 			case 'advertiser_campaigns.tabs.completed': return 'Completed';
+			case 'advertiser_campaigns.tabs.cancelled': return 'Cancelled';
 			case 'advertiser_campaigns.search_placeholder': return 'Search campaigns';
 			case 'advertiser_campaigns.empty.none': return 'No campaigns found';
 			case 'advertiser_campaigns.empty.hint': return 'You don\'t have any campaigns in this status yet.';
@@ -2078,7 +2101,9 @@ extension on Translations {
 			case 'advertiser_campaigns.card.list_row_creators': return '{count} creators';
 			case 'advertiser_campaigns.status.active': return 'Active';
 			case 'advertiser_campaigns.status.paused': return 'Paused';
+			case 'advertiser_campaigns.status.under_review': return 'Under review';
 			case 'advertiser_campaigns.status.completed': return 'Completed';
+			case 'advertiser_campaigns.status.cancelled': return 'Cancelled';
 			case 'advertiser_campaigns.status.draft': return 'Draft';
 			case 'advertiser_campaigns.status.other': return 'Other';
 			case 'advertiser_campaigns.platform.youtube': return 'YouTube';
@@ -2366,6 +2391,12 @@ extension on Translations {
 			case 'creator.campaigns.submit_subtitle': return 'Once approved, share a public video URL so the advertiser can review it.';
 			case 'creator.campaigns.details_title': return 'Campaign details';
 			case 'creator.campaigns.application_title': return 'My application';
+			case 'creator.campaigns.not_found_title': return 'Campaign unavailable';
+			case 'creator.campaigns.not_found_desc': return 'This campaign is not available or may have been removed.';
+			case 'creator.campaigns.cancelled_not_available': return 'This campaign has been cancelled and is no longer available.';
+			case 'creator.campaigns.completed_not_available': return 'This campaign has ended and is no longer available.';
+			case 'creator.campaigns.paused_not_available': return 'This campaign is currently paused and is not available.';
+			case 'creator.campaigns.cancelled_owner_banner': return 'This campaign has been cancelled.';
 			case 'creator.campaigns.load_error': return 'Couldn\'t load campaigns.';
 			case 'creator.campaigns.empty_title': return 'No campaigns right now';
 			case 'creator.campaigns.empty_subtitle': return 'New campaigns show up here the moment advertisers launch them.';
@@ -2441,6 +2472,10 @@ extension on Translations {
 			case 'creator.campaigns.submission_status_rejected': return 'Rejected';
 			case 'creator.campaigns.submission_status_flagged': return 'Flagged';
 			case 'creator.campaigns.submission_views': return ({required Object views}) => '${views} validated views';
+			case 'creator.campaigns.submission_pending_views': return ({required Object views}) => '+${views} pending validation';
+			case 'creator.campaigns.submission_platform_views': return ({required Object views}) => '${views} platform views';
+			case 'creator.campaigns.clicks_validated_label': return 'Validated clicks';
+			case 'creator.campaigns.clicks_recorded_label': return 'Recorded clicks';
 			case 'creator.campaigns.tracking_link_title': return 'Your tracking link';
 			case 'creator.campaigns.tracking_link_subtitle': return 'Share this short link in your bio, posts or stories. Clicks are tracked automatically.';
 			case 'creator.campaigns.tracking_link_copy': return 'Copy link';
@@ -2453,6 +2488,9 @@ extension on Translations {
 			case 'creator.stats.earnings_title': return 'Total earnings';
 			case 'creator.stats.pending': return 'Pending';
 			case 'creator.stats.validated_views': return 'Validated views';
+			case 'creator.stats.pending_validation': return ({required Object count}) => '+${count} pending validation';
+			case 'creator.stats.pending_validation_tooltip': return 'Views are being verified by YouTube and will be confirmed within 48 hours before being added to your earnings.';
+			case 'creator.stats.total_valid_clicks': return 'Valid clicks';
 			case 'creator.stats.validation_rate': return 'Validation rate';
 			case 'creator.stats.approved_campaigns': return 'Approved campaigns';
 			case 'creator.applications.section_title': return 'Active applications';

@@ -77,7 +77,11 @@ final class AdvertiserCampaign extends Equatable {
 
   bool get matchesPausedTab => status == CampaignStatus.paused;
 
+  bool get matchesUnderReviewTab => status == CampaignStatus.underReview;
+
   bool get matchesCompletedTab => status == CampaignStatus.completed;
+
+  bool get matchesCancelledTab => status == CampaignStatus.cancelled;
 
   @override
   List<Object?> get props => [

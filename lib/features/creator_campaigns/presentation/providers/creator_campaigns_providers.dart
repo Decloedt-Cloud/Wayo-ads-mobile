@@ -64,8 +64,14 @@ final creatorCampaignExplorerLocationProvider = StateProvider<String?>(
   (ref) => null,
 );
 
-/// Paginated browse key: [creatorBrowseCampaignPageProvider] + [creatorBrowseCampaignSearchQueryProvider].
-typedef CreatorBrowsePagedKey = ({int page, String search});
+/// Paginated browse key: page, search, and server-side explorer filters (API).
+typedef CreatorBrowsePagedKey = ({
+  int page,
+  String search,
+  String? typeApi,
+  String? nicheApi,
+  String? countryApi,
+});
 
 /// Paginated browse (`GET /api/campaigns?creatorOnly=true&limit=10&search=…`).
 final creatorBrowseCampaignsPagedProvider = FutureProvider.autoDispose
@@ -81,6 +87,9 @@ final creatorBrowseCampaignsPagedProvider = FutureProvider.autoDispose
               page: key.page,
               limit: 10,
               search: q.isEmpty ? null : q,
+              type: key.typeApi,
+              niche: key.nicheApi,
+              countryCode: key.countryApi,
             ),
       );
     });

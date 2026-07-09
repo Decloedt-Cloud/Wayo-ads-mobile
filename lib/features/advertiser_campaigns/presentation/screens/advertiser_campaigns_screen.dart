@@ -8,6 +8,7 @@ import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../../../core/errors/auth_exceptions.dart';
 import '../../../../core/campaigns/campaign_explorer_layout.dart';
+import '../../../../core/campaigns/campaign_marketplace_facets.dart';
 import '../../../../core/format/campaign_finance_display.dart';
 import '../../../../core/campaigns/campaigns_explorer_toolbar_expanded_provider.dart';
 import '../../../../core/providers/app_providers.dart';
@@ -15,11 +16,11 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/campaigns_explorer_toolbar.dart';
 import '../../../../i18n/strings.g.dart';
-import '../../../creator_campaigns/domain/creator_browse_campaign.dart';
 import '../../../dashboard/presentation/widgets/error_banner.dart';
 import '../../../chat/presentation/providers/chat_providers.dart';
 import '../../../creator/presentation/providers/creator_session_gate.dart';
 import '../../domain/advertiser_campaign.dart';
+import '../../domain/advertiser_campaign_status_counts.dart';
 import '../../domain/campaign_niche_catalog.dart';
 import '../providers/advertiser_campaigns_providers.dart';
 import '../theme/advertiser_campaigns_chrome.dart';
@@ -30,76 +31,57 @@ import '../widgets/advertiser_campaign_grid_tile.dart';
 
 String _moneyLocale(AppLocale l) => wayoPublicMoneyLocale(l);
 
-List<AdvertiserCampaign> _filterAdvertiserCampaigns(
-  List<AdvertiserCampaign> raw,
-  CreatorCampaignType? type,
-  String? niche,
-  String? location,
-) {
-  return raw.where((c) {
-    if (type != null && c.campaignType != type) return false;
-    if (niche != null &&
-        niche.isNotEmpty &&
-        normalizeCampaignNicheApiValue(c.niche) !=
-            normalizeCampaignNicheApiValue(niche)) {
-      return false;
-    }
-    if (location != null && location.isNotEmpty) {
-      final cl = normalizeCampaignLocationValue(c.location);
-      if (cl != normalizeCampaignLocationValue(location)) return false;
-    }
-    return true;
-  }).toList();
-}
-
 void _sanitizeAdvertiserExplorerFilters(
   WidgetRef ref,
-  List<AdvertiserCampaign> list,
+  CampaignMarketplaceFacets facets,
 ) {
   var tSel = ref.read(advertiserCampaignExplorerTypeFilterProvider);
-
-  if (tSel != null && !list.any((c) => c.campaignType == tSel)) {
+  final typeSet = marketplaceTypesFromFacets(facets);
+  if (tSel != null && typeSet.isNotEmpty && !typeSet.contains(tSel)) {
     ref.read(advertiserCampaignExplorerTypeFilterProvider.notifier).state =
         null;
-    tSel = null;
-  }
-
-  bool matchesType(AdvertiserCampaign c) {
-    if (tSel != null && c.campaignType != tSel) return false;
-    return true;
   }
 
   final nSel = ref.read(advertiserCampaignExplorerNicheProvider);
-  if (nSel != null && nSel.isNotEmpty) {
+  if (nSel != null && nSel.isNotEmpty && facets.activeNiches.isNotEmpty) {
     final want = normalizeCampaignNicheApiValue(nSel);
     if (want != null &&
-        !list.any(
-          (c) =>
-              matchesType(c) &&
-              normalizeCampaignNicheApiValue(c.niche) == want,
-        )) {
+        !facets.activeNiches
+            .map(normalizeCampaignNicheApiValue)
+            .whereType<String>()
+            .contains(want)) {
       ref.read(advertiserCampaignExplorerNicheProvider.notifier).state = null;
     }
   }
 
   final lSel = ref.read(advertiserCampaignExplorerLocationProvider);
-  final nicheAfter = ref.read(advertiserCampaignExplorerNicheProvider);
-  if (lSel != null && lSel.isNotEmpty) {
+  if (lSel != null && lSel.isNotEmpty && facets.activeCountries.isNotEmpty) {
     final wantLoc = normalizeCampaignLocationValue(lSel);
-    final wantNiche = normalizeCampaignNicheApiValue(nicheAfter);
     if (wantLoc != null &&
-        !list.any((c) {
-          if (!matchesType(c)) return false;
-          if (wantNiche != null &&
-              normalizeCampaignNicheApiValue(c.niche) != wantNiche) {
-            return false;
-          }
-          return normalizeCampaignLocationValue(c.location) == wantLoc;
-        })) {
+        !facets.activeCountries
+            .map(normalizeCampaignLocationValue)
+            .whereType<String>()
+            .contains(wantLoc)) {
       ref.read(advertiserCampaignExplorerLocationProvider.notifier).state =
           null;
     }
   }
+}
+
+AdvertiserCampaignsPagedKey _mineCampaignsPagedKey(WidgetRef ref) {
+  final type = ref.read(advertiserCampaignExplorerTypeFilterProvider);
+  final niche = ref.read(advertiserCampaignExplorerNicheProvider);
+  final location = ref.read(advertiserCampaignExplorerLocationProvider);
+  return (
+    tab: ref.read(advertiserCampaignsTabProvider),
+    page: ref.read(advertiserCampaignsPageIndexProvider),
+    search: ref.read(advertiserCampaignsSearchQueryProvider),
+    typeApi: marketplaceTypeApiFromFilter(type),
+    nicheApi: niche != null && niche.isNotEmpty
+        ? normalizeCampaignNicheApiValue(niche)
+        : null,
+    countryApi: marketplaceCountryApiFromLocation(location),
+  );
 }
 
 /// Page background — aligned with campaign detail premium palette.
@@ -257,7 +239,10 @@ class _MineCampaignsBody extends ConsumerWidget {
     final tab = ref.watch(advertiserCampaignsTabProvider);
     final pageIdx = ref.watch(advertiserCampaignsPageIndexProvider);
     final searchQ = ref.watch(advertiserCampaignsSearchQueryProvider);
-    final key = (tab: tab, page: pageIdx, search: searchQ);
+    ref.watch(advertiserCampaignExplorerTypeFilterProvider);
+    ref.watch(advertiserCampaignExplorerNicheProvider);
+    ref.watch(advertiserCampaignExplorerLocationProvider);
+    final key = _mineCampaignsPagedKey(ref);
     final pageAsync = ref.watch(advertiserCampaignsPagedProvider(key));
     final countsAsync = ref.watch(advertiserCampaignsCountsProvider);
 
@@ -274,6 +259,7 @@ class _MineCampaignsBody extends ConsumerWidget {
     });
 
     ref.listen(advertiserCampaignsPagedProvider(key), (previous, next) {
+      next.whenData((r) => _sanitizeAdvertiserExplorerFilters(ref, r.facets));
       next.whenOrNull(
         error: (e, _) {
           if (!shouldSuppressSessionLoadError(ref, e)) return;
@@ -286,21 +272,24 @@ class _MineCampaignsBody extends ConsumerWidget {
 
     Future<void> refresh() async {
       ref.invalidate(advertiserCampaignsPagedProvider);
-      await ref.read(advertiserCampaignsPagedProvider(key).future);
+      await ref.read(advertiserCampaignsPagedProvider(_mineCampaignsPagedKey(ref)).future);
     }
 
     final cachedPage = pageAsync.valueOrNull;
     final cachedCounts =
-        countsAsync.valueOrNull ??
-        (active: 0, draft: 0, paused: 0, completed: 0);
+        countsAsync.valueOrNull ?? const AdvertiserCampaignStatusCounts();
 
     Widget buildBody({
       required List<AdvertiserCampaign> campaigns,
       required int totalPages,
+      required int total,
+      required CampaignMarketplaceFacets facets,
     }) {
       return _Body(
         campaigns: campaigns,
         totalPages: totalPages,
+        total: total,
+        facets: facets,
         currentPage: pageIdx,
         counts: cachedCounts,
         tab: tab,
@@ -340,6 +329,8 @@ class _MineCampaignsBody extends ConsumerWidget {
       return buildBody(
         campaigns: cachedPage.campaigns,
         totalPages: cachedPage.totalPages,
+        total: cachedPage.total,
+        facets: cachedPage.facets,
       );
     }
 
@@ -347,6 +338,8 @@ class _MineCampaignsBody extends ConsumerWidget {
       data: (pageResult) => buildBody(
         campaigns: pageResult.campaigns,
         totalPages: pageResult.totalPages,
+        total: pageResult.total,
+        facets: pageResult.facets,
       ),
       loading: () => _LoadingShell(t: t),
       error: (e, _) {
@@ -436,6 +429,8 @@ class _Body extends ConsumerWidget {
   const _Body({
     required this.campaigns,
     required this.totalPages,
+    required this.total,
+    required this.facets,
     required this.currentPage,
     required this.counts,
     required this.tab,
@@ -452,8 +447,10 @@ class _Body extends ConsumerWidget {
 
   final List<AdvertiserCampaign> campaigns;
   final int totalPages;
+  final int total;
+  final CampaignMarketplaceFacets facets;
   final int currentPage;
-  final ({int active, int draft, int paused, int completed}) counts;
+  final AdvertiserCampaignStatusCounts counts;
   final AdvertiserCampaignsTab tab;
   final TextEditingController searchCtrl;
   final String searchQ;
@@ -473,18 +470,10 @@ class _Body extends ConsumerWidget {
     final typeF = ref.watch(advertiserCampaignExplorerTypeFilterProvider);
     final nicheF = ref.watch(advertiserCampaignExplorerNicheProvider);
     final locF = ref.watch(advertiserCampaignExplorerLocationProvider);
-    final filtered = _filterAdvertiserCampaigns(
-      campaigns,
-      typeF,
-      nicheF,
-      locF,
-    );
 
-    final pagedKey = (tab: tab, page: currentPage, search: searchQ);
+    final pagedKey = _mineCampaignsPagedKey(ref);
     ref.listen(advertiserCampaignsPagedProvider(pagedKey), (prev, next) {
-      next.whenData(
-        (r) => _sanitizeAdvertiserExplorerFilters(ref, r.campaigns),
-      );
+      next.whenData((r) => _sanitizeAdvertiserExplorerFilters(ref, r.facets));
     });
 
     void resetPageToFirst() {
@@ -498,14 +487,14 @@ class _Body extends ConsumerWidget {
       ref.read(advertiserCampaignExplorerNicheProvider.notifier).state = null;
       ref.read(advertiserCampaignExplorerLocationProvider.notifier).state =
           null;
-      _sanitizeAdvertiserExplorerFilters(ref, campaigns);
+      _sanitizeAdvertiserExplorerFilters(ref, facets);
     }
 
-    final countText = filtered.isEmpty && campaigns.isEmpty
+    final countText = total == 0 && campaigns.isEmpty
         ? '…'
-        : (filtered.length == 1
+        : (total == 1
               ? t.campaigns_explorer.results_one
-              : t.campaigns_explorer.results_many(n: filtered.length));
+              : t.campaigns_explorer.results_many(n: total));
 
     void pushDetail(AdvertiserCampaign c) {
       FocusManager.instance.primaryFocus?.unfocus();
@@ -556,6 +545,7 @@ class _Body extends ConsumerWidget {
                     .state = v,
                 filterScrollContent: AdvertiserCampaignExplorerFilters(
                         campaigns: campaigns,
+                        facets: facets,
                         t: t,
                         statusTab: tab,
                         statusCounts: counts,
@@ -575,7 +565,7 @@ class _Body extends ConsumerWidget {
                                   )
                                   .state =
                               v;
-                          _sanitizeAdvertiserExplorerFilters(ref, campaigns);
+                          _sanitizeAdvertiserExplorerFilters(ref, facets);
                         },
                         onNicheChanged: (v) {
                           resetPageToFirst();
@@ -587,7 +577,7 @@ class _Body extends ConsumerWidget {
                               .state = v == null
                               ? null
                               : normalizeCampaignNicheApiValue(v);
-                          _sanitizeAdvertiserExplorerFilters(ref, campaigns);
+                          _sanitizeAdvertiserExplorerFilters(ref, facets);
                         },
                         onLocationChanged: (v) {
                           resetPageToFirst();
@@ -599,11 +589,13 @@ class _Body extends ConsumerWidget {
                               .state = v == null
                               ? null
                               : normalizeCampaignLocationValue(v);
-                          _sanitizeAdvertiserExplorerFilters(ref, campaigns);
+                          _sanitizeAdvertiserExplorerFilters(ref, facets);
                         },
                       ),
                 onResetExplorerFilters:
-                    campaigns.isNotEmpty ? resetAllExplorerFilters : null,
+                    campaigns.isNotEmpty || !facets.isEmpty
+                    ? resetAllExplorerFilters
+                    : null,
                 resultCountText: countText,
                 layout: layout,
                 onLayoutChanged: (v) =>
@@ -619,39 +611,12 @@ class _Body extends ConsumerWidget {
           if (campaigns.isEmpty)
             SliverFillRemaining(
               hasScrollBody: false,
-              child: _EmptyState(hasSearch: searchQ.trim().isNotEmpty),
-            )
-          else if (filtered.isEmpty)
-            SliverFillRemaining(
-              hasScrollBody: false,
-              child: Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 32),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.filter_alt_off_rounded,
-                        size: 56,
-                        color: AppColors.textMutedOf(context),
-                      ),
-                      const SizedBox(height: 14),
-                      Text(
-                        t.campaigns_explorer.empty_filters,
-                        textAlign: TextAlign.center,
-                        style: AppTextStyles.headlineMedium(
-                          context,
-                        ).copyWith(fontSize: 18),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        t.advertiser_campaigns.empty.search_hint,
-                        textAlign: TextAlign.center,
-                        style: AppTextStyles.bodyLarge(context),
-                      ),
-                    ],
-                  ),
-                ),
+              child: _EmptyState(
+                hasSearch:
+                    searchQ.trim().isNotEmpty ||
+                    typeF != null ||
+                    (nicheF?.isNotEmpty ?? false) ||
+                    (locF?.isNotEmpty ?? false),
               ),
             )
           else if (layout == CampaignExplorerLayout.grid) ...[
@@ -666,14 +631,14 @@ class _Body extends ConsumerWidget {
                   childAspectRatio: 0.56,
                 ),
                 delegate: SliverChildBuilderDelegate((context, i) {
-                  final c = filtered[i];
+                  final c = campaigns[i];
                   return AdvertiserCampaignGridTile(
                     campaign: c,
                     moneyLocale: moneyLocale,
                     gridIndex: i,
                     onTap: () => pushDetail(c),
                   );
-                }, childCount: filtered.length),
+                }, childCount: campaigns.length),
               ),
             ),
             if (totalPages > 1)
@@ -699,8 +664,8 @@ class _Body extends ConsumerWidget {
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 120),
               sliver: SliverList(
                 delegate: SliverChildBuilderDelegate((context, i) {
-                  if (i < filtered.length) {
-                    final c = filtered[i];
+                  if (i < campaigns.length) {
+                    final c = campaigns[i];
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 12),
                       child: AdvertiserCampaignCard(
@@ -724,7 +689,7 @@ class _Body extends ConsumerWidget {
                       onNext: onPageNext,
                     ),
                   );
-                }, childCount: filtered.length + (totalPages > 1 ? 1 : 0)),
+                }, childCount: campaigns.length + (totalPages > 1 ? 1 : 0)),
               ),
             ),
           ],

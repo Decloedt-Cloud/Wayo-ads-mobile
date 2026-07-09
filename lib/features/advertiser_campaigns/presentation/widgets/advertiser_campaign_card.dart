@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../../core/campaigns/campaign_detail_metadata.dart';
 import '../../../../core/format/campaign_finance_display.dart';
 import '../../../../core/format/money_formatter.dart';
 import '../../../../core/network/wayo_ads_public_url.dart';
@@ -458,13 +459,7 @@ class _ListStatusChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String label = switch (status) {
-      CampaignStatus.active => t.advertiser_campaigns.status.active,
-      CampaignStatus.paused => t.advertiser_campaigns.status.paused,
-      CampaignStatus.completed => t.advertiser_campaigns.status.completed,
-      CampaignStatus.draft => t.advertiser_campaigns.status.draft,
-      CampaignStatus.unknown => t.advertiser_campaigns.status.other,
-    };
+    final String label = campaignStatusLabel(t, status);
 
     final (bg, fg, borderClr) =
         AdvertiserCampaignsChrome.statusChip(context, status);

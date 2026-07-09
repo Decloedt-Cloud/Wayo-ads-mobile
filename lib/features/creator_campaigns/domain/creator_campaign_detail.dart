@@ -60,6 +60,7 @@ final class CreatorCampaignDetail extends Equatable {
     this.paidViews = 0,
     this.validatedClicks = 0,
     this.recordedClicks = 0,
+    this.isOwner = false,
   });
 
   final String id;
@@ -124,12 +125,16 @@ final class CreatorCampaignDetail extends Equatable {
   final int paidViews;
   final int validatedClicks;
   final int recordedClicks;
+  final bool isOwner;
 
   int get earningsViews =>
       myVideos.fold<int>(0, (sum, v) => sum + v.totalValidatedViews);
 
   int get platformViews =>
       myVideos.fold<int>(0, (sum, v) => sum + v.currentViews);
+
+  int get pendingViewsFromPosts =>
+      myVideos.fold<int>(0, (sum, v) => sum + v.pendingValidatedViews);
 
   bool get isApproved =>
       myApplicationStatus == CreatorApplicationStatus.approved;
@@ -299,6 +304,7 @@ final class CreatorCampaignDetail extends Equatable {
           (earningsCampaign?['validatedClicks'] as num?)?.toInt() ?? 0,
       recordedClicks:
           (earningsCampaign?['recordedClicks'] as num?)?.toInt() ?? 0,
+      isOwner: m['isOwner'] == true,
     );
   }
 
@@ -347,6 +353,7 @@ final class CreatorCampaignDetail extends Equatable {
       paidViews: paidViews,
       validatedClicks: validatedClicks,
       recordedClicks: recordedClicks,
+      isOwner: isOwner,
     );
   }
 
@@ -394,5 +401,6 @@ final class CreatorCampaignDetail extends Equatable {
     paidViews,
     validatedClicks,
     recordedClicks,
+    isOwner,
   ];
 }

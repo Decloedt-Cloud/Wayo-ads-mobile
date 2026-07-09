@@ -5,11 +5,19 @@ import '../../../creator/presentation/providers/creator_session_gate.dart';
 import '../../../creator_campaigns/domain/creator_browse_campaign.dart';
 import '../../../creator_campaigns/domain/creator_browse_page_result.dart';
 import '../../data/advertiser_campaigns_repository.dart';
+import '../../domain/advertiser_campaign_status_counts.dart';
 import '../../domain/advertiser_campaigns_page_result.dart';
 import '../../domain/campaign_application.dart';
 
-/// Primary status filter (explorer dropdown + API). Drafts are separate from "Active".
-enum AdvertiserCampaignsTab { active, draft, paused, completed }
+/// Primary status filter (explorer dropdown + API).
+enum AdvertiserCampaignsTab {
+  active,
+  draft,
+  paused,
+  underReview,
+  completed,
+  cancelled,
+}
 
 /// Top-level campaigns tab: own campaigns vs marketplace browse.
 enum AdvertiserCampaignsViewMode { mine, browse }
@@ -23,7 +31,9 @@ String apiStatusForAdvertiserTab(AdvertiserCampaignsTab tab) => switch (tab) {
   AdvertiserCampaignsTab.active => 'ACTIVE',
   AdvertiserCampaignsTab.draft => 'DRAFT',
   AdvertiserCampaignsTab.paused => 'PAUSED',
+  AdvertiserCampaignsTab.underReview => 'UNDER_REVIEW',
   AdvertiserCampaignsTab.completed => 'COMPLETED',
+  AdvertiserCampaignsTab.cancelled => 'CANCELLED',
 };
 
 final advertiserCampaignsTabProvider = StateProvider<AdvertiserCampaignsTab>(
@@ -59,6 +69,9 @@ typedef AdvertiserCampaignsPagedKey = ({
   AdvertiserCampaignsTab tab,
   int page,
   String search,
+  String? typeApi,
+  String? nicheApi,
+  String? countryApi,
 });
 
 /// Current page of campaigns (server-side, 10 per page, filtered by tab + search).
@@ -80,6 +93,9 @@ final advertiserCampaignsPagedProvider = FutureProvider.autoDispose
               page: key.page,
               limit: 10,
               search: q.isEmpty ? null : q,
+              type: key.typeApi,
+              niche: key.nicheApi,
+              countryCode: key.countryApi,
             );
           } catch (e) {
             throw AdvertiserCampaignsRepository.mapError(e);
@@ -88,11 +104,9 @@ final advertiserCampaignsPagedProvider = FutureProvider.autoDispose
       );
     });
 
-/// Tab totals for chips (four `limit=1` requests).
+/// Tab totals from `statusCounts` on advertiser list API.
 final advertiserCampaignsCountsProvider =
-    FutureProvider<({int active, int draft, int paused, int completed})>((
-      ref,
-    ) async {
+    FutureProvider<AdvertiserCampaignStatusCounts>((ref) async {
       ref.keepAlive();
       await awaitPostLoginBootstrap(ref);
       final repo = ref.watch(advertiserCampaignsRepositoryProvider);

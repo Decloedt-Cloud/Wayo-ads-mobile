@@ -1,5 +1,8 @@
+import 'package:flutter/material.dart';
+
 import '../../features/creator_campaigns/domain/creator_browse_campaign.dart';
 import '../../features/dashboard/domain/entities/campaign_platform.dart';
+import '../../features/dashboard/domain/entities/campaign_status.dart';
 import '../../i18n/strings.g.dart';
 
 /// Platform key from campaign JSON — mirrors Wayo-ads web detail parsing.
@@ -57,3 +60,34 @@ String campaignDetailTypeLabel(Translations t, CreatorCampaignType type) =>
       CreatorCampaignType.shorts => t.creator.campaigns.type_shorts,
       CreatorCampaignType.unknown => '—',
     };
+
+String campaignStatusLabel(Translations t, CampaignStatus status) =>
+    switch (status) {
+      CampaignStatus.active => t.advertiser_campaigns.status.active,
+      CampaignStatus.paused => t.advertiser_campaigns.status.paused,
+      CampaignStatus.underReview => t.advertiser_campaigns.status.under_review,
+      CampaignStatus.completed => t.advertiser_campaigns.status.completed,
+      CampaignStatus.cancelled => t.advertiser_campaigns.status.cancelled,
+      CampaignStatus.draft => t.advertiser_campaigns.status.draft,
+      CampaignStatus.unknown => t.advertiser_campaigns.status.other,
+    };
+
+Color campaignStatusAccentColor(CampaignStatus status) => switch (status) {
+  CampaignStatus.active => const Color(0xFF22C55E),
+  CampaignStatus.paused => const Color(0xFFF59E0B),
+  CampaignStatus.underReview => const Color(0xFF6366F1),
+  CampaignStatus.completed => const Color(0xFF8B5CF6),
+  CampaignStatus.cancelled => const Color(0xFFEF4444),
+  CampaignStatus.draft => const Color(0xFF94A3B8),
+  CampaignStatus.unknown => const Color(0xFF94A3B8),
+};
+
+IconData campaignStatusIcon(CampaignStatus status) => switch (status) {
+  CampaignStatus.active => Icons.circle,
+  CampaignStatus.paused => Icons.pause_circle_outline,
+  CampaignStatus.underReview => Icons.hourglass_top_rounded,
+  CampaignStatus.completed => Icons.check_circle_outline,
+  CampaignStatus.cancelled => Icons.cancel_outlined,
+  CampaignStatus.draft => Icons.edit_note_rounded,
+  CampaignStatus.unknown => Icons.help_outline,
+};

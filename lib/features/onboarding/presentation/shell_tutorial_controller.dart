@@ -6,7 +6,6 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/storage/app_prefs.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/creator_colors.dart';
 import '../../../i18n/strings.g.dart';
 import '../../auth/domain/wayo_ads_account_role.dart';
 import 'shell_tutorial_highlight.dart';
@@ -116,9 +115,7 @@ class ShellTutorialController {
     final steps = _buildSteps(context: context, role: role, keys: keys);
     if (steps.isEmpty) return false;
 
-    final accent = role == WayoAdsAccountRole.creator
-        ? CreatorColors.primaryOf(context)
-        : AppColors.primary;
+    final accent = AppColors.primary;
     final t = context.t;
     final overlay = Overlay.of(context, rootOverlay: false);
 

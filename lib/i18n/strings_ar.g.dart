@@ -179,8 +179,8 @@ class _TranslationsLoginAr extends TranslationsLoginEn {
 	@override String get rate_limit_body => 'محاولات تسجيل دخول كثيرة جدًا.';
 	@override String rate_limit_remaining({required Object seconds}) => 'أعد المحاولة خلال ${seconds} ث';
 	@override String get forgot_password_link => 'نسيت كلمة المرور؟';
-	@override String get google_cta => 'إنشاء حساب عبر Google';
-	@override String get apple_cta => 'إنشاء حساب عبر Apple';
+	@override String get google_cta => 'المتابعة عبر Google';
+	@override String get apple_cta => 'تسجيل الدخول عبر Apple';
 	@override String get apple_unavailable => 'تسجيل الدخول عبر Apple غير متاح على هذا الجهاز.';
 	@override String get apple_failed => 'فشل تسجيل الدخول عبر Apple. حاول مرة أخرى.';
 	@override String get apple_server_not_configured => 'تسجيل الدخول عبر Apple غير مفعّل على خادم Wayo ID بعد. اطلب من المسؤول إعداد Apple على Auth_Wayo (الإنتاج)، ثم أعد المحاولة.';
@@ -217,6 +217,8 @@ class _TranslationsSignupAr extends TranslationsSignupEn {
 	@override String get confirm_password_label => 'تأكيد كلمة المرور';
 	@override String get password_need_symbol => 'مطلوب رمز (!@#%…)';
 	@override String get register_cta => 'إنشاء حساب';
+	@override String get google_cta => 'إنشاء حساب عبر Google';
+	@override String get apple_cta => 'إنشاء حساب عبر Apple';
 	@override String get already_have_account => 'لديك حساب بالفعل؟';
 	@override String get sign_in_link => 'تسجيل الدخول';
 	@override String get verify_then_sign_in => 'تم تأكيد البريد. سجّل الدخول بكلمة المرور.';
@@ -1309,7 +1311,9 @@ class _TranslationsAdvertiserCampaignsTabsAr extends TranslationsAdvertiserCampa
 	@override String get active => 'نشطة';
 	@override String get draft => 'مسودات';
 	@override String get paused => 'معلّقة';
+	@override String get under_review => 'قيد المراجعة';
 	@override String get completed => 'مكتملة';
+	@override String get cancelled => 'ملغاة';
 }
 
 // Path: advertiser_campaigns.empty
@@ -1354,7 +1358,9 @@ class _TranslationsAdvertiserCampaignsStatusAr extends TranslationsAdvertiserCam
 	// Translations
 	@override String get active => 'نشطة';
 	@override String get paused => 'معلّقة';
+	@override String get under_review => 'قيد المراجعة';
 	@override String get completed => 'مكتملة';
+	@override String get cancelled => 'ملغاة';
 	@override String get draft => 'مسودة';
 	@override String get other => 'أخرى';
 }
@@ -1575,6 +1581,12 @@ class _TranslationsCreatorCampaignsAr extends TranslationsCreatorCampaignsEn {
 	@override String get submit_subtitle => 'بعد الموافقة، شارك رابط فيديو علني ليراجعه المعلن.';
 	@override String get details_title => 'تفاصيل الحملة';
 	@override String get application_title => 'طلبي';
+	@override String get not_found_title => 'الحملة غير متاحة';
+	@override String get not_found_desc => 'هذه الحملة غير متاحة أو ربما أُزيلت.';
+	@override String get cancelled_not_available => 'أُلغيت هذه الحملة ولم تعد متاحة.';
+	@override String get completed_not_available => 'انتهت هذه الحملة ولم تعد متاحة.';
+	@override String get paused_not_available => 'هذه الحملة معلّقة حالياً وغير متاحة.';
+	@override String get cancelled_owner_banner => 'أُلغيت هذه الحملة.';
 	@override String get load_error => 'تعذّر تحميل الحملات.';
 	@override String get empty_title => 'لا توجد حملات حالياً';
 	@override String get empty_subtitle => 'ستظهر هنا الحملات الجديدة فور إطلاقها من طرف المعلنين.';
@@ -1650,6 +1662,10 @@ class _TranslationsCreatorCampaignsAr extends TranslationsCreatorCampaignsEn {
 	@override String get submission_status_rejected => 'مرفوض';
 	@override String get submission_status_flagged => 'تم الإبلاغ';
 	@override String submission_views({required Object views}) => '${views} مشاهدة موثقة';
+	@override String submission_pending_views({required Object views}) => '+${views} بانتظار التصديق';
+	@override String submission_platform_views({required Object views}) => '${views} مشاهدة على المنصة';
+	@override String get clicks_validated_label => 'نقرات معتمدة';
+	@override String get clicks_recorded_label => 'نقرات مسجّلة';
 	@override String get tracking_link_title => 'رابط التتبع الخاص بك';
 	@override String get tracking_link_subtitle => 'شارك هذا الرابط القصير في السيرة أو المنشورات. يتم تتبع النقرات تلقائياً.';
 	@override String get tracking_link_copy => 'نسخ الرابط';
@@ -1671,6 +1687,9 @@ class _TranslationsCreatorStatsAr extends TranslationsCreatorStatsEn {
 	@override String get earnings_title => 'إجمالي الأرباح';
 	@override String get pending => 'قيد الانتظار';
 	@override String get validated_views => 'المشاهدات المعتمدة';
+	@override String pending_validation({required Object count}) => '+${count} بانتظار التصديق';
+	@override String get pending_validation_tooltip => 'يتم التحقق من المشاهدات عبر YouTube وسيتم تأكيدها خلال 48 ساعة قبل إضافتها إلى أرباحك.';
+	@override String get total_valid_clicks => 'نقرات معتمدة';
 	@override String get validation_rate => 'نسبة الاعتماد';
 	@override String get approved_campaigns => 'الحملات المقبولة';
 }
@@ -1873,8 +1892,8 @@ extension on TranslationsAr {
 			case 'login.rate_limit_body': return 'محاولات تسجيل دخول كثيرة جدًا.';
 			case 'login.rate_limit_remaining': return ({required Object seconds}) => 'أعد المحاولة خلال ${seconds} ث';
 			case 'login.forgot_password_link': return 'نسيت كلمة المرور؟';
-			case 'login.google_cta': return 'إنشاء حساب عبر Google';
-			case 'login.apple_cta': return 'إنشاء حساب عبر Apple';
+			case 'login.google_cta': return 'المتابعة عبر Google';
+			case 'login.apple_cta': return 'تسجيل الدخول عبر Apple';
 			case 'login.apple_unavailable': return 'تسجيل الدخول عبر Apple غير متاح على هذا الجهاز.';
 			case 'login.apple_failed': return 'فشل تسجيل الدخول عبر Apple. حاول مرة أخرى.';
 			case 'login.apple_server_not_configured': return 'تسجيل الدخول عبر Apple غير مفعّل على خادم Wayo ID بعد. اطلب من المسؤول إعداد Apple على Auth_Wayo (الإنتاج)، ثم أعد المحاولة.';
@@ -1902,6 +1921,8 @@ extension on TranslationsAr {
 			case 'signup.confirm_password_label': return 'تأكيد كلمة المرور';
 			case 'signup.password_need_symbol': return 'مطلوب رمز (!@#%…)';
 			case 'signup.register_cta': return 'إنشاء حساب';
+			case 'signup.google_cta': return 'إنشاء حساب عبر Google';
+			case 'signup.apple_cta': return 'إنشاء حساب عبر Apple';
 			case 'signup.already_have_account': return 'لديك حساب بالفعل؟';
 			case 'signup.sign_in_link': return 'تسجيل الدخول';
 			case 'signup.verify_then_sign_in': return 'تم تأكيد البريد. سجّل الدخول بكلمة المرور.';
@@ -2056,7 +2077,9 @@ extension on TranslationsAr {
 			case 'advertiser_campaigns.tabs.active': return 'نشطة';
 			case 'advertiser_campaigns.tabs.draft': return 'مسودات';
 			case 'advertiser_campaigns.tabs.paused': return 'معلّقة';
+			case 'advertiser_campaigns.tabs.under_review': return 'قيد المراجعة';
 			case 'advertiser_campaigns.tabs.completed': return 'مكتملة';
+			case 'advertiser_campaigns.tabs.cancelled': return 'ملغاة';
 			case 'advertiser_campaigns.search_placeholder': return 'ابحث عن حملة';
 			case 'advertiser_campaigns.empty.none': return 'لا توجد حملات';
 			case 'advertiser_campaigns.empty.hint': return 'لا توجد لديك حملات بهذه الحالة بعد.';
@@ -2075,7 +2098,9 @@ extension on TranslationsAr {
 			case 'advertiser_campaigns.card.list_row_creators': return '{count} منشئين';
 			case 'advertiser_campaigns.status.active': return 'نشطة';
 			case 'advertiser_campaigns.status.paused': return 'معلّقة';
+			case 'advertiser_campaigns.status.under_review': return 'قيد المراجعة';
 			case 'advertiser_campaigns.status.completed': return 'مكتملة';
+			case 'advertiser_campaigns.status.cancelled': return 'ملغاة';
 			case 'advertiser_campaigns.status.draft': return 'مسودة';
 			case 'advertiser_campaigns.status.other': return 'أخرى';
 			case 'advertiser_campaigns.platform.youtube': return 'YouTube';
@@ -2362,6 +2387,12 @@ extension on TranslationsAr {
 			case 'creator.campaigns.submit_subtitle': return 'بعد الموافقة، شارك رابط فيديو علني ليراجعه المعلن.';
 			case 'creator.campaigns.details_title': return 'تفاصيل الحملة';
 			case 'creator.campaigns.application_title': return 'طلبي';
+			case 'creator.campaigns.not_found_title': return 'الحملة غير متاحة';
+			case 'creator.campaigns.not_found_desc': return 'هذه الحملة غير متاحة أو ربما أُزيلت.';
+			case 'creator.campaigns.cancelled_not_available': return 'أُلغيت هذه الحملة ولم تعد متاحة.';
+			case 'creator.campaigns.completed_not_available': return 'انتهت هذه الحملة ولم تعد متاحة.';
+			case 'creator.campaigns.paused_not_available': return 'هذه الحملة معلّقة حالياً وغير متاحة.';
+			case 'creator.campaigns.cancelled_owner_banner': return 'أُلغيت هذه الحملة.';
 			case 'creator.campaigns.load_error': return 'تعذّر تحميل الحملات.';
 			case 'creator.campaigns.empty_title': return 'لا توجد حملات حالياً';
 			case 'creator.campaigns.empty_subtitle': return 'ستظهر هنا الحملات الجديدة فور إطلاقها من طرف المعلنين.';
@@ -2437,6 +2468,10 @@ extension on TranslationsAr {
 			case 'creator.campaigns.submission_status_rejected': return 'مرفوض';
 			case 'creator.campaigns.submission_status_flagged': return 'تم الإبلاغ';
 			case 'creator.campaigns.submission_views': return ({required Object views}) => '${views} مشاهدة موثقة';
+			case 'creator.campaigns.submission_pending_views': return ({required Object views}) => '+${views} بانتظار التصديق';
+			case 'creator.campaigns.submission_platform_views': return ({required Object views}) => '${views} مشاهدة على المنصة';
+			case 'creator.campaigns.clicks_validated_label': return 'نقرات معتمدة';
+			case 'creator.campaigns.clicks_recorded_label': return 'نقرات مسجّلة';
 			case 'creator.campaigns.tracking_link_title': return 'رابط التتبع الخاص بك';
 			case 'creator.campaigns.tracking_link_subtitle': return 'شارك هذا الرابط القصير في السيرة أو المنشورات. يتم تتبع النقرات تلقائياً.';
 			case 'creator.campaigns.tracking_link_copy': return 'نسخ الرابط';
@@ -2449,6 +2484,9 @@ extension on TranslationsAr {
 			case 'creator.stats.earnings_title': return 'إجمالي الأرباح';
 			case 'creator.stats.pending': return 'قيد الانتظار';
 			case 'creator.stats.validated_views': return 'المشاهدات المعتمدة';
+			case 'creator.stats.pending_validation': return ({required Object count}) => '+${count} بانتظار التصديق';
+			case 'creator.stats.pending_validation_tooltip': return 'يتم التحقق من المشاهدات عبر YouTube وسيتم تأكيدها خلال 48 ساعة قبل إضافتها إلى أرباحك.';
+			case 'creator.stats.total_valid_clicks': return 'نقرات معتمدة';
 			case 'creator.stats.validation_rate': return 'نسبة الاعتماد';
 			case 'creator.stats.approved_campaigns': return 'الحملات المقبولة';
 			case 'creator.applications.section_title': return 'الطلبات النشطة';

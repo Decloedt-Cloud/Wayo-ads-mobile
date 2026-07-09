@@ -42,6 +42,7 @@ final class CreatorSocialPost extends Equatable {
     required this.status,
     required this.currentViews,
     required this.totalValidatedViews,
+    this.pendingValidatedViews = 0,
     this.title,
     this.thumbnailUrl,
     this.videoUrl,
@@ -55,6 +56,9 @@ final class CreatorSocialPost extends Equatable {
   final CreatorSocialPostStatus status;
   final int currentViews;
   final int totalValidatedViews;
+
+  /// Views detected on YouTube but not yet settled (48h hold).
+  final int pendingValidatedViews;
   final String? title;
   final String? thumbnailUrl;
   final String? videoUrl;
@@ -74,6 +78,8 @@ final class CreatorSocialPost extends Equatable {
       status: CreatorSocialPostStatus.fromApi(m['status']),
       currentViews: (m['currentViews'] as num?)?.toInt() ?? 0,
       totalValidatedViews: (m['totalValidatedViews'] as num?)?.toInt() ?? 0,
+      pendingValidatedViews:
+          (m['pendingValidatedViews'] as num?)?.toInt() ?? 0,
       title: m['title'] as String?,
       thumbnailUrl: m['thumbnailUrl'] as String?,
       videoUrl: m['videoUrl'] as String?,
@@ -90,6 +96,7 @@ final class CreatorSocialPost extends Equatable {
     status,
     currentViews,
     totalValidatedViews,
+    pendingValidatedViews,
     title,
     thumbnailUrl,
     videoUrl,

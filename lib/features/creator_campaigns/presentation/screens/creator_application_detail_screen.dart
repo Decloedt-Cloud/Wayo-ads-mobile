@@ -534,6 +534,25 @@ class _SubmissionTile extends StatelessWidget {
                             context,
                           ).copyWith(color: AppColors.textSecondaryOf(context)),
                         ),
+                        if (post.pendingValidatedViews > 0)
+                          Text(
+                            t.creator.campaigns.submission_pending_views(
+                              views: post.pendingValidatedViews,
+                            ),
+                            style: AppTextStyles.caption(context).copyWith(
+                              color: const Color(0xFFF59E0B),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        if (post.currentViews > post.totalValidatedViews)
+                          Text(
+                            t.creator.campaigns.submission_platform_views(
+                              views: post.currentViews,
+                            ),
+                            style: AppTextStyles.caption(
+                              context,
+                            ).copyWith(color: AppColors.textSecondaryOf(context)),
+                          ),
                       ],
                     ),
                     if (post.rejectionReason != null &&

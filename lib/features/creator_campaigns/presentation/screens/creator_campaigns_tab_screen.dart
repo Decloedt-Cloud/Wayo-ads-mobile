@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/campaigns/campaign_explorer_layout.dart';
+import '../../../../core/campaigns/campaign_marketplace_facets.dart';
 import '../../../../core/format/campaign_finance_display.dart';
 import '../../../../core/campaigns/campaigns_explorer_toolbar_expanded_provider.dart';
 import '../../../../core/providers/app_providers.dart';
@@ -28,75 +29,37 @@ import '../theme/creator_campaigns_chrome.dart';
 
 String _moneyLocale(AppLocale l) => wayoPublicMoneyLocale(l);
 
-List<CreatorBrowseCampaign> _filterCreatorBrowsePage(
-  List<CreatorBrowseCampaign> raw,
-  CreatorCampaignType? type,
-  String? niche,
-  String? location,
-) {
-  return raw.where((c) {
-    if (type != null && c.type != type) return false;
-    if (niche != null &&
-        niche.isNotEmpty &&
-        normalizeCampaignNicheApiValue(c.niche) !=
-            normalizeCampaignNicheApiValue(niche)) {
-      return false;
-    }
-    if (location != null && location.isNotEmpty) {
-      final loc = normalizeCampaignLocationValue(c.location);
-      if (loc != normalizeCampaignLocationValue(location)) return false;
-    }
-    return true;
-  }).toList();
-}
-
-bool _creatorPageHasExplorerFilters(List<CreatorBrowseCampaign> list) {
-  return list.isNotEmpty;
-}
-
 void _sanitizeCreatorBrowseFilters(
   WidgetRef ref,
-  List<CreatorBrowseCampaign> list,
+  CampaignMarketplaceFacets facets,
 ) {
   var tSel = ref.read(creatorCampaignExplorerTypeFilterProvider);
-  final nSel = ref.read(creatorCampaignExplorerNicheProvider);
-  final lSel = ref.read(creatorCampaignExplorerLocationProvider);
-
-  if (tSel != null && !list.any((c) => c.type == tSel)) {
+  final typeSet = marketplaceTypesFromFacets(facets);
+  if (tSel != null && typeSet.isNotEmpty && !typeSet.contains(tSel)) {
     ref.read(creatorCampaignExplorerTypeFilterProvider.notifier).state = null;
     tSel = null;
   }
 
-  bool matchesType(CreatorBrowseCampaign c) {
-    if (tSel != null && c.type != tSel) return false;
-    return true;
-  }
-
-  if (nSel != null && nSel.isNotEmpty) {
+  final nSel = ref.read(creatorCampaignExplorerNicheProvider);
+  if (nSel != null && nSel.isNotEmpty && facets.activeNiches.isNotEmpty) {
     final want = normalizeCampaignNicheApiValue(nSel);
     if (want != null &&
-        !list.any(
-          (c) =>
-              matchesType(c) &&
-              normalizeCampaignNicheApiValue(c.niche) == want,
-        )) {
+        !facets.activeNiches
+            .map(normalizeCampaignNicheApiValue)
+            .whereType<String>()
+            .contains(want)) {
       ref.read(creatorCampaignExplorerNicheProvider.notifier).state = null;
     }
   }
 
-  final nicheAfter = ref.read(creatorCampaignExplorerNicheProvider);
-  if (lSel != null && lSel.isNotEmpty) {
+  final lSel = ref.read(creatorCampaignExplorerLocationProvider);
+  if (lSel != null && lSel.isNotEmpty && facets.activeCountries.isNotEmpty) {
     final wantLoc = normalizeCampaignLocationValue(lSel);
-    final wantNiche = normalizeCampaignNicheApiValue(nicheAfter);
     if (wantLoc != null &&
-        !list.any((c) {
-          if (!matchesType(c)) return false;
-          if (wantNiche != null &&
-              normalizeCampaignNicheApiValue(c.niche) != wantNiche) {
-            return false;
-          }
-          return normalizeCampaignLocationValue(c.location) == wantLoc;
-        })) {
+        !facets.activeCountries
+            .map(normalizeCampaignLocationValue)
+            .whereType<String>()
+            .contains(wantLoc)) {
       ref.read(creatorCampaignExplorerLocationProvider.notifier).state = null;
     }
   }
@@ -149,6 +112,21 @@ class _CreatorCampaignsTabScreenState
     });
   }
 
+  CreatorBrowsePagedKey _browseKey() {
+    final type = ref.read(creatorCampaignExplorerTypeFilterProvider);
+    final niche = ref.read(creatorCampaignExplorerNicheProvider);
+    final location = ref.read(creatorCampaignExplorerLocationProvider);
+    return (
+      page: ref.read(creatorBrowseCampaignPageProvider),
+      search: ref.read(creatorBrowseCampaignSearchQueryProvider),
+      typeApi: marketplaceTypeApiFromFilter(type),
+      nicheApi: niche != null && niche.isNotEmpty
+          ? normalizeCampaignNicheApiValue(niche)
+          : null,
+      countryApi: marketplaceCountryApiFromLocation(location),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final t = context.t;
@@ -161,7 +139,7 @@ class _CreatorCampaignsTabScreenState
     final typeFilter = ref.watch(creatorCampaignExplorerTypeFilterProvider);
     final nicheFilter = ref.watch(creatorCampaignExplorerNicheProvider);
     final locationFilter = ref.watch(creatorCampaignExplorerLocationProvider);
-    final browseKey = (page: browsePage, search: searchQ);
+    final browseKey = _browseKey();
     final browseAsync = ref.watch(
       creatorBrowseCampaignsPagedProvider(browseKey),
     );
@@ -169,7 +147,7 @@ class _CreatorCampaignsTabScreenState
 
     ref.listen(creatorBrowseCampaignsPagedProvider(browseKey), (prev, next) {
       next.whenData(
-        (page) => _sanitizeCreatorBrowseFilters(ref, page.campaigns),
+        (page) => _sanitizeCreatorBrowseFilters(ref, page.facets),
       );
       next.whenOrNull(
         error: (e, _) {
@@ -206,11 +184,10 @@ class _CreatorCampaignsTabScreenState
     });
 
     final cachedBrowsePage = browseAsync.valueOrNull;
-    final browsePageForExplorerFilters =
-        cachedBrowsePage != null &&
-            _creatorPageHasExplorerFilters(cachedBrowsePage.campaigns)
-        ? cachedBrowsePage
-        : null;
+    final browseFacets = cachedBrowsePage?.facets;
+    final showExplorerFilters =
+        browseFacets != null && !browseFacets.isEmpty ||
+        (cachedBrowsePage?.campaigns.isNotEmpty ?? false);
 
     return Scaffold(
       backgroundColor: CreatorCampaignsChrome.bg(context),
@@ -223,11 +200,7 @@ class _CreatorCampaignsTabScreenState
           ref.read(creatorBrowseCampaignPageProvider.notifier).state = 1;
           ref.invalidate(creatorBrowseCampaignsPagedProvider);
           ref.invalidate(creatorApplicationsProvider);
-          final k = (
-            page: 1,
-            search: ref.read(creatorBrowseCampaignSearchQueryProvider),
-          );
-          await ref.read(creatorBrowseCampaignsPagedProvider(k).future);
+          await ref.read(creatorBrowseCampaignsPagedProvider(_browseKey()).future);
         },
         child: ListView(
           controller: _scrollController,
@@ -283,10 +256,11 @@ class _CreatorCampaignsTabScreenState
               onFiltersExpandedChanged: (v) => ref
                   .read(campaignsExplorerToolbarExpandedProvider.notifier)
                   .state = v,
-              filterScrollContent: browsePageForExplorerFilters == null
+              filterScrollContent: !showExplorerFilters
                   ? null
                   : CreatorBrowseExplorerFilters(
-                      campaigns: browsePageForExplorerFilters.campaigns,
+                      campaigns: cachedBrowsePage?.campaigns ?? const [],
+                      facets: browseFacets,
                       t: t,
                       typeFilter: typeFilter,
                       nicheFilter: nicheFilter,
@@ -305,10 +279,9 @@ class _CreatorCampaignsTabScreenState
                                 )
                                 .state =
                             v;
-                        _sanitizeCreatorBrowseFilters(
-                          ref,
-                          browsePageForExplorerFilters.campaigns,
-                        );
+                        if (browseFacets != null) {
+                          _sanitizeCreatorBrowseFilters(ref, browseFacets);
+                        }
                       },
                       onNicheChanged: (v) {
                         ref
@@ -324,10 +297,9 @@ class _CreatorCampaignsTabScreenState
                                 .state = v == null
                                 ? null
                                 : normalizeCampaignNicheApiValue(v);
-                        _sanitizeCreatorBrowseFilters(
-                          ref,
-                          browsePageForExplorerFilters.campaigns,
-                        );
+                        if (browseFacets != null) {
+                          _sanitizeCreatorBrowseFilters(ref, browseFacets);
+                        }
                       },
                       onLocationChanged: (v) {
                         ref
@@ -344,13 +316,12 @@ class _CreatorCampaignsTabScreenState
                                 .state = v == null
                                 ? null
                                 : normalizeCampaignLocationValue(v);
-                        _sanitizeCreatorBrowseFilters(
-                          ref,
-                          browsePageForExplorerFilters.campaigns,
-                        );
+                        if (browseFacets != null) {
+                          _sanitizeCreatorBrowseFilters(ref, browseFacets);
+                        }
                       },
                     ),
-              onResetExplorerFilters: browsePageForExplorerFilters == null
+              onResetExplorerFilters: !showExplorerFilters
                   ? null
                   : () {
                       ref
@@ -367,18 +338,11 @@ class _CreatorCampaignsTabScreenState
                             creatorCampaignExplorerLocationProvider.notifier,
                           )
                           .state = null;
-                      _sanitizeCreatorBrowseFilters(
-                        ref,
-                        browsePageForExplorerFilters.campaigns,
-                      );
+                      if (browseFacets != null) {
+                        _sanitizeCreatorBrowseFilters(ref, browseFacets);
+                      }
                     },
-              resultCountText: _browseCountLabel(
-                browseAsync,
-                typeFilter,
-                nicheFilter,
-                locationFilter,
-                t,
-              ),
+              resultCountText: _browseCountLabel(browseAsync, t),
               layout: explorerLayout,
               onLayoutChanged: (v) =>
                   ref
@@ -402,27 +366,19 @@ class _CreatorCampaignsTabScreenState
               },
               data: (pageResult) {
                 final list = pageResult.campaigns;
-                final filtered = _filterCreatorBrowsePage(
-                  list,
-                  typeFilter,
-                  nicheFilter,
-                  locationFilter,
-                );
                 final hasSearch = searchQ.trim().isNotEmpty;
+                final hasFilters =
+                    typeFilter != null ||
+                    (nicheFilter?.isNotEmpty ?? false) ||
+                    (locationFilter?.isNotEmpty ?? false);
                 if (list.isEmpty) {
                   return _EmptyBrowseBlock(
-                    title: hasSearch
+                    title: hasSearch || hasFilters
                         ? t.creator.campaigns.browse_empty_search_title
                         : t.creator.campaigns.empty_title,
-                    subtitle: hasSearch
+                    subtitle: hasSearch || hasFilters
                         ? t.creator.campaigns.browse_empty_search_subtitle
                         : t.creator.campaigns.empty_subtitle,
-                  );
-                }
-                if (filtered.isEmpty) {
-                  return _EmptyBrowseBlock(
-                    title: t.campaigns_explorer.empty_filters,
-                    subtitle: t.campaigns_explorer.empty_filters_subtitle,
                   );
                 }
                 final statusByCampaign = <String, CreatorApplicationStatus>{};
@@ -437,7 +393,7 @@ class _CreatorCampaignsTabScreenState
                 final browseItems = <Widget>[
                   if (explorerLayout == CampaignExplorerLayout.grid)
                     _CreatorBrowseLazyGrid(
-                      campaigns: filtered,
+                      campaigns: list,
                       moneyLocale: moneyLocale,
                       statusByCampaign: statusByCampaign,
                       onOpen: (c) {
@@ -450,7 +406,7 @@ class _CreatorCampaignsTabScreenState
                     )
                   else
                     _CreatorBrowseLazyList(
-                      campaigns: filtered,
+                      campaigns: list,
                       moneyLocale: moneyLocale,
                       statusByCampaign: statusByCampaign,
                       onOpen: (c) {
@@ -558,19 +514,11 @@ class _CreatorCampaignsTabScreenState
 
   String _browseCountLabel(
     AsyncValue<CreatorBrowsePageResult> browseAsync,
-    CreatorCampaignType? typeFilter,
-    String? nicheFilter,
-    String? locationFilter,
     Translations t,
   ) {
     final pageResult = browseAsync.valueOrNull;
     if (pageResult == null) return '…';
-    final n = _filterCreatorBrowsePage(
-      pageResult.campaigns,
-      typeFilter,
-      nicheFilter,
-      locationFilter,
-    ).length;
+    final n = pageResult.total;
     return n == 1
         ? t.campaigns_explorer.results_one
         : t.campaigns_explorer.results_many(n: n);

@@ -550,7 +550,13 @@ class AuthNotifier extends _$AuthNotifier {
     try {
       await ref.read(creatorApplicationsProvider.future);
     } catch (_) {}
-    const browseKey = (page: 1, search: '');
+    const browseKey = (
+      page: 1,
+      search: '',
+      typeApi: null,
+      nicheApi: null,
+      countryApi: null,
+    );
     for (var attempt = 0; attempt < 5; attempt++) {
       try {
         await ref.read(creatorBrowseCampaignsPagedProvider(browseKey).future);

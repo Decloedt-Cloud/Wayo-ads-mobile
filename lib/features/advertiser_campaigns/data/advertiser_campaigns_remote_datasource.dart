@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
 import '../../../core/config/auth_runtime_config.dart';
+import '../../../core/campaigns/campaign_marketplace_facets.dart';
 import '../../../core/errors/auth_exceptions.dart';
 import '../../../core/campaigns/campaign_recency.dart';
 import '../../../core/network/api_endpoints.dart';
@@ -11,6 +12,7 @@ import '../../creator_campaigns/domain/creator_browse_page_result.dart';
 import '../../dashboard/domain/entities/campaign_platform.dart';
 import '../../dashboard/domain/entities/campaign_status.dart';
 import '../domain/advertiser_campaign.dart';
+import '../domain/advertiser_campaign_status_counts.dart';
 import '../domain/advertiser_campaigns_page_result.dart';
 import '../domain/campaign_application.dart';
 import '../domain/campaign_niche_catalog.dart';
@@ -25,6 +27,9 @@ abstract interface class AdvertiserCampaignsRemote {
     int limit = 10,
     String? status,
     String? search,
+    String? type,
+    String? niche,
+    String? countryCode,
   });
 
   Future<Map<String, dynamic>> fetchCampaignDetailJson(String id);
@@ -75,6 +80,9 @@ final class AdvertiserCampaignsRemoteDatasource
     int limit = 10,
     String? status,
     String? search,
+    String? type,
+    String? niche,
+    String? countryCode,
   }) async {
     final qp = <String, dynamic>{
       'advertiserOnly': 'true',
@@ -87,6 +95,15 @@ final class AdvertiserCampaignsRemoteDatasource
     final trimmed = search?.trim();
     if (trimmed != null && trimmed.isNotEmpty) {
       qp['search'] = trimmed;
+    }
+    if (type != null && type.isNotEmpty) {
+      qp['type'] = type.toUpperCase();
+    }
+    if (niche != null && niche.isNotEmpty) {
+      qp['niche'] = niche;
+    }
+    if (countryCode != null && countryCode.length == 2) {
+      qp['country'] = countryCode.toUpperCase();
     }
     final res = await _dio.get<Map<String, dynamic>>(
       _path(ApiEndpoints.campaigns),
@@ -115,11 +132,20 @@ final class AdvertiserCampaignsRemoteDatasource
     if (totalPages < 1) {
       totalPages = total > 0 ? (total + lim - 1) ~/ lim : 1;
     }
+    final statusCountsRaw = data['statusCounts'];
+    final statusCounts = statusCountsRaw is Map
+        ? AdvertiserCampaignStatusCounts.fromJson(
+            Map<String, dynamic>.from(statusCountsRaw),
+          )
+        : null;
+
     return AdvertiserCampaignsPageResult(
       campaigns: campaigns,
       total: total,
       page: pageNum,
       totalPages: totalPages,
+      statusCounts: statusCounts,
+      facets: CampaignMarketplaceFacets.fromJson(data),
     );
   }
 
@@ -564,6 +590,7 @@ final class AdvertiserCampaignsRemoteDatasource
       total: total,
       page: pageNum,
       totalPages: totalPages,
+      facets: CampaignMarketplaceFacets.fromJson(map),
     );
   }
 }

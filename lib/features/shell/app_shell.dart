@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
-import '../../core/theme/creator_colors.dart';
 import '../../core/providers/app_providers.dart';
 import '../../core/storage/app_prefs.dart';
 import '../../i18n/strings.g.dart';
@@ -294,10 +293,7 @@ class _AppShellState extends ConsumerState<AppShell>
     final systemNav = wayoSystemNavBarOverlay(context);
 
     final keyboardOpen = wayoShellKeyboardOpen(context);
-    final shellCoachAccent = authState is AuthAuthenticated &&
-            authState.user.wayoAdsRole == WayoAdsAccountRole.creator
-        ? CreatorColors.primaryOf(context)
-        : AppColors.primary;
+    final shellCoachAccent = AppColors.primary;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: systemNav,

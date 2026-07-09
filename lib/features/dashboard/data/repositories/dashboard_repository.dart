@@ -433,11 +433,13 @@ final class DashboardRepositoryImpl implements DashboardRepository {
       switch (c.status) {
         case CampaignStatus.active:
         case CampaignStatus.paused:
+        case CampaignStatus.underReview:
           lockedCents += c.lockedBudgetCents;
           break;
         case CampaignStatus.completed:
           spentCents += c.spentBudgetCents;
           break;
+        case CampaignStatus.cancelled:
         case CampaignStatus.draft:
         case CampaignStatus.unknown:
           break;

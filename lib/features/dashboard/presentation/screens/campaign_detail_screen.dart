@@ -11,6 +11,7 @@ import '../../../../core/format/money_formatter.dart';
 import '../../../../core/layout/wayo_black_bottom_bar.dart';
 import '../../../../core/network/wayo_ads_public_url.dart';
 import '../../../../core/providers/app_providers.dart';
+import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/push/mobile_push_route_utils.dart';
 import '../../../../core/widgets/campaign_cover_image.dart';
 import '../../../../core/widgets/campaign_detail/campaign_detail_assets_link.dart';
@@ -580,6 +581,40 @@ class _Body extends ConsumerWidget {
             fallbackIcon: Icons.campaign_outlined,
             accent: CampaignDetailPremiumPalette.amber,
           ),
+          if (parsed.status == CampaignStatus.cancelled && parsed.isOwner) ...[
+            const SizedBox(height: 14),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: const Color(0xFFEF4444).withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: const Color(0xFFEF4444).withValues(alpha: 0.35),
+                ),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(
+                    Icons.cancel_outlined,
+                    color: Color(0xFFEF4444),
+                    size: 20,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      t.creator.campaigns.cancelled_owner_banner,
+                      style: AppTextStyles.bodyLarge(context).copyWith(
+                        color: const Color(0xFFEF4444),
+                        height: 1.4,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
           const SizedBox(height: 14),
           _PremiumCard(
             child: Column(
@@ -764,27 +799,9 @@ class _StatusPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final label = switch (status) {
-      CampaignStatus.active => t.advertiser_campaigns.status.active,
-      CampaignStatus.paused => t.advertiser_campaigns.status.paused,
-      CampaignStatus.completed => t.advertiser_campaigns.status.completed,
-      CampaignStatus.draft => t.advertiser_campaigns.status.draft,
-      CampaignStatus.unknown => t.advertiser_campaigns.status.other,
-    };
-    final color = switch (status) {
-      CampaignStatus.active => const Color(0xFF22C55E),
-      CampaignStatus.paused => const Color(0xFFF59E0B),
-      CampaignStatus.completed => const Color(0xFF8B5CF6),
-      CampaignStatus.draft => CampaignDetailPremiumPalette.muted(context),
-      CampaignStatus.unknown => CampaignDetailPremiumPalette.muted(context),
-    };
-    final icon = switch (status) {
-      CampaignStatus.active => Icons.circle,
-      CampaignStatus.paused => Icons.pause_circle_outline,
-      CampaignStatus.completed => Icons.check_circle_outline,
-      CampaignStatus.draft => Icons.edit_note_rounded,
-      CampaignStatus.unknown => Icons.help_outline,
-    };
+    final label = campaignStatusLabel(t, status);
+    final color = campaignStatusAccentColor(status);
+    final icon = campaignStatusIcon(status);
     return _Pill(label: label, color: color, icon: icon);
   }
 }

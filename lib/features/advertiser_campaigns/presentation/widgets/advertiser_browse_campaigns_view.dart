@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/campaigns/campaign_explorer_layout.dart';
+import '../../../../core/campaigns/campaign_marketplace_facets.dart';
 import '../../../../core/campaigns/campaigns_explorer_toolbar_expanded_provider.dart';
 import '../../../../core/errors/auth_exceptions.dart';
 import '../../../../core/format/campaign_finance_display.dart';
@@ -26,35 +27,6 @@ import '../providers/advertiser_campaigns_providers.dart';
 import '../theme/advertiser_campaigns_chrome.dart';
 
 String _moneyLocale(AppLocale l) => wayoPublicMoneyLocale(l);
-
-List<CreatorBrowseCampaign> _filterBrowseList(
-  List<CreatorBrowseCampaign> raw, {
-  CreatorCampaignType? type,
-  String? niche,
-  String? location,
-}) {
-  return raw.where((c) {
-    if (type != null && c.type != type) return false;
-    if (niche != null &&
-        niche.isNotEmpty &&
-        normalizeCampaignNicheApiValue(c.niche) !=
-            normalizeCampaignNicheApiValue(niche)) {
-      return false;
-    }
-    if (location != null && location.isNotEmpty) {
-      final loc = normalizeCampaignLocationValue(c.location);
-      if (loc != normalizeCampaignLocationValue(location)) return false;
-    }
-    return true;
-  }).toList();
-}
-
-String? _countryApiFromLocation(String? location) {
-  final loc = location?.trim().toUpperCase();
-  if (loc == null || loc.length != 2) return null;
-  if (!RegExp(r'^[A-Z]{2}$').hasMatch(loc)) return null;
-  return loc;
-}
 
 /// Advertiser marketplace browse — active campaigns on the platform (read-only).
 class AdvertiserBrowseCampaignsView extends ConsumerStatefulWidget {
@@ -92,17 +64,12 @@ class _AdvertiserBrowseCampaignsViewState
     return (
       page: ref.read(advertiserBrowseCampaignPageProvider),
       search: ref.read(advertiserBrowseCampaignSearchProvider),
-      typeApi: switch (type) {
-        CreatorCampaignType.link => 'LINK',
-        CreatorCampaignType.video => 'VIDEO',
-        CreatorCampaignType.shorts => 'SHORTS',
-        _ => null,
-      },
+      typeApi: marketplaceTypeApiFromFilter(type),
       nicheApi:
           niche != null && niche.isNotEmpty
               ? normalizeCampaignNicheApiValue(niche)
               : null,
-      countryApi: _countryApiFromLocation(location),
+      countryApi: marketplaceCountryApiFromLocation(location),
     );
   }
 
@@ -145,16 +112,10 @@ class _AdvertiserBrowseCampaignsViewState
 
     final resultCountText = browseAsync.maybeWhen(
       data: (p) {
-        final filtered = _filterBrowseList(
-          p.campaigns,
-          type: typeFilter,
-          niche: nicheFilter,
-          location: locationFilter,
-        );
-        if (filtered.isEmpty) return '…';
-        return filtered.length == 1
+        if (p.total == 0) return '…';
+        return p.total == 1
             ? t.campaigns_explorer.results_one
-            : t.campaigns_explorer.results_many(n: filtered.length);
+            : t.campaigns_explorer.results_many(n: p.total);
       },
       orElse: () => '…',
     );
@@ -237,10 +198,12 @@ class _AdvertiserBrowseCampaignsViewState
                     .read(campaignsExplorerToolbarExpandedProvider.notifier)
                     .state = v,
                 filterScrollContent: browseAsync.maybeWhen(
-                  data: (p) => p.campaigns.isEmpty
+                  data: (p) =>
+                      p.campaigns.isEmpty && p.facets.isEmpty
                       ? null
                       : CreatorBrowseExplorerFilters(
                           campaigns: p.campaigns,
+                          facets: p.facets,
                           t: t,
                           typeFilter: typeFilter,
                           nicheFilter: nicheFilter,
@@ -330,41 +293,30 @@ class _AdvertiserBrowseCampaignsViewState
               );
             },
             data: (pageResult) {
-              final filtered = _filterBrowseList(
-                pageResult.campaigns,
-                type: typeFilter,
-                niche: nicheFilter,
-                location: locationFilter,
-              );
+              final list = pageResult.campaigns;
               final hasSearch = browseKey.search.trim().isNotEmpty;
+              final hasFilters =
+                  typeFilter != null ||
+                  (nicheFilter?.isNotEmpty ?? false) ||
+                  (locationFilter?.isNotEmpty ?? false);
 
-              if (pageResult.campaigns.isEmpty) {
+              if (list.isEmpty) {
                 return SliverFillRemaining(
                   hasScrollBody: false,
                   child: _EmptyBlock(
-                    title: hasSearch
+                    title: hasSearch || hasFilters
                         ? t.advertiser_campaigns.browse.empty_search_title
                         : t.advertiser_campaigns.browse.empty_title,
-                    subtitle: hasSearch
+                    subtitle: hasSearch || hasFilters
                         ? t.advertiser_campaigns.browse.empty_search_subtitle
                         : t.advertiser_campaigns.browse.empty_subtitle,
                   ),
                 );
               }
 
-              if (filtered.isEmpty) {
-                return SliverFillRemaining(
-                  hasScrollBody: false,
-                  child: _EmptyBlock(
-                    title: t.campaigns_explorer.empty_filters,
-                    subtitle: t.advertiser_campaigns.browse.empty_search_subtitle,
-                  ),
-                );
-              }
-
-              final countLabel = filtered.length == 1
+              final countLabel = pageResult.total == 1
                   ? t.campaigns_explorer.results_one
-                  : t.campaigns_explorer.results_many(n: filtered.length);
+                  : t.campaigns_explorer.results_many(n: pageResult.total);
 
               if (layout == CampaignExplorerLayout.grid) {
                 return SliverPadding(
@@ -378,14 +330,14 @@ class _AdvertiserBrowseCampaignsViewState
                       childAspectRatio: 0.72,
                     ),
                     delegate: SliverChildBuilderDelegate((context, i) {
-                      final c = filtered[i];
+                      final c = list[i];
                       return CreatorBrowseCampaignGridTile(
                         campaign: c,
                         moneyLocale: moneyLocale,
                         gridIndex: i,
                         onTap: () => _openCampaign(c),
                       );
-                    }, childCount: filtered.length),
+                    }, childCount: list.length),
                   ),
                 );
               }
@@ -404,7 +356,7 @@ class _AdvertiserBrowseCampaignsViewState
                       ),
                     );
                   }
-                  final c = filtered[i - 1];
+                  final c = list[i - 1];
                   return Padding(
                     padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
                     child: CreatorBrowseCampaignCard(
@@ -414,7 +366,7 @@ class _AdvertiserBrowseCampaignsViewState
                       onTap: () => _openCampaign(c),
                     ),
                   );
-                }, childCount: filtered.length + 1),
+                }, childCount: list.length + 1),
               );
             },
           ),

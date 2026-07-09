@@ -96,7 +96,7 @@ class _ConnectivityOverlayState extends ConsumerState<ConnectivityOverlay>
     return Stack(
       children: [
         widget.child,
-        if (status.isOffline)
+        if (status.isOffline && !radioUp)
           Positioned.fill(
             child: _BlockerLayer(
               radioUp: radioUp,

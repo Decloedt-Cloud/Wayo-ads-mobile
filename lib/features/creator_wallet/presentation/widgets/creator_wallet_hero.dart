@@ -5,7 +5,7 @@ import '../../../../core/theme/creator_colors.dart';
 import '../../../../i18n/strings.g.dart';
 import '../../domain/creator_wallet_models.dart';
 
-/// Earnings hero card — the teal gradient echoes the creator dashboard.
+/// Earnings hero card — orange gradient aligned with the advertiser dashboard.
 class CreatorWalletHero extends StatelessWidget {
   const CreatorWalletHero({
     super.key,

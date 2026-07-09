@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 
 import '../../../core/config/auth_runtime_config.dart';
+import '../../../core/campaigns/campaign_marketplace_facets.dart';
 import '../../../core/network/api_endpoints.dart';
 import '../domain/creator_browse_campaign.dart';
 import '../domain/creator_browse_page_result.dart';
@@ -39,6 +40,9 @@ class CreatorCampaignsRemoteDatasource {
     int limit = 10,
     int page = 1,
     String? search,
+    String? type,
+    String? niche,
+    String? countryCode,
   }) async {
     try {
       final qp = <String, dynamic>{
@@ -50,6 +54,15 @@ class CreatorCampaignsRemoteDatasource {
       final trimmed = search?.trim();
       if (trimmed != null && trimmed.isNotEmpty) {
         qp['search'] = trimmed;
+      }
+      if (type != null && type.isNotEmpty) {
+        qp['type'] = type.toUpperCase();
+      }
+      if (niche != null && niche.isNotEmpty) {
+        qp['niche'] = niche;
+      }
+      if (countryCode != null && countryCode.length == 2) {
+        qp['country'] = countryCode.toUpperCase();
       }
       final res = await _dio.get<Object?>(
         AuthRuntimeConfig.instance.wayoAdsRequestPath(ApiEndpoints.campaigns),
@@ -64,7 +77,8 @@ class CreatorCampaignsRemoteDatasource {
           totalPages: 1,
         );
       }
-      final raw = body['campaigns'];
+      final map = Map<String, dynamic>.from(body);
+      final raw = map['campaigns'];
       final list = raw is List
           ? raw
               .whereType<Map>()
@@ -74,9 +88,9 @@ class CreatorCampaignsRemoteDatasource {
               )
               .toList(growable: false)
           : const <CreatorBrowseCampaign>[];
-      final total = _intFromJson(body['total'], list.length);
-      final pageNum = _intFromJson(body['page'], page);
-      var totalPages = _intFromJson(body['totalPages'], 0);
+      final total = _intFromJson(map['total'], list.length);
+      final pageNum = _intFromJson(map['page'], page);
+      var totalPages = _intFromJson(map['totalPages'], 0);
       if (totalPages < 1) {
         final lim = limit.clamp(1, 100);
         totalPages = total > 0 ? (total + lim - 1) ~/ lim : 1;
@@ -86,6 +100,7 @@ class CreatorCampaignsRemoteDatasource {
         total: total,
         page: pageNum,
         totalPages: totalPages,
+        facets: CampaignMarketplaceFacets.fromJson(map),
       );
     } on DioException catch (e) {
       throw _mapDioException(e, 'Failed to load campaigns');

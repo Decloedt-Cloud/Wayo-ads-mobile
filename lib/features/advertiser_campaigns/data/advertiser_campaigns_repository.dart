@@ -5,6 +5,7 @@ import '../../../core/errors/auth_exceptions.dart';
 import '../../../core/network/wayo_ads_dio.dart';
 import 'advertiser_campaigns_remote_datasource.dart';
 import '../domain/advertiser_campaign.dart';
+import '../domain/advertiser_campaign_status_counts.dart';
 import '../domain/advertiser_campaigns_page_result.dart';
 import '../domain/campaign_application.dart';
 import '../../creator_campaigns/domain/creator_browse_page_result.dart';
@@ -35,16 +36,30 @@ final class AdvertiserCampaignsRepository {
     required int page,
     int limit = 10,
     String? search,
+    String? type,
+    String? niche,
+    String? countryCode,
   }) => _remote.fetchAdvertiserCampaignsPage(
     page: page,
     limit: limit,
     status: status,
     search: search,
+    type: type,
+    niche: niche,
+    countryCode: countryCode,
   );
 
-  /// Tab totals (4 light requests with `limit=1`).
-  Future<({int active, int draft, int paused, int completed})>
-  loadCampaignStatusCounts() async {
+  /// Tab totals from `statusCounts` on a single advertiser-only list call.
+  Future<AdvertiserCampaignStatusCounts> loadCampaignStatusCounts() async {
+    final page = await _remote.fetchAdvertiserCampaignsPage(
+      page: 1,
+      limit: 1,
+      status: 'ACTIVE',
+    );
+    if (page.statusCounts != null) {
+      return page.statusCounts!;
+    }
+    // Fallback when API omits rollup (older backend).
     final r = await Future.wait([
       _remote.fetchAdvertiserCampaignsPage(page: 1, limit: 1, status: 'ACTIVE'),
       _remote.fetchAdvertiserCampaignsPage(page: 1, limit: 1, status: 'DRAFT'),
@@ -52,14 +67,26 @@ final class AdvertiserCampaignsRepository {
       _remote.fetchAdvertiserCampaignsPage(
         page: 1,
         limit: 1,
+        status: 'UNDER_REVIEW',
+      ),
+      _remote.fetchAdvertiserCampaignsPage(
+        page: 1,
+        limit: 1,
         status: 'COMPLETED',
       ),
+      _remote.fetchAdvertiserCampaignsPage(
+        page: 1,
+        limit: 1,
+        status: 'CANCELLED',
+      ),
     ]);
-    return (
+    return AdvertiserCampaignStatusCounts(
       active: r[0].total,
       draft: r[1].total,
       paused: r[2].total,
-      completed: r[3].total,
+      underReview: r[3].total,
+      completed: r[4].total,
+      cancelled: r[5].total,
     );
   }
 

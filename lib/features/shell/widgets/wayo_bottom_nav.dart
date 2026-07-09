@@ -109,7 +109,7 @@ class WayoBottomNav extends StatefulWidget {
     this.coachAccentColor = AppColors.primary,
   });
 
-  /// Role accent (amber advertiser / teal creator) — selected tab + coach lift.
+  /// Role accent (Wayo orange) — selected tab + coach lift.
   final Color coachAccentColor;
 
   final StatefulNavigationShell navigationShell;

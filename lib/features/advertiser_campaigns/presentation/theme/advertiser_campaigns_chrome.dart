@@ -109,6 +109,16 @@ abstract final class AdvertiserCampaignsChrome {
           amberC,
           amberC,
         ),
+      CampaignStatus.underReview => (
+          const Color(0x336366F1),
+          const Color(0xFF6366F1),
+          const Color(0xFF6366F1),
+        ),
+      CampaignStatus.cancelled => (
+          const Color(0x33EF4444),
+          const Color(0xFFEF4444),
+          const Color(0xFFEF4444),
+        ),
       CampaignStatus.completed ||
       CampaignStatus.draft ||
       CampaignStatus.unknown =>

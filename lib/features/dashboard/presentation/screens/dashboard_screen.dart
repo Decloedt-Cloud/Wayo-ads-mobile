@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
+import '../../../../core/campaigns/campaign_detail_metadata.dart';
 import '../../../../core/format/campaign_finance_display.dart';
 import '../../../../core/format/money_formatter.dart';
 import '../../../../core/network/wayo_ads_public_url.dart';
@@ -46,13 +47,7 @@ String _localizedAdvertiserCampaignStatus(
   CampaignStatus status,
   Translations t,
 ) {
-  return switch (status) {
-    CampaignStatus.active => t.advertiser_campaigns.status.active,
-    CampaignStatus.paused => t.advertiser_campaigns.status.paused,
-    CampaignStatus.completed => t.advertiser_campaigns.status.completed,
-    CampaignStatus.draft => t.advertiser_campaigns.status.draft,
-    CampaignStatus.unknown => t.advertiser_campaigns.status.other,
-  };
+  return campaignStatusLabel(t, status);
 }
 
 /// Advertiser home — balance, campaigns, premium visuals.

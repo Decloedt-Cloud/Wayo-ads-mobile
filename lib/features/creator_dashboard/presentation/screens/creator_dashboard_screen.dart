@@ -548,20 +548,26 @@ class _StatsSection extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: _StatCard(
+              child: _ViewsStatCard(
                 label: t.creator.stats.validated_views,
                 value: '${stats.validatedViews}',
+                pendingViews: stats.pendingViews,
+                pendingTooltip: t.creator.stats.pending_validation_tooltip,
+                pendingLabel: stats.pendingViews > 0
+                    ? t.creator.stats.pending_validation(
+                        count: stats.pendingViews,
+                      )
+                    : null,
                 accent: CreatorColors.primaryOf(context),
-                icon: Icons.visibility_rounded,
               ),
             ),
             const SizedBox(width: 10),
             Expanded(
               child: _StatCard(
-                label: t.creator.stats.validation_rate,
-                value: '${(stats.validationRate * 100).toStringAsFixed(1)}%',
-                accent: const Color(0xFF10B981),
-                icon: Icons.verified_user_outlined,
+                label: t.creator.stats.total_valid_clicks,
+                value: '${stats.totalValidClicks}',
+                accent: const Color(0xFF0EA5E9),
+                icon: Icons.ads_click_outlined,
               ),
             ),
             const SizedBox(width: 10),
@@ -663,6 +669,110 @@ class _EarningsHero extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _ViewsStatCard extends StatelessWidget {
+  const _ViewsStatCard({
+    required this.label,
+    required this.value,
+    required this.pendingViews,
+    required this.pendingTooltip,
+    required this.pendingLabel,
+    required this.accent,
+  });
+
+  final String label;
+  final String value;
+  final int pendingViews;
+  final String pendingTooltip;
+  final String? pendingLabel;
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(18),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: (isDark ? Colors.white : Colors.black).withValues(
+              alpha: 0.04,
+            ),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: AppColors.borderOf(context)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      label,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: AppColors.textSecondaryOf(context),
+                        height: 1.2,
+                      ),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: accent.withValues(alpha: 0.15),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(Icons.visibility_rounded, color: accent, size: 14),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Text(
+                value,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTextStyles.headlineMedium(
+                  context,
+                ).copyWith(fontSize: 18, fontWeight: FontWeight.w800),
+              ),
+              if (pendingLabel != null && pendingViews > 0) ...[
+                const SizedBox(height: 6),
+                Tooltip(
+                  message: pendingTooltip,
+                  child: Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          pendingLabel!,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            color: AppColors.textSecondaryOf(context),
+                            fontSize: 10,
+                            height: 1.2,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Icon(
+                        Icons.help_outline_rounded,
+                        size: 12,
+                        color: AppColors.textSecondaryOf(context),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
       ),
     );
   }

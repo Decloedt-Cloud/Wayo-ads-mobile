@@ -179,8 +179,8 @@ class _TranslationsLoginFr extends TranslationsLoginEn {
 	@override String get rate_limit_body => 'Trop de tentatives de connexion.';
 	@override String rate_limit_remaining({required Object seconds}) => 'Réessayez dans ${seconds} s';
 	@override String get forgot_password_link => 'Mot de passe oublié ?';
-	@override String get google_cta => 'S\'inscrire avec Google';
-	@override String get apple_cta => 'S\'inscrire avec Apple';
+	@override String get google_cta => 'Continuer avec Google';
+	@override String get apple_cta => 'Se connecter avec Apple';
 	@override String get apple_unavailable => 'Connexion avec Apple indisponible sur cet appareil.';
 	@override String get apple_failed => 'Échec de la connexion avec Apple. Réessayez.';
 	@override String get apple_server_not_configured => 'La connexion avec Apple n’est pas encore activée sur le serveur Wayo ID. Demandez à l’administrateur de configurer Apple sur Auth_Wayo (production), puis réessayez.';
@@ -217,6 +217,8 @@ class _TranslationsSignupFr extends TranslationsSignupEn {
 	@override String get confirm_password_label => 'Confirmer le mot de passe';
 	@override String get password_need_symbol => 'Un symbole est requis (!@#%…)';
 	@override String get register_cta => 'Créer un compte';
+	@override String get google_cta => 'S\'inscrire avec Google';
+	@override String get apple_cta => 'S\'inscrire avec Apple';
 	@override String get already_have_account => 'Vous avez déjà un compte ?';
 	@override String get sign_in_link => 'Se connecter';
 	@override String get verify_then_sign_in => 'E-mail vérifié. Connectez-vous avec votre mot de passe.';
@@ -1310,7 +1312,9 @@ class _TranslationsAdvertiserCampaignsTabsFr extends TranslationsAdvertiserCampa
 	@override String get active => 'Actives';
 	@override String get draft => 'Brouillons';
 	@override String get paused => 'En pause';
+	@override String get under_review => 'En revue';
 	@override String get completed => 'Terminées';
+	@override String get cancelled => 'Annulées';
 }
 
 // Path: advertiser_campaigns.empty
@@ -1355,7 +1359,9 @@ class _TranslationsAdvertiserCampaignsStatusFr extends TranslationsAdvertiserCam
 	// Translations
 	@override String get active => 'Active';
 	@override String get paused => 'En pause';
+	@override String get under_review => 'En revue';
 	@override String get completed => 'Terminée';
+	@override String get cancelled => 'Annulée';
 	@override String get draft => 'Brouillon';
 	@override String get other => 'Autre';
 }
@@ -1576,6 +1582,12 @@ class _TranslationsCreatorCampaignsFr extends TranslationsCreatorCampaignsEn {
 	@override String get submit_subtitle => 'Une fois approuvé, partagez une URL vidéo publique pour que l\'annonceur la valide.';
 	@override String get details_title => 'Détails de la campagne';
 	@override String get application_title => 'Ma candidature';
+	@override String get not_found_title => 'Campagne indisponible';
+	@override String get not_found_desc => 'Cette campagne n\'est pas disponible ou a peut-être été retirée.';
+	@override String get cancelled_not_available => 'Cette campagne a été annulée et n\'est plus disponible.';
+	@override String get completed_not_available => 'Cette campagne est terminée et n\'est plus disponible.';
+	@override String get paused_not_available => 'Cette campagne est en pause et n\'est pas disponible.';
+	@override String get cancelled_owner_banner => 'Cette campagne a été annulée.';
 	@override String get load_error => 'Impossible de charger les campagnes.';
 	@override String get empty_title => 'Aucune campagne active';
 	@override String get empty_subtitle => 'Les nouvelles campagnes apparaîtront ici dès qu\'un annonceur les lancera.';
@@ -1651,6 +1663,10 @@ class _TranslationsCreatorCampaignsFr extends TranslationsCreatorCampaignsEn {
 	@override String get submission_status_rejected => 'Refusé';
 	@override String get submission_status_flagged => 'Signalé';
 	@override String submission_views({required Object views}) => '${views} vues validées';
+	@override String submission_pending_views({required Object views}) => '+${views} en attente de validation';
+	@override String submission_platform_views({required Object views}) => '${views} vues plateforme';
+	@override String get clicks_validated_label => 'Clics validés';
+	@override String get clicks_recorded_label => 'Clics enregistrés';
 	@override String get tracking_link_title => 'Votre lien de suivi';
 	@override String get tracking_link_subtitle => 'Partagez ce lien court dans votre bio, posts ou stories. Les clics sont comptabilisés automatiquement.';
 	@override String get tracking_link_copy => 'Copier le lien';
@@ -1672,6 +1688,9 @@ class _TranslationsCreatorStatsFr extends TranslationsCreatorStatsEn {
 	@override String get earnings_title => 'Gains totaux';
 	@override String get pending => 'En attente';
 	@override String get validated_views => 'Vues validées';
+	@override String pending_validation({required Object count}) => '+${count} en attente de validation';
+	@override String get pending_validation_tooltip => 'Les vues sont vérifiées par YouTube et seront confirmées sous 48 h avant d\'être ajoutées à vos gains.';
+	@override String get total_valid_clicks => 'Clics validés';
 	@override String get validation_rate => 'Taux de validation';
 	@override String get approved_campaigns => 'Campagnes approuvées';
 }
@@ -1874,8 +1893,8 @@ extension on TranslationsFr {
 			case 'login.rate_limit_body': return 'Trop de tentatives de connexion.';
 			case 'login.rate_limit_remaining': return ({required Object seconds}) => 'Réessayez dans ${seconds} s';
 			case 'login.forgot_password_link': return 'Mot de passe oublié ?';
-			case 'login.google_cta': return 'S\'inscrire avec Google';
-			case 'login.apple_cta': return 'S\'inscrire avec Apple';
+			case 'login.google_cta': return 'Continuer avec Google';
+			case 'login.apple_cta': return 'Se connecter avec Apple';
 			case 'login.apple_unavailable': return 'Connexion avec Apple indisponible sur cet appareil.';
 			case 'login.apple_failed': return 'Échec de la connexion avec Apple. Réessayez.';
 			case 'login.apple_server_not_configured': return 'La connexion avec Apple n’est pas encore activée sur le serveur Wayo ID. Demandez à l’administrateur de configurer Apple sur Auth_Wayo (production), puis réessayez.';
@@ -1903,6 +1922,8 @@ extension on TranslationsFr {
 			case 'signup.confirm_password_label': return 'Confirmer le mot de passe';
 			case 'signup.password_need_symbol': return 'Un symbole est requis (!@#%…)';
 			case 'signup.register_cta': return 'Créer un compte';
+			case 'signup.google_cta': return 'S\'inscrire avec Google';
+			case 'signup.apple_cta': return 'S\'inscrire avec Apple';
 			case 'signup.already_have_account': return 'Vous avez déjà un compte ?';
 			case 'signup.sign_in_link': return 'Se connecter';
 			case 'signup.verify_then_sign_in': return 'E-mail vérifié. Connectez-vous avec votre mot de passe.';
@@ -2057,7 +2078,9 @@ extension on TranslationsFr {
 			case 'advertiser_campaigns.tabs.active': return 'Actives';
 			case 'advertiser_campaigns.tabs.draft': return 'Brouillons';
 			case 'advertiser_campaigns.tabs.paused': return 'En pause';
+			case 'advertiser_campaigns.tabs.under_review': return 'En revue';
 			case 'advertiser_campaigns.tabs.completed': return 'Terminées';
+			case 'advertiser_campaigns.tabs.cancelled': return 'Annulées';
 			case 'advertiser_campaigns.search_placeholder': return 'Rechercher une campagne';
 			case 'advertiser_campaigns.empty.none': return 'Aucune campagne';
 			case 'advertiser_campaigns.empty.hint': return 'Vous n\'avez pas encore de campagne pour ce statut.';
@@ -2076,7 +2099,9 @@ extension on TranslationsFr {
 			case 'advertiser_campaigns.card.list_row_creators': return '{count} créateurs';
 			case 'advertiser_campaigns.status.active': return 'Active';
 			case 'advertiser_campaigns.status.paused': return 'En pause';
+			case 'advertiser_campaigns.status.under_review': return 'En revue';
 			case 'advertiser_campaigns.status.completed': return 'Terminée';
+			case 'advertiser_campaigns.status.cancelled': return 'Annulée';
 			case 'advertiser_campaigns.status.draft': return 'Brouillon';
 			case 'advertiser_campaigns.status.other': return 'Autre';
 			case 'advertiser_campaigns.platform.youtube': return 'YouTube';
@@ -2364,6 +2389,12 @@ extension on TranslationsFr {
 			case 'creator.campaigns.submit_subtitle': return 'Une fois approuvé, partagez une URL vidéo publique pour que l\'annonceur la valide.';
 			case 'creator.campaigns.details_title': return 'Détails de la campagne';
 			case 'creator.campaigns.application_title': return 'Ma candidature';
+			case 'creator.campaigns.not_found_title': return 'Campagne indisponible';
+			case 'creator.campaigns.not_found_desc': return 'Cette campagne n\'est pas disponible ou a peut-être été retirée.';
+			case 'creator.campaigns.cancelled_not_available': return 'Cette campagne a été annulée et n\'est plus disponible.';
+			case 'creator.campaigns.completed_not_available': return 'Cette campagne est terminée et n\'est plus disponible.';
+			case 'creator.campaigns.paused_not_available': return 'Cette campagne est en pause et n\'est pas disponible.';
+			case 'creator.campaigns.cancelled_owner_banner': return 'Cette campagne a été annulée.';
 			case 'creator.campaigns.load_error': return 'Impossible de charger les campagnes.';
 			case 'creator.campaigns.empty_title': return 'Aucune campagne active';
 			case 'creator.campaigns.empty_subtitle': return 'Les nouvelles campagnes apparaîtront ici dès qu\'un annonceur les lancera.';
@@ -2439,6 +2470,10 @@ extension on TranslationsFr {
 			case 'creator.campaigns.submission_status_rejected': return 'Refusé';
 			case 'creator.campaigns.submission_status_flagged': return 'Signalé';
 			case 'creator.campaigns.submission_views': return ({required Object views}) => '${views} vues validées';
+			case 'creator.campaigns.submission_pending_views': return ({required Object views}) => '+${views} en attente de validation';
+			case 'creator.campaigns.submission_platform_views': return ({required Object views}) => '${views} vues plateforme';
+			case 'creator.campaigns.clicks_validated_label': return 'Clics validés';
+			case 'creator.campaigns.clicks_recorded_label': return 'Clics enregistrés';
 			case 'creator.campaigns.tracking_link_title': return 'Votre lien de suivi';
 			case 'creator.campaigns.tracking_link_subtitle': return 'Partagez ce lien court dans votre bio, posts ou stories. Les clics sont comptabilisés automatiquement.';
 			case 'creator.campaigns.tracking_link_copy': return 'Copier le lien';
@@ -2451,6 +2486,9 @@ extension on TranslationsFr {
 			case 'creator.stats.earnings_title': return 'Gains totaux';
 			case 'creator.stats.pending': return 'En attente';
 			case 'creator.stats.validated_views': return 'Vues validées';
+			case 'creator.stats.pending_validation': return ({required Object count}) => '+${count} en attente de validation';
+			case 'creator.stats.pending_validation_tooltip': return 'Les vues sont vérifiées par YouTube et seront confirmées sous 48 h avant d\'être ajoutées à vos gains.';
+			case 'creator.stats.total_valid_clicks': return 'Clics validés';
 			case 'creator.stats.validation_rate': return 'Taux de validation';
 			case 'creator.stats.approved_campaigns': return 'Campagnes approuvées';
 			case 'creator.applications.section_title': return 'Candidatures actives';

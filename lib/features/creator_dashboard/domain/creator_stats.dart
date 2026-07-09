@@ -6,8 +6,10 @@ final class CreatorStats extends Equatable {
     required this.totalEarningsCents,
     required this.pendingEarningsCents,
     required this.approvedApplications,
-    required this.totalViews,
     required this.validatedViews,
+    required this.pendingViews,
+    required this.estimatedViews,
+    required this.totalValidClicks,
     required this.currency,
   });
 
@@ -20,11 +22,17 @@ final class CreatorStats extends Equatable {
   /// Number of campaign applications with `status=APPROVED`.
   final int approvedApplications;
 
-  /// Recorded views — all platforms, last 30 days.
-  final int totalViews;
-
-  /// Validated views — views that passed fraud filters, last 30 days.
+  /// Settled / validated views (`totalViews` on Wayo-ads API).
   final int validatedViews;
+
+  /// Views awaiting 48h YouTube settlement (`pendingViews` on API).
+  final int pendingViews;
+
+  /// Settled + pending (`estimatedViews` on API, or validated + pending).
+  final int estimatedViews;
+
+  /// Validated link clicks across campaigns (`totalValidClicks` on API).
+  final int totalValidClicks;
 
   /// ISO 4217 currency code (e.g. `EUR`). Defaults to `EUR` when absent.
   final String currency;
@@ -37,23 +45,22 @@ final class CreatorStats extends Equatable {
       return 0;
     }
 
-    // Server shape (`GET /api/creator/stats`):
-    //   totalViews            — validated views (aggregated over active posts)
-    //   totalEarnings         — ledger credits (cents)
-    //   activeCampaigns       — APPROVED applications count
-    //   availableCents        — CreatorBalance.availableCents
-    //   pendingCents          — CreatorBalance.pendingCents
-    //   currency              — CreatorBalance.currency
-    //
-    // We also tolerate alternative key names for forward-compatibility.
+    // Wayo-ads `GET /api/creator/stats` (Jul 2026 settlement):
+    //   totalViews      — settled validated views
+    //   pendingViews    — pendingValidatedViews sum (48h hold)
+    //   estimatedViews  — totalViews + pendingViews
+    //   totalValidClicks — validated VisitEvent count
     final validated = asInt(
-      json['totalValidatedViews'] ??
-          json['validatedViews'] ??
-          json['totalViews'],
+      json['totalViews'] ??
+          json['totalValidatedViews'] ??
+          json['validatedViews'],
     );
-    final total = asInt(
-      json['totalRecordedViews'] ?? json['totalViews'] ?? validated,
-    );
+    final pending = asInt(json['pendingViews']);
+    var estimated = asInt(json['estimatedViews']);
+    if (estimated <= 0 && (validated > 0 || pending > 0)) {
+      estimated = validated + pending;
+    }
+
     return CreatorStats(
       totalEarningsCents: asInt(
         json['totalEarningsCents'] ?? json['totalEarnings'],
@@ -61,13 +68,16 @@ final class CreatorStats extends Equatable {
       pendingEarningsCents: asInt(
         json['pendingEarningsCents'] ??
             json['pendingCents'] ??
+            json['pendingBalance'] ??
             json['pendingEarnings'],
       ),
       approvedApplications: asInt(
         json['approvedApplications'] ?? json['activeCampaigns'],
       ),
-      totalViews: total,
       validatedViews: validated,
+      pendingViews: pending,
+      estimatedViews: estimated,
+      totalValidClicks: asInt(json['totalValidClicks']),
       currency: (json['currency'] as String?)?.trim().isNotEmpty == true
           ? (json['currency'] as String)
           : 'EUR',
@@ -77,10 +87,10 @@ final class CreatorStats extends Equatable {
   double get totalEarnings => totalEarningsCents / 100.0;
   double get pendingEarnings => pendingEarningsCents / 100.0;
 
-  /// `0..1` ratio of validated over recorded views.
-  double get validationRate {
-    if (totalViews <= 0) return 0;
-    return validatedViews / totalViews;
+  /// Share of estimated views that are still in the 48h settlement hold.
+  double get pendingViewsRatio {
+    if (estimatedViews <= 0) return 0;
+    return pendingViews / estimatedViews;
   }
 
   @override
@@ -88,8 +98,10 @@ final class CreatorStats extends Equatable {
     totalEarningsCents,
     pendingEarningsCents,
     approvedApplications,
-    totalViews,
     validatedViews,
+    pendingViews,
+    estimatedViews,
+    totalValidClicks,
     currency,
   ];
 }

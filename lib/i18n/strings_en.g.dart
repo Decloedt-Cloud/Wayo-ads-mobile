@@ -658,6 +658,7 @@ class TranslationsAdvertiserWalletEn {
 	String get pay_with_card => 'Pay with card';
 	String get pay_with_apple => 'Pay with Apple Pay';
 	String get pay_with_google => 'Pay with Google Pay';
+	String get google_pay_with_prefix => 'Pay with';
 	String get or => 'or';
 	String get stripe_unavailable => 'Top-ups are not available: payment is not configured on the server.';
 	String get stripe_keys_mismatch => 'Payment is misconfigured on the server (Stripe test/live keys mixed). Contact support.';
@@ -1068,6 +1069,21 @@ class TranslationsAppSettingsEn {
 	String get rate_app => 'Rate Wayo Ads';
 	String get rate_app_sub => 'Open the App Store or Google Play';
 	String get rate_app_error => 'Could not open the store. Try again in a moment.';
+	String get devices_nav_title => 'Trusted Devices';
+	String get devices_title => 'Trusted devices';
+	String get devices_desc => 'Devices authorized to connect to your account. Forget any you don\'t recognize.';
+	String get devices_empty => 'No trusted devices registered.';
+	String get devices_error_load => 'Could not load trusted devices.';
+	String get devices_error_revoke => 'Could not forget the device. Try again.';
+	String get device_unknown_device => 'Unknown device';
+	String get device_this_device => 'This device';
+	String get device_forget => 'Forget';
+	String get device_revoking => 'Forgetting…';
+	String get device_revoke_confirm_title => 'Forget device?';
+	String get device_revoke_confirm_desc => 'This device will be removed from your trusted list. You will need to re-approve it on next login.';
+	String get device_revoke_confirm => 'Forget';
+	String get device_revoke_cancel => 'Cancel';
+	String get device_revoked => 'Device forgotten.';
 }
 
 // Path: profile
@@ -2570,6 +2586,7 @@ extension on Translations {
 			case 'advertiser_wallet.pay_with_card': return 'Pay with card';
 			case 'advertiser_wallet.pay_with_apple': return 'Pay with Apple Pay';
 			case 'advertiser_wallet.pay_with_google': return 'Pay with Google Pay';
+			case 'advertiser_wallet.google_pay_with_prefix': return 'Pay with';
 			case 'advertiser_wallet.or': return 'or';
 			case 'advertiser_wallet.stripe_unavailable': return 'Top-ups are not available: payment is not configured on the server.';
 			case 'advertiser_wallet.stripe_keys_mismatch': return 'Payment is misconfigured on the server (Stripe test/live keys mixed). Contact support.';
@@ -2917,6 +2934,21 @@ extension on Translations {
 			case 'app_settings.rate_app': return 'Rate Wayo Ads';
 			case 'app_settings.rate_app_sub': return 'Open the App Store or Google Play';
 			case 'app_settings.rate_app_error': return 'Could not open the store. Try again in a moment.';
+			case 'app_settings.devices_nav_title': return 'Trusted Devices';
+			case 'app_settings.devices_title': return 'Trusted devices';
+			case 'app_settings.devices_desc': return 'Devices authorized to connect to your account. Forget any you don\'t recognize.';
+			case 'app_settings.devices_empty': return 'No trusted devices registered.';
+			case 'app_settings.devices_error_load': return 'Could not load trusted devices.';
+			case 'app_settings.devices_error_revoke': return 'Could not forget the device. Try again.';
+			case 'app_settings.device_unknown_device': return 'Unknown device';
+			case 'app_settings.device_this_device': return 'This device';
+			case 'app_settings.device_forget': return 'Forget';
+			case 'app_settings.device_revoking': return 'Forgetting…';
+			case 'app_settings.device_revoke_confirm_title': return 'Forget device?';
+			case 'app_settings.device_revoke_confirm_desc': return 'This device will be removed from your trusted list. You will need to re-approve it on next login.';
+			case 'app_settings.device_revoke_confirm': return 'Forget';
+			case 'app_settings.device_revoke_cancel': return 'Cancel';
+			case 'app_settings.device_revoked': return 'Device forgotten.';
 			case 'profile.nav_title': return 'Profile';
 			case 'profile.entry_title': return 'Edit profile';
 			case 'profile.entry_sub': return 'Photo, display name and account info';

@@ -42,5 +42,26 @@ void main() {
       });
       expect(ok, isTrue);
     });
+
+    test('blocks Creator Studio analysis notifications', () async {
+      await activatePushDeliveryForWayoUser('user-1');
+      final ok = await shouldDeliverFcmData({
+        'type': 'CREATOR_ANALYSIS_READY',
+        'targetApp': 'wayo-creator-studio',
+        'route': '/content-lab?url=abc&analysis=contentPotential&openResult=1',
+        'recipientUserId': 'user-1',
+      });
+      expect(ok, isFalse);
+    });
+
+    test('blocks Content Lab route notifications', () async {
+      await activatePushDeliveryForWayoUser('user-1');
+      final ok = await shouldDeliverFcmData({
+        'type': 'CREATOR_ANALYSIS_READY',
+        'route': '/content-spy?url=abc&analysis=contentPotential&openResult=1',
+        'recipientUserId': 'user-1',
+      });
+      expect(ok, isFalse);
+    });
   });
 }

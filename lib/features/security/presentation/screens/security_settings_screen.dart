@@ -309,6 +309,83 @@ class _SecuritySettingsScreenState extends ConsumerState<SecuritySettingsScreen>
                         .animate()
                         .fadeIn(delay: 60.ms, duration: 280.ms)
                         .slideY(begin: 0.04, curve: Curves.easeOutCubic),
+                    const SizedBox(height: 16),
+                    _SecurityCard(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          InkWell(
+                            borderRadius: BorderRadius.circular(16),
+                            onTap: () {
+                              context.push('/settings/trusted-devices');
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.all(2),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 42,
+                                    height: 42,
+                                    decoration: BoxDecoration(
+                                      color: scheme.primaryContainer
+                                          .withValues(alpha: 0.5),
+                                      borderRadius:
+                                          BorderRadius.circular(12),
+                                    ),
+                                    child: Icon(
+                                      Icons.verified_user_outlined,
+                                      color: scheme.primary,
+                                      size: 22,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          context.t.app_settings
+                                              .devices_title,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodyMedium
+                                              ?.copyWith(
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          context.t.app_settings
+                                              .devices_desc,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodySmall
+                                              ?.copyWith(
+                                                color: scheme
+                                                    .onSurfaceVariant,
+                                                fontSize: 12,
+                                              ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Icon(
+                                    Icons.chevron_right_rounded,
+                                    color:
+                                        scheme.onSurface.withValues(alpha: 0.4),
+                                    size: 20,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                        .animate()
+                        .fadeIn(delay: 90.ms, duration: 280.ms)
+                        .slideY(begin: 0.04, curve: Curves.easeOutCubic),
                   ]),
                 ),
               ),

@@ -656,6 +656,7 @@ class _TranslationsAdvertiserWalletFr extends TranslationsAdvertiserWalletEn {
 	@override String get pay_with_card => 'Payer par carte';
 	@override String get pay_with_apple => 'Payer avec Apple Pay';
 	@override String get pay_with_google => 'Payer avec Google Pay';
+	@override String get google_pay_with_prefix => 'Payer avec';
 	@override String get or => 'ou';
 	@override String get stripe_unavailable => 'Rechargement indisponible : le paiement n’est pas configuré côté serveur.';
 	@override String get stripe_keys_mismatch => 'Paiement mal configuré côté serveur (clés Stripe test/live mélangées). Contactez le support.';
@@ -1066,6 +1067,21 @@ class _TranslationsAppSettingsFr extends TranslationsAppSettingsEn {
 	@override String get rate_app => 'Notez Wayo Ads';
 	@override String get rate_app_sub => 'Ouvrez l’App Store ou Google Play';
 	@override String get rate_app_error => 'Impossible d’ouvrir le store. Réessayez dans un instant.';
+	@override String get devices_nav_title => 'Appareils de confiance';
+	@override String get devices_title => 'Appareils de confiance';
+	@override String get devices_desc => 'Appareils autorisés à se connecter à votre compte. Oubliez ceux que vous ne reconnaissez pas.';
+	@override String get devices_empty => 'Aucun appareil de confiance enregistré.';
+	@override String get devices_error_load => 'Impossible de charger les appareils de confiance.';
+	@override String get devices_error_revoke => 'Impossible d’oublier l’appareil. Réessayez.';
+	@override String get device_unknown_device => 'Appareil inconnu';
+	@override String get device_this_device => 'Cet appareil';
+	@override String get device_forget => 'Oublier';
+	@override String get device_revoking => 'Oubli…';
+	@override String get device_revoke_confirm_title => 'Oublier cet appareil ?';
+	@override String get device_revoke_confirm_desc => 'Cet appareil sera retiré de votre liste de confiance. Vous devrez le ré-approuver lors de la prochaine connexion.';
+	@override String get device_revoke_confirm => 'Oublier';
+	@override String get device_revoke_cancel => 'Annuler';
+	@override String get device_revoked => 'Appareil oublié.';
 }
 
 // Path: profile
@@ -2568,6 +2584,7 @@ extension on TranslationsFr {
 			case 'advertiser_wallet.pay_with_card': return 'Payer par carte';
 			case 'advertiser_wallet.pay_with_apple': return 'Payer avec Apple Pay';
 			case 'advertiser_wallet.pay_with_google': return 'Payer avec Google Pay';
+			case 'advertiser_wallet.google_pay_with_prefix': return 'Payer avec';
 			case 'advertiser_wallet.or': return 'ou';
 			case 'advertiser_wallet.stripe_unavailable': return 'Rechargement indisponible : le paiement n’est pas configuré côté serveur.';
 			case 'advertiser_wallet.stripe_keys_mismatch': return 'Paiement mal configuré côté serveur (clés Stripe test/live mélangées). Contactez le support.';
@@ -2915,6 +2932,21 @@ extension on TranslationsFr {
 			case 'app_settings.rate_app': return 'Notez Wayo Ads';
 			case 'app_settings.rate_app_sub': return 'Ouvrez l’App Store ou Google Play';
 			case 'app_settings.rate_app_error': return 'Impossible d’ouvrir le store. Réessayez dans un instant.';
+			case 'app_settings.devices_nav_title': return 'Appareils de confiance';
+			case 'app_settings.devices_title': return 'Appareils de confiance';
+			case 'app_settings.devices_desc': return 'Appareils autorisés à se connecter à votre compte. Oubliez ceux que vous ne reconnaissez pas.';
+			case 'app_settings.devices_empty': return 'Aucun appareil de confiance enregistré.';
+			case 'app_settings.devices_error_load': return 'Impossible de charger les appareils de confiance.';
+			case 'app_settings.devices_error_revoke': return 'Impossible d’oublier l’appareil. Réessayez.';
+			case 'app_settings.device_unknown_device': return 'Appareil inconnu';
+			case 'app_settings.device_this_device': return 'Cet appareil';
+			case 'app_settings.device_forget': return 'Oublier';
+			case 'app_settings.device_revoking': return 'Oubli…';
+			case 'app_settings.device_revoke_confirm_title': return 'Oublier cet appareil ?';
+			case 'app_settings.device_revoke_confirm_desc': return 'Cet appareil sera retiré de votre liste de confiance. Vous devrez le ré-approuver lors de la prochaine connexion.';
+			case 'app_settings.device_revoke_confirm': return 'Oublier';
+			case 'app_settings.device_revoke_cancel': return 'Annuler';
+			case 'app_settings.device_revoked': return 'Appareil oublié.';
 			case 'profile.nav_title': return 'Profil';
 			case 'profile.entry_title': return 'Modifier le profil';
 			case 'profile.entry_sub': return 'Photo, nom d’affichage et infos du compte';

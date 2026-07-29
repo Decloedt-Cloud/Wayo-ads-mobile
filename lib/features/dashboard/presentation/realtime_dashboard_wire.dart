@@ -39,7 +39,7 @@ const Duration _kForegroundSafetyNetInterval = Duration(seconds: 45);
 /// [_runSessionRevocationCheck]). This slow poll + the immediate check on resume
 /// only exist to catch the rare case where BOTH the socket and the push were
 /// missed. It deliberately stays infrequent to spare mobile battery/network.
-const Duration _kSessionWatchdogInterval = Duration(seconds: 60);
+const Duration _kSessionWatchdogInterval = Duration(seconds: 15);
 
 /// Global Reverb: connects as soon as the user is signed in (any tab), not only on [DashboardScreen].
 class RealtimeDashboardWire extends ConsumerStatefulWidget {

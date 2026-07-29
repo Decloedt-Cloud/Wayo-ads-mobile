@@ -82,6 +82,9 @@ abstract final class ApiEndpoints {
   /// [POST /api/user/sessions/register](Wayo-ads) — register this phone session.
   static const String userSessionsRegister = 'api/user/sessions/register';
 
+  /// [GET/POST /api/user/devices](Wayo-ads) — trusted known devices.
+  static const String userDevices = 'api/user/devices';
+
   /// [POST /api/user/delete-account](Wayo-ads), body `{ password }`.
   static const String userDeleteAccount = 'api/user/delete-account';
 

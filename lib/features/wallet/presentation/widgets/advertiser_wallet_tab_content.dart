@@ -16,6 +16,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/ui/wayo_toast.dart';
 import '../../../../i18n/strings.g.dart';
+import '../../../../shared/widgets/google_pay_button.dart';
 import '../../../auth/presentation/providers/current_account_providers.dart';
 import '../../../creator_wallet/domain/creator_business_profile.dart';
 import '../../../creator_wallet/presentation/providers/creator_wallet_providers.dart';
@@ -30,8 +31,8 @@ import '../../stripe/advertiser_stripe_deposit.dart';
 enum _PayMethod { card, applePay, googlePay }
 
 const int _kWalletTxPageSize = 7;
-/// Minimum top-up amount in minor units (e.g. cents): 50.00 in wallet currency.
-const int _kMinDepositCents = 5000;
+/// Minimum top-up amount in minor units (e.g. cents): 15.00 in wallet currency.
+const int _kMinDepositCents = 1500;
 
 const List<double> _kQuickDepositAmounts = [50, 100, 500];
 
@@ -1216,12 +1217,12 @@ class _WalletPayStrip extends ConsumerWidget {
           ),
         ],
         if (showGoogle)
-          _NativeWalletCta(
+          GooglePayButton(
+            payWithPrefix: t.advertiser_wallet.google_pay_with_prefix,
             busy: googleBusy,
-            anyBusy: anyBusy,
-            onPressed: onGooglePay,
-            label: t.advertiser_wallet.pay_with_google,
-            isApple: false,
+            disabled: anyBusy,
+            onPressed: anyBusy ? null : onGooglePay,
+            style: GooglePayButtonStyle.dark,
           ),
       ],
     );

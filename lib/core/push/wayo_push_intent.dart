@@ -760,6 +760,47 @@ bool isCreatorYoutubeConnectFcmPayload(Map<String, dynamic> data) {
   return false;
 }
 
+/// Creator Studio pushes (Content Lab / Content Spy) — must not show in Wayo Ads Mobile.
+bool isCreatorStudioFcmPayload(Map<String, dynamic> data) {
+  final flat = _flattenFcmPayloadMap(data);
+
+  final target = (_trimmedPayloadField(flat['targetApp']) ??
+          _trimmedPayloadField(flat['clientApp']) ??
+          '')
+      .toLowerCase();
+  if (target == 'wayo-creator-studio') {
+    return true;
+  }
+
+  final type = (_trimmedPayloadField(flat['type']) ??
+          _trimmedPayloadField(flat['notificationType']) ??
+          _trimmedPayloadField(flat['notification_type']) ??
+          '')
+      .toUpperCase();
+  if (type == 'CREATOR_ANALYSIS_READY' || type == 'CREATOR_TRENDS_UPDATED') {
+    return true;
+  }
+  if (type.contains('CREATOR_ANALYSIS')) {
+    return true;
+  }
+
+  final route =
+      (_trimmedPayloadField(flat['route']) ?? '').toLowerCase();
+  if (route.startsWith('/content-lab') || route.startsWith('/content-spy')) {
+    return true;
+  }
+
+  final module = (_trimmedPayloadField(flat['module']) ?? '').toLowerCase();
+  final hasAnalysisContext =
+      _trimmedPayloadField(flat['analysisType']) != null ||
+      _trimmedPayloadField(flat['videoId']) != null;
+  if ((module == 'lab' || module == 'spy') && hasAnalysisContext) {
+    return true;
+  }
+
+  return false;
+}
+
 /// Whether a Reverb / notification payload refers to a creator withdrawal.
 bool isWithdrawalNotificationPayload(Object? raw) {
   Map<String, dynamic>? map;

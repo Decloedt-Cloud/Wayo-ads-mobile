@@ -108,7 +108,11 @@ Future<bool> _postPushDevice({
   try {
     final res = await wayoAdsDio.post<Map<String, dynamic>>(
       path,
-      data: <String, dynamic>{'fcmToken': token, 'platform': platform},
+      data: <String, dynamic>{
+        'fcmToken': token,
+        'platform': platform,
+        'clientApp': 'wayo-ads-go',
+      },
     );
     final responseBody = res.data?.toString() ?? '(empty)';
     PushRegistrationDebug.recordHttp(

@@ -242,6 +242,10 @@ Future<bool> shouldDeliverFcmData(Map<String, dynamic> data) async {
     _logPush('FCM ignored — creator YouTube connect notification suppressed');
     return false;
   }
+  if (isCreatorStudioFcmPayload(data)) {
+    _logPush('FCM ignored — Creator Studio notification (wrong app)');
+    return false;
+  }
   if (isSelfInitiatedWalletFcmPayload(data)) {
     _logPush('FCM ignored — self-initiated wallet action (deposit/withdraw) suppressed');
     return false;

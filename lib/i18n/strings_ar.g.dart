@@ -655,6 +655,7 @@ class _TranslationsAdvertiserWalletAr extends TranslationsAdvertiserWalletEn {
 	@override String get pay_with_card => 'الدفع بالبطاقة';
 	@override String get pay_with_apple => 'الدفع عبر Apple Pay';
 	@override String get pay_with_google => 'الدفع عبر Google Pay';
+	@override String get google_pay_with_prefix => 'الدفع عبر';
 	@override String get or => 'أو';
 	@override String get stripe_unavailable => 'الشحن غير متاح: لم يُضبط الدفع في الخادم.';
 	@override String get stripe_keys_mismatch => 'الدفع مُعدّ بشكل خاطئ على الخادم (خلط مفاتيح Stripe للاختبار/الإنتاج). تواصل مع الدعم.';
@@ -1065,6 +1066,21 @@ class _TranslationsAppSettingsAr extends TranslationsAppSettingsEn {
 	@override String get rate_app => 'قيّم Wayo Ads';
 	@override String get rate_app_sub => 'افتح App Store أو Google Play';
 	@override String get rate_app_error => 'تعذّر فتح المتجر. أعِد المحاولة بعد لحظات.';
+	@override String get devices_nav_title => 'أجهزة الثقة';
+	@override String get devices_title => 'الأجهزة الموثوقة';
+	@override String get devices_desc => 'الأجهزة المسموح لها بالاتصال بحسابك. انسَ أي جهاز لا تعرفه.';
+	@override String get devices_empty => 'لا توجد أجهزة موثوقة مسجلة.';
+	@override String get devices_error_load => 'تعذر تحميل الأجهزة الموثوقة.';
+	@override String get devices_error_revoke => 'تعذر نسيان الجهاز. حاول مرة أخرى.';
+	@override String get device_unknown_device => 'جهاز غير معروف';
+	@override String get device_this_device => 'هذا الجهاز';
+	@override String get device_forget => 'انسَ';
+	@override String get device_revoking => 'جارٍ النسيان…';
+	@override String get device_revoke_confirm_title => 'نسيان هذا الجهاز؟';
+	@override String get device_revoke_confirm_desc => 'سيتم إزالة هذا الجهاز من قائمة الثقة. ستحتاج إلى إعادة الموافقة عليه عند تسجيل الدخول التالي.';
+	@override String get device_revoke_confirm => 'انسَ';
+	@override String get device_revoke_cancel => 'إلغاء';
+	@override String get device_revoked => 'تم نسيان الجهاز.';
 }
 
 // Path: profile
@@ -2566,6 +2582,7 @@ extension on TranslationsAr {
 			case 'advertiser_wallet.pay_with_card': return 'الدفع بالبطاقة';
 			case 'advertiser_wallet.pay_with_apple': return 'الدفع عبر Apple Pay';
 			case 'advertiser_wallet.pay_with_google': return 'الدفع عبر Google Pay';
+			case 'advertiser_wallet.google_pay_with_prefix': return 'الدفع عبر';
 			case 'advertiser_wallet.or': return 'أو';
 			case 'advertiser_wallet.stripe_unavailable': return 'الشحن غير متاح: لم يُضبط الدفع في الخادم.';
 			case 'advertiser_wallet.stripe_keys_mismatch': return 'الدفع مُعدّ بشكل خاطئ على الخادم (خلط مفاتيح Stripe للاختبار/الإنتاج). تواصل مع الدعم.';
@@ -2913,6 +2930,21 @@ extension on TranslationsAr {
 			case 'app_settings.rate_app': return 'قيّم Wayo Ads';
 			case 'app_settings.rate_app_sub': return 'افتح App Store أو Google Play';
 			case 'app_settings.rate_app_error': return 'تعذّر فتح المتجر. أعِد المحاولة بعد لحظات.';
+			case 'app_settings.devices_nav_title': return 'أجهزة الثقة';
+			case 'app_settings.devices_title': return 'الأجهزة الموثوقة';
+			case 'app_settings.devices_desc': return 'الأجهزة المسموح لها بالاتصال بحسابك. انسَ أي جهاز لا تعرفه.';
+			case 'app_settings.devices_empty': return 'لا توجد أجهزة موثوقة مسجلة.';
+			case 'app_settings.devices_error_load': return 'تعذر تحميل الأجهزة الموثوقة.';
+			case 'app_settings.devices_error_revoke': return 'تعذر نسيان الجهاز. حاول مرة أخرى.';
+			case 'app_settings.device_unknown_device': return 'جهاز غير معروف';
+			case 'app_settings.device_this_device': return 'هذا الجهاز';
+			case 'app_settings.device_forget': return 'انسَ';
+			case 'app_settings.device_revoking': return 'جارٍ النسيان…';
+			case 'app_settings.device_revoke_confirm_title': return 'نسيان هذا الجهاز؟';
+			case 'app_settings.device_revoke_confirm_desc': return 'سيتم إزالة هذا الجهاز من قائمة الثقة. ستحتاج إلى إعادة الموافقة عليه عند تسجيل الدخول التالي.';
+			case 'app_settings.device_revoke_confirm': return 'انسَ';
+			case 'app_settings.device_revoke_cancel': return 'إلغاء';
+			case 'app_settings.device_revoked': return 'تم نسيان الجهاز.';
 			case 'profile.nav_title': return 'الملف الشخصي';
 			case 'profile.entry_title': return 'تعديل الملف الشخصي';
 			case 'profile.entry_sub': return 'الصورة، الاسم المعروض ومعلومات الحساب';

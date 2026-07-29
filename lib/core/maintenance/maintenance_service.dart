@@ -45,13 +45,14 @@ String _bodyAsString(dynamic data) {
 bool bodyLooksLikeMaintenancePage(String body) {
   if (body.isEmpty) return false;
   final lower = body.toLowerCase();
+  // Do NOT match brand tokens like "wayo-ads" / "wayo ads": Auth HTML pages
+  // (login, /up) include those strings in CSS classes and footer links, which
+  // would permanently trap the app on the maintenance screen after deploy.
+  // Prefer status codes / X-Wayo-Maintenance / JSON status:"maintenance".
   const markers = [
-    'maintenance',
     'maintenance en cours',
     'cours de maintenance',
     'under maintenance',
-    'temporarily unavailable',
-    'service unavailable',
     'en maintenance',
     'scheduled maintenance',
     'site is down',
@@ -60,16 +61,10 @@ bool bodyLooksLikeMaintenancePage(String body) {
     'revenez plus tard',
     'bad gateway',
     'gateway time-out',
-    'indisponible',
-    'déploiement',
     'deployment in progress',
     'service temporarily unavailable',
     'temporarily unavailable',
-    'nginx',
-    'erreur',
-    'patience',
-    'wayo ads',
-    'wayo-ads',
+    'service unavailable',
   ];
   return markers.any(lower.contains);
 }
@@ -222,13 +217,15 @@ class MaintenanceService extends ChangeNotifier {
   Future<bool> _probeOrigin(String baseUrl, {required bool isWayoAds}) async {
     final runtime = AuthRuntimeConfig.instance;
     // Preprod nginx Basic Auth makes `/` return 401 — probe mobile API routes only.
+    // Auth: use Laravel `/up` (not `/`) so a normal login HTML page is never
+    // mistaken for a static nginx maintenance page.
     final paths = isWayoAds
         ? <String>[
             runtime.wayoAdsRequestPath('api/health'),
             runtime.wayoAdsRequestPath('api/campaigns'),
             runtime.wayoAdsRequestPath('api/wallet/config'),
           ]
-        : <String>['/'];
+        : <String>['/up'];
 
     for (final path in paths) {
       final ok = await _probePath(baseUrl, path);

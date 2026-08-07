@@ -14,10 +14,6 @@ const bool kWayoVerboseLogs = bool.fromEnvironment(
   defaultValue: false,
 );
 
-/// User-visible FCM / push diagnostics (settings panel, snackbar hints).
-/// Never tied to [kWayoVerboseLogs] — that flag is logcat-only for release QA.
-bool get kWayoShowPushDebugUi => kDebugMode;
-
 /// Lightweight release-only diagnostics (`adb logcat`, tag `wayo.config`) without
 /// full HTTP body logging. Use `--dart-define=WAYO_AUTH_DIAG=true`.
 const bool kWayoAuthDiag = bool.fromEnvironment(

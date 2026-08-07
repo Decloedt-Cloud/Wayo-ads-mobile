@@ -119,9 +119,15 @@ final class ChatRealtimeService {
 
   String? get socketId => _socketId;
 
-  Future<void> start(ChatCredentials creds, List<int> conversationIds) async {
+  Future<void> start(
+    ChatCredentials creds,
+    List<int> conversationIds, {
+    bool forceFullRestart = false,
+  }) async {
     final canSoftResync =
+        !forceFullRestart &&
         _client != null &&
+        _socketId != null &&
         _boundChatUserId == creds.chatUserId &&
         _boundAppId == creds.appId &&
         _boundToken == creds.token;

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:wayoadsgo/core/ui/wayo_dialog.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -116,7 +117,7 @@ class _AdvertiserVideoReviewsScreenState
 
   Future<void> _reject(AdvertiserSubmittedVideo video) async {
     final t = context.t.advertiser_video_reviews;
-    final reason = await showDialog<String>(
+    final reason = await showWayoDialog<String>(
       context: context,
       builder: (ctx) => _RejectReasonDialog(videoTitle: video.titleSnapshot),
     );
@@ -709,7 +710,7 @@ class _RejectReasonDialogState extends State<_RejectReasonDialog> {
   @override
   Widget build(BuildContext context) {
     final t = context.t.advertiser_video_reviews;
-    return AlertDialog(
+    return WayoAlertDialog(
       title: Text(t.reject_dialog_title),
       content: Column(
         mainAxisSize: MainAxisSize.min,

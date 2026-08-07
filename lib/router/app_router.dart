@@ -37,15 +37,45 @@ import '../features/account_deletion/presentation/screens/account_deletion_scree
 import '../features/profile/presentation/screens/profile_settings_screen.dart';
 import '../features/security/presentation/screens/security_settings_screen.dart';
 import '../features/security/presentation/screens/trusted_devices_screen.dart';
+import '../features/notification_prefs/presentation/screens/notification_preferences_screen.dart';
+import '../features/app_settings/presentation/screens/privacy_export_screen.dart';
+import '../features/app_settings/presentation/screens/web_only_security_screens.dart';
+import '../features/app_settings/presentation/screens/guides_resources_screen.dart';
 import '../features/superadmin/presentation/screens/superadmin_home_screen.dart';
 import '../features/superadmin/presentation/screens/ai_usage_screen.dart';
 import '../features/superadmin/presentation/screens/ledger_screen.dart';
 import '../features/superadmin/presentation/screens/banned_users_screen.dart';
+import '../features/superadmin/presentation/screens/announcements_screen.dart';
 import '../features/superadmin/presentation/screens/superadmin_browse_campaigns_screen.dart';
 import '../features/superadmin/presentation/screens/tax_rates_screen.dart';
+import '../features/superadmin/presentation/screens/payment_audits_screen.dart';
+import '../features/superadmin/presentation/screens/audit_log_screen.dart';
+import '../features/superadmin/presentation/screens/platform_health_screen.dart';
+import '../features/superadmin/presentation/screens/token_purchases_screen.dart';
+import '../features/superadmin/presentation/screens/click_pipeline_screen.dart';
+import '../features/superadmin/presentation/screens/creator_velocity_screen.dart';
+import '../features/superadmin/presentation/screens/email_logs_screen.dart';
+import '../features/superadmin/presentation/screens/email_settings_screen.dart';
+import '../features/superadmin/presentation/screens/email_templates_screen.dart';
+import '../features/superadmin/presentation/screens/recent_activity_screen.dart';
+import '../features/superadmin/presentation/screens/financial_documents_screen.dart';
+import '../features/superadmin/presentation/screens/youtube_monitoring_screen.dart';
+import '../features/superadmin/presentation/screens/admin_jobs_screen.dart';
+import '../features/superadmin/presentation/screens/token_packages_screen.dart';
+import '../features/superadmin/presentation/screens/platform_settings_screen.dart';
+import '../features/superadmin/presentation/screens/stripe_settings_screen.dart';
+import '../features/superadmin/presentation/screens/broadcast_screen.dart';
 import '../screens/cookie_policy_screen.dart';
 import '../screens/privacy_policy_screen.dart';
 import '../screens/terms_and_conditions_screen.dart';
+import '../features/advertiser_campaigns/presentation/screens/campaign_analytics_screen.dart';
+import '../features/advertiser_campaigns/presentation/screens/campaign_editor_screen.dart';
+import '../features/advertiser_campaigns/presentation/screens/campaign_financial_health_screen.dart';
+import '../features/advertiser_creators/presentation/screens/advertiser_creators_screen.dart';
+import '../features/creator_analytics/presentation/screens/creator_analytics_screen.dart';
+import '../features/youtube_connection/presentation/screens/youtube_settings_screen.dart';
+import '../features/auth/presentation/providers/current_account_providers.dart';
+import '../features/creator_wallet/presentation/screens/business_info_host_screen.dart';
 import '../features/splash/splash_screen.dart';
 
 part 'app_router.g.dart';
@@ -69,6 +99,36 @@ class _HomeTabScreen extends ConsumerWidget {
   }
 }
 
+/// `/settings/business` → role-aware advertiser/creator business routes.
+class _BusinessSettingsAliasScreen extends ConsumerStatefulWidget {
+  const _BusinessSettingsAliasScreen();
+
+  @override
+  ConsumerState<_BusinessSettingsAliasScreen> createState() =>
+      _BusinessSettingsAliasScreenState();
+}
+
+class _BusinessSettingsAliasScreenState
+    extends ConsumerState<_BusinessSettingsAliasScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final user = ref.read(currentAppUserProvider);
+      final path = user?.shouldUseAdvertiserGlobalBusinessSchema == true
+          ? '/advertiser/business'
+          : '/creator/business';
+      context.go(path);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(body: Center(child: CircularProgressIndicator()));
+  }
+}
+
 /// Root navigator for full-screen routes (detail, notifications).
 final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>(
   debugLabel: 'root',
@@ -83,10 +143,7 @@ Page<void> _advertiserCampaignDetailPage(GoRouterState state) {
   }
   return MaterialPage<void>(
     key: ValueKey('advertiser-campaign-$id'),
-    child: CampaignDetailScreen(
-      id: id,
-      title: title,
-    ),
+    child: CampaignDetailScreen(id: id, title: title),
   );
 }
 
@@ -120,6 +177,8 @@ bool _superadminAllowedPath(String loc) {
   if (loc.startsWith('/superadmin/campaigns/')) return true;
   if (loc.startsWith('/creator/campaigns/')) return true;
   if (loc.startsWith('/chat/thread/')) return true;
+  if (loc == '/chat' || loc.startsWith('/chat?')) return true;
+  if (loc.startsWith('/chat/')) return true;
   if (loc.startsWith('/invoices/')) return true;
   return false;
 }
@@ -192,7 +251,8 @@ GoRouter goRouter(GoRouterRef ref) {
               }
               return next;
             }
-            final isSuperAdmin = s.user.wayoAdsRole == WayoAdsAccountRole.superAdmin;
+            final isSuperAdmin =
+                s.user.wayoAdsRole == WayoAdsAccountRole.superAdmin;
             if (loc.startsWith('/onboarding/')) {
               return isSuperAdmin ? '/superadmin' : '/dashboard';
             }
@@ -207,6 +267,15 @@ GoRouter goRouter(GoRouterRef ref) {
                 return '/onboarding/verify-email-otp';
               }
               return isSuperAdmin ? '/superadmin' : '/dashboard';
+            }
+            // Campaign create/edit is advertiser-only (creators use browse/apply).
+            final isCampaignCreate = loc == '/advertiser/campaigns/new';
+            final isCampaignEdit = RegExp(
+              r'^/advertiser/campaigns/[^/]+/edit$',
+            ).hasMatch(loc);
+            if ((isCampaignCreate || isCampaignEdit) &&
+                s.user.wayoAdsRole != WayoAdsAccountRole.advertiser) {
+              return '/campaigns';
             }
             // Superadmin panel + shared deep links (notifications, etc.)
             if (isSuperAdmin && !_superadminAllowedPath(loc)) {
@@ -227,12 +296,12 @@ GoRouter goRouter(GoRouterRef ref) {
         },
         loading: () =>
             loc == '/login' || _isSignupPath(loc) || _isAuthOnboardingPath(loc)
-                ? null
-                : '/login',
+            ? null
+            : '/login',
         error: (Object? err, StackTrace? stack) =>
             loc == '/login' || _isSignupPath(loc) || _isAuthOnboardingPath(loc)
-                ? null
-                : '/login',
+            ? null
+            : '/login',
       );
     },
     routes: [
@@ -274,8 +343,7 @@ GoRouter goRouter(GoRouterRef ref) {
             path: 'register',
             builder: (context, state) {
               final role =
-                  state.uri.queryParameters['role']?.trim().toUpperCase() ??
-                      '';
+                  state.uri.queryParameters['role']?.trim().toUpperCase() ?? '';
               if (role != 'CREATOR' && role != 'ADVERTISER') {
                 return const SignupRoleScreen();
               }
@@ -412,6 +480,94 @@ GoRouter goRouter(GoRouterRef ref) {
       ),
       GoRoute(
         parentNavigatorKey: rootNavigatorKey,
+        path: '/advertiser/campaigns/new',
+        pageBuilder: (context, state) => const MaterialPage<void>(
+          key: ValueKey('advertiser-campaign-new'),
+          child: CampaignEditorScreen(),
+        ),
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: '/advertiser/campaigns/:id/edit',
+        pageBuilder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return MaterialPage<void>(
+            key: ValueKey('advertiser-campaign-edit-$id'),
+            child: CampaignEditorScreen(campaignId: id),
+          );
+        },
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: '/advertiser/campaigns/:id/analytics',
+        pageBuilder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return MaterialPage<void>(
+            key: ValueKey('advertiser-campaign-analytics-$id'),
+            child: CampaignAnalyticsScreen(campaignId: id),
+          );
+        },
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: '/advertiser/campaigns/:id/financial-health',
+        pageBuilder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return MaterialPage<void>(
+            key: ValueKey('advertiser-campaign-financial-$id'),
+            child: CampaignFinancialHealthScreen(campaignId: id),
+          );
+        },
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: '/advertiser/creators',
+        builder: (context, state) => const AdvertiserCreatorsScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: '/settings/youtube',
+        builder: (context, state) => const YouTubeSettingsScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: '/creator/analytics',
+        builder: (context, state) => const CreatorAnalyticsScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: '/advertiser/business',
+        pageBuilder: (context, state) => MaterialPage<void>(
+          key: const ValueKey('advertiser-business'),
+          child: BusinessInfoHostScreen.fromGoState(
+            state,
+            useGlobalBilling: true,
+          ),
+        ),
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: '/creator/business',
+        pageBuilder: (context, state) => MaterialPage<void>(
+          key: const ValueKey('creator-business'),
+          child: BusinessInfoHostScreen.fromGoState(
+            state,
+            useGlobalBilling: false,
+          ),
+        ),
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: '/creator/payouts',
+        builder: (context, state) => const InvoicesTabScreen(standalone: true),
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: '/settings/business',
+        builder: (context, state) => const _BusinessSettingsAliasScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
         path: '/superadmin/campaigns/:id',
         pageBuilder: (context, state) => _advertiserCampaignDetailPage(state),
       ),
@@ -427,10 +583,7 @@ GoRouter goRouter(GoRouterRef ref) {
           }
           return MaterialPage<void>(
             key: ValueKey('creator-campaign-$id'),
-            child: CreatorCampaignDetailScreen(
-              id: id,
-              title: title,
-            ),
+            child: CreatorCampaignDetailScreen(id: id, title: title),
           );
         },
       ),
@@ -468,6 +621,31 @@ GoRouter goRouter(GoRouterRef ref) {
       ),
       GoRoute(
         parentNavigatorKey: rootNavigatorKey,
+        path: '/settings/notifications',
+        builder: (context, state) => const NotificationPreferencesScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: '/settings/privacy',
+        builder: (context, state) => const PrivacyExportScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: '/settings/passkeys',
+        builder: (context, state) => const PasskeysInfoScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: '/settings/connected-accounts',
+        builder: (context, state) => const ConnectedAccountsInfoScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: '/resources',
+        builder: (context, state) => const GuidesResourcesScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
         path: '/settings/security',
         builder: (context, state) => const SecuritySettingsScreen(),
       ),
@@ -494,11 +672,8 @@ GoRouter goRouter(GoRouterRef ref) {
           }
           final reply =
               state.uri.queryParameters['reply'] == '1' ||
-                  state.uri.queryParameters['reply'] == 'true';
-          return ChatThreadScreen(
-            conversationId: id,
-            autoFocusComposer: reply,
-          );
+              state.uri.queryParameters['reply'] == 'true';
+          return ChatThreadScreen(conversationId: id, autoFocusComposer: reply);
         },
       ),
       // Superadmin routes
@@ -535,7 +710,7 @@ GoRouter goRouter(GoRouterRef ref) {
       GoRoute(
         parentNavigatorKey: rootNavigatorKey,
         path: '/superadmin/announcements',
-        redirect: (context, state) => '/superadmin?tab=announcements',
+        builder: (context, state) => const AnnouncementsScreen(),
       ),
       GoRoute(
         parentNavigatorKey: rootNavigatorKey,
@@ -555,6 +730,91 @@ GoRouter goRouter(GoRouterRef ref) {
             ),
           ),
         ],
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: '/superadmin/payment-audits',
+        builder: (context, state) => const PaymentAuditsScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: '/superadmin/audit-log',
+        builder: (context, state) => const AuditLogScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: '/superadmin/health',
+        builder: (context, state) => const PlatformHealthScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: '/superadmin/token-purchases',
+        builder: (context, state) => const TokenPurchasesScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: '/superadmin/click-pipeline',
+        builder: (context, state) => const ClickPipelineScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: '/superadmin/creator-velocity',
+        builder: (context, state) => const CreatorVelocityScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: '/superadmin/email-logs',
+        builder: (context, state) => const EmailLogsScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: '/superadmin/email-templates',
+        builder: (context, state) => const EmailTemplatesScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: '/superadmin/recent-activity',
+        builder: (context, state) => const RecentActivityScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: '/superadmin/financial-documents',
+        builder: (context, state) => const FinancialDocumentsScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: '/superadmin/youtube-monitoring',
+        builder: (context, state) => const YoutubeMonitoringScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: '/superadmin/jobs',
+        builder: (context, state) => const AdminJobsScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: '/superadmin/token-packages',
+        builder: (context, state) => const TokenPackagesScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: '/superadmin/platform-settings',
+        builder: (context, state) => const PlatformSettingsScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: '/superadmin/stripe-settings',
+        builder: (context, state) => const StripeSettingsScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: '/superadmin/email-settings',
+        builder: (context, state) => const EmailSettingsScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: '/superadmin/broadcast',
+        builder: (context, state) => const BroadcastScreen(),
       ),
     ],
   );

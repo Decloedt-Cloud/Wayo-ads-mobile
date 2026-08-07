@@ -65,10 +65,9 @@ class _AdvertiserBrowseCampaignsViewState
       page: ref.read(advertiserBrowseCampaignPageProvider),
       search: ref.read(advertiserBrowseCampaignSearchProvider),
       typeApi: marketplaceTypeApiFromFilter(type),
-      nicheApi:
-          niche != null && niche.isNotEmpty
-              ? normalizeCampaignNicheApiValue(niche)
-              : null,
+      nicheApi: niche != null && niche.isNotEmpty
+          ? normalizeCampaignNicheApiValue(niche)
+          : null,
       countryApi: marketplaceCountryApiFromLocation(location),
     );
   }
@@ -108,7 +107,9 @@ class _AdvertiserBrowseCampaignsViewState
     final layout = ref.watch(advertiserBrowseExplorerLayoutProvider);
     final pageIdx = ref.watch(advertiserBrowseCampaignPageProvider);
     final browseKey = _browseKey();
-    final browseAsync = ref.watch(advertiserBrowseCampaignsPagedProvider(browseKey));
+    final browseAsync = ref.watch(
+      advertiserBrowseCampaignsPagedProvider(browseKey),
+    );
 
     final resultCountText = browseAsync.maybeWhen(
       data: (p) {
@@ -124,13 +125,18 @@ class _AdvertiserBrowseCampaignsViewState
       if (gateAt == null) return;
       scheduleSessionRetryAfterBootstrap(ref, () {
         if (!mounted) return;
-        if (ref.read(advertiserBrowseCampaignsPagedProvider(browseKey)).hasError) {
+        if (ref
+            .read(advertiserBrowseCampaignsPagedProvider(browseKey))
+            .hasError) {
           ref.invalidate(advertiserBrowseCampaignsPagedProvider);
         }
       });
     });
 
-    ref.listen(advertiserBrowseCampaignsPagedProvider(browseKey), (previous, next) {
+    ref.listen(advertiserBrowseCampaignsPagedProvider(browseKey), (
+      previous,
+      next,
+    ) {
       next.whenOrNull(
         error: (e, _) {
           if (!shouldSuppressSessionLoadError(ref, e)) return;
@@ -185,21 +191,30 @@ class _AdvertiserBrowseCampaignsViewState
                       _debounce?.cancel();
                       _searchCtrl.clear();
                       ref
-                          .read(advertiserBrowseCampaignPageProvider.notifier)
-                          .state = 1;
+                              .read(
+                                advertiserBrowseCampaignPageProvider.notifier,
+                              )
+                              .state =
+                          1;
                       ref
-                          .read(advertiserBrowseCampaignSearchProvider.notifier)
-                          .state = '';
+                              .read(
+                                advertiserBrowseCampaignSearchProvider.notifier,
+                              )
+                              .state =
+                          '';
                     },
                   ),
                 ),
                 filtersExpanded: toolbarExpanded,
-                onFiltersExpandedChanged: (v) => ref
-                    .read(campaignsExplorerToolbarExpandedProvider.notifier)
-                    .state = v,
+                onFiltersExpandedChanged: (v) =>
+                    ref
+                            .read(
+                              campaignsExplorerToolbarExpandedProvider.notifier,
+                            )
+                            .state =
+                        v,
                 filterScrollContent: browseAsync.maybeWhen(
-                  data: (p) =>
-                      p.campaigns.isEmpty && p.facets.isEmpty
+                  data: (p) => p.campaigns.isEmpty && p.facets.isEmpty
                       ? null
                       : CreatorBrowseExplorerFilters(
                           campaigns: p.campaigns,
@@ -210,45 +225,55 @@ class _AdvertiserBrowseCampaignsViewState
                           locationFilter: locationFilter,
                           onTypeChanged: (v) {
                             ref
-                                .read(
-                                  advertiserBrowseCampaignPageProvider.notifier,
-                                )
-                                .state = 1;
+                                    .read(
+                                      advertiserBrowseCampaignPageProvider
+                                          .notifier,
+                                    )
+                                    .state =
+                                1;
                             ref
-                                .read(
-                                  advertiserBrowseTypeFilterProvider.notifier,
-                                )
-                                .state = v;
+                                    .read(
+                                      advertiserBrowseTypeFilterProvider
+                                          .notifier,
+                                    )
+                                    .state =
+                                v;
                           },
                           onNicheChanged: (v) {
                             ref
-                                .read(
-                                  advertiserBrowseCampaignPageProvider.notifier,
-                                )
-                                .state = 1;
+                                    .read(
+                                      advertiserBrowseCampaignPageProvider
+                                          .notifier,
+                                    )
+                                    .state =
+                                1;
                             ref
                                 .read(advertiserBrowseNicheProvider.notifier)
                                 .state = v == null
-                                    ? null
-                                    : normalizeCampaignNicheApiValue(v);
+                                ? null
+                                : normalizeCampaignNicheApiValue(v);
                           },
                           onLocationChanged: (v) {
                             ref
-                                .read(
-                                  advertiserBrowseCampaignPageProvider.notifier,
-                                )
-                                .state = 1;
+                                    .read(
+                                      advertiserBrowseCampaignPageProvider
+                                          .notifier,
+                                    )
+                                    .state =
+                                1;
                             ref
                                 .read(advertiserBrowseLocationProvider.notifier)
                                 .state = v == null
-                                    ? null
-                                    : normalizeCampaignLocationValue(v);
+                                ? null
+                                : normalizeCampaignLocationValue(v);
                           },
                         ),
                   orElse: () => null,
                 ),
                 onResetExplorerFilters: () {
-                  ref.read(advertiserBrowseCampaignPageProvider.notifier).state =
+                  ref
+                          .read(advertiserBrowseCampaignPageProvider.notifier)
+                          .state =
                       1;
                   ref.read(advertiserBrowseTypeFilterProvider.notifier).state =
                       null;
@@ -258,9 +283,13 @@ class _AdvertiserBrowseCampaignsViewState
                 },
                 resultCountText: resultCountText,
                 layout: layout,
-                onLayoutChanged: (v) => ref
-                    .read(advertiserBrowseExplorerLayoutProvider.notifier)
-                    .state = v,
+                onLayoutChanged: (v) =>
+                    ref
+                            .read(
+                              advertiserBrowseExplorerLayoutProvider.notifier,
+                            )
+                            .state =
+                        v,
               ),
             ),
           ),
@@ -324,11 +353,11 @@ class _AdvertiserBrowseCampaignsViewState
                   sliver: SliverGrid(
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      mainAxisSpacing: 12,
-                      crossAxisSpacing: 12,
-                      childAspectRatio: 0.72,
-                    ),
+                          crossAxisCount: 2,
+                          mainAxisSpacing: 12,
+                          crossAxisSpacing: 12,
+                          childAspectRatio: 0.72,
+                        ),
                     delegate: SliverChildBuilderDelegate((context, i) {
                       final c = list[i];
                       return CreatorBrowseCampaignGridTile(
@@ -385,20 +414,24 @@ class _AdvertiserBrowseCampaignsViewState
                         ? () {
                             HapticFeedback.selectionClick();
                             ref
-                                .read(
-                                  advertiserBrowseCampaignPageProvider.notifier,
-                                )
-                                .state = pageIdx - 1;
+                                    .read(
+                                      advertiserBrowseCampaignPageProvider
+                                          .notifier,
+                                    )
+                                    .state =
+                                pageIdx - 1;
                           }
                         : null,
                     onNext: pageIdx < pageResult.totalPages
                         ? () {
                             HapticFeedback.selectionClick();
                             ref
-                                .read(
-                                  advertiserBrowseCampaignPageProvider.notifier,
-                                )
-                                .state = pageIdx + 1;
+                                    .read(
+                                      advertiserBrowseCampaignPageProvider
+                                          .notifier,
+                                    )
+                                    .state =
+                                pageIdx + 1;
                           }
                         : null,
                   ),

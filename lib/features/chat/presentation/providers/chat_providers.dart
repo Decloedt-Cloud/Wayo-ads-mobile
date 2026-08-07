@@ -138,12 +138,16 @@ final FutureProvider<ChatCredentials> chatBootstrapProvider =
 
 /// Conversation list from chat-service (Bearer chat JWT).
 /// Not `autoDispose`: shell IndexedStack + login prefetch can cancel in-flight loads if disposed too early.
+/// Watches [chatInboxShowArchivedProvider] to include archived threads when browsing that filter.
+final chatInboxShowArchivedProvider = StateProvider<bool>((ref) => false);
+
 final chatConversationsProvider = FutureProvider<List<ChatConversation>>((
   ref,
 ) async {
   ref.keepAlive();
   final rt = ref.read(chatRealtimeServiceProvider);
   final repo = ref.read(chatRepositoryProvider);
+  final showArchived = ref.watch(chatInboxShowArchivedProvider);
 
   await awaitChatPostLoginGate(ref);
 
@@ -153,7 +157,15 @@ final chatConversationsProvider = FutureProvider<List<ChatConversation>>((
     // Always fetch fresh credentials on each attempt (handles expired tokens).
     final creds = await ref.read(chatBootstrapProvider.future);
     try {
-      return await repo.fetchConversationsEnriched(creds, socketId: () => rt.socketId);
+      final list = await repo.fetchConversationsEnriched(
+        creds,
+        socketId: () => rt.socketId,
+        includeArchived: showArchived,
+      );
+      if (showArchived) {
+        return list.where((c) => c.isArchived).toList();
+      }
+      return list.where((c) => !c.isArchived).toList();
     } on DioException catch (e) {
       lastError = e;
       final code = e.response?.statusCode;
@@ -207,6 +219,24 @@ void invalidateChatRealtimeBindingImmediate(void Function() invalidateBinding) {
   _chatRealtimeBindingInvalidateCoalesceTimer?.cancel();
   _chatRealtimeBindingInvalidateCoalesceTimer = null;
   invalidateBinding();
+}
+
+/// Forces a full Reverb reconnect (background/resume can leave a dead soft-synced socket).
+Future<void> forceReconnectChatRealtime(WidgetRef ref) async {
+  try {
+    final creds = await ref.read(chatBootstrapProvider.future);
+    final list = await ref.read(chatConversationsProvider.future);
+    final rt = ref.read(chatRealtimeServiceProvider);
+    await rt.start(
+      creds,
+      list.map((e) => e.id).toList(),
+      forceFullRestart: true,
+    );
+  } catch (e, st) {
+    if (kDebugMode) {
+      debugPrint('[ChatRealtime] force reconnect failed: $e\n$st');
+    }
+  }
 }
 
 final chatRealtimeBindingProvider = FutureProvider<void>((ref) async {

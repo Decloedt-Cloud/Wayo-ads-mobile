@@ -9,6 +9,7 @@ import '../../../../core/format/campaign_finance_display.dart';
 import '../../../../core/format/money_formatter.dart';
 import '../../../../core/network/wayo_ads_public_url.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/ui/wayo_popup_menu.dart';
 import '../../../../i18n/strings.g.dart';
 import '../../../creator_campaigns/domain/creator_browse_campaign.dart';
 import '../../../dashboard/domain/entities/campaign_platform.dart';
@@ -23,11 +24,19 @@ class AdvertiserCampaignCard extends StatefulWidget {
     required this.moneyLocale,
     required this.onTap,
     required this.listIndex,
+    this.onEdit,
+    this.onPause,
+    this.onResume,
+    this.onCancel,
   });
 
   final AdvertiserCampaign campaign;
   final String moneyLocale;
   final VoidCallback onTap;
+  final VoidCallback? onEdit;
+  final VoidCallback? onPause;
+  final VoidCallback? onResume;
+  final VoidCallback? onCancel;
 
   /// Stagger entrance animation offset.
   final int listIndex;
@@ -58,131 +67,193 @@ class _AdvertiserCampaignCardState extends State<AdvertiserCampaignCard> {
             boxShadow: AdvertiserCampaignsChrome.cardElevation(context),
           ),
           child: Material(
-          color: AdvertiserCampaignsChrome.card(context),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-            side: AdvertiserCampaignsChrome.cardBorderSide(context),
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: InkWell(
-            onTap: () {
-              HapticFeedback.lightImpact();
-              widget.onTap();
-            },
-            splashColor:
-                AdvertiserCampaignsChrome.amber(context).withValues(alpha: 0.12),
-            highlightColor:
-                AdvertiserCampaignsChrome.amber(context).withValues(alpha: 0.06),
-            borderRadius: BorderRadius.circular(16),
-            child: Padding(
-              padding: const EdgeInsets.all(14),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _ListThumbGradient(
-                        coverUrl: normalizeWayoAdsMediaUrl(c.coverUrl),
-                        brandLogoUrl: resolveWayoAdsPublicUrl(c.brandLogoUrl),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              c.name,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: GoogleFonts.sora(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w800,
-                                height: 1.2,
-                                color: AdvertiserCampaignsChrome.value(context),
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Wrap(
-                              spacing: 6,
-                              runSpacing: 6,
-                              crossAxisAlignment: WrapCrossAlignment.center,
-                              children: [
-                                _ListStatusChip(status: c.status, t: t),
-                                _ListTypeChip(type: c.campaignType, t: t),
-                                _ListPlatformChip(platform: c.platform, t: t),
-                              ],
-                            ),
-                          ],
+            color: AdvertiserCampaignsChrome.card(context),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: AdvertiserCampaignsChrome.cardBorderSide(context),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: () {
+                HapticFeedback.lightImpact();
+                widget.onTap();
+              },
+              splashColor: AdvertiserCampaignsChrome.amber(
+                context,
+              ).withValues(alpha: 0.12),
+              highlightColor: AdvertiserCampaignsChrome.amber(
+                context,
+              ).withValues(alpha: 0.06),
+              borderRadius: BorderRadius.circular(16),
+              child: Padding(
+                padding: const EdgeInsets.all(14),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _ListThumbGradient(
+                          coverUrl: normalizeWayoAdsMediaUrl(c.coverUrl),
+                          brandLogoUrl: resolveWayoAdsPublicUrl(c.brandLogoUrl),
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 14),
-                  Divider(
-                    height: 1,
-                    thickness: 1,
-                    color: AdvertiserCampaignsChrome.divider(context),
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _StatColumn(
-                          label: t.advertiser_campaigns.card.budget_total,
-                          value: MoneyFormatter.format(
-                            c.totalBudgetCents / 100.0,
-                            currency: kWayoPublicCurrency,
-                            locale: widget.moneyLocale,
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                c.name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: GoogleFonts.sora(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w800,
+                                  height: 1.2,
+                                  color: AdvertiserCampaignsChrome.value(
+                                    context,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Wrap(
+                                spacing: 6,
+                                runSpacing: 6,
+                                crossAxisAlignment: WrapCrossAlignment.center,
+                                children: [
+                                  _ListStatusChip(status: c.status, t: t),
+                                  _ListTypeChip(type: c.campaignType, t: t),
+                                  _ListPlatformChip(platform: c.platform, t: t),
+                                ],
+                              ),
+                            ],
                           ),
                         ),
-                      ),
-                      Expanded(
-                        child: _StatColumn(
-                          label: _remainingOrSpentLabel(context, c),
-                          value: _remainingOrSpentValue(context, c),
+                        if (widget.onEdit != null ||
+                            widget.onPause != null ||
+                            widget.onResume != null ||
+                            widget.onCancel != null)
+                          PopupMenuButton<String>(
+                            tooltip: t.advertiser_campaigns.actions.more,
+                            offset: const Offset(0, 8),
+                            shape: WayoPopupMenu.shape(context),
+                            color: WayoPopupMenu.color(context),
+                            elevation: 10,
+                            icon: Icon(
+                              Icons.more_vert_rounded,
+                              color: AdvertiserCampaignsChrome.muted(context),
+                            ),
+                            onSelected: (v) {
+                              HapticFeedback.selectionClick();
+                              switch (v) {
+                                case 'edit':
+                                  widget.onEdit?.call();
+                                case 'pause':
+                                  widget.onPause?.call();
+                                case 'resume':
+                                  widget.onResume?.call();
+                                case 'cancel':
+                                  widget.onCancel?.call();
+                              }
+                            },
+                            itemBuilder: (context) {
+                              final a = t.advertiser_campaigns.actions;
+                              return [
+                                if (widget.onEdit != null)
+                                  wayoPopupMenuItem(
+                                    value: 'edit',
+                                    icon: Icons.edit_rounded,
+                                    label: a.edit,
+                                  ),
+                                if (widget.onPause != null)
+                                  wayoPopupMenuItem(
+                                    value: 'pause',
+                                    icon: Icons.pause_rounded,
+                                    label: a.pause,
+                                  ),
+                                if (widget.onResume != null)
+                                  wayoPopupMenuItem(
+                                    value: 'resume',
+                                    icon: Icons.play_arrow_rounded,
+                                    label: a.resume,
+                                  ),
+                                if (widget.onCancel != null)
+                                  wayoPopupMenuItem(
+                                    value: 'cancel',
+                                    icon: Icons.delete_outline_rounded,
+                                    label: a.cancel,
+                                    destructive: true,
+                                  ),
+                              ];
+                            },
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+                    Divider(
+                      height: 1,
+                      thickness: 1,
+                      color: AdvertiserCampaignsChrome.divider(context),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _StatColumn(
+                            label: t.advertiser_campaigns.card.budget_total,
+                            value: MoneyFormatter.format(
+                              c.totalBudgetCents / 100.0,
+                              currency: kWayoPublicCurrency,
+                              locale: widget.moneyLocale,
+                            ),
+                          ),
                         ),
-                      ),
-                      Expanded(
-                        child: Builder(
-                          builder: (context) {
-                            final rate = resolveCampaignPayoutMetric(
-                              type: c.campaignType,
-                              cpcCents: c.cpcCents,
-                              cpmCents: c.cpmCents,
-                              spentBudgetCents: c.spentBudgetCents,
-                              validViews: c.validViews,
-                            );
-                            return _StatColumn(
-                              label: campaignPayoutMetricLabel(t, rate.kind),
-                              value: rate.hasValue
-                                  ? MoneyFormatter.format(
-                                      rate.cents / 100.0,
-                                      currency: kWayoPublicCurrency,
-                                      locale: widget.moneyLocale,
-                                    )
-                                  : '—',
-                            );
-                          },
+                        Expanded(
+                          child: _StatColumn(
+                            label: _remainingOrSpentLabel(context, c),
+                            value: _remainingOrSpentValue(context, c),
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Divider(
-                    height: 1,
-                    thickness: 1,
-                    color: AdvertiserCampaignsChrome.divider(context),
-                  ),
-                  const SizedBox(height: 10),
-                  _EngagementFooter(campaign: c, t: t),
-                ],
+                        Expanded(
+                          child: Builder(
+                            builder: (context) {
+                              final rate = resolveCampaignPayoutMetric(
+                                type: c.campaignType,
+                                cpcCents: c.cpcCents,
+                                cpmCents: c.cpmCents,
+                                spentBudgetCents: c.spentBudgetCents,
+                                validViews: c.validViews,
+                              );
+                              return _StatColumn(
+                                label: campaignPayoutMetricLabel(t, rate.kind),
+                                value: rate.hasValue
+                                    ? MoneyFormatter.format(
+                                        rate.cents / 100.0,
+                                        currency: kWayoPublicCurrency,
+                                        locale: widget.moneyLocale,
+                                      )
+                                    : '—',
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Divider(
+                      height: 1,
+                      thickness: 1,
+                      color: AdvertiserCampaignsChrome.divider(context),
+                    ),
+                    const SizedBox(height: 10),
+                    _EngagementFooter(campaign: c, t: t),
+                  ],
+                ),
               ),
             ),
           ),
-        ),
         ),
       ),
     );
@@ -211,8 +282,9 @@ class _AdvertiserCampaignCardState extends State<AdvertiserCampaignCard> {
   }
 
   String _remainingOrSpentValue(BuildContext context, AdvertiserCampaign c) {
-    final cents =
-        c.status == CampaignStatus.completed ? c.spentBudgetCents : c.remainingBudgetCents;
+    final cents = c.status == CampaignStatus.completed
+        ? c.spentBudgetCents
+        : c.remainingBudgetCents;
     return MoneyFormatter.format(
       cents / 100.0,
       currency: kWayoPublicCurrency,
@@ -267,8 +339,10 @@ class _EngagementFooter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    String viewsTxt() => t.advertiser_campaigns.card.list_row_views
-        .replaceAll('{count}', '${campaign.validViews}');
+    String viewsTxt() => t.advertiser_campaigns.card.list_row_views.replaceAll(
+      '{count}',
+      '${campaign.validViews}',
+    );
     String clicksTxt() => t.advertiser_campaigns.card.list_row_clicks
         .replaceAll('{count}', '${campaign.validClicks}');
     String creatorsTxt() => t.advertiser_campaigns.card.list_row_creators
@@ -279,7 +353,10 @@ class _EngagementFooter extends StatelessWidget {
         Expanded(
           child: Tooltip(
             message: t.advertiser_campaigns.detail.valid_views,
-            child: _FooterCell(icon: Icons.visibility_outlined, text: viewsTxt()),
+            child: _FooterCell(
+              icon: Icons.visibility_outlined,
+              text: viewsTxt(),
+            ),
           ),
         ),
         SizedBox(
@@ -293,7 +370,10 @@ class _EngagementFooter extends StatelessWidget {
         Expanded(
           child: Tooltip(
             message: t.advertiser_campaigns.detail.valid_clicks,
-            child: _FooterCell(icon: Icons.ads_click_rounded, text: clicksTxt()),
+            child: _FooterCell(
+              icon: Icons.ads_click_rounded,
+              text: clicksTxt(),
+            ),
           ),
         ),
         SizedBox(
@@ -307,8 +387,10 @@ class _EngagementFooter extends StatelessWidget {
         Expanded(
           child: Tooltip(
             message: t.advertiser_campaigns.detail.approved_creators,
-            child:
-                _FooterCell(icon: Icons.groups_2_outlined, text: creatorsTxt()),
+            child: _FooterCell(
+              icon: Icons.groups_2_outlined,
+              text: creatorsTxt(),
+            ),
           ),
         ),
       ],
@@ -331,7 +413,9 @@ class _FooterCell extends StatelessWidget {
         Icon(
           icon,
           size: 16,
-          color: AdvertiserCampaignsChrome.amber(context).withValues(alpha: 0.9),
+          color: AdvertiserCampaignsChrome.amber(
+            context,
+          ).withValues(alpha: 0.9),
         ),
         const SizedBox(width: 6),
         Flexible(
@@ -343,8 +427,9 @@ class _FooterCell extends StatelessWidget {
             style: GoogleFonts.dmSans(
               fontSize: 12,
               fontWeight: FontWeight.w700,
-              color: AdvertiserCampaignsChrome.value(context)
-                  .withValues(alpha: 0.92),
+              color: AdvertiserCampaignsChrome.value(
+                context,
+              ).withValues(alpha: 0.92),
             ),
           ),
         ),
@@ -380,7 +465,8 @@ class _ListThumbGradient extends StatelessWidget {
                       fit: BoxFit.cover,
                       memCacheWidth: 160,
                       memCacheHeight: 160,
-                      errorWidget: (context, url, error) => _placeholder(context),
+                      errorWidget: (context, url, error) =>
+                          _placeholder(context),
                     )
                   : _placeholder(context),
               if (Theme.of(context).brightness == Brightness.dark)
@@ -388,7 +474,8 @@ class _ListThumbGradient extends StatelessWidget {
                   left: 0,
                   right: 0,
                   bottom: 0,
-                  height: _size *
+                  height:
+                      _size *
                       AdvertiserCampaignsChrome.heroScrimHeightFactor(context),
                   child: DecoratedBox(
                     decoration: AdvertiserCampaignsChrome.heroImageBottomFade(
@@ -461,8 +548,10 @@ class _ListStatusChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final String label = campaignStatusLabel(t, status);
 
-    final (bg, fg, borderClr) =
-        AdvertiserCampaignsChrome.statusChip(context, status);
+    final (bg, fg, borderClr) = AdvertiserCampaignsChrome.statusChip(
+      context,
+      status,
+    );
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),

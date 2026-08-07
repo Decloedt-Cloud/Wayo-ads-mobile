@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:wayoadsgo/core/ui/wayo_dialog.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,7 +10,6 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/ui/wayo_system_nav_bar.dart';
 import '../../../../core/ui/wayo_toast.dart';
 import '../../../../i18n/strings.g.dart';
-import '../../../../router/app_router.dart';
 import '../../../app_settings/data/known_devices_remote.dart';
 import '../../../app_settings/presentation/providers/known_devices_providers.dart';
 
@@ -32,28 +32,15 @@ class _TrustedDevicesScreenState extends ConsumerState<TrustedDevicesScreen> {
   Future<void> _revokeDevice(KnownDevice device) async {
     final t = context.t;
     final appSettings = t.app_settings;
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showWayoConfirmDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(appSettings.device_revoke_confirm_title),
-        content: Text(appSettings.device_revoke_confirm_desc),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(appSettings.device_revoke_cancel),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.error,
-              foregroundColor: Colors.white,
-            ),
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: Text(appSettings.device_revoke_confirm),
-          ),
-        ],
-      ),
+      title: appSettings.device_revoke_confirm_title,
+      message: appSettings.device_revoke_confirm_desc,
+      cancelLabel: appSettings.device_revoke_cancel,
+      confirmLabel: appSettings.device_revoke_confirm,
+      tone: WayoDialogTone.destructive,
     );
-    if (confirmed != true || !mounted) return;
+    if (!confirmed || !mounted) return;
 
     setState(() => _revokingId = device.id);
     HapticFeedback.mediumImpact();

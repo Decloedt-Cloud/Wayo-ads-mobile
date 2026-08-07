@@ -108,21 +108,22 @@ final class AdvertiserWalletRepository {
     return null;
   }
 
-  /// [GET /api/wallet/deposit-intent] — resume an abandoned Stripe checkout.
-  Future<AdvertiserPendingDeposit?> fetchPendingDeposit() async {
+  /// [GET /api/wallet/deposit-intent] — resume an abandoned Stripe checkout,
+  /// plus any ACH-processing / wire-awaiting deposits.
+  Future<AdvertiserPendingDepositsSnapshot> fetchPendingDeposit() async {
     try {
       final res = await _dio.get<Map<String, dynamic>>(
         _path(ApiEndpoints.walletDepositIntent),
       );
       final data = res.data;
       if (data == null) {
-        return null;
+        return AdvertiserPendingDepositsSnapshot.empty;
       }
-      return _parsePendingDeposit(data);
+      return _parsePendingSnapshot(data);
     } on DioException catch (e) {
       final code = e.response?.statusCode ?? 0;
       if (code == 403 || code == 404) {
-        return null;
+        return AdvertiserPendingDepositsSnapshot.empty;
       }
       throw ServerException(_depositErrorMessage(e), code);
     }
@@ -150,6 +151,30 @@ final class AdvertiserWalletRepository {
       }
       throw ServerException(_depositErrorMessage(e), code);
     }
+  }
+
+  static AdvertiserPendingDepositsSnapshot _parsePendingSnapshot(
+    Map<String, dynamic> data,
+  ) {
+    final achRaw = data['achProcessing'];
+    final ach = achRaw is List
+        ? achRaw
+            .whereType<Map>()
+            .map((e) => AchProcessingDeposit.fromJson(Map<String, dynamic>.from(e)))
+            .toList()
+        : <AchProcessingDeposit>[];
+    final wireRaw = data['wireAwaiting'];
+    final wire = wireRaw is List
+        ? wireRaw
+            .whereType<Map>()
+            .map((e) => WireAwaitingDeposit.fromJson(Map<String, dynamic>.from(e)))
+            .toList()
+        : <WireAwaitingDeposit>[];
+    return AdvertiserPendingDepositsSnapshot(
+      pending: _parsePendingDeposit(data),
+      achProcessing: ach,
+      wireAwaiting: wire,
+    );
   }
 
   static AdvertiserPendingDeposit? _parsePendingDeposit(
@@ -184,12 +209,18 @@ final class AdvertiserWalletRepository {
       bankFeeCents: bankFeeCents,
       totalAmountCents: totalAmountCents,
       currency: (intent['currency'] as String?)?.toUpperCase() ?? 'USD',
+      depositMethod: AdvertiserDepositMethod.normalize(
+        pending['depositMethod'] as String?,
+      ),
+      bankTransferInstructions:
+          BankTransferFundingInstructions.tryParse(pending['bankTransferInstructions']),
     );
   }
 
   Future<DepositIntentResult> createDepositIntent({
     required int amountCents,
     String? currency,
+    String depositMethod = AdvertiserDepositMethod.card,
   }) async {
     try {
       final res = await _dio.post<Map<String, dynamic>>(
@@ -197,6 +228,7 @@ final class AdvertiserWalletRepository {
         data: <String, dynamic>{
           'amountCents': amountCents,
           'currency': currency,
+          'depositMethod': depositMethod,
         }..removeWhere((_, v) => v == null),
       );
       final data = res.data;
@@ -223,7 +255,78 @@ final class AdvertiserWalletRepository {
         canSimulate: data['canSimulate'] == true,
         walletAmountCents: (data['walletAmountCents'] as num?)?.toInt(),
         bankFeeCents: (data['bankFeeCents'] as num?)?.toInt(),
+        depositMethod: AdvertiserDepositMethod.normalize(
+          data['depositMethod'] as String? ?? depositMethod,
+        ),
+        bankTransferInstructions:
+            BankTransferFundingInstructions.tryParse(data['bankTransferInstructions']),
       );
+    } on DioException catch (e) {
+      throw ServerException(_depositErrorMessage(e), e.response?.statusCode);
+    }
+  }
+
+  /// [POST /api/wallet/deposits/:intentId/reconcile] — manual settle retry
+  /// for a deposit stuck in PENDING (e.g. webhook delay).
+  Future<String> reconcileDeposit(String intentId) async {
+    try {
+      final res = await _dio.post<Map<String, dynamic>>(
+        _path(ApiEndpoints.walletDepositReconcile(intentId)),
+      );
+      final data = res.data;
+      if (data == null) {
+        throw const ServerException('Empty reconcile response');
+      }
+      final err = _err(data);
+      if (err != null) {
+        throw ServerException(err);
+      }
+      return '${data['status'] ?? 'PENDING'}';
+    } on DioException catch (e) {
+      throw ServerException(_depositErrorMessage(e), e.response?.statusCode);
+    }
+  }
+
+  /// [GET /api/wallet/saved-cards] — DB projection (no live Stripe call).
+  Future<SavedCardsResult> fetchSavedCards() async {
+    try {
+      final res = await _dio.get<Map<String, dynamic>>(
+        _path(ApiEndpoints.walletSavedCards),
+      );
+      final data = res.data;
+      if (data == null) return SavedCardsResult.empty;
+      return SavedCardsResult.fromJson(data);
+    } on DioException catch (e) {
+      throw ServerException(_depositErrorMessage(e), e.response?.statusCode);
+    }
+  }
+
+  /// [POST /api/wallet/saved-cards/refresh] — live Stripe → DB sync.
+  Future<SavedCardsResult> refreshSavedCards() async {
+    try {
+      final res = await _dio.post<Map<String, dynamic>>(
+        _path(ApiEndpoints.walletSavedCardsRefresh),
+      );
+      final data = res.data;
+      if (data == null) return SavedCardsResult.empty;
+      return SavedCardsResult.fromJson(data);
+    } on DioException catch (e) {
+      throw ServerException(_depositErrorMessage(e), e.response?.statusCode);
+    }
+  }
+
+  /// [DELETE /api/wallet/saved-cards] — detach a saved card.
+  Future<void> deleteSavedCard(String paymentMethodId) async {
+    try {
+      final res = await _dio.delete<Map<String, dynamic>>(
+        _path(ApiEndpoints.walletSavedCards),
+        data: <String, dynamic>{'paymentMethodId': paymentMethodId},
+      );
+      final data = res.data;
+      final err = data == null ? null : _err(data);
+      if (err != null) {
+        throw ServerException(err);
+      }
     } on DioException catch (e) {
       throw ServerException(_depositErrorMessage(e), e.response?.statusCode);
     }

@@ -33,8 +33,9 @@ class CampaignTopCreatorsSection extends StatelessWidget {
         Row(
           children: [
             ShaderMask(
-              shaderCallback: (rect) =>
-                  CampaignDetailPremiumPalette.accentGradient.createShader(rect),
+              shaderCallback: (rect) => CampaignDetailPremiumPalette
+                  .accentGradient
+                  .createShader(rect),
               child: const Icon(
                 Icons.emoji_events_rounded,
                 size: 22,
@@ -72,11 +73,11 @@ class CampaignTopCreatorsSection extends StatelessWidget {
             itemBuilder: (context, index) {
               final maxViews = ranked.first.validViews;
               return _TopCreatorTile(
-                rank: index + 1,
-                creator: ranked[index],
-                maxViews: maxViews,
-                moneyLocale: moneyLocale,
-              )
+                    rank: index + 1,
+                    creator: ranked[index],
+                    maxViews: maxViews,
+                    moneyLocale: moneyLocale,
+                  )
                   .animate(delay: Duration(milliseconds: 50 * index))
                   .fadeIn(duration: 360.ms, curve: Curves.easeOutCubic)
                   .slideX(begin: 0.08, end: 0, curve: Curves.easeOutCubic);
@@ -123,8 +124,9 @@ class _TopCreatorTile extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: CampaignDetailPremiumPalette.surface1(context),
-        borderRadius:
-            BorderRadius.circular(CampaignDetailPremiumPalette.kCardRadius),
+        borderRadius: BorderRadius.circular(
+          CampaignDetailPremiumPalette.kCardRadius,
+        ),
         border: Border.all(
           color: isPodium
               ? rankColor.withValues(alpha: 0.45)
@@ -149,8 +151,9 @@ class _TopCreatorTile extends StatelessWidget {
                       creator.creatorName,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: CampaignDetailPremiumPalette.bodyValue(context)
-                          .copyWith(fontSize: 15, fontWeight: FontWeight.w700),
+                      style: CampaignDetailPremiumPalette.bodyValue(
+                        context,
+                      ).copyWith(fontSize: 15, fontWeight: FontWeight.w700),
                     ),
                     const SizedBox(height: 2),
                     Text(
@@ -159,8 +162,9 @@ class _TopCreatorTile extends StatelessWidget {
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: CampaignDetailPremiumPalette.bodyLabel(context)
-                          .copyWith(fontSize: 13),
+                      style: CampaignDetailPremiumPalette.bodyLabel(
+                        context,
+                      ).copyWith(fontSize: 13),
                     ),
                   ],
                 ),
@@ -180,8 +184,9 @@ class _TopCreatorTile extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     t.advertiser_campaigns.detail.top_creators_earned,
-                    style: CampaignDetailPremiumPalette.bodyLabel(context)
-                        .copyWith(fontSize: 11),
+                    style: CampaignDetailPremiumPalette.bodyLabel(
+                      context,
+                    ).copyWith(fontSize: 11),
                   ),
                 ],
               ),
@@ -193,8 +198,9 @@ class _TopCreatorTile extends StatelessWidget {
             child: LinearProgressIndicator(
               value: viewsRatio,
               minHeight: 5,
-              backgroundColor:
-                  CampaignDetailPremiumPalette.divider(context).withValues(alpha: 0.6),
+              backgroundColor: CampaignDetailPremiumPalette.divider(
+                context,
+              ).withValues(alpha: 0.6),
               valueColor: AlwaysStoppedAnimation<Color>(rankColor),
             ),
           ),
@@ -256,8 +262,9 @@ class _CreatorAvatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final url = creator.creatorImage;
-    final letter =
-        creator.creatorName.isNotEmpty ? creator.creatorName[0].toUpperCase() : '?';
+    final letter = creator.creatorName.isNotEmpty
+        ? creator.creatorName[0].toUpperCase()
+        : '?';
     if (url != null && url.isNotEmpty) {
       return ClipOval(
         child: CachedNetworkImage(
@@ -313,7 +320,9 @@ class _TopCreatorsEmpty extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
         color: CampaignDetailPremiumPalette.surface1(context),
-        border: Border.all(color: CampaignDetailPremiumPalette.divider(context)),
+        border: Border.all(
+          color: CampaignDetailPremiumPalette.divider(context),
+        ),
         boxShadow: CampaignDetailPremiumPalette.cardShadow(context, 0.08),
       ),
       child: Column(

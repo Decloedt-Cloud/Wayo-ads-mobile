@@ -14,6 +14,8 @@ String localizeAuthError(Object error, Translations t) {
         t.login.rate_limit_remaining(seconds: retryAfterSeconds),
       SessionInvalidException() => t.errors.session_invalid,
       EmailNotRegisteredException() => t.errors.email_not_found,
+      CampaignInsufficientFundsException(:final message) =>
+        message.isNotEmpty ? message : t.errors.server_generic,
     };
   }
   return _fromServerMessage(error.toString(), t) ?? t.errors.unknown;

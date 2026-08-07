@@ -2,6 +2,7 @@ import 'package:country_flags/country_flags.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/layout/wayo_black_bottom_bar.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -28,7 +29,7 @@ const _businessProfileApiFieldKeys = <String>{
   'currency',
 };
 
-/// Opens business info on a dedicated full-screen page (keyboard-safe layout).
+/// Opens business info on the GoRouter full-screen routes (web parity).
 ///
 /// Returns `true` when the user successfully saved a complete profile.
 Future<bool> openBusinessInfoScreen(
@@ -36,13 +37,14 @@ Future<bool> openBusinessInfoScreen(
   required CreatorBusinessProfile initial,
   bool useGlobalBilling = false,
 }) async {
-  final result = await Navigator.of(context, rootNavigator: true).push<bool>(
-    MaterialPageRoute<bool>(
-      builder: (_) => BusinessInfoScreen(
-        initial: initial,
-        useGlobalBilling: useGlobalBilling,
-      ),
-    ),
+  final path =
+      useGlobalBilling ? '/advertiser/business' : '/creator/business';
+  final result = await context.push<bool>(
+    path,
+    extra: <String, dynamic>{
+      'initial': initial,
+      'useGlobalBilling': useGlobalBilling,
+    },
   );
   return result == true;
 }

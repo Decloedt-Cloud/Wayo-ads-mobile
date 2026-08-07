@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:wayoadsgo/core/ui/wayo_dialog.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
@@ -173,9 +174,9 @@ class AnnouncementsScreen extends ConsumerWidget {
     WidgetRef ref,
     Announcement announcement,
   ) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showWayoDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => WayoAlertDialog(
         backgroundColor: AppColors.surfaceOf(context),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),

@@ -36,6 +36,8 @@ NotificationItem notificationItemFromPushData(Map<String, dynamic> data) {
     'campaign_id',
     'applicationId',
     'application_id',
+    'conversationId',
+    'conversation_id',
   ]) {
     final v = flat[key];
     if (v != null) metadata.putIfAbsent(key, () => v);
@@ -192,7 +194,18 @@ String? _routeFromMetadata(
 
   if (type.contains('INVOICE')) return '/invoices';
 
-  if (type.contains('CHAT') || type.contains('MESSAGE')) return '/chat';
+  final conversationId = () {
+    final m = item.metadata;
+    if (m == null) return null;
+    final raw = m['conversationId'] ?? m['conversation_id'];
+    if (raw == null) return null;
+    final s = raw.toString().trim();
+    return s.isEmpty ? null : s;
+  }();
+  if (type.contains('CHAT') || type.contains('MESSAGE')) {
+    if (conversationId != null) return '/chat/thread/$conversationId';
+    return '/chat';
+  }
 
   if (type.contains('CAMPAIGN') ||
       type.contains('VIDEO') ||

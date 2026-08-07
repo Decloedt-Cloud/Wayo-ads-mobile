@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:wayoadsgo/core/ui/wayo_dialog.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -38,27 +39,15 @@ class _SecurityActiveSessionsSectionState
 
   Future<void> _revokeOne(ActiveSession session) async {
     final t = context.t;
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showWayoConfirmDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(t.app_settings.session_revoke_confirm_title),
-        content: Text(t.app_settings.session_revoke_confirm_desc),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(t.app_settings.session_revoke_cancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: Text(
-              t.app_settings.session_revoke_confirm,
-              style: const TextStyle(color: AppColors.error),
-            ),
-          ),
-        ],
-      ),
+      title: t.app_settings.session_revoke_confirm_title,
+      message: t.app_settings.session_revoke_confirm_desc,
+      cancelLabel: t.app_settings.session_revoke_cancel,
+      confirmLabel: t.app_settings.session_revoke_confirm,
+      tone: WayoDialogTone.destructive,
     );
-    if (confirmed != true || !mounted) return;
+    if (!confirmed || !mounted) return;
 
     setState(() {
       _revokingId = session.id;
@@ -94,27 +83,15 @@ class _SecurityActiveSessionsSectionState
 
   Future<void> _revokeOthers() async {
     final t = context.t;
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showWayoConfirmDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(t.app_settings.session_revoke_others_confirm_title),
-        content: Text(t.app_settings.session_revoke_others_confirm_desc),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(t.app_settings.session_revoke_cancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: Text(
-              t.app_settings.session_revoke_confirm,
-              style: const TextStyle(color: AppColors.error),
-            ),
-          ),
-        ],
-      ),
+      title: t.app_settings.session_revoke_others_confirm_title,
+      message: t.app_settings.session_revoke_others_confirm_desc,
+      cancelLabel: t.app_settings.session_revoke_cancel,
+      confirmLabel: t.app_settings.session_revoke_confirm,
+      tone: WayoDialogTone.destructive,
     );
-    if (confirmed != true || !mounted) return;
+    if (!confirmed || !mounted) return;
 
     setState(() {
       _revokingOthers = true;

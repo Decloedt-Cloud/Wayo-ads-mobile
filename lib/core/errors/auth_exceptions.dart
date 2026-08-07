@@ -50,3 +50,25 @@ final class EmailNotRegisteredException extends AuthException {
   @override
   String toString() => message;
 }
+
+/// Campaign activate lock failed — draft may already exist server-side.
+final class CampaignInsufficientFundsException extends AuthException {
+  const CampaignInsufficientFundsException({
+    this.draftCampaignId,
+    this.requiredCents,
+    this.availableCents,
+    this.platformFeeCents,
+    this.taxCents,
+    this.message = 'Insufficient funds',
+  });
+
+  final String? draftCampaignId;
+  final int? requiredCents;
+  final int? availableCents;
+  final int? platformFeeCents;
+  final int? taxCents;
+  final String message;
+
+  @override
+  String toString() => message;
+}

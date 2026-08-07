@@ -9,6 +9,7 @@ import 'advertiser_wallet_providers.dart';
 /// Keeps pending wallet checkout, balance, and advertiser invoices aligned.
 void invalidateAdvertiserWalletDepositSync(WidgetRef ref) {
   ref.invalidate(advertiserWalletPageProvider);
+  ref.invalidate(advertiserPendingDepositsSnapshotProvider);
   ref.invalidate(advertiserPendingDepositProvider);
   ref.invalidate(invoicesControllerProvider);
   ref.invalidate(dashboardStreamProvider);
@@ -19,6 +20,7 @@ void syncAdvertiserPendingDepositFromInvoices(Ref ref) {
   final role = ref.read(currentWayoAdsAccountRoleProvider);
   if (role == WayoAdsAccountRole.advertiser ||
       role == WayoAdsAccountRole.superAdmin) {
+    ref.invalidate(advertiserPendingDepositsSnapshotProvider);
     ref.invalidate(advertiserPendingDepositProvider);
   }
 }

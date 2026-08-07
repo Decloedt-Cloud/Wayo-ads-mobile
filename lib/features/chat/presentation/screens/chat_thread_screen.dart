@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:cross_file/cross_file.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:wayoadsgo/core/ui/wayo_dialog.dart';
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -15,6 +16,7 @@ import '../../../../core/push/wayo_push_intent.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/ui/wayo_toast.dart';
 import '../../../../i18n/strings.g.dart';
+import '../../../auth/domain/wayo_ads_account_role.dart';
 import '../../../auth/presentation/providers/current_account_providers.dart';
 import '../formatting/chat_partner_role.dart';
 import '../../data/chat_active_conversation.dart';
@@ -95,7 +97,8 @@ class ChatThreadScreen extends ConsumerStatefulWidget {
   ConsumerState<ChatThreadScreen> createState() => _ChatThreadScreenState();
 }
 
-class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
+class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen>
+    with WidgetsBindingObserver {
   final _scroll = ScrollController();
   final _draft = TextEditingController();
   bool _showScrollFab = false;
@@ -196,13 +199,19 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
       if (context.canPop()) {
         context.pop();
       } else {
-        context.go('/chat');
+        final role = ref.read(currentWayoAdsAccountRoleProvider);
+        context.go(
+          role == WayoAdsAccountRole.superAdmin
+              ? '/superadmin?tab=chat'
+              : '/chat',
+        );
       }
     }());
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _sub?.cancel();
     _typingTimer?.cancel();
     _typingQuietTimer?.cancel();
@@ -212,6 +221,56 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
     _draft.dispose();
     unawaited(setActiveChatConversationId(null));
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      unawaited(_resyncAfterForeground());
+    }
+  }
+
+  /// Backgrounding often kills Reverb without a connectivity flip — reconnect +
+  /// refetch so the thread body catches up with messages missed offline.
+  Future<void> _resyncAfterForeground() async {
+    if (!mounted || _loading) return;
+    try {
+      await forceReconnectChatRealtime(ref);
+      if (!mounted) return;
+      final creds = await ref.read(chatBootstrapProvider.future);
+      final rt = ref.read(chatRealtimeServiceProvider);
+      final repo = ref.read(chatRepositoryProvider);
+      final idSet = <int>{widget.conversationId};
+      final conversations = ref.read(chatConversationsProvider).valueOrNull;
+      if (conversations != null) {
+        idSet.addAll(conversations.map((c) => c.id));
+      }
+      await rt.updateConversationSubscriptions(creds, idSet.toList());
+      final page = await repo.fetchMessagesPage(
+        creds,
+        widget.conversationId,
+        socketId: () => rt.socketId,
+        page: 1,
+        perPage: _messagesPageSize,
+      );
+      if (!mounted) return;
+      final byId = <int, ChatMessage>{
+        for (final m in _messages) m.id: m,
+      };
+      for (final m in page.messages) {
+        byId[m.id] = m;
+      }
+      final merged = byId.values.toList()
+        ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+      setState(() {
+        _messages = merged;
+        _error = null;
+      });
+      _listenRt(creds, repo, rt);
+      unawaited(markChatConversationRead(ref, widget.conversationId));
+    } catch (_) {
+      // Best-effort — leave existing thread UI intact.
+    }
   }
 
   void _syncSpamCooldownTicker() {
@@ -233,6 +292,7 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     unawaited(setActiveChatConversationId(widget.conversationId));
     WidgetsBinding.instance.addPostFrameCallback((_) => _bootstrap());
   }
@@ -1164,36 +1224,16 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
       return;
     }
 
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showWayoConfirmDialog(
       context: context,
-      builder: (ctx) {
-        final ct = CinematicChatTheme.of(ctx);
-        return AlertDialog(
-          backgroundColor: ct.surface,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(22),
-          ),
-          title: Text(t.chat.delete_confirm_title),
-          content: Text(t.chat.delete_confirm_text),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(false),
-              child: Text(t.chat.delete_confirm_cancel),
-            ),
-            FilledButton(
-              style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFFEF4444),
-                foregroundColor: Colors.white,
-              ),
-              onPressed: () => Navigator.of(ctx).pop(true),
-              child: Text(t.chat.delete_confirm_cta),
-            ),
-          ],
-        );
-      },
+      title: t.chat.delete_confirm_title,
+      message: t.chat.delete_confirm_text,
+      cancelLabel: t.chat.delete_confirm_cancel,
+      confirmLabel: t.chat.delete_confirm_cta,
+      tone: WayoDialogTone.destructive,
     );
 
-    if (confirmed != true) return;
+    if (!confirmed) return;
     if (!mounted) return;
 
     final previous = _messages;
@@ -1210,6 +1250,50 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
       if (!mounted) return;
       setState(() => _messages = previous);
       WayoToast.error(context, t.chat.delete_failed);
+    }
+  }
+
+  Future<void> _onDeleteConversation() async {
+    final t = context.t;
+    final confirmed = await showWayoConfirmDialog(
+      context: context,
+      title: t.chat.delete_conversation_confirm_title,
+      message: t.chat.delete_conversation_confirm_text,
+      cancelLabel: t.chat.delete_confirm_cancel,
+      confirmLabel: t.chat.delete_conversation_confirm_cta,
+      tone: WayoDialogTone.destructive,
+    );
+    if (!confirmed || !mounted) return;
+
+    final creds = ref.read(chatBootstrapProvider).valueOrNull;
+    if (creds == null) return;
+    final repo = ref.read(chatRepositoryProvider);
+    final rt = ref.read(chatRealtimeServiceProvider);
+    try {
+      await repo.deleteConversation(
+        creds,
+        widget.conversationId,
+        socketId: () => rt.socketId,
+      );
+      invalidateChatRealtimeBindingImmediate(
+        () => ref.invalidate(chatRealtimeBindingProvider),
+      );
+      ref.invalidate(chatConversationsProvider);
+      if (!mounted) return;
+      WayoToast.info(context, t.chat.delete_conversation_done);
+      if (context.canPop()) {
+        context.pop();
+      } else {
+        final role = ref.read(currentWayoAdsAccountRoleProvider);
+        context.go(
+          role == WayoAdsAccountRole.superAdmin
+              ? '/superadmin?tab=chat'
+              : '/chat',
+        );
+      }
+    } catch (_) {
+      if (!mounted) return;
+      WayoToast.error(context, t.chat.delete_conversation_failed);
     }
   }
 
@@ -1801,11 +1885,16 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
                                           context,
                                         ).top,
                                         partnerAvatarUrl: partnerAvatarResolved,
-                                        partnerRole: chatPartnerRoleFor(
-                                          ref.watch(
+                                        partnerRole: resolveChatPartnerRole(
+                                          myRole: ref.watch(
                                             currentWayoAdsAccountRoleProvider,
                                           ),
+                                          partnerAppRoles: conv?.partnerAppRoles(
+                                            creds.chatUserId,
+                                          ),
                                         ),
+                                        onDeleteConversation:
+                                            _onDeleteConversation,
                                       ),
                                     ),
                                     if (_loading)

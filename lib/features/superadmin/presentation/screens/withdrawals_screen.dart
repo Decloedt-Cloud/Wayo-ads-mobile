@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:wayoadsgo/core/ui/wayo_dialog.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
@@ -294,9 +295,9 @@ class _WithdrawalsScreenState extends ConsumerState<WithdrawalsScreen> {
     String actionLabel,
     Color actionColor,
   ) {
-    return showDialog<bool>(
+    return showWayoDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => WayoAlertDialog(
         backgroundColor: AppColors.surfaceOf(context),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),

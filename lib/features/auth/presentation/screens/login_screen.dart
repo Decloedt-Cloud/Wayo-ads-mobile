@@ -135,6 +135,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       final idToken = await GoogleSignInFacade.signInForIdToken(googleCid);
       if (!mounted) return;
       if (idToken == null) {
+        // User cancelled the Google account picker — not an error.
         return;
       }
       if (idToken.isEmpty) {
@@ -142,9 +143,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         return;
       }
       await ref.read(authNotifierProvider.notifier).loginWithGoogle(idToken);
-      if (!context.mounted) return;
+      if (!mounted) return;
       if (ref.read(authNotifierProvider).hasError) return;
-      _goAfterLogin(ref);
+      // Defer navigation one frame so GoRouter can finish disposing the login
+      // route after AuthAuthenticated without using a deactivated context.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _goAfterLogin(ref);
+      });
     } on PlatformException catch (e) {
       if (!mounted) return;
       final msg = GoogleSignInFacade.looksLikeStaleChannel(e)
@@ -161,6 +167,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           ? t.login.google_channel_restart
           : GoogleSignInFacade.isAndroidDeveloperConfigError(e)
           ? t.login.google_android_oauth_misconfigured
+          : GoogleSignInFacade.isMissingIdTokenError(e)
+          ? t.login.google_wrong_client_id
           : t.login.google_failed;
       WayoToast.error(context, msg);
     } finally {

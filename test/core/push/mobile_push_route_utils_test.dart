@@ -13,6 +13,27 @@ void main() {
     );
   });
 
+  test('preserves chat thread deep links for FCM → conversation body', () {
+    expect(
+      normalizeMobilePushRoute('/chat/thread/42'),
+      '/chat/thread/42',
+    );
+    expect(
+      normalizeMobilePushRoute('/chat/thread/42?reply=1'),
+      '/chat/thread/42?reply=1',
+    );
+    expect(
+      normalizeMobilePushRoute('/messages/99'),
+      '/chat/thread/99',
+    );
+    expect(normalizeMobilePushRoute('/chat'), '/chat');
+    expect(
+      normalizeWayoPushNavigationRoute('/chat/thread/7?peer=Alice'),
+      '/chat/thread/7?peer=Alice',
+    );
+    expect(isAllowedWayoPushNavigationRoute('/chat/thread/7'), isTrue);
+  });
+
   test('shellTabParentForPushRoute maps detail routes to shell tabs', () {
     expect(shellTabParentForPushRoute('/campaigns/abc'), '/campaigns');
     expect(shellTabParentForPushRoute('/creator/campaigns/abc'), '/dashboard');
@@ -24,5 +45,33 @@ void main() {
     expect(isShellEmbeddedPushRoute('/campaigns/abc'), isTrue);
     expect(isShellEmbeddedPushRoute('/campaigns/abc/extra'), isFalse);
     expect(isShellEmbeddedPushRoute('/creator/campaigns/abc'), isFalse);
+  });
+
+  test('allows advertiser campaign editor deep links', () {
+    expect(
+      isAllowedWayoPushNavigationRoute('/advertiser/campaigns/abc/edit'),
+      isTrue,
+    );
+    expect(
+      isAllowedWayoPushNavigationRoute('/advertiser/campaigns/new'),
+      isTrue,
+    );
+    expect(isAllowedWayoPushNavigationRoute('/settings/youtube'), isTrue);
+    expect(isAllowedWayoPushNavigationRoute('/creator/analytics'), isTrue);
+    expect(isAllowedWayoPushNavigationRoute('/advertiser/creators'), isTrue);
+  });
+
+  test('maps and allows business profile routes', () {
+    expect(
+      normalizeMobilePushRoute('/advertiser/business'),
+      '/advertiser/business',
+    );
+    expect(
+      normalizeMobilePushRoute('/dashboard/creator/business'),
+      '/creator/business',
+    );
+    expect(isAllowedWayoPushNavigationRoute('/advertiser/business'), isTrue);
+    expect(isAllowedWayoPushNavigationRoute('/creator/business'), isTrue);
+    expect(shellTabParentForPushRoute('/creator/business'), '/wallet');
   });
 }

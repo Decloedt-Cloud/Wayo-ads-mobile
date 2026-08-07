@@ -7,9 +7,10 @@ import '../../../../core/push/mobile_push_route_utils.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../auth/domain/auth_notifier.dart';
 import '../../../auth/domain/wayo_ads_account_role.dart';
-import '../providers/superadmin_providers.dart';
+import '../../../chat/presentation/providers/chat_providers.dart';
+import '../../../shell/shell_tabs.dart';
 import '../../../shell/widgets/wayo_bottom_nav.dart';
-import 'announcements_screen.dart';
+import '../providers/superadmin_providers.dart';
 import 'superadmin_dashboard_screen.dart';
 import 'superadmin_shell_screen.dart';
 import 'users_screen.dart';
@@ -27,13 +28,7 @@ class _SuperadminHomeScreenState extends ConsumerState<SuperadminHomeScreen> {
   int _currentIndex = 0;
   String? _lastSyncedRouteTab;
 
-  static const _screens = [
-    SuperadminDashboardScreen(),
-    UsersScreen(),
-    WithdrawalsScreen(),
-    AnnouncementsScreen(),
-    SuperadminMoreScreen(),
-  ];
+  static const _tabCount = 5;
 
   @override
   void didChangeDependencies() {
@@ -50,14 +45,25 @@ class _SuperadminHomeScreenState extends ConsumerState<SuperadminHomeScreen> {
     }
     if (tab == _lastSyncedRouteTab) return;
     _lastSyncedRouteTab = tab;
-    final next = superadminTabIndexFromQuery(tab).clamp(0, _screens.length - 1);
+
+    // Announcements moved out of the bottom nav → dedicated screen.
+    if (tab.trim().toLowerCase() == 'announcements') {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        context.go('/superadmin/announcements');
+      });
+      return;
+    }
+
+    final next =
+        superadminTabIndexFromQuery(tab).clamp(0, _tabCount - 1);
     if (next != _currentIndex) {
       setState(() => _currentIndex = next);
     }
   }
 
   void _selectTab(int index) {
-    final safeIndex = index.clamp(0, _screens.length - 1);
+    final safeIndex = index.clamp(0, _tabCount - 1);
     if (safeIndex == _currentIndex) {
       if (safeIndex == 2) {
         invalidateSuperadminWithdrawalData(ref);
@@ -72,7 +78,6 @@ class _SuperadminHomeScreenState extends ConsumerState<SuperadminHomeScreen> {
       invalidateSuperadminWithdrawalData(ref);
     }
 
-    // Keep URL in sync for push deep links; local state drives the UI instantly.
     final route = superadminShellRouteForTabIndex(safeIndex);
     _lastSyncedRouteTab =
         Uri.tryParse(route)?.queryParameters['tab'] ?? '';
@@ -92,11 +97,18 @@ class _SuperadminHomeScreenState extends ConsumerState<SuperadminHomeScreen> {
     }
 
     final keyboardOpen = wayoShellKeyboardOpen(context);
+    final chatUnread = ref.watch(chatUnreadCountProvider);
 
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,
-        children: _screens,
+        children: const [
+          SuperadminDashboardScreen(),
+          UsersScreen(),
+          WithdrawalsScreen(),
+          ChatTabScreen(),
+          SuperadminMoreScreen(),
+        ],
       ),
       bottomNavigationBar: keyboardOpen
           ? null
@@ -108,6 +120,7 @@ class _SuperadminHomeScreenState extends ConsumerState<SuperadminHomeScreen> {
               child: SuperadminBottomNav(
                 currentIndex: _currentIndex,
                 onTap: _selectTab,
+                chatUnread: chatUnread,
               ),
             ),
     );

@@ -1,12 +1,16 @@
-﻿import 'dart:async';
+import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:wayoadsgo/core/ui/wayo_dialog.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/ui/wayo_toast.dart';
+import '../../../auth/domain/auth_notifier.dart';
+import '../../data/superadmin_ops_remote.dart';
+import '../../domain/entities/admin_ops.dart';
 import '../../domain/entities/admin_user.dart';
 import '../../domain/entities/banned_user.dart';
 import '../providers/superadmin_providers.dart';
@@ -145,15 +149,6 @@ class _UsersScreenState extends ConsumerState<UsersScreen>
         ? ref.watch(bannedUsersNotifierProvider(search: _searchQuery))
         : null;
 
-    if (!_showBannedOnly) {
-      ref.listen(adminUsersNotifierProvider(
-        search: _searchQuery, role: _roleFilter,
-        joined: _joinedFilter, bannedOnly: false,
-      ), (previous, next) {
-        if (next.hasValue && mounted) setState(() {});
-      });
-    }
-
     return Scaffold(
       backgroundColor: AppColors.surfaceOf(context),
       appBar: AppBar(
@@ -240,24 +235,34 @@ class _UsersScreenState extends ConsumerState<UsersScreen>
           _showBannedOnly
               ? (bannedAsync?.when(
                   data: (page) => page.bans.isEmpty
-                      ? SliverFillRemaining(child: _buildEmptyState())
+                      ? SliverFillRemaining(
+                          hasScrollBody: false,
+                          child: _buildEmptyState(),
+                        )
                       : _buildBannedUsersSliverList(page),
                   loading: () => const SliverFillRemaining(
+                    hasScrollBody: false,
                     child: Center(child: CircularProgressIndicator()),
                   ),
                   error: (e, _) => SliverFillRemaining(
+                    hasScrollBody: false,
                     child: _buildErrorState(() => ref.invalidate(
                       bannedUsersNotifierProvider(search: _searchQuery))),
                   ),
                 ) ?? const SliverToBoxAdapter(child: SizedBox.shrink()))
               : (usersAsync?.when(
                   data: (page) => page.users.isEmpty
-                      ? SliverFillRemaining(child: _buildEmptyState())
+                      ? SliverFillRemaining(
+                          hasScrollBody: false,
+                          child: _buildEmptyState(),
+                        )
                       : _buildUsersSliverList(page),
                   loading: () => const SliverFillRemaining(
+                    hasScrollBody: false,
                     child: Center(child: CircularProgressIndicator()),
                   ),
                   error: (e, _) => SliverFillRemaining(
+                    hasScrollBody: false,
                     child: _buildErrorState(_invalidateUsersList),
                   ),
                 ) ?? const SliverToBoxAdapter(child: SizedBox.shrink())),
@@ -266,7 +271,7 @@ class _UsersScreenState extends ConsumerState<UsersScreen>
     );
   }
 
-  // ── Segmented Toggle ──
+  // -- Segmented Toggle --
   Widget _buildSegmentedToggle(bool isDark) {
     return Container(
       height: 44,
@@ -327,7 +332,7 @@ class _UsersScreenState extends ConsumerState<UsersScreen>
     );
   }
 
-  // ── Search Bar ──
+  // -- Search Bar --
   Widget _buildSearchBar(bool isDark) {
     return Container(
       decoration: BoxDecoration(boxShadow: [
@@ -369,7 +374,7 @@ class _UsersScreenState extends ConsumerState<UsersScreen>
     );
   }
 
-  // ── Filter Chips ──
+  // -- Filter Chips --
   Widget _buildFilterChips(bool isDark) {
     return SizedBox(
       height: 38,
@@ -401,7 +406,7 @@ class _UsersScreenState extends ConsumerState<UsersScreen>
     );
   }
 
-  // ── Stat Pill ──
+  // -- Stat Pill --
   Widget _buildStatPill({
     required IconData icon, required String value, required String label,
     required Color color, required bool isDark,
@@ -442,7 +447,7 @@ class _UsersScreenState extends ConsumerState<UsersScreen>
     );
   }
 
-  // ── Stats Section ──
+  // -- Stats Section --
   Widget _buildStatsSection(AdminUsersStats stats, bool isDark) {
     final items = [
       _StatPillData(Icons.people_rounded, stats.total.toString(), 'Total Users', AppColors.primary),
@@ -483,7 +488,7 @@ class _UsersScreenState extends ConsumerState<UsersScreen>
     );
   }
 
-  // ── List Builders ──
+  // -- List Builders --
   SliverList _buildUsersSliverList(AdminUsersPage page) {
     return SliverList(
       delegate: SliverChildBuilderDelegate((context, index) {
@@ -516,7 +521,7 @@ class _UsersScreenState extends ConsumerState<UsersScreen>
     );
   }
 
-  // ── Pagination (Wayo-ads page / totalPages / limit) ──
+  // -- Pagination (Wayo-ads page / totalPages / limit) --
   Widget _buildPaginationFooter(AdminUsersPage page) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final canPrev = page.page > 1 && !_isPagingUsers;
@@ -566,7 +571,7 @@ class _UsersScreenState extends ConsumerState<UsersScreen>
                       Text(
                         page.total == 0
                             ? 'No users'
-                            : '$start–$end of ${page.total} users',
+                            : '$start�$end of ${page.total} users',
                         style: TextStyle(
                           fontSize: 12,
                           color: AppColors.textMutedOf(context),
@@ -635,7 +640,7 @@ class _UsersScreenState extends ConsumerState<UsersScreen>
     );
   }
 
-  // ── Empty & Error ──
+  // -- Empty & Error --
   Widget _buildEmptyState() {
     return Center(
       child: Column(mainAxisSize: MainAxisSize.min, children: [
@@ -678,7 +683,7 @@ class _UsersScreenState extends ConsumerState<UsersScreen>
     );
   }
 
-  // ── Dialogs ──
+  // -- Dialogs --
   Future<void> _showBanDialog(AdminUser user) async {
     final reasonController = TextEditingController();
     final confirmed = await showModalBottomSheet<bool>(
@@ -774,9 +779,9 @@ class _UsersScreenState extends ConsumerState<UsersScreen>
   }
 
   Future<void> _confirmUnban(AdminUser user) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showWayoDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
+      builder: (ctx) => WayoAlertDialog(
         backgroundColor: AppColors.surfaceOf(context),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         contentPadding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
@@ -832,9 +837,9 @@ class _UsersScreenState extends ConsumerState<UsersScreen>
   }
 
   Future<void> _confirmUnbanBannedUser(BannedUser user) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showWayoDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
+      builder: (ctx) => WayoAlertDialog(
         backgroundColor: AppColors.surfaceOf(context),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         contentPadding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
@@ -1046,240 +1051,171 @@ class _UserCard extends StatelessWidget {
                 : Colors.white,
             child: InkWell(
               onTap: onViewDetails,
-              child: IntrinsicHeight(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Container(
-                      width: 4,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            accent,
-                            accent.withValues(alpha: 0.35),
-                          ],
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  border: Border(
+                    left: BorderSide(width: 4, color: accent),
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _ModernUserAvatar(user: user),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                _ModernUserAvatar(user: user),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Expanded(
-                                            child: Text(
-                                              user.displayName,
-                                              style: TextStyle(
-                                                fontSize: 17,
-                                                fontWeight: FontWeight.w700,
-                                                letterSpacing: -0.4,
-                                                color: AppColors.textPrimaryOf(context),
-                                              ),
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          ),
-                                          Icon(
-                                            Icons.chevron_right_rounded,
-                                            size: 22,
-                                            color: AppColors.textMutedOf(context)
-                                                .withValues(alpha: 0.5),
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        user.email,
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        user.displayName,
                                         style: TextStyle(
-                                          fontSize: 13,
-                                          height: 1.2,
-                                          color: AppColors.textSecondaryOf(context),
+                                          fontSize: 17,
+                                          fontWeight: FontWeight.w700,
+                                          letterSpacing: -0.4,
+                                          color: AppColors.textPrimaryOf(context),
                                         ),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                       ),
-                                      const SizedBox(height: 6),
-                                      Row(
-                                        children: [
-                                          Icon(
-                                            Icons.access_time_filled_rounded,
-                                            size: 14,
-                                            color: lastLoginTint,
-                                          ),
-                                          const SizedBox(width: 5),
-                                          Expanded(
-                                            child: Text(
-                                              lastLoginHours != null
-                                                  ? 'Last seen · $lastLoginLabel'
-                                                  : lastLoginLabel,
-                                              style: TextStyle(
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.w600,
-                                                color: lastLoginTint,
-                                              ),
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          ),
-                                          if (lastLoginHours != null)
-                                            Container(
-                                              padding: const EdgeInsets.symmetric(
-                                                horizontal: 8,
-                                                vertical: 3,
-                                              ),
-                                              decoration: BoxDecoration(
-                                                color: lastLoginTint.withValues(
-                                                  alpha: 0.12,
-                                                ),
-                                                borderRadius:
-                                                    BorderRadius.circular(8),
-                                              ),
-                                              child: Text(
-                                                '${lastLoginHours}h',
-                                                style: TextStyle(
-                                                  fontSize: 11,
-                                                  fontWeight: FontWeight.w800,
-                                                  color: lastLoginTint,
-                                                ),
-                                              ),
-                                            ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Wrap(
-                                        spacing: 6,
-                                        runSpacing: 6,
-                                        children: [
-                                          _RolePill(role: user.role),
-                                          _StatusPill(
-                                            label: status.$2,
-                                            color: status.$1,
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
+                                    ),
+                                    Icon(
+                                      Icons.chevron_right_rounded,
+                                      size: 22,
+                                      color: AppColors.textMutedOf(context)
+                                          .withValues(alpha: 0.5),
+                                    ),
+                                  ],
                                 ),
-                              ],
-                            ),
-                            const SizedBox(height: 14),
-                            LayoutBuilder(
-                              builder: (context, constraints) {
-                                final tileWidth =
-                                    (constraints.maxWidth - 8) / 2;
-                                return Wrap(
-                                  spacing: 8,
-                                  runSpacing: 8,
+                                const SizedBox(height: 2),
+                                Text(
+                                  user.email,
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    height: 1.2,
+                                    color: AppColors.textSecondaryOf(context),
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 6),
+                                Row(
                                   children: [
-                                    if (user.role == AdminUserRole.creator)
-                                      _UserMetricTile(
-                                        width: tileWidth,
-                                        icon: Icons.handshake_rounded,
-                                        label: 'Collabs',
-                                        value: '${user.approvedCollaborations}',
-                                        color: user.approvedCollaborations > 0
-                                            ? AppColors.success
-                                            : AppColors.textMutedOf(context),
-                                      ),
-                                    _UserMetricTile(
-                                      width: tileWidth,
-                                      icon: Icons.credit_card_rounded,
-                                      label: 'Stripe',
-                                      value: user.stripeStatus.displayName,
-                                      color: user.stripeStatus ==
-                                              StripeStatus.connected
-                                          ? AppColors.success
-                                          : AppColors.textMutedOf(context),
-                                    ),
-                                    _UserMetricTile(
-                                      width: tileWidth,
-                                      icon: Icons.calendar_month_rounded,
-                                      label: 'Joined',
-                                      value: DateFormat('MMM d, yy')
-                                          .format(user.joinedAt),
-                                      color: AppColors.textMutedOf(context),
-                                    ),
-                                    _UserMetricTile(
-                                      width: tileWidth,
-                                      icon: Icons.schedule_rounded,
-                                      label: 'Last login',
-                                      value: lastLoginHours != null
-                                          ? '$lastLoginHours h'
-                                          : '—',
-                                      subtitle: lastLoginHours != null
-                                          ? lastLoginLabel
-                                          : 'Never',
+                                    Icon(
+                                      Icons.access_time_filled_rounded,
+                                      size: 14,
                                       color: lastLoginTint,
                                     ),
-                                    if (user.ipAddress != null)
-                                      _UserMetricTile(
-                                        width: tileWidth,
-                                        icon: Icons.public_rounded,
-                                        label: 'IP',
-                                        value: user.ipAddress!,
-                                        color: AppColors.textMutedOf(context),
+                                    const SizedBox(width: 5),
+                                    Expanded(
+                                      child: Text(
+                                        lastLoginHours != null
+                                            ? 'Last seen � $lastLoginLabel'
+                                            : lastLoginLabel,
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                          color: lastLoginTint,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                    if (lastLoginHours != null)
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 3,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: lastLoginTint.withValues(
+                                            alpha: 0.12,
+                                          ),
+                                          borderRadius:
+                                              BorderRadius.circular(8),
+                                        ),
+                                        child: Text(
+                                          '${lastLoginHours}h',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w800,
+                                            color: lastLoginTint,
+                                          ),
+                                        ),
                                       ),
                                   ],
-                                );
-                              },
-                            ),
-                            const SizedBox(height: 12),
-                            Divider(
-                              height: 1,
-                              color: AppColors.borderOf(context)
-                                  .withValues(alpha: 0.35),
-                            ),
-                            const SizedBox(height: 8),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: _CardActionButton(
-                                    label: 'Details',
-                                    icon: Icons.insights_rounded,
-                                    foreground: AppColors.primary,
-                                    background: AppColors.primary
-                                        .withValues(alpha: 0.1),
-                                    onPressed: onViewDetails,
-                                  ),
                                 ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: _CardActionButton(
-                                    label: isBanned ? 'Unban' : 'Ban',
-                                    icon: isBanned
-                                        ? Icons.lock_open_rounded
-                                        : Icons.gpp_bad_rounded,
-                                    foreground: isBanned
-                                        ? AppColors.success
-                                        : AppColors.error,
-                                    background: (isBanned
-                                            ? AppColors.success
-                                            : AppColors.error)
-                                        .withValues(alpha: 0.1),
-                                    onPressed: isBanned ? onUnban : onBan,
-                                  ),
+                                const SizedBox(height: 8),
+                                Wrap(
+                                  spacing: 6,
+                                  runSpacing: 6,
+                                  children: [
+                                    _RolePill(role: user.role),
+                                    _StatusPill(
+                                      label: status.$2,
+                                      color: status.$1,
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 14),
+                      _UserMetricsGrid(
+                        user: user,
+                        lastLoginHours: lastLoginHours,
+                        lastLoginLabel: lastLoginLabel,
+                        lastLoginTint: lastLoginTint,
+                      ),
+                      const SizedBox(height: 12),
+                      Divider(
+                        height: 1,
+                        color: AppColors.borderOf(context)
+                            .withValues(alpha: 0.35),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _CardActionButton(
+                              label: 'Details',
+                              icon: Icons.insights_rounded,
+                              foreground: AppColors.primary,
+                              background: AppColors.primary
+                                  .withValues(alpha: 0.1),
+                              onPressed: onViewDetails,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: _CardActionButton(
+                              label: isBanned ? 'Unban' : 'Ban',
+                              icon: isBanned
+                                  ? Icons.lock_open_rounded
+                                  : Icons.gpp_bad_rounded,
+                              foreground: isBanned
+                                  ? AppColors.success
+                                  : AppColors.error,
+                              background: (isBanned
+                                      ? AppColors.success
+                                      : AppColors.error)
+                                  .withValues(alpha: 0.1),
+                              onPressed: isBanned ? onUnban : onBan,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -1449,9 +1385,85 @@ class _StatusPill extends StatelessWidget {
   }
 }
 
+class _UserMetricsGrid extends StatelessWidget {
+  const _UserMetricsGrid({
+    required this.user,
+    required this.lastLoginHours,
+    required this.lastLoginLabel,
+    required this.lastLoginTint,
+  });
+
+  final AdminUser user;
+  final int? lastLoginHours;
+  final String lastLoginLabel;
+  final Color lastLoginTint;
+
+  @override
+  Widget build(BuildContext context) {
+    final tiles = <Widget>[
+      if (user.role == AdminUserRole.creator)
+        _UserMetricTile(
+          icon: Icons.handshake_rounded,
+          label: 'Collabs',
+          value: '${user.approvedCollaborations}',
+          color: user.approvedCollaborations > 0
+              ? AppColors.success
+              : AppColors.textMutedOf(context),
+        ),
+      _UserMetricTile(
+        icon: Icons.credit_card_rounded,
+        label: 'Stripe',
+        value: user.stripeStatus.displayName,
+        color: user.stripeStatus == StripeStatus.connected
+            ? AppColors.success
+            : AppColors.textMutedOf(context),
+      ),
+      _UserMetricTile(
+        icon: Icons.calendar_month_rounded,
+        label: 'Joined',
+        value: DateFormat('MMM d, yy').format(user.joinedAt),
+        color: AppColors.textMutedOf(context),
+      ),
+      _UserMetricTile(
+        icon: Icons.schedule_rounded,
+        label: 'Last login',
+        value: lastLoginHours != null ? '$lastLoginHours h' : '�',
+        subtitle: lastLoginHours != null ? lastLoginLabel : 'Never',
+        color: lastLoginTint,
+      ),
+      if (user.ipAddress != null)
+        _UserMetricTile(
+          icon: Icons.public_rounded,
+          label: 'IP',
+          value: user.ipAddress!,
+          color: AppColors.textMutedOf(context),
+        ),
+    ];
+
+    // Pair into rows of 2 Expanded � no IntrinsicHeight / LayoutBuilder.
+    final rows = <Widget>[];
+    for (var i = 0; i < tiles.length; i += 2) {
+      final left = tiles[i];
+      final right = i + 1 < tiles.length ? tiles[i + 1] : null;
+      rows.add(
+        Padding(
+          padding: EdgeInsets.only(bottom: i + 2 < tiles.length ? 8 : 0),
+          child: Row(
+            children: [
+              Expanded(child: left),
+              const SizedBox(width: 8),
+              Expanded(child: right ?? const SizedBox.shrink()),
+            ],
+          ),
+        ),
+      );
+    }
+    return Column(children: rows);
+  }
+}
+
 class _UserMetricTile extends StatelessWidget {
   const _UserMetricTile({
-    required this.width,
     required this.icon,
     required this.label,
     required this.value,
@@ -1459,7 +1471,6 @@ class _UserMetricTile extends StatelessWidget {
     this.subtitle,
   });
 
-  final double width;
   final IconData icon;
   final String label;
   final String value;
@@ -1469,72 +1480,69 @@ class _UserMetricTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return SizedBox(
-      width: width,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-        decoration: BoxDecoration(
-          color: isDark
-              ? Colors.white.withValues(alpha: 0.04)
-              : AppColors.surfaceElevatedOf(context),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: AppColors.borderOf(context).withValues(alpha: 0.25),
-          ),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+      decoration: BoxDecoration(
+        color: isDark
+            ? Colors.white.withValues(alpha: 0.04)
+            : AppColors.surfaceElevatedOf(context),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: AppColors.borderOf(context).withValues(alpha: 0.25),
         ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(icon, size: 14, color: color),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(8),
             ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    label,
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textMutedOf(context),
-                      letterSpacing: 0.2,
-                    ),
+            child: Icon(icon, size: 14, color: color),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textMutedOf(context),
+                    letterSpacing: 0.2,
                   ),
+                ),
+                const SizedBox(height: 1),
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimaryOf(context),
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                if (subtitle != null) ...[
                   const SizedBox(height: 1),
                   Text(
-                    value,
+                    subtitle!,
                     style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimaryOf(context),
+                      fontSize: 10,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.textMutedOf(context),
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  if (subtitle != null) ...[
-                    const SizedBox(height: 1),
-                    Text(
-                      subtitle!,
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.textMutedOf(context),
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
                 ],
-              ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -1586,14 +1594,16 @@ class _CardActionButton extends StatelessWidget {
   }
 }
 
-class _UserDetailsSheet extends StatelessWidget {
+class _UserDetailsSheet extends ConsumerWidget {
   const _UserDetailsSheet({required this.user});
   final AdminUser user;
-  static final _dateTimeFormat = DateFormat('MMM d, yyyy • hh:mm a');
+  static final _dateTimeFormat = DateFormat('MMM d, yyyy � hh:mm a');
+  static final _money = NumberFormat.simpleCurrency(name: 'EUR');
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final detailAsync = ref.watch(adminUserDetailProvider(user.id));
     return Container(
       constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.85),
       decoration: BoxDecoration(
@@ -1676,11 +1686,312 @@ class _UserDetailsSheet extends StatelessWidget {
                 if (user.ipAddress != null)
                   _DetailRow(icon: Icons.language_rounded, label: 'IP Address', value: user.ipAddress!),
               ]),
+              const SizedBox(height: 20),
+              detailAsync.when(
+                loading: () => const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                  child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                ),
+                error: (e, _) => Text(
+                  'Could not load campaigns/applications',
+                  style: TextStyle(color: AppColors.textMutedOf(context), fontSize: 13),
+                ),
+                data: (detail) => _buildRelatedActivity(context, detail),
+              ),
+              const SizedBox(height: 28),
+              _buildDangerZone(context, ref),
               const SizedBox(height: 32),
             ]),
           ),
         ),
       ]),
+    );
+  }
+
+  bool _isSelf(WidgetRef ref) {
+    final authState = ref.watch(authNotifierProvider).valueOrNull;
+    if (authState is! AuthAuthenticated) return false;
+    return authState.user.id == user.authUserId;
+  }
+
+  Widget _buildDangerZone(BuildContext context, WidgetRef ref) {
+    final isSelf = _isSelf(ref);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 8),
+          child: Row(children: [
+            Container(width: 3, height: 14,
+              decoration: BoxDecoration(color: AppColors.error, borderRadius: BorderRadius.circular(2)),
+            ),
+            const SizedBox(width: 8),
+            Text('Danger Zone', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700,
+              color: AppColors.error, letterSpacing: 0.6)),
+          ]),
+        ),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.error.withValues(alpha: 0.06),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: AppColors.error.withValues(alpha: 0.25)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Permanently delete this account and all associated data '
+                '(campaigns, applications, payouts). This cannot be undone.',
+                style: TextStyle(fontSize: 12.5, height: 1.4, color: AppColors.textSecondaryOf(context)),
+              ),
+              if (isSelf) ...[
+                const SizedBox(height: 10),
+                Text(
+                  'You cannot hard-delete your own account.',
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.error),
+                ),
+              ],
+              const SizedBox(height: 14),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: isSelf ? null : () => _confirmHardDelete(context, ref),
+                  icon: const Icon(Icons.delete_forever_rounded, size: 18),
+                  label: const Text('Hard delete user'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.error,
+                    disabledForegroundColor: AppColors.textMutedOf(context).withValues(alpha: 0.4),
+                    padding: const EdgeInsets.symmetric(vertical: 13),
+                    side: BorderSide(color: AppColors.error.withValues(alpha: isSelf ? 0.15 : 0.4)),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _confirmHardDelete(BuildContext context, WidgetRef ref) async {
+    final firstConfirm = await showWayoDialog<bool>(
+      context: context,
+      builder: (ctx) => WayoAlertDialog(
+        backgroundColor: AppColors.surfaceOf(context),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        contentPadding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
+        content: Column(mainAxisSize: MainAxisSize.min, children: [
+          Container(padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(color: AppColors.error.withValues(alpha: 0.1), shape: BoxShape.circle),
+            child: const Icon(Icons.warning_amber_rounded, size: 36, color: AppColors.error),
+          ),
+          const SizedBox(height: 16),
+          const Text('Hard delete user?', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
+          const SizedBox(height: 8),
+          Text(
+            'This permanently removes ${user.email} and all related data. '
+            'This action cannot be undone.',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 14, color: AppColors.textSecondaryOf(context)),
+          ),
+        ]),
+        actionsPadding: const EdgeInsets.fromLTRB(24, 8, 24, 20),
+        actions: [
+          SizedBox(width: double.infinity, child: OutlinedButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14),
+              side: BorderSide(color: AppColors.borderOf(context)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            ),
+            child: Text('Cancel', style: TextStyle(fontWeight: FontWeight.w600, color: AppColors.textSecondaryOf(context))),
+          )),
+          const SizedBox(height: 8),
+          SizedBox(width: double.infinity, child: ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error, foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)), elevation: 0,
+            ),
+            child: const Text('Continue', style: TextStyle(fontWeight: FontWeight.w700)),
+          )),
+        ],
+      ),
+    );
+
+    if (firstConfirm != true || !context.mounted) return;
+
+    final typedController = TextEditingController();
+    final typed = await showWayoDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setState) {
+          final matches = typedController.text.trim().toUpperCase() == 'DELETE' ||
+              typedController.text.trim().toLowerCase() == user.email.trim().toLowerCase();
+          return WayoAlertDialog(
+            backgroundColor: AppColors.surfaceOf(context),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            title: const Text('Confirm deletion'),
+            content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(
+                'Type "${user.email}" or DELETE to confirm.',
+                style: TextStyle(fontSize: 13, color: AppColors.textSecondaryOf(context)),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: typedController,
+                autofocus: true,
+                onChanged: (_) => setState(() {}),
+                decoration: InputDecoration(
+                  hintText: 'DELETE',
+                  filled: true,
+                  fillColor: AppColors.surfaceElevatedOf(context),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+                  contentPadding: const EdgeInsets.all(14),
+                ),
+              ),
+            ]),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: matches ? () => Navigator.pop(ctx, true) : null,
+                style: ElevatedButton.styleFrom(backgroundColor: AppColors.error, foregroundColor: Colors.white),
+                child: const Text('Delete permanently'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+
+    if (typed != true || !context.mounted) return;
+
+    try {
+      await ref.read(superadminOpsRemoteProvider).hardDeleteUser(user.id);
+      ref.invalidate(adminUsersNotifierProvider);
+      ref.invalidate(bannedUsersNotifierProvider);
+      if (context.mounted) {
+        WayoToast.success(context, 'User permanently deleted');
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      if (context.mounted) {
+        WayoToast.error(context, 'Failed to delete user: $e');
+      }
+    }
+  }
+
+  Widget _buildRelatedActivity(BuildContext context, AdminUserDetail detail) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Campaigns (${detail.campaignsTotal})',
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.6,
+            color: AppColors.textMutedOf(context),
+          ),
+        ),
+        const SizedBox(height: 8),
+        if (detail.campaigns.isEmpty)
+          Text(
+            'No advertiser campaigns',
+            style: TextStyle(color: AppColors.textMutedOf(context), fontSize: 13),
+          )
+        else
+          ...detail.campaigns.map((c) => Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceElevatedOf(context),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: AppColors.borderOf(context).withValues(alpha: 0.3),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        c.title,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textPrimaryOf(context),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '${c.status} � ${_money.format(c.spentBudgetCents / 100)} / ${_money.format(c.totalBudgetCents / 100)} � ${c.totalBillableViews} views',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textSecondaryOf(context),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              )),
+        const SizedBox(height: 16),
+        Text(
+          'Approved applications (${detail.applicationsTotal})',
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.6,
+            color: AppColors.textMutedOf(context),
+          ),
+        ),
+        const SizedBox(height: 8),
+        if (detail.applications.isEmpty)
+          Text(
+            'No approved applications',
+            style: TextStyle(color: AppColors.textMutedOf(context), fontSize: 13),
+          )
+        else
+          ...detail.applications.map((a) => Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceElevatedOf(context),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: AppColors.borderOf(context).withValues(alpha: 0.3),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        a.campaignTitle,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textPrimaryOf(context),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '${a.status} � campaign ${a.campaignStatus}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textSecondaryOf(context),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              )),
+      ],
     );
   }
 
@@ -1827,149 +2138,136 @@ class _BannedUserCard extends StatelessWidget {
             color: isDark
                 ? AppColors.surfaceElevated.withValues(alpha: 0.72)
                 : Colors.white,
-            child: IntrinsicHeight(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Container(
-                    width: 4,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [accent, accent.withValues(alpha: 0.4)],
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                border: Border(
+                  left: BorderSide(width: 4, color: accent),
+                ),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(2.5),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: LinearGradient(
+                              colors: [
+                                accent,
+                                accent.withValues(alpha: 0.45),
+                              ],
+                            ),
+                          ),
+                          child: Container(
+                            padding: const EdgeInsets.all(2),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: AppColors.surfaceOf(context),
+                            ),
+                            child: CircleAvatar(
+                              radius: 26,
+                              backgroundColor:
+                                  accent.withValues(alpha: 0.12),
+                              child: Icon(
+                                Icons.block_rounded,
+                                color: accent,
+                                size: 26,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Container(
-                                padding: const EdgeInsets.all(2.5),
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      accent,
-                                      accent.withValues(alpha: 0.45),
-                                    ],
-                                  ),
+                              Text(
+                                user.name ?? 'Unknown',
+                                style: TextStyle(
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: -0.4,
+                                  color: AppColors.textPrimaryOf(context),
                                 ),
-                                child: Container(
-                                  padding: const EdgeInsets.all(2),
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: AppColors.surfaceOf(context),
-                                  ),
-                                  child: CircleAvatar(
-                                    radius: 26,
-                                    backgroundColor:
-                                        accent.withValues(alpha: 0.12),
-                                    child: Icon(
-                                      Icons.block_rounded,
-                                      color: accent,
-                                      size: 26,
-                                    ),
-                                  ),
-                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      user.name ?? 'Unknown',
-                                      style: TextStyle(
-                                        fontSize: 17,
-                                        fontWeight: FontWeight.w700,
-                                        letterSpacing: -0.4,
-                                        color: AppColors.textPrimaryOf(context),
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      user.email,
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        color: AppColors.textSecondaryOf(context),
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    const SizedBox(height: 8),
-                                    _StatusPill(label: 'Banned', color: accent),
-                                  ],
+                              const SizedBox(height: 2),
+                              Text(
+                                user.email,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: AppColors.textSecondaryOf(context),
                                 ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
+                              const SizedBox(height: 8),
+                              _StatusPill(label: 'Banned', color: accent),
                             ],
                           ),
-                          if (user.reason != null &&
-                              user.reason!.isNotEmpty) ...[
-                            const SizedBox(height: 12),
-                            Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: accent.withValues(alpha: 0.06),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: accent.withValues(alpha: 0.2),
+                        ),
+                      ],
+                    ),
+                    if (user.reason != null &&
+                        user.reason!.isNotEmpty) ...[
+                      const SizedBox(height: 12),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: accent.withValues(alpha: 0.06),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: accent.withValues(alpha: 0.2),
+                          ),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Icon(
+                              Icons.report_gmailerrorred_rounded,
+                              size: 18,
+                              color: accent.withValues(alpha: 0.85),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                user.reason!,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  height: 1.35,
+                                  color: AppColors.textSecondaryOf(context),
                                 ),
-                              ),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Icon(
-                                    Icons.report_gmailerrorred_rounded,
-                                    size: 18,
-                                    color: accent.withValues(alpha: 0.85),
-                                  ),
-                                  const SizedBox(width: 10),
-                                  Expanded(
-                                    child: Text(
-                                      user.reason!,
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        height: 1.35,
-                                        color: AppColors.textSecondaryOf(context),
-                                      ),
-                                    ),
-                                  ),
-                                ],
                               ),
                             ),
                           ],
-                          const SizedBox(height: 12),
-                          _UserMetricTile(
-                            width: double.infinity,
-                            icon: Icons.event_busy_rounded,
-                            label: 'Banned on',
-                            value: _dateFormat.format(user.bannedAt),
-                            color: accent,
-                          ),
-                          const SizedBox(height: 12),
-                          _CardActionButton(
-                            label: 'Unban user',
-                            icon: Icons.lock_open_rounded,
-                            foreground: AppColors.success,
-                            background:
-                                AppColors.success.withValues(alpha: 0.1),
-                            onPressed: onUnban,
-                          ),
-                        ],
+                        ),
                       ),
+                    ],
+                    const SizedBox(height: 12),
+                    _UserMetricTile(
+                      icon: Icons.event_busy_rounded,
+                      label: 'Banned on',
+                      value: _dateFormat.format(user.bannedAt),
+                      color: accent,
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 12),
+                    _CardActionButton(
+                      label: 'Unban user',
+                      icon: Icons.lock_open_rounded,
+                      foreground: AppColors.success,
+                      background:
+                          AppColors.success.withValues(alpha: 0.1),
+                      onPressed: onUnban,
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

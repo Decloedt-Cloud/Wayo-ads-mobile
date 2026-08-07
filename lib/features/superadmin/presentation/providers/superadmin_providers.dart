@@ -35,16 +35,10 @@ ISuperadminRepository superadminRepository(SuperadminRepositoryRef ref) {
 Future<DashboardStats> dashboardStats(DashboardStatsRef ref) async {
   await awaitPostLoginBootstrap(ref);
   final repo = ref.watch(superadminRepositoryProvider);
-  return fetchWithSessionRetry(
-    ref,
-    () async {
-      final result = await repo.getDashboardStats();
-      return result.when(
-        success: (stats) => stats,
-        failure: (e) => throw e,
-      );
-    },
-  );
+  return fetchWithSessionRetry(ref, () async {
+    final result = await repo.getDashboardStats();
+    return result.when(success: (stats) => stats, failure: (e) => throw e);
+  });
 }
 
 @riverpod
@@ -53,16 +47,10 @@ Future<AdminTransactionsPage> adminRecentTransactions(
 ) async {
   await awaitPostLoginBootstrap(ref);
   final repo = ref.watch(superadminRepositoryProvider);
-  return fetchWithSessionRetry(
-    ref,
-    () async {
-      final result = await repo.getAdminTransactionsPage(limit: 15);
-      return result.when(
-        success: (page) => page,
-        failure: (e) => throw e,
-      );
-    },
-  );
+  return fetchWithSessionRetry(ref, () async {
+    final result = await repo.getAdminTransactionsPage(limit: 15);
+    return result.when(success: (page) => page, failure: (e) => throw e);
+  });
 }
 
 @riverpod
@@ -71,32 +59,20 @@ Future<TrafficQualitySummary> trafficQualitySummary(
 ) async {
   await awaitPostLoginBootstrap(ref);
   final repo = ref.watch(superadminRepositoryProvider);
-  return fetchWithSessionRetry(
-    ref,
-    () async {
-      final result = await repo.getTrafficQualitySummary();
-      return result.when(
-        success: (summary) => summary,
-        failure: (e) => throw e,
-      );
-    },
-  );
+  return fetchWithSessionRetry(ref, () async {
+    final result = await repo.getTrafficQualitySummary();
+    return result.when(success: (summary) => summary, failure: (e) => throw e);
+  });
 }
 
 @riverpod
 Future<PayoutStats> payoutStats(PayoutStatsRef ref) async {
   await awaitPostLoginBootstrap(ref);
   final repo = ref.watch(superadminRepositoryProvider);
-  return fetchWithSessionRetry(
-    ref,
-    () async {
-      final result = await repo.getPayoutStats();
-      return result.when(
-        success: (stats) => stats,
-        failure: (e) => throw e,
-      );
-    },
-  );
+  return fetchWithSessionRetry(ref, () async {
+    final result = await repo.getPayoutStats();
+    return result.when(success: (stats) => stats, failure: (e) => throw e);
+  });
 }
 
 // Banned Users Providers
@@ -106,10 +82,7 @@ class BannedUsersNotifier extends _$BannedUsersNotifier {
   Future<BannedUsersPage> build({String? search}) async {
     final repo = ref.watch(superadminRepositoryProvider);
     final result = await repo.getBannedUsers(search: search);
-    return result.when(
-      success: (page) => page,
-      failure: (e) => throw e,
-    );
+    return result.when(success: (page) => page, failure: (e) => throw e);
   }
 
   Future<void> loadMore() async {
@@ -124,12 +97,14 @@ class BannedUsersNotifier extends _$BannedUsersNotifier {
     );
     result.when(
       success: (page) {
-        state = AsyncData(BannedUsersPage(
-          bans: [...current.bans, ...page.bans],
-          total: page.total,
-          limit: page.limit,
-          offset: page.offset,
-        ));
+        state = AsyncData(
+          BannedUsersPage(
+            bans: [...current.bans, ...page.bans],
+            total: page.total,
+            limit: page.limit,
+            offset: page.offset,
+          ),
+        );
       },
       failure: (e) {
         // Keep current state on failure
@@ -170,10 +145,7 @@ Future<List<SearchUser>> userSearch(
   if (query.isEmpty) return [];
   final repo = ref.watch(superadminRepositoryProvider);
   final result = await repo.searchUsers(search: query);
-  return result.when(
-    success: (users) => users,
-    failure: (e) => throw e,
-  );
+  return result.when(success: (users) => users, failure: (e) => throw e);
 }
 
 // Admin Users Management Providers
@@ -199,10 +171,7 @@ class AdminUsersNotifier extends _$AdminUsersNotifier {
       page: page,
       limit: kAdminUsersPageSize,
     );
-    return result.when(
-      success: (p) => p,
-      failure: (e) => throw e,
-    );
+    return result.when(success: (p) => p, failure: (e) => throw e);
   }
 
   /// Loads a specific page from Wayo-ads (replaces the current list).
@@ -268,10 +237,7 @@ class WithdrawalsNotifier extends _$WithdrawalsNotifier {
     ref.watch(superadminWithdrawalsLivePulseProvider);
     final repo = ref.watch(superadminRepositoryProvider);
     final result = await repo.getWithdrawals(status: status);
-    return result.when(
-      success: (page) => page,
-      failure: (e) => throw e,
-    );
+    return result.when(success: (page) => page, failure: (e) => throw e);
   }
 
   Future<void> loadMore() async {
@@ -286,13 +252,15 @@ class WithdrawalsNotifier extends _$WithdrawalsNotifier {
     );
     result.when(
       success: (page) {
-        state = AsyncData(WithdrawalsPage(
-          withdrawals: [...current.withdrawals, ...page.withdrawals],
-          total: page.total,
-          totalPages: page.totalPages,
-          page: page.page,
-          summary: page.summary,
-        ));
+        state = AsyncData(
+          WithdrawalsPage(
+            withdrawals: [...current.withdrawals, ...page.withdrawals],
+            total: page.total,
+            totalPages: page.totalPages,
+            page: page.page,
+            summary: page.summary,
+          ),
+        );
       },
       failure: (e) {
         // Keep current state on failure
@@ -332,10 +300,7 @@ class AnnouncementsNotifier extends _$AnnouncementsNotifier {
   Future<List<Announcement>> build() async {
     final repo = ref.watch(superadminRepositoryProvider);
     final result = await repo.getAnnouncements();
-    return result.when(
-      success: (list) => list,
-      failure: (e) => throw e,
-    );
+    return result.when(success: (list) => list, failure: (e) => throw e);
   }
 
   Future<bool> create(Announcement announcement) async {
@@ -380,10 +345,7 @@ class AnnouncementsNotifier extends _$AnnouncementsNotifier {
 Future<AiUsageStats> aiUsage(AiUsageRef ref, {String period = '30d'}) async {
   final repo = ref.watch(superadminRepositoryProvider);
   final result = await repo.getAiUsage(period: period);
-  return result.when(
-    success: (stats) => stats,
-    failure: (e) => throw e,
-  );
+  return result.when(success: (stats) => stats, failure: (e) => throw e);
 }
 
 // Ledger Providers
@@ -405,10 +367,7 @@ class LedgerNotifier extends _$LedgerNotifier {
       startDate: startDate,
       endDate: endDate,
     );
-    return result.when(
-      success: (page) => page,
-      failure: (e) => throw e,
-    );
+    return result.when(success: (page) => page, failure: (e) => throw e);
   }
 
   Future<void> loadMore() async {
@@ -427,14 +386,16 @@ class LedgerNotifier extends _$LedgerNotifier {
     );
     result.when(
       success: (page) {
-        state = AsyncData(LedgerPage(
-          entries: [...current.entries, ...page.entries],
-          page: page.page,
-          limit: page.limit,
-          total: page.total,
-          totalPages: page.totalPages,
-          summary: page.summary,
-        ));
+        state = AsyncData(
+          LedgerPage(
+            entries: [...current.entries, ...page.entries],
+            page: page.page,
+            limit: page.limit,
+            total: page.total,
+            totalPages: page.totalPages,
+            summary: page.summary,
+          ),
+        );
       },
       failure: (e) {
         // Keep current state on failure
@@ -448,10 +409,7 @@ class LedgerNotifier extends _$LedgerNotifier {
 Future<TaxRatesPage> taxRates(TaxRatesRef ref) async {
   final repo = ref.watch(superadminRepositoryProvider);
   final result = await repo.getTaxRates();
-  return result.when(
-    success: (page) => page,
-    failure: (e) => throw e,
-  );
+  return result.when(success: (page) => page, failure: (e) => throw e);
 }
 
 /// Browse campaigns list page (1-based).
@@ -461,8 +419,9 @@ final superadminBrowseCampaignSearchProvider = StateProvider<String>(
   (ref) => '',
 );
 
-final superadminBrowseTypeFilterProvider =
-    StateProvider<CreatorCampaignType?>((ref) => null);
+final superadminBrowseTypeFilterProvider = StateProvider<CreatorCampaignType?>(
+  (ref) => null,
+);
 
 final superadminBrowseNicheProvider = StateProvider<String?>((ref) => null);
 
@@ -478,7 +437,10 @@ typedef SuperadminBrowsePagedKey = ({
 
 /// Public marketplace — `GET /api/campaigns?status=ACTIVE`.
 final superadminBrowseCampaignsPagedProvider = FutureProvider.autoDispose
-    .family<CreatorBrowsePageResult, SuperadminBrowsePagedKey>((ref, key) async {
+    .family<CreatorBrowsePageResult, SuperadminBrowsePagedKey>((
+      ref,
+      key,
+    ) async {
       ref.watch(superadminBrowseLivePulseProvider);
       final repo = ref.watch(superadminRepositoryProvider);
       final result = await repo.getMarketplaceCampaignsPage(
@@ -489,10 +451,7 @@ final superadminBrowseCampaignsPagedProvider = FutureProvider.autoDispose
         niche: key.nicheApi,
         countryCode: key.countryApi,
       );
-      return result.when(
-        success: (page) => page,
-        failure: (e) => throw e,
-      );
+      return result.when(success: (page) => page, failure: (e) => throw e);
     });
 
 /// Bumps when Reverb invalidates superadmin payout data (live refresh pulse).
@@ -502,19 +461,31 @@ final superadminWithdrawalsLivePulseProvider = StateProvider<int>((ref) => 0);
 final superadminBrowseLivePulseProvider = StateProvider<int>((ref) => 0);
 
 void invalidateSuperadminBrowseCampaigns(dynamic ref) {
-  ref.read(superadminBrowseLivePulseProvider.notifier).update((n) => n + 1);
+  ref.read(superadminBrowseLivePulseProvider.notifier).update((int n) => n + 1);
   ref.invalidate(superadminBrowseCampaignsPagedProvider);
 }
 
 /// Refreshes withdrawals list, payout stats, and dashboard KPIs after a realtime signal.
 void invalidateSuperadminWithdrawalData(dynamic ref) {
-  ref.read(superadminWithdrawalsLivePulseProvider.notifier).update((n) => n + 1);
+  ref
+      .read(superadminWithdrawalsLivePulseProvider.notifier)
+      .update((int n) => n + 1);
   ref.invalidate(withdrawalsNotifierProvider);
   ref.invalidate(payoutStatsProvider);
   ref.invalidate(dashboardStatsProvider);
 }
 
-void invalidateSuperadminRealtimePanels(dynamic ref) {
+void invalidateSuperadminRealtimePanels(Ref ref) {
+  _invalidateSuperadminRealtimePanels(ref);
+}
+
+/// Widget-facing twin of [invalidateSuperadminRealtimePanels] (Riverpod 2.x:
+/// [WidgetRef] is not a [Ref]).
+void invalidateSuperadminRealtimePanelsForWidget(WidgetRef ref) {
+  _invalidateSuperadminRealtimePanels(ref);
+}
+
+void _invalidateSuperadminRealtimePanels(dynamic ref) {
   invalidateSuperadminWithdrawalData(ref);
   invalidateSuperadminBrowseCampaigns(ref);
   ref.invalidate(trafficQualitySummaryProvider);

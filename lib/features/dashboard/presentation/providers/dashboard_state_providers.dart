@@ -151,7 +151,10 @@ Map<String, dynamic> _realtimeSignalPayloadMap(Object? raw) {
 
 /// Applies an instant banner update when the payload carries
 /// `deletionRequestedAt`, then confirms via profile GET (web parity).
-void _refreshAccountDeletionFromRealtime(Ref ref, Map<String, dynamic> payload) {
+void _refreshAccountDeletionFromRealtime(
+  Ref ref,
+  Map<String, dynamic> payload,
+) {
   applyAccountDeletionRealtimeSignal(ref, payload);
 }
 
@@ -181,12 +184,17 @@ bool _isProfileUpdatedRealtimeEvent(String name, Map<String, dynamic> payload) {
 ///
 /// [revokedSessionId] — when the realtime payload names the revoked session and
 /// it matches this device's stored session id, log out immediately (fast path).
-Future<void> _recheckSessionRevocation(Ref ref, {String? revokedSessionId}) async {
+Future<void> _recheckSessionRevocation(
+  Ref ref, {
+  String? revokedSessionId,
+}) async {
   try {
     final storage = ref.read(secureStorageProvider);
     if (revokedSessionId != null && revokedSessionId.isNotEmpty) {
       final localId = await storage.getMobileSessionId();
-      if (localId != null && localId.isNotEmpty && localId == revokedSessionId) {
+      if (localId != null &&
+          localId.isNotEmpty &&
+          localId == revokedSessionId) {
         notifyAuthForceLogout();
         return;
       }
@@ -276,7 +284,9 @@ final realtimeInvalidationProvider = Provider<void>((ref) {
     final submissionEvent =
         lower.contains('submission') &&
         (lower.contains('updat') || lower.contains('review'));
-    final creatorVideoStatusEvent = shouldRefreshCreatorVideoSubmissions(sig.raw);
+    final creatorVideoStatusEvent = shouldRefreshCreatorVideoSubmissions(
+      sig.raw,
+    );
     final payoutEvent =
         lower.contains('payout') &&
         (lower.contains('updat') || lower.contains('complet'));
@@ -318,14 +328,16 @@ final realtimeInvalidationProvider = Provider<void>((ref) {
         _refreshAccountDeletionFromRealtime(ref, payload);
       }
       final auth = ref.read(authNotifierProvider).valueOrNull;
-      final isSuperadmin = auth is AuthAuthenticated &&
+      final isSuperadmin =
+          auth is AuthAuthenticated &&
           auth.user.wayoAdsRole == WayoAdsAccountRole.superAdmin;
       if (isSuperadmin || isWithdrawalNotificationPayload(sig.raw)) {
         invalidateSuperadminWithdrawalData(ref);
       }
     }
 
-    final withdrawalEvent = lower.contains('withdrawal') &&
+    final withdrawalEvent =
+        lower.contains('withdrawal') &&
         (lower.contains('creat') ||
             lower.contains('updat') ||
             lower.contains('approv') ||
@@ -401,37 +413,6 @@ final realtimeInvalidationProvider = Provider<void>((ref) {
   });
   ref.onDispose(sub.cancel);
 });
-
-/// Re-fetch app data after maintenance ends. Requests that failed during downtime
-/// leave Riverpod providers in error until explicitly invalidated.
-void refreshAppDataAfterMaintenanceRecovery(dynamic ref) {
-  ref.read(dashboardRateLimiterProvider).reset();
-  ref.read(creatorRateLimiterProvider).reset();
-  ref.read(creatorCampaignsRateLimiterProvider).reset();
-  ref.read(notificationsRateLimiterProvider).reset();
-  ref.read(requestDeduplicatorProvider).clear();
-
-  ref.invalidate(dashboardStreamProvider);
-  ref.invalidate(creatorStatsProvider);
-  ref.invalidate(creatorApplicationsProvider);
-  ref.invalidate(creatorWalletPageProvider);
-  ref.invalidate(creatorBrowseCampaignsPagedProvider);
-  ref.invalidate(creatorStripeStatusProvider);
-  ref.invalidate(creatorBusinessProfileProvider);
-  ref.invalidate(creatorCampaignDetailProvider);
-  ref.invalidate(creatorMySubmissionsProvider);
-  ref.invalidate(advertiserWalletPageProvider);
-  ref.invalidate(advertiserCampaignsPagedProvider);
-  ref.invalidate(advertiserCampaignsCountsProvider);
-  ref.invalidate(advertiserDashboardCampaignsPageFetchProvider);
-  ref.invalidate(advertiserCampaignDetailProvider);
-  invalidateAdvertiserBrowseCampaigns(ref);
-  invalidateAdvertiserVideoReviewsProviders(ref);
-  ref.invalidate(invoicesControllerProvider);
-  ref.invalidate(notificationsListProvider);
-  ref.invalidate(notificationsUnreadCountsProvider);
-  invalidateSuperadminRealtimePanels(ref);
-}
 
 /// Clears cached creator dashboard + campaigns reads after logout / account switch.
 void invalidateCreatorSessionProviders(Ref ref) {

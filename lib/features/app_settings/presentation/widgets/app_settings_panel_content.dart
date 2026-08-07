@@ -18,6 +18,12 @@ import 'app_settings_notifications_tile.dart';
 import 'profile_settings_entry_tile.dart';
 import '../../../account_deletion/presentation/widgets/account_deletion_settings_section.dart';
 import '../../../security/presentation/widgets/security_settings_entry_tile.dart';
+import '../../../creator_wallet/presentation/widgets/business_settings_entry_tile.dart';
+import '../../../creator_wallet/presentation/widgets/creator_payouts_settings_entry_tile.dart';
+import '../../../youtube_connection/presentation/widgets/youtube_settings_entry_tile.dart';
+import '../../../notification_prefs/presentation/widgets/notification_prefs_settings_entry_tile.dart';
+import '../screens/web_only_security_screens.dart';
+import '../screens/guides_resources_screen.dart';
 
 class AppSettingsPanelContent extends ConsumerWidget {
   const AppSettingsPanelContent({super.key, required this.onClose});
@@ -60,6 +66,21 @@ class AppSettingsPanelContent extends ConsumerWidget {
                 ProfileSettingsEntryTile(onClose: onClose)
                     .animate()
                     .fadeIn(duration: 200.ms)
+                    .slideY(begin: 0.03),
+                const SizedBox(height: 10),
+                BusinessSettingsEntryTile(onClose: onClose)
+                    .animate()
+                    .fadeIn(delay: 20.ms, duration: 200.ms)
+                    .slideY(begin: 0.03),
+                const SizedBox(height: 10),
+                CreatorPayoutsSettingsEntryTile(onClose: onClose)
+                    .animate()
+                    .fadeIn(delay: 25.ms, duration: 200.ms)
+                    .slideY(begin: 0.03),
+                const SizedBox(height: 10),
+                YoutubeSettingsEntryTile(onClose: onClose)
+                    .animate()
+                    .fadeIn(delay: 30.ms, duration: 200.ms)
                     .slideY(begin: 0.03),
                 const SizedBox(height: 22),
                 _SectionTitle(
@@ -128,6 +149,11 @@ class AppSettingsPanelContent extends ConsumerWidget {
                     .animate()
                     .fadeIn(delay: 105.ms, duration: 260.ms)
                     .slideY(begin: 0.03),
+                const SizedBox(height: 10),
+                NotificationPrefsSettingsEntryTile(onClose: onClose)
+                    .animate()
+                    .fadeIn(delay: 106.ms, duration: 260.ms)
+                    .slideY(begin: 0.03),
                 const SizedBox(height: 8),
                 Text(
                   t.app_settings.notifications_hint,
@@ -141,6 +167,32 @@ class AppSettingsPanelContent extends ConsumerWidget {
                     .animate()
                     .fadeIn(delay: 108.ms, duration: 260.ms)
                     .slideY(begin: 0.03),
+                const SizedBox(height: 10),
+                _SimpleSettingsTile(
+                  icon: Icons.key_outlined,
+                  title: t.app_settings.passkeys_title,
+                  subtitle: t.app_settings.passkeys_sub,
+                  onTap: () {
+                    HapticFeedback.selectionClick();
+                    openPasskeysInfoScreen(onClosePanel: onClose);
+                  },
+                )
+                    .animate()
+                    .fadeIn(delay: 109.ms, duration: 260.ms)
+                    .slideY(begin: 0.03),
+                const SizedBox(height: 10),
+                _SimpleSettingsTile(
+                  icon: Icons.link_rounded,
+                  title: t.app_settings.connected_accounts_title,
+                  subtitle: t.app_settings.connected_accounts_sub,
+                  onTap: () {
+                    HapticFeedback.selectionClick();
+                    openConnectedAccountsInfoScreen(onClosePanel: onClose);
+                  },
+                )
+                    .animate()
+                    .fadeIn(delay: 110.ms, duration: 260.ms)
+                    .slideY(begin: 0.03),
                 const SizedBox(height: 22),
                 _SectionTitle(
                       icon: Icons.star_outline_rounded,
@@ -149,6 +201,19 @@ class AppSettingsPanelContent extends ConsumerWidget {
                     .animate()
                     .fadeIn(delay: 100.ms, duration: 220.ms)
                     .slideX(begin: 0.04, curve: Curves.easeOutCubic),
+                const SizedBox(height: 10),
+                _SimpleSettingsTile(
+                  icon: Icons.menu_book_outlined,
+                  title: t.app_settings.guides_title,
+                  subtitle: t.app_settings.guides_sub,
+                  onTap: () {
+                    HapticFeedback.selectionClick();
+                    openGuidesScreen(onClosePanel: onClose);
+                  },
+                )
+                    .animate()
+                    .fadeIn(delay: 105.ms, duration: 260.ms)
+                    .slideY(begin: 0.03),
                 const SizedBox(height: 10),
                 _RateAppTile(
                       title: t.app_settings.rate_app,
@@ -269,6 +334,73 @@ class _SectionTitle extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _SimpleSettingsTile extends StatelessWidget {
+  const _SimpleSettingsTile({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Material(
+      color: scheme.surface.withValues(alpha: 0.35),
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+          child: Row(
+            children: [
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  color: scheme.primary.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(10),
+                  child: Icon(icon, size: 22, color: scheme.primary),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w800,
+                          ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: scheme.onSurfaceVariant,
+                            height: 1.3,
+                          ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_right_rounded, color: scheme.onSurfaceVariant),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

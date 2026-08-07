@@ -49,23 +49,30 @@ bool wayoContextHasShellTabBar(BuildContext context) {
 /// system inset filler, etc.) — used to pin toasts flush above it.
 double wayoBottomChromeHeightForToast(BuildContext context) {
   var chromeHeight = wayoSystemBottomInset(context);
-  context.visitAncestorElements((element) {
-    if (element.widget is! Scaffold) return true;
-    final bar = (element.widget as Scaffold).bottomNavigationBar;
-    if (bar == null) return true;
+  // After Google Sign-In / route redirects the login [Element] can be
+  // *deactivated* but not yet disposed (`mounted == true`). Walking ancestors
+  // then throws: "Looking up a deactivated widget's ancestor is unsafe."
+  try {
+    context.visitAncestorElements((ancestor) {
+      if (ancestor.widget is! Scaffold) return true;
+      final bar = (ancestor.widget as Scaffold).bottomNavigationBar;
+      if (bar == null) return true;
 
-    if (bar is WayoBlackBottomBar) {
-      chromeHeight = WayoBlackBottomBar.totalHeight(context);
+      if (bar is WayoBlackBottomBar) {
+        chromeHeight = WayoBlackBottomBar.totalHeight(context);
+        return false;
+      }
+      if (bar is WayoSystemNavBarFill) {
+        chromeHeight = wayoSystemBottomInset(context);
+        return false;
+      }
+      // App shell tab bar: SafeArea inset + tab content.
+      chromeHeight = wayoSystemBottomInset(context) + kWayoBottomNavBarHeight;
       return false;
-    }
-    if (bar is WayoSystemNavBarFill) {
-      chromeHeight = wayoSystemBottomInset(context);
-      return false;
-    }
-    // App shell tab bar: SafeArea inset + tab content.
-    chromeHeight = wayoSystemBottomInset(context) + kWayoBottomNavBarHeight;
-    return false;
-  });
+    });
+  } catch (_) {
+    // Deactivated / defunct element — keep system inset only.
+  }
   return chromeHeight;
 }
 

@@ -5,6 +5,7 @@ final class ChatUserPreview {
     this.avatar,
     this.email,
     this.marketingUserId,
+    this.appRoles,
   });
 
   final int id;
@@ -16,4 +17,7 @@ final class ChatUserPreview {
 
   /// Wayo-ads Prisma [User.id] when chat-service stores [marketing_user_id].
   final String? marketingUserId;
+
+  /// Raw Wayo-ads `User.roles` string (e.g. `USER,CREATOR`) when enriched.
+  final String? appRoles;
 }

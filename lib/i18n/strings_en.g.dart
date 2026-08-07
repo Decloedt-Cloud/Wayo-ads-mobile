@@ -54,6 +54,8 @@ class Translations implements BaseTranslations<AppLocale, Translations> {
 	late final TranslationsDashboardEn dashboard = TranslationsDashboardEn.internal(_root);
 	late final TranslationsAdvertiserCampaignsEn advertiser_campaigns = TranslationsAdvertiserCampaignsEn.internal(_root);
 	late final TranslationsAdvertiserVideoReviewsEn advertiser_video_reviews = TranslationsAdvertiserVideoReviewsEn.internal(_root);
+	late final TranslationsAdvertiserCreatorsEn advertiser_creators = TranslationsAdvertiserCreatorsEn.internal(_root);
+	late final TranslationsYoutubeEn youtube = TranslationsYoutubeEn.internal(_root);
 	late final TranslationsNavEn nav = TranslationsNavEn.internal(_root);
 	late final TranslationsInvoicesEn invoices = TranslationsInvoicesEn.internal(_root);
 	late final TranslationsPushEn push = TranslationsPushEn.internal(_root);
@@ -451,6 +453,8 @@ class TranslationsAdvertiserCampaignsEn {
 	late final TranslationsAdvertiserCampaignsPlatformEn platform = TranslationsAdvertiserCampaignsPlatformEn.internal(_root);
 	late final TranslationsAdvertiserCampaignsDetailEn detail = TranslationsAdvertiserCampaignsDetailEn.internal(_root);
 	late final TranslationsAdvertiserCampaignsCreateEn create = TranslationsAdvertiserCampaignsCreateEn.internal(_root);
+	late final TranslationsAdvertiserCampaignsActionsEn actions = TranslationsAdvertiserCampaignsActionsEn.internal(_root);
+	late final TranslationsAdvertiserCampaignsInsightsEn insights = TranslationsAdvertiserCampaignsInsightsEn.internal(_root);
 	late final TranslationsAdvertiserCampaignsApplicationsEn applications = TranslationsAdvertiserCampaignsApplicationsEn.internal(_root);
 }
 
@@ -485,6 +489,57 @@ class TranslationsAdvertiserVideoReviewsEn {
 	String get status_approved => 'Approved';
 	String get status_rejected => 'Rejected';
 	String get status_flagged => 'Flagged';
+}
+
+// Path: advertiser_creators
+class TranslationsAdvertiserCreatorsEn {
+	TranslationsAdvertiserCreatorsEn.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+	String get title => 'Creators';
+	String get search_hint => 'Search creators';
+	String get load_error => 'Could not load creators';
+	String get empty => 'No creators yet';
+	String get prev => 'Previous';
+	String get next => 'Next';
+	String trust({required Object score}) => 'Trust: ${score}';
+}
+
+// Path: youtube
+class TranslationsYoutubeEn {
+	TranslationsYoutubeEn.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+	String get title => 'YouTube';
+	String get entry_title => 'YouTube channel';
+	String get entry_sub => 'Connect your channel for video campaigns';
+	String get not_connected => 'YouTube not connected';
+	String get connect_subtitle => 'Link your YouTube channel to submit videos and track performance.';
+	String get connect => 'Connect YouTube';
+	String get reconnect_subtitle => 'Your YouTube connection expired. Reconnect to continue.';
+	String get reconnect => 'Reconnect';
+	String get refresh => 'Refresh stats';
+	String get disconnect => 'Disconnect';
+	String get disconnect_confirm => 'Disconnect YouTube from this account?';
+	String get cancel => 'Cancel';
+	String connect_success({required Object channelName}) => 'Connected to ${channelName}';
+	String reconnect_success({required Object channelName}) => 'Reconnected to ${channelName}';
+	String get disconnect_success => 'YouTube disconnected';
+	String get refresh_success => 'Channel stats updated';
+	String subscribers({required Object count}) => '${count} subscribers';
+	String get error_generic => 'YouTube request failed';
+	String get error_oauth_denied => 'YouTube sign-in was cancelled';
+	String get error_invalid_state => 'Invalid OAuth state — try again';
+	String get error_missing_pkce => 'Missing PKCE verifier';
+	String get error_token_exchange => 'Could not complete YouTube sign-in';
+	String get error_stats_fetch => 'Could not load channel stats';
+	String get error_channel_taken => 'This channel is linked to another account';
+	String get error_cancelled => 'Connection cancelled';
+	String get error_already_connected => 'YouTube is already connected';
 }
 
 // Path: nav
@@ -633,6 +688,8 @@ class TranslationsCreatorEn {
 	late final TranslationsCreatorStatsEn stats = TranslationsCreatorStatsEn.internal(_root);
 	late final TranslationsCreatorApplicationsEn applications = TranslationsCreatorApplicationsEn.internal(_root);
 	late final TranslationsCreatorBusinessEn business = TranslationsCreatorBusinessEn.internal(_root);
+	late final TranslationsCreatorTrustEn trust = TranslationsCreatorTrustEn.internal(_root);
+	late final TranslationsCreatorAnalyticsEn analytics = TranslationsCreatorAnalyticsEn.internal(_root);
 }
 
 // Path: advertiser_wallet
@@ -651,7 +708,7 @@ class TranslationsAdvertiserWalletEn {
 	String get quick_50 => '50 USD';
 	String get quick_100 => '100 USD';
 	String get quick_250 => '500 USD';
-	String get min_deposit => 'Minimum deposit is 50.00 USD.';
+	String get min_deposit => 'Minimum deposit is {amount}.';
 	String get test_pay => 'Simulate payment (dev)';
 	String get test_hint => 'Test mode: no real card. Tops up your dev wallet for QA.';
 	String get pay_secure => 'Pay with card, Apple Pay or Google Pay';
@@ -687,6 +744,68 @@ class TranslationsAdvertiserWalletEn {
 	String get deposit_pending => 'Deposit pending';
 	String get deposit_resume_hint => 'Resuming your deposit of {amount} — complete payment or tap Cancel to discard.';
 	String get deposit_cancel => 'Cancel';
+	String get funding_method_label => 'Funding method';
+	String get funding_card_title => 'Card';
+	String get funding_card_badge => 'Instant';
+	String get funding_card_desc => 'Visa, Mastercard, Amex — funds are available right away.';
+	String get funding_ach_title => 'Bank debit (ACH)';
+	String get funding_ach_badge => 'Lower fee';
+	String get funding_ach_desc => 'Debit your US bank account directly — lower fee than card.';
+	String get funding_ach_eta => 'Funds usually settle in 1–3 business days.';
+	String get funding_ach_usd_only => 'ACH is only available for USD wallets.';
+	String get funding_wire_title => 'Wire transfer';
+	String get funding_wire_badge => 'Large amounts';
+	String get funding_wire_desc => 'Send a bank wire using the instructions we provide.';
+	String get funding_wire_eta => 'Funds usually arrive in 1–3 business days.';
+	String get funding_wire_currency_only => 'Wire is only available for: {currencies}.';
+	String get saved_cards_loading => 'Loading saved cards…';
+	String get default_card_badge => 'Default';
+	String get saved_card_badge => 'Saved';
+	String get use_new_card => 'Use a new card';
+	String get use_saved_card => 'Use a saved card';
+	String get change_method => 'Change';
+	String get remove_card => 'Remove';
+	String get remove_card_confirm_title => 'Remove this card?';
+	String get remove_card_confirm_desc => '{brand} •••• {last4} will be removed from your saved cards.';
+	String get remove_card_confirm_action => 'Remove';
+	String get card_removed_title => 'Card removed';
+	String get card_removed_desc => '•••• {last4} was removed.';
+	String get card_remove_failed => 'Could not remove this card. Try again.';
+	String get refresh_saved_cards => 'Refresh';
+	String get pay_with_saved_card => 'Pay with {brand} •••• {last4}';
+	String get wire_instructions_loading => 'Preparing wire instructions…';
+	String get wire_awaiting_title => 'Awaiting your bank transfer';
+	String get wire_awaiting_desc => 'Send a wire using the details below. Your balance will update once we receive the funds.';
+	String get wire_exact_amount => 'Exact amount';
+	String get wire_reference => 'Reference (required)';
+	String get wire_reference_required_hint => 'Include this reference in your transfer memo — without it we can\'t match your payment.';
+	String get wire_copy_action => 'Copy';
+	String get wire_copied_title => 'Copied';
+	String get wire_copied_desc => 'Copied to clipboard.';
+	String get wire_copy_failed => 'Could not copy. Try again.';
+	String get wire_network_swift => 'SWIFT / international wire';
+	String get wire_network_aba => 'US domestic wire (ABA)';
+	String get wire_network_iban => 'IBAN / SEPA';
+	String get wire_network_sort_code => 'UK bank transfer';
+	String get wire_network_other => '{network}';
+	String get wire_account_holder => 'Account holder';
+	String get wire_bank_name => 'Bank name';
+	String get wire_routing_number => 'Routing number';
+	String get wire_sort_code => 'Sort code';
+	String get wire_account_number => 'Account number';
+	String get wire_swift_code => 'SWIFT/BIC';
+	String get wire_iban => 'IBAN';
+	String get wire_bic => 'BIC';
+	String get wire_hosted_instructions => 'View full instructions';
+	String get wire_done_button => 'I\'ve sent the transfer';
+	String get ach_processing_banner => 'ACH deposit of {amount} is processing — funds typically settle in 1–3 business days.';
+	String get wire_awaiting_banner => 'Wire deposit of {amount} is awaiting your bank transfer.';
+	String get reconcile_button => 'Check status';
+	String get reconcile_success => 'Status updated.';
+	String get reconcile_still_pending => 'Still processing — check back soon.';
+	String get reconcile_failed => 'Could not check status. Try again.';
+	String get continue_to_payment => 'Continue';
+	String get cancel => 'Cancel';
 }
 
 // Path: chat
@@ -702,6 +821,7 @@ class TranslationsChatEn {
 	String get thread_fallback_title => 'Chat';
 	String get role_creator => 'Creator';
 	String get role_advertiser => 'Advertiser';
+	String get role_admin => 'Admin';
 	String get composer_hint => 'Write a message…';
 	String get typing => 'Typing…';
 	String get error_load_threads => 'Could not load your conversations. Try again.';
@@ -730,7 +850,29 @@ class TranslationsChatEn {
 	String get conversation_open_failed => 'Could not open that conversation. Try again.';
 	String get file_picker_restart_hint => 'Attachments need a full app restart after updates. Stop the app, then Run again (avoid hot restart).';
 	String get attachment_type_not_allowed => 'Only images (JPG, PNG, GIF, WebP, BMP) or PDF are allowed.';
-	String get inbox_swipe_soon => 'Pin and archive from the list are coming soon.';
+	String get inbox_filter_active => 'Inbox';
+	String get inbox_filter_archived => 'Archived';
+	String get inbox_pinned => 'Pinned';
+	String get inbox_unpinned => 'Unpinned';
+	String get inbox_archived => 'Archived';
+	String get inbox_unarchived => 'Moved to inbox';
+	String get inbox_pin_failed => 'Could not update pin. Try again.';
+	String get inbox_archive_failed => 'Could not update archive. Try again.';
+	String get inbox_pin_disabled => 'Pin and archive are temporarily unavailable.';
+	String get menu_more => 'More';
+	String get menu_pin => 'Pin';
+	String get menu_unpin => 'Unpin';
+	String get menu_archive => 'Archive';
+	String get menu_unarchive => 'Unarchive';
+	String get menu_delete => 'Delete';
+	String get delete_conversation => 'Delete conversation';
+	String get delete_conversation_confirm_title => 'Delete this conversation?';
+	String get delete_conversation_confirm_text => 'All messages will be permanently deleted for both participants. This cannot be undone.';
+	String get delete_conversation_confirm_cta => 'Delete';
+	String get delete_conversation_failed => 'Could not delete the conversation. Try again.';
+	String get delete_conversation_done => 'Conversation deleted';
+	String get empty_archived_title => 'No archived chats';
+	String get empty_archived_hint => 'Swipe a conversation left to archive it.';
 	String get date_today => 'Today';
 	String get date_yesterday => 'Yesterday';
 	String get bubble_reply => 'Reply';
@@ -1043,6 +1185,46 @@ class TranslationsAppSettingsEn {
 	String get notifications_open_settings => 'Open phone settings';
 	String get notifications_enable_error => 'Could not enable notifications. Check system settings.';
 	String get notifications_update_error => 'Could not update notification settings. Try again.';
+	String get notif_prefs_entry_title => 'Notification preferences';
+	String get notif_prefs_entry_sub => 'Choose channels and categories for in-app and email alerts';
+	String get notif_prefs_title => 'Notification preferences';
+	String get notif_prefs_channels_title => 'Channels';
+	String get notif_prefs_channels_sub => 'Master switches for how Wayo can reach you.';
+	String get notif_prefs_categories_title => 'Categories';
+	String get notif_prefs_categories_sub => 'Mute specific types without turning everything off.';
+	String get notif_prefs_in_app => 'In-app';
+	String get notif_prefs_email => 'Email';
+	String get notif_prefs_sound => 'Sound';
+	String get notif_prefs_load_error => 'Could not load notification preferences.';
+	String get notif_prefs_error => 'Could not save preferences. Try again.';
+	String get notif_prefs_retry => 'Retry';
+	String get notif_cat_video => 'Videos';
+	String get notif_cat_applications => 'Applications';
+	String get notif_cat_payouts => 'Payouts';
+	String get notif_cat_wallet => 'Wallet';
+	String get notif_cat_tokens => 'Tokens';
+	String get notif_cat_campaigns => 'Campaigns';
+	String get notif_cat_security => 'Security';
+	String get export_data_title => 'Download my data';
+	String get export_data_sub => 'Export a JSON copy of your Wayo Ads account data';
+	String get export_data_button => 'Download export';
+	String get export_data_progress => 'Preparing export…';
+	String get export_data_success => 'Export saved';
+	String get export_data_error => 'Could not export your data. Try again.';
+	String get passkeys_title => 'Passkeys';
+	String get passkeys_sub => 'Passwordless sign-in keys for your account';
+	String get passkeys_web_only => 'Passkey management opens securely via Auth Wayo in the app.';
+	String get passkeys_manage_hint => 'Add or remove passkeys for your Wayo account. Management runs on Auth Wayo (required for WebAuthn).';
+	String get passkeys_open_manage => 'Manage passkeys';
+	String get connected_accounts_title => 'Connected accounts';
+	String get connected_accounts_sub => 'Google and Apple linked to your Wayo account';
+	String get connected_accounts_web_only => 'Link or unlink Google/Apple via Auth Wayo in the app.';
+	String get connected_accounts_manage_hint => 'Link or unlink Google and Apple on your Wayo Auth account.';
+	String get connected_accounts_open_manage => 'Manage connected accounts';
+	String get handoff_error => 'Could not open secure management. Falling back to browser.';
+	String get open_web_settings => 'Open web settings';
+	String get guides_title => 'Guides & resources';
+	String get guides_sub => 'Help articles and product guides from Wayo Ads';
 	String get section_account => 'Account';
 	String get section_security => 'Security';
 	String get sessions_title => 'Active sessions';
@@ -1442,6 +1624,8 @@ class TranslationsAdvertiserCampaignsCreateEn {
 
 	// Translations
 	String get title => 'New campaign';
+	String get edit_title => 'Edit campaign';
+	String step_of({required Object current, required Object total}) => 'Step ${current} of ${total}';
 	String get section_basics => 'Basics';
 	String get section_budget => 'Budget & rates';
 	String get field_type => 'Campaign type';
@@ -1452,20 +1636,160 @@ class TranslationsAdvertiserCampaignsCreateEn {
 	String get field_landing => 'Landing page URL';
 	String get field_assets => 'Brief / assets link';
 	String get field_budget => 'Total budget';
-	String get field_cpm_hint => 'CPM — cost per 1,000 impressions (¢)';
-	String get field_cpc_hint => 'CPC — cost per click (¢)';
+	String get field_cpm_hint => 'CPM — cost per 1,000 views';
+	String get field_cpc_hint => 'CPC — cost per click';
 	String get field_video_min_duration => 'Minimum video length (minutes)';
 	String get field_shorts_max_duration => 'Max shorts length (seconds)';
+	String get field_max_payout => 'Max payout per video (optional)';
+	String get field_hashtag => 'Required hashtag (optional)';
 	String get type_link => 'Link';
 	String get type_video => 'Video';
 	String get type_shorts => 'Shorts';
+	String get objective_awareness => 'Awareness';
+	String get objective_traffic => 'Traffic';
+	String get objective_forced_hint => 'Objective is set automatically from campaign type.';
 	String get landing_help => 'Required for link campaigns (https).';
-	String get assets_help => 'Video & shorts require a Drive, OneDrive, or SharePoint https link.';
+	String get assets_help => 'Video & shorts require a Drive, Dropbox, YouTube, TikTok, Instagram, or Vimeo https link (up to 5).';
+	String get platform_youtube_only => 'YouTube (required)';
+	String get allow_multiple_posts => 'Allow multiple posts per creator';
+	String get shorts_vertical => 'Require vertical video';
+	String get shorts_link_in_bio => 'Require link in bio';
+	String get end_date => 'Campaign end date (YYYY-MM-DD)';
+	String get notes_label => 'Instructions for creators';
+	String get geo_enable => 'Geographic targeting';
+	String get geo_country => 'Country code (ISO)';
+	String get geo_city => 'City (optional)';
+	String get geo_radius => 'Radius (km)';
+	String get geo_privacy => 'Country is required when geo targeting is on. Radius 1–1000 km.';
+	String get worldwide => 'Worldwide';
+	String get logo_section => 'Brand logo (optional)';
+	String get logo_pick => 'Choose logo';
+	String get logo_change => 'Change logo';
+	String get logo_remove => 'Remove';
+	String get logo_uploading => 'Uploading…';
+	String get logo_help => 'PNG, JPEG or WebP up to 2 MB.';
+	String get logo_too_large => 'Logo must be 2 MB or smaller.';
+	String get logo_upload_error => 'Logo upload failed';
+	String get logo_pick_error => 'Could not read the selected image';
+	String get budget_authority_note => 'Fees and wallet lock are calculated by the server when you publish.';
+	String wallet_available({required Object amount}) => 'Wallet available: ${amount}';
+	String get wallet_empty_gate => 'Add funds to your wallet before creating a campaign.';
+	String get wallet_insufficient => 'Insufficient wallet balance for budget + fees.';
+	String get go_wallet => 'Open wallet';
+	String get cost_budget => 'Campaign budget';
+	String cost_platform_fee({required Object pct}) => 'Platform fee (${pct}%)';
+	String get cost_tax => 'Tax';
+	String cost_tax_named({required Object label}) => 'Tax (${label})';
+	String get cost_total => 'Total to lock';
+	String get cost_available => 'Wallet available';
+	String get cost_remaining => 'Remaining after activation';
+	String get cost_loading => 'Calculating fees…';
+	String get cost_estimate_note => 'Estimate only — the server locks the final amount.';
+	String get review => 'Review';
 	String get submit_draft => 'Save as draft';
+	String get publish => 'Create and activate';
+	String get publish_confirm_title => 'Activate campaign?';
+	String get publish_confirm_body => 'This locks budget (+ fees/tax) from your wallet and makes the campaign live.';
+	String get continue_btn => 'Continue';
+	String get back => 'Back';
+	String get close => 'Close';
+	String get cancel => 'Cancel';
+	String get discard_title => 'Discard changes?';
+	String get discard_body => 'You have unsaved campaign details. Leave anyway?';
+	String get discard_confirm => 'Leave';
+	String get discard_stay => 'Stay';
 	String get validation_title => 'Check the highlighted fields.';
+	String get validation_title_required => 'Title is required';
+	String get validation_title_long => 'Title must be 200 characters or fewer';
+	String get validation_title_html => 'Title cannot contain HTML';
+	String get validation_niche => 'Select an industry niche';
+	String get validation_landing => 'Landing URL is required for link campaigns';
+	String get validation_landing_invalid => 'Enter a valid https landing URL';
+	String get validation_assets => 'At least one creative assets URL is required';
+	String get validation_assets_invalid => 'Use https links from Drive, Dropbox, YouTube, TikTok, Instagram, or Vimeo (max 5)';
+	String get validation_budget_min => 'Minimum budget is 10.00';
+	String get validation_budget_max => 'Maximum budget is 1,000,000';
+	String get validation_cpc => 'CPC is required for link campaigns';
+	String get validation_cpm => 'CPM is required for video and shorts';
+	String get validation_end_date => 'Enter end date as YYYY-MM-DD';
+	String get validation_end_date_past => 'End date must be today or later';
+	String get validation_geo_country => 'Select a country when geo targeting is enabled';
+	String get validation_geo_radius => 'Radius must be between 1 and 1000 km';
+	String get validation_video_duration => 'Video length must be 1–10 minutes';
+	String get validation_shorts_duration => 'Shorts max duration must be at least 15 seconds';
+	String get validation_max_payout => 'Max payout cannot exceed campaign budget';
 	String get assets_url_invalid => 'Use an https Google Drive, OneDrive, or SharePoint URL.';
 	String get success => 'Draft campaign created';
+	String get success_live => 'Campaign activated';
 	String get submit_in_progress => 'Saving…';
+	String estimate_clicks({required Object count}) => 'Est. clicks: ${count}';
+	String estimate_impressions({required Object count}) => 'Est. impressions: ${count}';
+}
+
+// Path: advertiser_campaigns.actions
+class TranslationsAdvertiserCampaignsActionsEn {
+	TranslationsAdvertiserCampaignsActionsEn.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+	String get publish => 'Publish';
+	String get pause => 'Pause';
+	String get resume => 'Resume';
+	String get cancel => 'Cancel campaign';
+	String get edit => 'Edit';
+	String get more => 'More';
+	String get analytics => 'Analytics';
+	String get financial => 'Financial health';
+	String get financial_health => 'Financial health';
+	String get status_updated => 'Campaign status updated';
+	String get status_error => 'Could not update campaign status';
+	String get cancel_confirm_title => 'Cancel this campaign?';
+	String get cancel_confirm_body => 'Remaining locked budget will be released to your wallet.';
+	String get dismiss => 'Keep campaign';
+	String get confirm => 'Cancel campaign';
+}
+
+// Path: advertiser_campaigns.insights
+class TranslationsAdvertiserCampaignsInsightsEn {
+	TranslationsAdvertiserCampaignsInsightsEn.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+	String get analytics_title => 'Campaign analytics';
+	String get financial_title => 'Financial health';
+	String get traffic => 'Traffic';
+	String get submissions => 'Submissions';
+	String get traffic_total => 'Traffic';
+	String get submissions_total => 'Submissions';
+	String get active_since => 'Active since';
+	String get analytics_empty => 'No analytics yet';
+	String get daily_traffic => 'Daily traffic';
+	String get daily_submissions => 'Daily submissions';
+	String get load_error => 'Could not load insights';
+	String get empty => 'No data yet';
+	String get badge => 'Confidence';
+	String get score => 'Score';
+	String get total_budget => 'Total budget';
+	String get locked_budget => 'Locked budget';
+	String get spent_billable => 'Spent (billable)';
+	String get remaining_budget => 'Remaining';
+	String get reserved => 'Reserved';
+	String get under_review => 'Under review';
+	String get paid_creators => 'Paid to creators';
+	String get pending_payouts => 'Pending payouts';
+	String get effective_cpm => 'Effective CPM';
+	String get validation_rate => 'Validation rate';
+	String get fraud_block_rate => 'Fraud block rate';
+	String get views => 'Views (validated / total)';
+	String get clicks => 'Clicks (validated / total)';
+	String get billable_views => 'Billable views';
+	String get billable_clicks => 'Billable clicks';
+	String get campaign_status => 'Status';
+	String get campaign_type => 'Type';
+	String get daily_spend => 'Daily spend';
+	String get server_authority_note => 'Amounts come from the server ledger and may update after settlement jobs.';
 }
 
 // Path: advertiser_campaigns.applications
@@ -1486,6 +1810,15 @@ class TranslationsAdvertiserCampaignsApplicationsEn {
 	String get reject_button => 'Reject';
 	String get approved_status => 'Approved';
 	String get rejected_status => 'Rejected';
+	String get insights_title => 'Creator insights';
+	String get insights_error => 'Could not load creator insights';
+	String get insights_retry => 'Retry';
+	String get insights_refresh => 'Refresh insights';
+	String match_score({required Object score}) => 'Match ${score}';
+	String content_quality({required Object value}) => 'Quality: ${value}';
+	String brand_safety({required Object value}) => 'Safety: ${value}';
+	String yt_linked({required Object name}) => 'YouTube: ${name}';
+	String get yt_unlinked => 'YouTube not linked';
 }
 
 // Path: creator.dashboard
@@ -1566,6 +1899,8 @@ class TranslationsCreatorWalletEn {
 	String get stripe_card_title_connected => 'Stripe is connected';
 	String get stripe_card_subtitle_connected => 'Your Stripe Express account is active. Payouts land in your bank.';
 	String get history_title => 'Payout history';
+	String get documents_cta => 'Statements';
+	String get documents_cta_subtitle => 'Signed payout PDFs and earnings documents';
 	String get history_empty => 'No withdrawals yet — they will appear here.';
 	String get history_load_error => 'Couldn\'t load your payout history.';
 	String get history_status_pending => 'Pending';
@@ -1773,6 +2108,54 @@ class TranslationsCreatorBusinessEn {
 	String get footer_info_global => 'Used for invoices and wallet top-ups. Payment details are handled securely by Stripe.';
 	String get save_error => 'We couldn\'t save your business info. Please try again.';
 	late final TranslationsCreatorBusinessValidationEn validation = TranslationsCreatorBusinessValidationEn.internal(_root);
+}
+
+// Path: creator.trust
+class TranslationsCreatorTrustEn {
+	TranslationsCreatorTrustEn.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+	String get title => 'Trust score';
+	String tier({required Object name}) => 'Tier ${name}';
+	String get verified => 'Verified';
+	String delta_up({required Object value}) => '+${value} this week';
+	String delta_down({required Object value}) => '-${value} this week';
+	String cpm_hint({required Object value}) => 'Potential CPM uplift: ${value}';
+	String get breakdown_title => 'Score breakdown';
+	String get validation_points => 'Validation rate';
+	String get fraud_points => 'Fraud score';
+	String get anomaly_points => 'Anomaly score';
+	String get open_analytics => 'View analytics';
+}
+
+// Path: creator.analytics
+class TranslationsCreatorAnalyticsEn {
+	TranslationsCreatorAnalyticsEn.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+	String get title => 'Creator analytics';
+	String get period_7d => '7d';
+	String get period_30d => '30d';
+	String get period_90d => '90d';
+	String get load_error => 'Couldn\'t load analytics';
+	String get empty => 'No analytics yet for this period';
+	String get earnings => 'Earnings';
+	String get pending => 'Pending';
+	String get validated_views => 'Validated views';
+	String get validated_clicks => 'Validated clicks';
+	String get recorded_views => 'Recorded views';
+	String get recorded_clicks => 'Recorded clicks';
+	String get view_validation_rate => 'View validation';
+	String get click_validation_rate => 'Click validation';
+	String period_meta({required Object days, required Object currency}) => 'Last ${days} days · ${currency}';
+	String get active_campaigns => 'Active campaigns';
+	String get daily_title => 'Daily';
+	String get by_campaign => 'By campaign';
+	String get server_authority_note => 'Amounts and rates come from the server. The app does not invent financial rules.';
 }
 
 // Path: onboarding.advertiser
@@ -2155,6 +2538,8 @@ extension on Translations {
 			case 'advertiser_campaigns.detail.top_creators_empty_title': return 'No performance yet';
 			case 'advertiser_campaigns.detail.top_creators_empty_subtitle': return 'Creator stats will appear here once your approved creators start driving views.';
 			case 'advertiser_campaigns.create.title': return 'New campaign';
+			case 'advertiser_campaigns.create.edit_title': return 'Edit campaign';
+			case 'advertiser_campaigns.create.step_of': return ({required Object current, required Object total}) => 'Step ${current} of ${total}';
 			case 'advertiser_campaigns.create.section_basics': return 'Basics';
 			case 'advertiser_campaigns.create.section_budget': return 'Budget & rates';
 			case 'advertiser_campaigns.create.field_type': return 'Campaign type';
@@ -2165,20 +2550,142 @@ extension on Translations {
 			case 'advertiser_campaigns.create.field_landing': return 'Landing page URL';
 			case 'advertiser_campaigns.create.field_assets': return 'Brief / assets link';
 			case 'advertiser_campaigns.create.field_budget': return 'Total budget';
-			case 'advertiser_campaigns.create.field_cpm_hint': return 'CPM — cost per 1,000 impressions (¢)';
-			case 'advertiser_campaigns.create.field_cpc_hint': return 'CPC — cost per click (¢)';
+			case 'advertiser_campaigns.create.field_cpm_hint': return 'CPM — cost per 1,000 views';
+			case 'advertiser_campaigns.create.field_cpc_hint': return 'CPC — cost per click';
 			case 'advertiser_campaigns.create.field_video_min_duration': return 'Minimum video length (minutes)';
 			case 'advertiser_campaigns.create.field_shorts_max_duration': return 'Max shorts length (seconds)';
+			case 'advertiser_campaigns.create.field_max_payout': return 'Max payout per video (optional)';
+			case 'advertiser_campaigns.create.field_hashtag': return 'Required hashtag (optional)';
 			case 'advertiser_campaigns.create.type_link': return 'Link';
 			case 'advertiser_campaigns.create.type_video': return 'Video';
 			case 'advertiser_campaigns.create.type_shorts': return 'Shorts';
+			case 'advertiser_campaigns.create.objective_awareness': return 'Awareness';
+			case 'advertiser_campaigns.create.objective_traffic': return 'Traffic';
+			case 'advertiser_campaigns.create.objective_forced_hint': return 'Objective is set automatically from campaign type.';
 			case 'advertiser_campaigns.create.landing_help': return 'Required for link campaigns (https).';
-			case 'advertiser_campaigns.create.assets_help': return 'Video & shorts require a Drive, OneDrive, or SharePoint https link.';
+			case 'advertiser_campaigns.create.assets_help': return 'Video & shorts require a Drive, Dropbox, YouTube, TikTok, Instagram, or Vimeo https link (up to 5).';
+			case 'advertiser_campaigns.create.platform_youtube_only': return 'YouTube (required)';
+			case 'advertiser_campaigns.create.allow_multiple_posts': return 'Allow multiple posts per creator';
+			case 'advertiser_campaigns.create.shorts_vertical': return 'Require vertical video';
+			case 'advertiser_campaigns.create.shorts_link_in_bio': return 'Require link in bio';
+			case 'advertiser_campaigns.create.end_date': return 'Campaign end date (YYYY-MM-DD)';
+			case 'advertiser_campaigns.create.notes_label': return 'Instructions for creators';
+			case 'advertiser_campaigns.create.geo_enable': return 'Geographic targeting';
+			case 'advertiser_campaigns.create.geo_country': return 'Country code (ISO)';
+			case 'advertiser_campaigns.create.geo_city': return 'City (optional)';
+			case 'advertiser_campaigns.create.geo_radius': return 'Radius (km)';
+			case 'advertiser_campaigns.create.geo_privacy': return 'Country is required when geo targeting is on. Radius 1–1000 km.';
+			case 'advertiser_campaigns.create.worldwide': return 'Worldwide';
+			case 'advertiser_campaigns.create.logo_section': return 'Brand logo (optional)';
+			case 'advertiser_campaigns.create.logo_pick': return 'Choose logo';
+			case 'advertiser_campaigns.create.logo_change': return 'Change logo';
+			case 'advertiser_campaigns.create.logo_remove': return 'Remove';
+			case 'advertiser_campaigns.create.logo_uploading': return 'Uploading…';
+			case 'advertiser_campaigns.create.logo_help': return 'PNG, JPEG or WebP up to 2 MB.';
+			case 'advertiser_campaigns.create.logo_too_large': return 'Logo must be 2 MB or smaller.';
+			case 'advertiser_campaigns.create.logo_upload_error': return 'Logo upload failed';
+			case 'advertiser_campaigns.create.logo_pick_error': return 'Could not read the selected image';
+			case 'advertiser_campaigns.create.budget_authority_note': return 'Fees and wallet lock are calculated by the server when you publish.';
+			case 'advertiser_campaigns.create.wallet_available': return ({required Object amount}) => 'Wallet available: ${amount}';
+			case 'advertiser_campaigns.create.wallet_empty_gate': return 'Add funds to your wallet before creating a campaign.';
+			case 'advertiser_campaigns.create.wallet_insufficient': return 'Insufficient wallet balance for budget + fees.';
+			case 'advertiser_campaigns.create.go_wallet': return 'Open wallet';
+			case 'advertiser_campaigns.create.cost_budget': return 'Campaign budget';
+			case 'advertiser_campaigns.create.cost_platform_fee': return ({required Object pct}) => 'Platform fee (${pct}%)';
+			case 'advertiser_campaigns.create.cost_tax': return 'Tax';
+			case 'advertiser_campaigns.create.cost_tax_named': return ({required Object label}) => 'Tax (${label})';
+			case 'advertiser_campaigns.create.cost_total': return 'Total to lock';
+			case 'advertiser_campaigns.create.cost_available': return 'Wallet available';
+			case 'advertiser_campaigns.create.cost_remaining': return 'Remaining after activation';
+			case 'advertiser_campaigns.create.cost_loading': return 'Calculating fees…';
+			case 'advertiser_campaigns.create.cost_estimate_note': return 'Estimate only — the server locks the final amount.';
+			case 'advertiser_campaigns.create.review': return 'Review';
 			case 'advertiser_campaigns.create.submit_draft': return 'Save as draft';
+			case 'advertiser_campaigns.create.publish': return 'Create and activate';
+			case 'advertiser_campaigns.create.publish_confirm_title': return 'Activate campaign?';
+			case 'advertiser_campaigns.create.publish_confirm_body': return 'This locks budget (+ fees/tax) from your wallet and makes the campaign live.';
+			case 'advertiser_campaigns.create.continue_btn': return 'Continue';
+			case 'advertiser_campaigns.create.back': return 'Back';
+			case 'advertiser_campaigns.create.close': return 'Close';
+			case 'advertiser_campaigns.create.cancel': return 'Cancel';
+			case 'advertiser_campaigns.create.discard_title': return 'Discard changes?';
+			case 'advertiser_campaigns.create.discard_body': return 'You have unsaved campaign details. Leave anyway?';
+			case 'advertiser_campaigns.create.discard_confirm': return 'Leave';
+			case 'advertiser_campaigns.create.discard_stay': return 'Stay';
 			case 'advertiser_campaigns.create.validation_title': return 'Check the highlighted fields.';
+			case 'advertiser_campaigns.create.validation_title_required': return 'Title is required';
+			case 'advertiser_campaigns.create.validation_title_long': return 'Title must be 200 characters or fewer';
+			case 'advertiser_campaigns.create.validation_title_html': return 'Title cannot contain HTML';
+			case 'advertiser_campaigns.create.validation_niche': return 'Select an industry niche';
+			case 'advertiser_campaigns.create.validation_landing': return 'Landing URL is required for link campaigns';
+			case 'advertiser_campaigns.create.validation_landing_invalid': return 'Enter a valid https landing URL';
+			case 'advertiser_campaigns.create.validation_assets': return 'At least one creative assets URL is required';
+			case 'advertiser_campaigns.create.validation_assets_invalid': return 'Use https links from Drive, Dropbox, YouTube, TikTok, Instagram, or Vimeo (max 5)';
+			case 'advertiser_campaigns.create.validation_budget_min': return 'Minimum budget is 10.00';
+			case 'advertiser_campaigns.create.validation_budget_max': return 'Maximum budget is 1,000,000';
+			case 'advertiser_campaigns.create.validation_cpc': return 'CPC is required for link campaigns';
+			case 'advertiser_campaigns.create.validation_cpm': return 'CPM is required for video and shorts';
+			case 'advertiser_campaigns.create.validation_end_date': return 'Enter end date as YYYY-MM-DD';
+			case 'advertiser_campaigns.create.validation_end_date_past': return 'End date must be today or later';
+			case 'advertiser_campaigns.create.validation_geo_country': return 'Select a country when geo targeting is enabled';
+			case 'advertiser_campaigns.create.validation_geo_radius': return 'Radius must be between 1 and 1000 km';
+			case 'advertiser_campaigns.create.validation_video_duration': return 'Video length must be 1–10 minutes';
+			case 'advertiser_campaigns.create.validation_shorts_duration': return 'Shorts max duration must be at least 15 seconds';
+			case 'advertiser_campaigns.create.validation_max_payout': return 'Max payout cannot exceed campaign budget';
 			case 'advertiser_campaigns.create.assets_url_invalid': return 'Use an https Google Drive, OneDrive, or SharePoint URL.';
 			case 'advertiser_campaigns.create.success': return 'Draft campaign created';
+			case 'advertiser_campaigns.create.success_live': return 'Campaign activated';
 			case 'advertiser_campaigns.create.submit_in_progress': return 'Saving…';
+			case 'advertiser_campaigns.create.estimate_clicks': return ({required Object count}) => 'Est. clicks: ${count}';
+			case 'advertiser_campaigns.create.estimate_impressions': return ({required Object count}) => 'Est. impressions: ${count}';
+			case 'advertiser_campaigns.actions.publish': return 'Publish';
+			case 'advertiser_campaigns.actions.pause': return 'Pause';
+			case 'advertiser_campaigns.actions.resume': return 'Resume';
+			case 'advertiser_campaigns.actions.cancel': return 'Cancel campaign';
+			case 'advertiser_campaigns.actions.edit': return 'Edit';
+			case 'advertiser_campaigns.actions.more': return 'More';
+			case 'advertiser_campaigns.actions.analytics': return 'Analytics';
+			case 'advertiser_campaigns.actions.financial': return 'Financial health';
+			case 'advertiser_campaigns.actions.financial_health': return 'Financial health';
+			case 'advertiser_campaigns.actions.status_updated': return 'Campaign status updated';
+			case 'advertiser_campaigns.actions.status_error': return 'Could not update campaign status';
+			case 'advertiser_campaigns.actions.cancel_confirm_title': return 'Cancel this campaign?';
+			case 'advertiser_campaigns.actions.cancel_confirm_body': return 'Remaining locked budget will be released to your wallet.';
+			case 'advertiser_campaigns.actions.dismiss': return 'Keep campaign';
+			case 'advertiser_campaigns.actions.confirm': return 'Cancel campaign';
+			case 'advertiser_campaigns.insights.analytics_title': return 'Campaign analytics';
+			case 'advertiser_campaigns.insights.financial_title': return 'Financial health';
+			case 'advertiser_campaigns.insights.traffic': return 'Traffic';
+			case 'advertiser_campaigns.insights.submissions': return 'Submissions';
+			case 'advertiser_campaigns.insights.traffic_total': return 'Traffic';
+			case 'advertiser_campaigns.insights.submissions_total': return 'Submissions';
+			case 'advertiser_campaigns.insights.active_since': return 'Active since';
+			case 'advertiser_campaigns.insights.analytics_empty': return 'No analytics yet';
+			case 'advertiser_campaigns.insights.daily_traffic': return 'Daily traffic';
+			case 'advertiser_campaigns.insights.daily_submissions': return 'Daily submissions';
+			case 'advertiser_campaigns.insights.load_error': return 'Could not load insights';
+			case 'advertiser_campaigns.insights.empty': return 'No data yet';
+			case 'advertiser_campaigns.insights.badge': return 'Confidence';
+			case 'advertiser_campaigns.insights.score': return 'Score';
+			case 'advertiser_campaigns.insights.total_budget': return 'Total budget';
+			case 'advertiser_campaigns.insights.locked_budget': return 'Locked budget';
+			case 'advertiser_campaigns.insights.spent_billable': return 'Spent (billable)';
+			case 'advertiser_campaigns.insights.remaining_budget': return 'Remaining';
+			case 'advertiser_campaigns.insights.reserved': return 'Reserved';
+			case 'advertiser_campaigns.insights.under_review': return 'Under review';
+			case 'advertiser_campaigns.insights.paid_creators': return 'Paid to creators';
+			case 'advertiser_campaigns.insights.pending_payouts': return 'Pending payouts';
+			case 'advertiser_campaigns.insights.effective_cpm': return 'Effective CPM';
+			case 'advertiser_campaigns.insights.validation_rate': return 'Validation rate';
+			case 'advertiser_campaigns.insights.fraud_block_rate': return 'Fraud block rate';
+			case 'advertiser_campaigns.insights.views': return 'Views (validated / total)';
+			case 'advertiser_campaigns.insights.clicks': return 'Clicks (validated / total)';
+			case 'advertiser_campaigns.insights.billable_views': return 'Billable views';
+			case 'advertiser_campaigns.insights.billable_clicks': return 'Billable clicks';
+			case 'advertiser_campaigns.insights.campaign_status': return 'Status';
+			case 'advertiser_campaigns.insights.campaign_type': return 'Type';
+			case 'advertiser_campaigns.insights.daily_spend': return 'Daily spend';
+			case 'advertiser_campaigns.insights.server_authority_note': return 'Amounts come from the server ledger and may update after settlement jobs.';
 			case 'advertiser_campaigns.applications.title': return 'Creator Applications';
 			case 'advertiser_campaigns.applications.pending_badge': return ({required Object count}) => '${count} pending';
 			case 'advertiser_campaigns.applications.subtitle': return 'Review and approve or reject creator applications';
@@ -2190,6 +2697,15 @@ extension on Translations {
 			case 'advertiser_campaigns.applications.reject_button': return 'Reject';
 			case 'advertiser_campaigns.applications.approved_status': return 'Approved';
 			case 'advertiser_campaigns.applications.rejected_status': return 'Rejected';
+			case 'advertiser_campaigns.applications.insights_title': return 'Creator insights';
+			case 'advertiser_campaigns.applications.insights_error': return 'Could not load creator insights';
+			case 'advertiser_campaigns.applications.insights_retry': return 'Retry';
+			case 'advertiser_campaigns.applications.insights_refresh': return 'Refresh insights';
+			case 'advertiser_campaigns.applications.match_score': return ({required Object score}) => 'Match ${score}';
+			case 'advertiser_campaigns.applications.content_quality': return ({required Object value}) => 'Quality: ${value}';
+			case 'advertiser_campaigns.applications.brand_safety': return ({required Object value}) => 'Safety: ${value}';
+			case 'advertiser_campaigns.applications.yt_linked': return ({required Object name}) => 'YouTube: ${name}';
+			case 'advertiser_campaigns.applications.yt_unlinked': return 'YouTube not linked';
 			case 'advertiser_video_reviews.title': return 'Video reviews';
 			case 'advertiser_video_reviews.subtitle': return 'Approve or reject creator video submissions for your campaigns.';
 			case 'advertiser_video_reviews.pending': return 'Pending';
@@ -2214,6 +2730,39 @@ extension on Translations {
 			case 'advertiser_video_reviews.status_approved': return 'Approved';
 			case 'advertiser_video_reviews.status_rejected': return 'Rejected';
 			case 'advertiser_video_reviews.status_flagged': return 'Flagged';
+			case 'advertiser_creators.title': return 'Creators';
+			case 'advertiser_creators.search_hint': return 'Search creators';
+			case 'advertiser_creators.load_error': return 'Could not load creators';
+			case 'advertiser_creators.empty': return 'No creators yet';
+			case 'advertiser_creators.prev': return 'Previous';
+			case 'advertiser_creators.next': return 'Next';
+			case 'advertiser_creators.trust': return ({required Object score}) => 'Trust: ${score}';
+			case 'youtube.title': return 'YouTube';
+			case 'youtube.entry_title': return 'YouTube channel';
+			case 'youtube.entry_sub': return 'Connect your channel for video campaigns';
+			case 'youtube.not_connected': return 'YouTube not connected';
+			case 'youtube.connect_subtitle': return 'Link your YouTube channel to submit videos and track performance.';
+			case 'youtube.connect': return 'Connect YouTube';
+			case 'youtube.reconnect_subtitle': return 'Your YouTube connection expired. Reconnect to continue.';
+			case 'youtube.reconnect': return 'Reconnect';
+			case 'youtube.refresh': return 'Refresh stats';
+			case 'youtube.disconnect': return 'Disconnect';
+			case 'youtube.disconnect_confirm': return 'Disconnect YouTube from this account?';
+			case 'youtube.cancel': return 'Cancel';
+			case 'youtube.connect_success': return ({required Object channelName}) => 'Connected to ${channelName}';
+			case 'youtube.reconnect_success': return ({required Object channelName}) => 'Reconnected to ${channelName}';
+			case 'youtube.disconnect_success': return 'YouTube disconnected';
+			case 'youtube.refresh_success': return 'Channel stats updated';
+			case 'youtube.subscribers': return ({required Object count}) => '${count} subscribers';
+			case 'youtube.error_generic': return 'YouTube request failed';
+			case 'youtube.error_oauth_denied': return 'YouTube sign-in was cancelled';
+			case 'youtube.error_invalid_state': return 'Invalid OAuth state — try again';
+			case 'youtube.error_missing_pkce': return 'Missing PKCE verifier';
+			case 'youtube.error_token_exchange': return 'Could not complete YouTube sign-in';
+			case 'youtube.error_stats_fetch': return 'Could not load channel stats';
+			case 'youtube.error_channel_taken': return 'This channel is linked to another account';
+			case 'youtube.error_cancelled': return 'Connection cancelled';
+			case 'youtube.error_already_connected': return 'YouTube is already connected';
 			case 'nav.dashboard': return 'Dashboard';
 			case 'nav.campaigns': return 'Campaigns';
 			case 'nav.analytics': return 'Analytics';
@@ -2382,6 +2931,8 @@ extension on Translations {
 			case 'creator.wallet.stripe_card_title_connected': return 'Stripe is connected';
 			case 'creator.wallet.stripe_card_subtitle_connected': return 'Your Stripe Express account is active. Payouts land in your bank.';
 			case 'creator.wallet.history_title': return 'Payout history';
+			case 'creator.wallet.documents_cta': return 'Statements';
+			case 'creator.wallet.documents_cta_subtitle': return 'Signed payout PDFs and earnings documents';
 			case 'creator.wallet.history_empty': return 'No withdrawals yet — they will appear here.';
 			case 'creator.wallet.history_load_error': return 'Couldn\'t load your payout history.';
 			case 'creator.wallet.history_status_pending': return 'Pending';
@@ -2570,6 +3121,36 @@ extension on Translations {
 			case 'creator.business.validation.vat_number_invalid': return 'VAT / tax ID format is invalid';
 			case 'creator.business.validation.state_required': return 'State / province is required';
 			case 'creator.business.validation.state_invalid': return 'State / region is invalid';
+			case 'creator.trust.title': return 'Trust score';
+			case 'creator.trust.tier': return ({required Object name}) => 'Tier ${name}';
+			case 'creator.trust.verified': return 'Verified';
+			case 'creator.trust.delta_up': return ({required Object value}) => '+${value} this week';
+			case 'creator.trust.delta_down': return ({required Object value}) => '-${value} this week';
+			case 'creator.trust.cpm_hint': return ({required Object value}) => 'Potential CPM uplift: ${value}';
+			case 'creator.trust.breakdown_title': return 'Score breakdown';
+			case 'creator.trust.validation_points': return 'Validation rate';
+			case 'creator.trust.fraud_points': return 'Fraud score';
+			case 'creator.trust.anomaly_points': return 'Anomaly score';
+			case 'creator.trust.open_analytics': return 'View analytics';
+			case 'creator.analytics.title': return 'Creator analytics';
+			case 'creator.analytics.period_7d': return '7d';
+			case 'creator.analytics.period_30d': return '30d';
+			case 'creator.analytics.period_90d': return '90d';
+			case 'creator.analytics.load_error': return 'Couldn\'t load analytics';
+			case 'creator.analytics.empty': return 'No analytics yet for this period';
+			case 'creator.analytics.earnings': return 'Earnings';
+			case 'creator.analytics.pending': return 'Pending';
+			case 'creator.analytics.validated_views': return 'Validated views';
+			case 'creator.analytics.validated_clicks': return 'Validated clicks';
+			case 'creator.analytics.recorded_views': return 'Recorded views';
+			case 'creator.analytics.recorded_clicks': return 'Recorded clicks';
+			case 'creator.analytics.view_validation_rate': return 'View validation';
+			case 'creator.analytics.click_validation_rate': return 'Click validation';
+			case 'creator.analytics.period_meta': return ({required Object days, required Object currency}) => 'Last ${days} days · ${currency}';
+			case 'creator.analytics.active_campaigns': return 'Active campaigns';
+			case 'creator.analytics.daily_title': return 'Daily';
+			case 'creator.analytics.by_campaign': return 'By campaign';
+			case 'creator.analytics.server_authority_note': return 'Amounts and rates come from the server. The app does not invent financial rules.';
 			case 'advertiser_wallet.hero_title': return 'Your balance';
 			case 'advertiser_wallet.hero_subtitle': return 'Add funds to run campaigns. Payments are processed securely by Stripe. Apple Pay (iOS) and Google Pay (Android) are available when supported.';
 			case 'advertiser_wallet.available': return 'Available';
@@ -2579,7 +3160,7 @@ extension on Translations {
 			case 'advertiser_wallet.quick_50': return '50 USD';
 			case 'advertiser_wallet.quick_100': return '100 USD';
 			case 'advertiser_wallet.quick_250': return '500 USD';
-			case 'advertiser_wallet.min_deposit': return 'Minimum deposit is 50.00 USD.';
+			case 'advertiser_wallet.min_deposit': return 'Minimum deposit is {amount}.';
 			case 'advertiser_wallet.test_pay': return 'Simulate payment (dev)';
 			case 'advertiser_wallet.test_hint': return 'Test mode: no real card. Tops up your dev wallet for QA.';
 			case 'advertiser_wallet.pay_secure': return 'Pay with card, Apple Pay or Google Pay';
@@ -2615,12 +3196,75 @@ extension on Translations {
 			case 'advertiser_wallet.deposit_pending': return 'Deposit pending';
 			case 'advertiser_wallet.deposit_resume_hint': return 'Resuming your deposit of {amount} — complete payment or tap Cancel to discard.';
 			case 'advertiser_wallet.deposit_cancel': return 'Cancel';
+			case 'advertiser_wallet.funding_method_label': return 'Funding method';
+			case 'advertiser_wallet.funding_card_title': return 'Card';
+			case 'advertiser_wallet.funding_card_badge': return 'Instant';
+			case 'advertiser_wallet.funding_card_desc': return 'Visa, Mastercard, Amex — funds are available right away.';
+			case 'advertiser_wallet.funding_ach_title': return 'Bank debit (ACH)';
+			case 'advertiser_wallet.funding_ach_badge': return 'Lower fee';
+			case 'advertiser_wallet.funding_ach_desc': return 'Debit your US bank account directly — lower fee than card.';
+			case 'advertiser_wallet.funding_ach_eta': return 'Funds usually settle in 1–3 business days.';
+			case 'advertiser_wallet.funding_ach_usd_only': return 'ACH is only available for USD wallets.';
+			case 'advertiser_wallet.funding_wire_title': return 'Wire transfer';
+			case 'advertiser_wallet.funding_wire_badge': return 'Large amounts';
+			case 'advertiser_wallet.funding_wire_desc': return 'Send a bank wire using the instructions we provide.';
+			case 'advertiser_wallet.funding_wire_eta': return 'Funds usually arrive in 1–3 business days.';
+			case 'advertiser_wallet.funding_wire_currency_only': return 'Wire is only available for: {currencies}.';
+			case 'advertiser_wallet.saved_cards_loading': return 'Loading saved cards…';
+			case 'advertiser_wallet.default_card_badge': return 'Default';
+			case 'advertiser_wallet.saved_card_badge': return 'Saved';
+			case 'advertiser_wallet.use_new_card': return 'Use a new card';
+			case 'advertiser_wallet.use_saved_card': return 'Use a saved card';
+			case 'advertiser_wallet.change_method': return 'Change';
+			case 'advertiser_wallet.remove_card': return 'Remove';
+			case 'advertiser_wallet.remove_card_confirm_title': return 'Remove this card?';
+			case 'advertiser_wallet.remove_card_confirm_desc': return '{brand} •••• {last4} will be removed from your saved cards.';
+			case 'advertiser_wallet.remove_card_confirm_action': return 'Remove';
+			case 'advertiser_wallet.card_removed_title': return 'Card removed';
+			case 'advertiser_wallet.card_removed_desc': return '•••• {last4} was removed.';
+			case 'advertiser_wallet.card_remove_failed': return 'Could not remove this card. Try again.';
+			case 'advertiser_wallet.refresh_saved_cards': return 'Refresh';
+			case 'advertiser_wallet.pay_with_saved_card': return 'Pay with {brand} •••• {last4}';
+			case 'advertiser_wallet.wire_instructions_loading': return 'Preparing wire instructions…';
+			case 'advertiser_wallet.wire_awaiting_title': return 'Awaiting your bank transfer';
+			case 'advertiser_wallet.wire_awaiting_desc': return 'Send a wire using the details below. Your balance will update once we receive the funds.';
+			case 'advertiser_wallet.wire_exact_amount': return 'Exact amount';
+			case 'advertiser_wallet.wire_reference': return 'Reference (required)';
+			case 'advertiser_wallet.wire_reference_required_hint': return 'Include this reference in your transfer memo — without it we can\'t match your payment.';
+			case 'advertiser_wallet.wire_copy_action': return 'Copy';
+			case 'advertiser_wallet.wire_copied_title': return 'Copied';
+			case 'advertiser_wallet.wire_copied_desc': return 'Copied to clipboard.';
+			case 'advertiser_wallet.wire_copy_failed': return 'Could not copy. Try again.';
+			case 'advertiser_wallet.wire_network_swift': return 'SWIFT / international wire';
+			case 'advertiser_wallet.wire_network_aba': return 'US domestic wire (ABA)';
+			case 'advertiser_wallet.wire_network_iban': return 'IBAN / SEPA';
+			case 'advertiser_wallet.wire_network_sort_code': return 'UK bank transfer';
+			case 'advertiser_wallet.wire_network_other': return '{network}';
+			case 'advertiser_wallet.wire_account_holder': return 'Account holder';
+			case 'advertiser_wallet.wire_bank_name': return 'Bank name';
+			case 'advertiser_wallet.wire_routing_number': return 'Routing number';
+			case 'advertiser_wallet.wire_sort_code': return 'Sort code';
+			case 'advertiser_wallet.wire_account_number': return 'Account number';
+			case 'advertiser_wallet.wire_swift_code': return 'SWIFT/BIC';
+			case 'advertiser_wallet.wire_iban': return 'IBAN';
+			case 'advertiser_wallet.wire_bic': return 'BIC';
+			case 'advertiser_wallet.wire_hosted_instructions': return 'View full instructions';
+			case 'advertiser_wallet.wire_done_button': return 'I\'ve sent the transfer';
+			case 'advertiser_wallet.ach_processing_banner': return 'ACH deposit of {amount} is processing — funds typically settle in 1–3 business days.';
+			case 'advertiser_wallet.wire_awaiting_banner': return 'Wire deposit of {amount} is awaiting your bank transfer.';
+			case 'advertiser_wallet.reconcile_button': return 'Check status';
+			case 'advertiser_wallet.reconcile_success': return 'Status updated.';
+			case 'advertiser_wallet.reconcile_still_pending': return 'Still processing — check back soon.';
+			case 'advertiser_wallet.reconcile_failed': return 'Could not check status. Try again.';
+			case 'advertiser_wallet.continue_to_payment': return 'Continue';
+			case 'advertiser_wallet.cancel': return 'Cancel';
 			case 'chat.inbox_title': return 'Messages';
 			case 'chat.inbox_subtitle': return 'Secure conversations for your campaigns';
 			case 'chat.conversation_unknown': return 'Conversation';
 			case 'chat.thread_fallback_title': return 'Chat';
 			case 'chat.role_creator': return 'Creator';
 			case 'chat.role_advertiser': return 'Advertiser';
+			case 'chat.role_admin': return 'Admin';
 			case 'chat.composer_hint': return 'Write a message…';
 			case 'chat.typing': return 'Typing…';
 			case 'chat.error_load_threads': return 'Could not load your conversations. Try again.';
@@ -2649,7 +3293,29 @@ extension on Translations {
 			case 'chat.conversation_open_failed': return 'Could not open that conversation. Try again.';
 			case 'chat.file_picker_restart_hint': return 'Attachments need a full app restart after updates. Stop the app, then Run again (avoid hot restart).';
 			case 'chat.attachment_type_not_allowed': return 'Only images (JPG, PNG, GIF, WebP, BMP) or PDF are allowed.';
-			case 'chat.inbox_swipe_soon': return 'Pin and archive from the list are coming soon.';
+			case 'chat.inbox_filter_active': return 'Inbox';
+			case 'chat.inbox_filter_archived': return 'Archived';
+			case 'chat.inbox_pinned': return 'Pinned';
+			case 'chat.inbox_unpinned': return 'Unpinned';
+			case 'chat.inbox_archived': return 'Archived';
+			case 'chat.inbox_unarchived': return 'Moved to inbox';
+			case 'chat.inbox_pin_failed': return 'Could not update pin. Try again.';
+			case 'chat.inbox_archive_failed': return 'Could not update archive. Try again.';
+			case 'chat.inbox_pin_disabled': return 'Pin and archive are temporarily unavailable.';
+			case 'chat.menu_more': return 'More';
+			case 'chat.menu_pin': return 'Pin';
+			case 'chat.menu_unpin': return 'Unpin';
+			case 'chat.menu_archive': return 'Archive';
+			case 'chat.menu_unarchive': return 'Unarchive';
+			case 'chat.menu_delete': return 'Delete';
+			case 'chat.delete_conversation': return 'Delete conversation';
+			case 'chat.delete_conversation_confirm_title': return 'Delete this conversation?';
+			case 'chat.delete_conversation_confirm_text': return 'All messages will be permanently deleted for both participants. This cannot be undone.';
+			case 'chat.delete_conversation_confirm_cta': return 'Delete';
+			case 'chat.delete_conversation_failed': return 'Could not delete the conversation. Try again.';
+			case 'chat.delete_conversation_done': return 'Conversation deleted';
+			case 'chat.empty_archived_title': return 'No archived chats';
+			case 'chat.empty_archived_hint': return 'Swipe a conversation left to archive it.';
 			case 'chat.date_today': return 'Today';
 			case 'chat.date_yesterday': return 'Yesterday';
 			case 'chat.bubble_reply': return 'Reply';
@@ -2908,6 +3574,46 @@ extension on Translations {
 			case 'app_settings.notifications_open_settings': return 'Open phone settings';
 			case 'app_settings.notifications_enable_error': return 'Could not enable notifications. Check system settings.';
 			case 'app_settings.notifications_update_error': return 'Could not update notification settings. Try again.';
+			case 'app_settings.notif_prefs_entry_title': return 'Notification preferences';
+			case 'app_settings.notif_prefs_entry_sub': return 'Choose channels and categories for in-app and email alerts';
+			case 'app_settings.notif_prefs_title': return 'Notification preferences';
+			case 'app_settings.notif_prefs_channels_title': return 'Channels';
+			case 'app_settings.notif_prefs_channels_sub': return 'Master switches for how Wayo can reach you.';
+			case 'app_settings.notif_prefs_categories_title': return 'Categories';
+			case 'app_settings.notif_prefs_categories_sub': return 'Mute specific types without turning everything off.';
+			case 'app_settings.notif_prefs_in_app': return 'In-app';
+			case 'app_settings.notif_prefs_email': return 'Email';
+			case 'app_settings.notif_prefs_sound': return 'Sound';
+			case 'app_settings.notif_prefs_load_error': return 'Could not load notification preferences.';
+			case 'app_settings.notif_prefs_error': return 'Could not save preferences. Try again.';
+			case 'app_settings.notif_prefs_retry': return 'Retry';
+			case 'app_settings.notif_cat_video': return 'Videos';
+			case 'app_settings.notif_cat_applications': return 'Applications';
+			case 'app_settings.notif_cat_payouts': return 'Payouts';
+			case 'app_settings.notif_cat_wallet': return 'Wallet';
+			case 'app_settings.notif_cat_tokens': return 'Tokens';
+			case 'app_settings.notif_cat_campaigns': return 'Campaigns';
+			case 'app_settings.notif_cat_security': return 'Security';
+			case 'app_settings.export_data_title': return 'Download my data';
+			case 'app_settings.export_data_sub': return 'Export a JSON copy of your Wayo Ads account data';
+			case 'app_settings.export_data_button': return 'Download export';
+			case 'app_settings.export_data_progress': return 'Preparing export…';
+			case 'app_settings.export_data_success': return 'Export saved';
+			case 'app_settings.export_data_error': return 'Could not export your data. Try again.';
+			case 'app_settings.passkeys_title': return 'Passkeys';
+			case 'app_settings.passkeys_sub': return 'Passwordless sign-in keys for your account';
+			case 'app_settings.passkeys_web_only': return 'Passkey management opens securely via Auth Wayo in the app.';
+			case 'app_settings.passkeys_manage_hint': return 'Add or remove passkeys for your Wayo account. Management runs on Auth Wayo (required for WebAuthn).';
+			case 'app_settings.passkeys_open_manage': return 'Manage passkeys';
+			case 'app_settings.connected_accounts_title': return 'Connected accounts';
+			case 'app_settings.connected_accounts_sub': return 'Google and Apple linked to your Wayo account';
+			case 'app_settings.connected_accounts_web_only': return 'Link or unlink Google/Apple via Auth Wayo in the app.';
+			case 'app_settings.connected_accounts_manage_hint': return 'Link or unlink Google and Apple on your Wayo Auth account.';
+			case 'app_settings.connected_accounts_open_manage': return 'Manage connected accounts';
+			case 'app_settings.handoff_error': return 'Could not open secure management. Falling back to browser.';
+			case 'app_settings.open_web_settings': return 'Open web settings';
+			case 'app_settings.guides_title': return 'Guides & resources';
+			case 'app_settings.guides_sub': return 'Help articles and product guides from Wayo Ads';
 			case 'app_settings.section_account': return 'Account';
 			case 'app_settings.section_security': return 'Security';
 			case 'app_settings.sessions_title': return 'Active sessions';

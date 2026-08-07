@@ -1,0 +1,126 @@
+{
+  "meta": {
+    "project": "Wayo Ads Go web parity",
+    "auditDate": "2026-08-03",
+    "repos": ["Wayo-ads", "Wayo-ads-mobile", "Auth_Wayo", "chat-service"],
+    "scope": "marketplace_ads",
+    "outOfScope": ["content_lab", "content_spy", "creator_studio_ai_tools", "marketing_site", "pwa", "chrome_extension"]
+  },
+  "roles": ["USER", "ADVERTISER", "CREATOR", "SUPERADMIN"],
+  "campaignStatus": ["DRAFT", "ACTIVE", "PAUSED", "UNDER_REVIEW", "COMPLETED", "CANCELLED"],
+  "campaignStatusTransitions": {
+    "DRAFT_to_ACTIVE": "PATCH status + lockCampaignBudget",
+    "ACTIVE_to_PAUSED": "PATCH status (budget remains locked)",
+    "PAUSED_to_ACTIVE": "PATCH status",
+    "ACTIVE_to_CANCELLED": "PATCH status + releaseCampaignBudget",
+    "ACTIVE_or_PAUSED_to_COMPLETED": "expiration/reconcile or PATCH",
+    "archive": null
+  },
+  "backendAuthGaps": [
+    {
+      "endpoint": "GET /api/advertiser/campaigns/[id]/financial-summary",
+      "issue": "fixed_bearer_2026-08-03",
+      "wave": 1,
+      "status": "FIXED"
+    },
+    {
+      "endpoint": "GET /api/campaigns/[id]/owner-live",
+      "issue": "fixed_bearer_2026-08-03",
+      "wave": 1,
+      "status": "FIXED"
+    },
+    {
+      "endpoint": "POST /api/campaigns/upload-logo",
+      "issue": "fixed_requireRole_request_plus_magic_bytes",
+      "wave": 1,
+      "status": "FIXED"
+    },
+    {
+      "endpoint": "POST /api/campaigns/[id]/reconcile-expiration",
+      "issue": "fixed_getCurrentUser_request",
+      "wave": 1,
+      "status": "FIXED"
+    },
+    {
+      "endpoint": "POST /api/campaigns Idempotency-Key",
+      "issue": "added_redis_memory_idempotency",
+      "wave": 1,
+      "status": "FIXED"
+    },
+    {
+      "endpoint": "chat-service pin/archive",
+      "issue": "added_participant_pin_archive_2026-08-03",
+      "wave": 3,
+      "status": "FIXED"
+    },
+    {
+      "endpoint": "GET /api/advertiser/creators + AI match/insights Bearer",
+      "issue": "fixed_requireRole_getCurrentUser_request",
+      "wave": 3,
+      "status": "FIXED"
+    }
+  ],
+  "matrix": [
+    {"id": "auth.login", "domain": "Auth", "webFeature": "Login/signup/OAuth", "webRoute": "/auth/signin", "endpoint": "Auth_Wayo /api/auth/* + /oauth/token", "mobileState": "COMPLETE", "gap": null, "priority": null, "effort": null, "dependency": "Auth_Wayo", "securityRisk": "medium", "tests": "partial"},
+    {"id": "auth.device_approval", "domain": "Auth", "webFeature": "Device approval", "webRoute": "/auth/device-approval", "endpoint": "/api/auth/device-approval", "mobileState": "PARTIAL", "gap": "Approve/deny UX incomplete vs web", "priority": "P2", "effort": "M", "dependency": "Auth_Wayo", "securityRisk": "high", "tests": "missing"},
+    {"id": "auth.passkeys", "domain": "Auth", "webFeature": "Passkeys", "webRoute": "/settings security", "endpoint": "/api/settings/passkeys-handoff", "mobileState": "ABSENT", "gap": "No native or handoff UI", "priority": "P2", "effort": "L", "dependency": "Auth_Wayo", "securityRisk": "high", "tests": "missing"},
+    {"id": "auth.connected_accounts", "domain": "Auth", "webFeature": "Connected accounts", "webRoute": "/settings", "endpoint": "/api/settings/connected-accounts-handoff", "mobileState": "ABSENT", "gap": "Link/unlink", "priority": "P2", "effort": "M", "dependency": "Auth_Wayo", "securityRisk": "high", "tests": "missing"},
+    {"id": "account.export", "domain": "Account", "webFeature": "Export data", "webRoute": "/settings privacy", "endpoint": "GET /api/user/export-data", "mobileState": "ABSENT", "gap": "No mobile client", "priority": "P2", "effort": "M", "dependency": null, "securityRisk": "high", "tests": "missing"},
+    {"id": "account.notif_prefs", "domain": "Account", "webFeature": "Notification preferences", "webRoute": "/settings notifications", "endpoint": "/api/notifications/preferences", "mobileState": "PARTIAL", "gap": "Category parity", "priority": "P2", "effort": "S", "dependency": null, "securityRisk": "low", "tests": "missing"},
+    {"id": "adv.create_campaign", "domain": "Advertiser", "webFeature": "Create campaign", "webRoute": "/advertiser/campaigns/new", "endpoint": "POST /api/campaigns", "mobileState": "COMPLETE", "gap": null, "priority": null, "effort": null, "dependency": "Idempotency-Key", "securityRisk": "high", "tests": "partial"},
+    {"id": "adv.edit_campaign", "domain": "Advertiser", "webFeature": "Edit campaign", "webRoute": "/advertiser/campaigns/[id]/edit", "endpoint": "PATCH /api/campaigns/[id]", "mobileState": "COMPLETE", "gap": null, "priority": null, "effort": null, "dependency": null, "securityRisk": "high", "tests": "partial"},
+    {"id": "adv.status_transitions", "domain": "Advertiser", "webFeature": "Pause/resume/cancel/publish", "webRoute": "campaign detail actions", "endpoint": "PATCH status", "mobileState": "COMPLETE", "gap": null, "priority": null, "effort": null, "dependency": null, "securityRisk": "medium", "tests": "partial"},
+    {"id": "adv.geo", "domain": "Advertiser", "webFeature": "Geo targeting", "webRoute": "campaign editor", "endpoint": "geo fields on POST/PATCH", "mobileState": "COMPLETE", "gap": "Lat/lng map picker deferred; country/city/radius OK", "priority": "P2", "effort": "S", "dependency": null, "securityRisk": "medium", "tests": "partial"},
+    {"id": "adv.upload_logo", "domain": "Advertiser", "webFeature": "Logo upload", "webRoute": "campaign editor", "endpoint": "POST /api/campaigns/upload-logo", "mobileState": "COMPLETE", "gap": null, "priority": null, "effort": null, "dependency": null, "securityRisk": "high", "tests": "missing"},
+    {"id": "adv.assets_url", "domain": "Advertiser", "webFeature": "Creative assets URLs", "webRoute": "campaign editor", "endpoint": "assetsUrl field", "mobileState": "COMPLETE", "gap": null, "priority": null, "effort": null, "dependency": null, "securityRisk": "medium", "tests": "missing"},
+    {"id": "adv.analytics", "domain": "Advertiser", "webFeature": "Campaign analytics", "webRoute": "/advertiser/campaigns/[id]/analytics", "endpoint": "GET /api/campaigns/[id]/analytics", "mobileState": "COMPLETE", "gap": null, "priority": null, "effort": null, "dependency": null, "securityRisk": "medium", "tests": "partial"},
+    {"id": "adv.financial_health", "domain": "Advertiser", "webFeature": "Financial health", "webRoute": "/advertiser/campaigns/[id]/financial-health", "endpoint": "GET /api/advertiser/campaigns/[id]/financial-summary", "mobileState": "COMPLETE", "gap": null, "priority": null, "effort": null, "dependency": null, "securityRisk": "high", "tests": "partial"},
+    {"id": "adv.applications", "domain": "Advertiser", "webFeature": "Application review", "webRoute": "campaign detail", "endpoint": "approve/reject", "mobileState": "COMPLETE", "gap": null, "priority": null, "effort": null, "dependency": null, "securityRisk": "medium", "tests": "missing"},
+    {"id": "adv.match_score", "domain": "Advertiser", "webFeature": "AI match score", "webRoute": "application review", "endpoint": ".../ai-match-score", "mobileState": "COMPLETE", "gap": null, "priority": null, "effort": null, "dependency": null, "securityRisk": "medium", "tests": "missing"},
+    {"id": "adv.yt_insights", "domain": "Advertiser", "webFeature": "Creator YouTube insights", "webRoute": "application review", "endpoint": ".../insights", "mobileState": "COMPLETE", "gap": null, "priority": null, "effort": null, "dependency": null, "securityRisk": "medium", "tests": "missing"},
+    {"id": "adv.video_reviews", "domain": "Advertiser", "webFeature": "Video reviews", "webRoute": "/advertiser/video-reviews", "endpoint": "/api/advertiser/videos", "mobileState": "COMPLETE", "gap": null, "priority": null, "effort": null, "dependency": null, "securityRisk": "medium", "tests": "missing"},
+    {"id": "adv.creators_dir", "domain": "Advertiser", "webFeature": "Creators directory", "webRoute": "/advertiser/creators", "endpoint": "GET /api/advertiser/creators", "mobileState": "COMPLETE", "gap": null, "priority": null, "effort": null, "dependency": null, "securityRisk": "medium", "tests": "partial"},
+    {"id": "adv.wallet", "domain": "Advertiser", "webFeature": "Wallet deposits", "webRoute": "/advertiser/wallet", "endpoint": "/api/wallet/deposit-intent", "mobileState": "COMPLETE", "gap": null, "priority": null, "effort": null, "dependency": "Stripe", "securityRisk": "high", "tests": "partial"},
+    {"id": "adv.saved_cards", "domain": "Advertiser", "webFeature": "Saved cards", "webRoute": "AddFundsPanel", "endpoint": "/api/wallet/saved-cards", "mobileState": "COMPLETE", "gap": null, "priority": null, "effort": null, "dependency": "Stripe", "securityRisk": "high", "tests": "partial"},
+    {"id": "adv.invoices", "domain": "Advertiser", "webFeature": "Invoices", "webRoute": "/advertiser/invoices", "endpoint": "/api/advertiser/invoices", "mobileState": "COMPLETE", "gap": null, "priority": null, "effort": null, "dependency": null, "securityRisk": "medium", "tests": "missing"},
+    {"id": "adv.business", "domain": "Advertiser", "webFeature": "Business profile", "webRoute": "/settings/business", "endpoint": "business-profile", "mobileState": "COMPLETE", "gap": null, "priority": null, "effort": null, "dependency": null, "securityRisk": "low", "tests": "missing"},
+    {"id": "creator.youtube", "domain": "Creator", "webFeature": "YouTube OAuth", "webRoute": "/settings/youtube", "endpoint": "/api/creator/youtube/connect|mobile-complete", "mobileState": "COMPLETE", "gap": null, "priority": null, "effort": null, "dependency": "returnApp=adsgo", "securityRisk": "high", "tests": "partial"},
+    {"id": "creator.analytics", "domain": "Creator", "webFeature": "Creator analytics", "webRoute": "/creator/analytics", "endpoint": "GET /api/creator/analytics", "mobileState": "COMPLETE", "gap": null, "priority": null, "effort": null, "dependency": null, "securityRisk": "low", "tests": "partial"},
+    {"id": "creator.trust", "domain": "Creator", "webFeature": "Trust score", "webRoute": "creator dashboard", "endpoint": "GET /api/creator/trust-score", "mobileState": "COMPLETE", "gap": null, "priority": null, "effort": null, "dependency": "bearer fix", "securityRisk": "high", "tests": "partial"},
+    {"id": "creator.apply", "domain": "Creator", "webFeature": "Browse/apply/submit", "webRoute": "/campaigns", "endpoint": "campaigns apply submit-post", "mobileState": "COMPLETE", "gap": null, "priority": null, "effort": null, "dependency": null, "securityRisk": "medium", "tests": "missing"},
+    {"id": "creator.wallet", "domain": "Creator", "webFeature": "Wallet Connect withdraw", "webRoute": "/creator/wallet", "endpoint": "stripe-connect withdrawal", "mobileState": "COMPLETE", "gap": null, "priority": null, "effort": null, "dependency": "Stripe", "securityRisk": "high", "tests": "partial"},
+    {"id": "chat.inbox", "domain": "Chat", "webFeature": "Inbox/thread", "webRoute": "/messages", "endpoint": "chat-service /api/v1 + /api/chat/token", "mobileState": "COMPLETE", "gap": null, "priority": null, "effort": null, "dependency": "chat-service", "securityRisk": "medium", "tests": "partial"},
+    {"id": "chat.pin_archive", "domain": "Chat", "webFeature": "Pin/archive", "webRoute": "inbox", "endpoint": "chat-service /pin|/unpin|/archive|/unarchive", "mobileState": "COMPLETE", "gap": "Archived inbox filter optional polish", "priority": "P2", "effort": "S", "dependency": "chat-service API", "securityRisk": "medium", "tests": "missing"},
+    {"id": "admin.core", "domain": "Admin", "webFeature": "Users/bans/withdrawals/announcements/ledger/tax/AI/browse", "webRoute": "/dashboard/admin/*", "endpoint": "/api/admin/* subset", "mobileState": "COMPLETE", "gap": null, "priority": null, "effort": null, "dependency": null, "securityRisk": "high", "tests": "missing"},
+    {"id": "admin.settings_suite", "domain": "Admin", "webFeature": "Platform/Stripe/SMTP/legal/token packages", "webRoute": "/admin/settings/*", "endpoint": "/api/admin/platform-settings|stripe-settings|email-settings|...", "mobileState": "ABSENT", "gap": "Full admin settings + step-up", "priority": "P2", "effort": "XL", "dependency": "step-up auth", "securityRisk": "critical", "tests": "missing"},
+    {"id": "admin.ops_suite", "domain": "Admin", "webFeature": "Audits/docs/broadcast/emails/audit/pipeline/velocity/yt/health/jobs", "webRoute": "/dashboard/admin/*", "endpoint": "/api/admin/*", "mobileState": "ABSENT", "gap": "Ops screens", "priority": "P2", "effort": "XL", "dependency": "step-up", "securityRisk": "critical", "tests": "missing"},
+    {"id": "studio.ai", "domain": "Studio", "webFeature": "Content Lab/Spy AI", "webRoute": "/content-lab /content-spy", "endpoint": "/api/creator/ai/*", "mobileState": "OUT_OF_SCOPE", "gap": "Do not import", "priority": null, "effort": null, "dependency": null, "securityRisk": null, "tests": null}
+  ],
+  "mobileRoutes": {
+    "auth": ["/splash", "/login", "/signup", "/signup/register", "/signup/verify-otp", "/onboarding/wayo-ads-role", "/onboarding/verify-email-otp", "/forgot-password", "/forgot-password/otp", "/forgot-password/new-password"],
+    "shell": ["/dashboard", "/campaigns", "/campaigns/:id", "/wallet", "/invoices", "/chat"],
+    "creator": ["/creator/campaigns/:id", "/creator/campaigns/:id/application", "/creator/analytics"],
+    "advertiser": [
+      "/advertiser/video-reviews",
+      "/advertiser/creators",
+      "/advertiser/campaigns/new",
+      "/advertiser/campaigns/:id/edit",
+      "/advertiser/campaigns/:id/analytics",
+      "/advertiser/campaigns/:id/financial-health"
+    ],
+    "settings": ["/settings/profile", "/settings/business", "/settings/security", "/settings/trusted-devices", "/settings/delete-account", "/settings/youtube", "/notifications"],
+    "chat": ["/chat/thread/:conversationId"],
+    "admin": ["/superadmin", "/superadmin/ai-usage", "/superadmin/ledger", "/superadmin/banned-users", "/superadmin/browse-campaigns", "/superadmin/tax-rates", "/superadmin/tax-rates/subdivisions/:countryCode", "/superadmin/campaigns/:id"],
+    "imperativeOnly": []
+  },
+  "counts": {
+    "matrixRows": 34,
+    "complete": 28,
+    "partial": 2,
+    "stub": 0,
+    "absent": 3,
+    "blockedApi": 0,
+    "outOfScope": 1,
+    "note": "Vague 1–3 COMPLETE 2026-08-03 (marketplace P0/P1). Next: Vague 4 account/security."
+  }
+}

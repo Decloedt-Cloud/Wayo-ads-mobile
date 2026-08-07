@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_brand_name">Wayo Ads</string>
+    <string name="widget_performance_label">Performance</string>
+    <string name="widget_performance_description">Track your most important campaign metrics.</string>
+    <string name="widget_performance_metric_fallback">Performance</string>
+    <string name="widget_wallet_label">Wallet</string>
+    <string name="widget_wallet_description">See your available Wayo balance at a glance.</string>
+    <string name="widget_quick_actions_label">Quick Actions</string>
+    <string name="widget_quick_actions_title">Quick actions</string>
+    <string name="widget_quick_actions_description">Open your most-used Wayo actions instantly.</string>
+    <string name="widget_available">Available</string>
+    <string name="widget_pending">Pending</string>
+    <string name="widget_sign_in">Sign in to see your dashboard</string>
+    <string name="widget_open_wayo">Open Wayo →</string>
+    <string name="widget_qa_create">New Campaign</string>
+    <string name="widget_qa_campaigns">Campaigns</string>
+    <string name="widget_qa_analytics">Analytics</string>
+    <string name="widget_qa_wallet">Wallet</string>
+    <string name="widget_qa_opportunities">Opportunities</string>
+    <string name="widget_qa_collabs">Collabs</string>
+    <string name="widget_qa_earnings">Earnings</string>
+</resources>

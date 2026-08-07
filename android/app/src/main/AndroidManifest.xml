@@ -57,6 +57,24 @@
                     android:host="oauthredirect" />
             </intent-filter>
 
+            <!-- YouTube OAuth return (FlutterWebAuth2 / HTTPS mobile-callback deep link). -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="com.wayo.wayoadsgo"
+                    android:host="youtube-oauth" />
+            </intent-filter>
+
+            <!-- Wayo Ads home-widget / product deep links -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="wayoads" />
+            </intent-filter>
+
             <!-- Share image/file into Wayo chat (multipart upload, not URL text). -->
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
@@ -95,6 +113,11 @@
             android:name="com.google.android.gms.wallet.api.enabled"
             android:value="true" />
 
+        <!-- Do not tools:replace Stripe activity themes. Overriding Financial
+             Connections / Link with Theme.AppCompat crashed ACH prepaid
+             ("Wayo Ads keeps stopping"). Nav-bar insets are handled via
+             MainActivity setDecorFitsSystemWindows around presentPaymentSheet. -->
+
         <activity
             android:name="com.linusu.flutter_secure_storage.FlutterSecureStorageActivity"
             android:exported="false" />
@@ -105,6 +128,44 @@
         <receiver
             android:name="com.dexterous.flutterlocalnotifications.ActionBroadcastReceiver"
             android:exported="false" />
+
+        <!-- Home Screen Widgets (fully-qualified names help Samsung/OEM widget hosts) -->
+        <receiver
+            android:name="ma.wayo.wayoadsgo.widgets.PerformanceWidgetProvider"
+            android:enabled="true"
+            android:exported="true"
+            android:label="@string/widget_performance_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_performance_info" />
+        </receiver>
+        <receiver
+            android:name="ma.wayo.wayoadsgo.widgets.WalletWidgetProvider"
+            android:enabled="true"
+            android:exported="true"
+            android:label="@string/widget_wallet_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_wallet_info" />
+        </receiver>
+        <receiver
+            android:name="ma.wayo.wayoadsgo.widgets.QuickActionsWidgetProvider"
+            android:enabled="true"
+            android:exported="true"
+            android:label="@string/widget_quick_actions_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_quick_actions_info" />
+        </receiver>
 
     </application>
 

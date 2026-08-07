@@ -336,6 +336,10 @@ class _SignupRegisterScreenState extends ConsumerState<SignupRegisterScreen> {
       WayoToast.error(context, t.login.google_not_configured);
       return;
     }
+    if (!AuthRuntimeConfig.looksLikeGoogleWebClientId(googleCid)) {
+      WayoToast.error(context, t.login.google_wrong_client_id);
+      return;
+    }
     FocusScope.of(context).unfocus();
     setState(() => _googleSigningIn = true);
     try {
@@ -348,14 +352,21 @@ class _SignupRegisterScreenState extends ConsumerState<SignupRegisterScreen> {
       await ref
           .read(authNotifierProvider.notifier)
           .signupWithGoogle(idToken, widget.role);
-      if (!context.mounted) return;
+      if (!mounted) return;
       if (ref.read(authNotifierProvider).hasError) return;
-      _goAfterAuth(ref);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _goAfterAuth(ref);
+      });
     } on PlatformException catch (e) {
       if (!mounted) return;
       WayoToast.error(context, _googleErrorMessage(e, t));
     } catch (e) {
       if (!mounted) return;
+      if (GoogleSignInFacade.isMissingIdTokenError(e)) {
+        WayoToast.error(context, t.login.google_wrong_client_id);
+        return;
+      }
       WayoToast.error(context, t.login.google_failed);
     } finally {
       if (mounted) setState(() => _googleSigningIn = false);

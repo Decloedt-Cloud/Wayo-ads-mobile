@@ -191,8 +191,9 @@ class _HeaderState extends ConsumerState<_Header> {
     final snap = async.valueOrNull;
     final unread = snap?.unreadCount ?? 0;
     final t = context.t;
-    final replayOnboardingTour =
-        ShellTutorialReplayScope.maybeOf(context)?.replay;
+    final replayOnboardingTour = ShellTutorialReplayScope.maybeOf(
+      context,
+    )?.replay;
     return Padding(
       padding: EdgeInsets.fromLTRB(
         16,
@@ -798,9 +799,7 @@ class _CampaignsSectionState extends ConsumerState<_CampaignsSection> {
                     const SizedBox(height: 6),
                     Text(
                       t.dashboard.campaigns.subtitle,
-                      style: AppTextStyles.bodyLarge(
-                        context,
-                      ).copyWith(
+                      style: AppTextStyles.bodyLarge(context).copyWith(
                         color: AppColors.textSecondaryOf(context),
                         height: 1.35,
                       ),
@@ -808,10 +807,25 @@ class _CampaignsSectionState extends ConsumerState<_CampaignsSection> {
                   ],
                 ),
               ),
-              TextButton.icon(
-                onPressed: () => context.go('/campaigns?view=browse'),
-                icon: const Icon(Icons.explore_outlined, size: 18),
-                label: Text(t.advertiser_campaigns.view_browse),
+              Expanded(
+                child: Wrap(
+                  alignment: WrapAlignment.end,
+                  spacing: 4,
+                  runSpacing: 4,
+                  children: [
+                    TextButton.icon(
+                      onPressed: () =>
+                          context.push('/advertiser/campaigns/new'),
+                      icon: const Icon(Icons.add_rounded, size: 18),
+                      label: Text(t.dashboard.campaigns.create_cta),
+                    ),
+                    TextButton.icon(
+                      onPressed: () => context.go('/campaigns?view=browse'),
+                      icon: const Icon(Icons.explore_outlined, size: 18),
+                      label: Text(t.advertiser_campaigns.view_browse),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -866,46 +880,48 @@ class _CampaignsSectionState extends ConsumerState<_CampaignsSection> {
                 final c = list[index];
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 12),
-                  child: RepaintBoundary(
-                    child: _CampaignTile(campaign: c),
-                  ),
+                  child: RepaintBoundary(child: _CampaignTile(campaign: c)),
                 );
               },
             ),
-          if (!loading && !loadingExtra && list.isNotEmpty && totalPages > 1) ...[
+          if (!loading &&
+              !loadingExtra &&
+              list.isNotEmpty &&
+              totalPages > 1) ...[
             const SizedBox(height: 4),
             _DashboardCampaignPaginationBar(
-                      page: page,
-                      totalPages: totalPages,
-                      previousLabel: t.dashboard.campaigns.pagination_previous,
-                      nextLabel: t.dashboard.campaigns.pagination_next,
-                      pageLabel: (cur, tot) =>
-                          t.dashboard.campaigns.pagination_page(
-                            current: cur,
-                            total: tot,
-                          ),
-                      onPrevious: page > 1
-                          ? () {
-                              HapticFeedback.selectionClick();
-                              ref
-                                  .read(
-                                    advertiserDashboardCampaignPageProvider
-                                        .notifier,
-                                  )
-                                  .state = page - 1;
-                            }
-                          : null,
-                      onNext: page < totalPages
-                          ? () {
-                              HapticFeedback.selectionClick();
-                              ref
-                                  .read(
-                                    advertiserDashboardCampaignPageProvider
-                                        .notifier,
-                                  )
-                                  .state = page + 1;
-                            }
-                          : null,
+              page: page,
+              totalPages: totalPages,
+              previousLabel: t.dashboard.campaigns.pagination_previous,
+              nextLabel: t.dashboard.campaigns.pagination_next,
+              pageLabel: (cur, tot) => t.dashboard.campaigns.pagination_page(
+                current: cur,
+                total: tot,
+              ),
+              onPrevious: page > 1
+                  ? () {
+                      HapticFeedback.selectionClick();
+                      ref
+                              .read(
+                                advertiserDashboardCampaignPageProvider
+                                    .notifier,
+                              )
+                              .state =
+                          page - 1;
+                    }
+                  : null,
+              onNext: page < totalPages
+                  ? () {
+                      HapticFeedback.selectionClick();
+                      ref
+                              .read(
+                                advertiserDashboardCampaignPageProvider
+                                    .notifier,
+                              )
+                              .state =
+                          page + 1;
+                    }
+                  : null,
             ),
           ],
         ],
@@ -942,10 +958,7 @@ class _DashboardCampaignPaginationBar extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
         child: Row(
           children: [
-            TextButton(
-              onPressed: onPrevious,
-              child: Text(previousLabel),
-            ),
+            TextButton(onPressed: onPrevious, child: Text(previousLabel)),
             Expanded(
               child: Text(
                 pageLabel(page, totalPages),
@@ -955,10 +968,7 @@ class _DashboardCampaignPaginationBar extends StatelessWidget {
                 ),
               ),
             ),
-            TextButton(
-              onPressed: onNext,
-              child: Text(nextLabel),
-            ),
+            TextButton(onPressed: onNext, child: Text(nextLabel)),
           ],
         ),
       ),
@@ -994,9 +1004,7 @@ class _CampaignTile extends StatelessWidget {
             HapticFeedback.lightImpact();
             context.push(
               '/campaigns/${c.id}',
-              extra: <String, String?>{
-                'title': c.name,
-              },
+              extra: <String, String?>{'title': c.name},
             );
           },
           child: Padding(
@@ -1058,10 +1066,7 @@ class _CampaignTile extends StatelessWidget {
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: Text(
-                              _localizedAdvertiserCampaignStatus(
-                                c.status,
-                                t,
-                              ),
+                              _localizedAdvertiserCampaignStatus(c.status, t),
                               style: TextStyle(
                                 color: statusColor,
                                 fontSize: 11,
@@ -1191,6 +1196,12 @@ class _EmptyCampaigns extends StatelessWidget {
           t.dashboard.campaigns.empty_subtitle,
           style: AppTextStyles.bodyLarge(context),
           textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 16),
+        FilledButton.icon(
+          onPressed: () => context.push('/advertiser/campaigns/new'),
+          icon: const Icon(Icons.add_rounded),
+          label: Text(t.dashboard.campaigns.create_cta),
         ),
       ],
     );

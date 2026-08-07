@@ -31,6 +31,11 @@ class ChatRoleBadge extends StatelessWidget {
           Icons.campaign_rounded,
           t.chat.role_advertiser,
         ),
+      ChatPartnerRole.admin => (
+          const Color(0xFF38BDF8),
+          Icons.shield_rounded,
+          t.chat.role_admin,
+        ),
     };
 
     return Container(
@@ -54,6 +59,7 @@ class ChatRoleBadge extends StatelessWidget {
             label,
             style: GoogleFonts.inter(
               fontSize: compact ? 9.5 : 10.5,
+              height: 1.1,
               fontWeight: FontWeight.w700,
               color: color,
               letterSpacing: 0.2,

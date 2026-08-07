@@ -147,21 +147,34 @@ final class WayoChatPushPayload {
   }
 
   /// Shared parsing for tray JSON + FCM data maps (camelCase / snake_case).
+  ///
+  /// Requires [conversationId]. [notificationId] is optional (defaults to `chat`)
+  /// so a missing id still deep-links to the thread body.
   static WayoChatPushPayload? _fromKeyedMap(Map<String, dynamic> m) {
     final conv =
         _trimmed(m['conversationId']) ?? _trimmed(m['conversation_id']);
-    final nid =
-        _trimmed(m['notificationId']) ?? _trimmed(m['notification_id']);
-    if (conv == null || nid == null) return null;
+    if (conv == null) return null;
 
     final kind = _trimmed(m['kind'])?.toLowerCase();
-    final type = _trimmed(m['type'])?.toLowerCase();
-    if (kind != null &&
-        kind.isNotEmpty &&
-        kind != 'chat' &&
-        type != 'chat') {
+    final type = (_trimmed(m['type']) ??
+            _trimmed(m['notificationType']) ??
+            _trimmed(m['notification_type']) ??
+            '')
+        .toLowerCase();
+
+    if (kind != null && kind.isNotEmpty && kind != 'chat') {
       return null;
     }
+    if (kind != 'chat' &&
+        type.isNotEmpty &&
+        !type.contains('chat') &&
+        !type.contains('message')) {
+      return null;
+    }
+
+    final nid = _trimmed(m['notificationId']) ??
+        _trimmed(m['notification_id']) ??
+        'chat';
 
     return WayoChatPushPayload(
       conversationId: conv,
@@ -419,7 +432,15 @@ final class WayoRoutePushPayload {
       return '/wallet';
     }
     if (type.contains('invoice')) return '/invoices';
-    if (type.contains('chat') || type.contains('message')) return '/chat';
+    if (type.contains('chat') ||
+        type.contains('message') ||
+        (_trimmed(m['kind'])?.toLowerCase() == 'chat')) {
+      final conversationId =
+          _trimmed(m['conversationId']) ?? _trimmed(m['conversation_id']);
+      return conversationId != null
+          ? '/chat/thread/$conversationId'
+          : '/chat';
+    }
     if (type.contains('campaign')) return '/campaigns';
 
     return null;

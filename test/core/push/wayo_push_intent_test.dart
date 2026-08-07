@@ -2,6 +2,31 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:wayoadsgo/core/push/wayo_push_intent.dart';
 
 void main() {
+  group('WayoChatPushPayload', () {
+    test('opens thread route from conversationId + kind chat', () {
+      final chat = WayoChatPushPayload.fromMessageData({
+        'kind': 'chat',
+        'conversationId': '42',
+        'notificationId': 'n1',
+        'title': 'Alice',
+        'body': 'Salut',
+      });
+      expect(chat, isNotNull);
+      expect(chat!.route(), contains('/chat/thread/42'));
+      expect(chat.route(), contains('peer=Alice'));
+    });
+
+    test('accepts conversationId without notificationId', () {
+      final chat = WayoChatPushPayload.fromMessageData({
+        'kind': 'chat',
+        'conversationId': '99',
+        'title': 'Bob',
+      });
+      expect(chat?.conversationId, '99');
+      expect(chat?.route().split('?').first, '/chat/thread/99');
+    });
+  });
+
   group('WayoRoutePushPayload', () {
     test('CAMPAIGN_ACTIVATED with advertiser actionUrl opens creator detail', () {
       final payload = WayoRoutePushPayload.fromMessageData({

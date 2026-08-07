@@ -114,7 +114,7 @@ class PremiumChatTokens {
     radiusSM: 14,
     radiusMD: 18,
     radiusLG: 22,
-    radiusXL: 26,
+    radiusXL: 18,
     radius2XL: 32,
     gutter: 8,
     surfaceBase: const Color(0xFF050508),
@@ -198,7 +198,7 @@ class PremiumChatTokens {
     radiusSM: 14,
     radiusMD: 18,
     radiusLG: 22,
-    radiusXL: 26,
+    radiusXL: 18,
     radius2XL: 32,
     gutter: 8,
     surfaceBase: const Color(0xFFFBF8F4), // warm off-white / cream

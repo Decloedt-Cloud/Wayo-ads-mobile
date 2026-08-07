@@ -30,7 +30,8 @@ int _applicationSortKey(CampaignApplicationStatus status) {
 List<CampaignApplication> _sortedApplications(List<CampaignApplication> list) {
   final copy = [...list];
   copy.sort(
-    (a, b) => _applicationSortKey(a.status).compareTo(_applicationSortKey(b.status)),
+    (a, b) =>
+        _applicationSortKey(a.status).compareTo(_applicationSortKey(b.status)),
   );
   return copy;
 }
@@ -77,7 +78,8 @@ class CampaignApplicationsSection extends ConsumerWidget {
           premiumChrome ? const _PremiumLoading() : const _ClassicLoading(),
       error: (Object? e, StackTrace? s) => premiumChrome
           ? _PremiumError(
-              onRetry: () => ref.invalidate(campaignApplicationsProvider(campaignId)),
+              onRetry: () =>
+                  ref.invalidate(campaignApplicationsProvider(campaignId)),
             )
           : _ErrorState(
               message: t.advertiser_campaigns.applications.load_error,
@@ -103,36 +105,36 @@ class _ClassicDataBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final pendingCount =
-        list.where((a) => a.status == CampaignApplicationStatus.pending).length;
+    final pendingCount = list
+        .where((a) => a.status == CampaignApplicationStatus.pending)
+        .length;
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _SectionHeader(
-              title: t.advertiser_campaigns.applications.title,
-              pendingCount: pendingCount,
-              isDark: isDark,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              t.advertiser_campaigns.applications.subtitle,
-          style: AppTextStyles.caption(context).copyWith(
-            color: AppColors.textMutedOf(context),
-            fontSize: 14,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _SectionHeader(
+          title: t.advertiser_campaigns.applications.title,
+          pendingCount: pendingCount,
+          isDark: isDark,
+        ),
+        const SizedBox(height: 8),
+        Text(
+          t.advertiser_campaigns.applications.subtitle,
+          style: AppTextStyles.caption(
+            context,
+          ).copyWith(color: AppColors.textMutedOf(context), fontSize: 14),
+        ),
+        const SizedBox(height: 16),
+        if (list.isEmpty)
+          _EmptyState(t: t, isDark: isDark)
+        else
+          _ApplicationsList(
+            campaignId: campaignId,
+            applications: _sortedApplications(list),
+            isDark: isDark,
           ),
-            ),
-            const SizedBox(height: 16),
-            if (list.isEmpty)
-              _EmptyState(t: t, isDark: isDark)
-            else
-              _ApplicationsList(
-                campaignId: campaignId,
-                applications: _sortedApplications(list),
-                isDark: isDark,
-              ),
-          ],
-        );
+      ],
+    );
   }
 }
 
@@ -149,8 +151,9 @@ class _PremiumDataBody extends StatelessWidget {
     final approved = sorted
         .where((a) => a.status == CampaignApplicationStatus.approved)
         .toList();
-    final pendingCount =
-        sorted.where((a) => a.status == CampaignApplicationStatus.pending).length;
+    final pendingCount = sorted
+        .where((a) => a.status == CampaignApplicationStatus.pending)
+        .length;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -173,7 +176,10 @@ class _PremiumDataBody extends StatelessWidget {
             ),
             if (pendingCount > 0)
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(24),
                   gradient: CampaignDetailPremiumPalette.accentGradient,
@@ -232,8 +238,9 @@ class _PremiumLoading extends StatelessWidget {
   Widget build(BuildContext context) {
     return Shimmer.fromColors(
       baseColor: CampaignDetailPremiumPalette.surface1(context),
-      highlightColor:
-          CampaignDetailPremiumPalette.surfaceGlass(context).withValues(alpha: 0.55),
+      highlightColor: CampaignDetailPremiumPalette.surfaceGlass(
+        context,
+      ).withValues(alpha: 0.55),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -306,8 +313,10 @@ class _PremiumError extends StatelessWidget {
           const SizedBox(height: 12),
           TextButton.icon(
             onPressed: onRetry,
-            icon:
-                const Icon(Icons.refresh, color: CampaignDetailPremiumPalette.amber),
+            icon: const Icon(
+              Icons.refresh,
+              color: CampaignDetailPremiumPalette.amber,
+            ),
             label: Text(
               t.dashboard.errors.retry,
               style: GoogleFonts.dmSans(
@@ -335,11 +344,10 @@ class _PremiumEmpty extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
         color: CampaignDetailPremiumPalette.surface1(context),
-        border: Border.all(color: CampaignDetailPremiumPalette.divider(context)),
-        boxShadow: CampaignDetailPremiumPalette.cardShadow(
-          context,
-          0.1,
+        border: Border.all(
+          color: CampaignDetailPremiumPalette.divider(context),
         ),
+        boxShadow: CampaignDetailPremiumPalette.cardShadow(context, 0.1),
       ),
       child: Column(
         children: [
@@ -396,9 +404,12 @@ class _ApprovedCreatorsStrip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: CampaignDetailPremiumPalette.surface1(context),
-        borderRadius:
-            BorderRadius.circular(CampaignDetailPremiumPalette.kCardRadius),
-        border: Border.all(color: CampaignDetailPremiumPalette.divider(context)),
+        borderRadius: BorderRadius.circular(
+          CampaignDetailPremiumPalette.kCardRadius,
+        ),
+        border: Border.all(
+          color: CampaignDetailPremiumPalette.divider(context),
+        ),
         boxShadow: CampaignDetailPremiumPalette.cardShadow(context, 0.1),
       ),
       child: Row(
@@ -413,7 +424,10 @@ class _ApprovedCreatorsStrip extends StatelessWidget {
                   Positioned(
                     left: i * (_avatarSize - _overlap),
                     top: 3,
-                    child: _ApprovedStackAvatar(app: approved[i], size: _avatarSize),
+                    child: _ApprovedStackAvatar(
+                      app: approved[i],
+                      size: _avatarSize,
+                    ),
                   ),
                 if (showOverflow)
                   Positioned(
@@ -434,16 +448,18 @@ class _ApprovedCreatorsStrip extends StatelessWidget {
               children: [
                 Text(
                   t.advertiser_campaigns.detail.approved_creators,
-                  style: CampaignDetailPremiumPalette.bodyLabel(context)
-                      .copyWith(fontSize: 13),
+                  style: CampaignDetailPremiumPalette.bodyLabel(
+                    context,
+                  ).copyWith(fontSize: 13),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   namesLine,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: CampaignDetailPremiumPalette.bodyValue(context)
-                      .copyWith(fontSize: 14, fontWeight: FontWeight.w700),
+                  style: CampaignDetailPremiumPalette.bodyValue(
+                    context,
+                  ).copyWith(fontSize: 14, fontWeight: FontWeight.w700),
                 ),
               ],
             ),
@@ -454,7 +470,9 @@ class _ApprovedCreatorsStrip extends StatelessWidget {
               color: CampaignDetailPremiumPalette.amber,
               borderRadius: BorderRadius.circular(24),
               border: Border.all(
-                color: CampaignDetailPremiumPalette.amber.withValues(alpha: 0.45),
+                color: CampaignDetailPremiumPalette.amber.withValues(
+                  alpha: 0.45,
+                ),
               ),
             ),
             child: Text(
@@ -490,10 +508,7 @@ class _ApprovedStackAvatar extends StatelessWidget {
           width: 2,
         ),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.18),
-            blurRadius: 5,
-          ),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.18), blurRadius: 5),
         ],
       ),
       child: _PremiumAvatar(
@@ -538,10 +553,7 @@ class _ApprovedOverflowAvatar extends StatelessWidget {
 }
 
 class _PremiumApplicationCard extends ConsumerStatefulWidget {
-  const _PremiumApplicationCard({
-    required this.campaignId,
-    required this.app,
-  });
+  const _PremiumApplicationCard({required this.campaignId, required this.app});
 
   final String campaignId;
   final CampaignApplication app;
@@ -551,7 +563,8 @@ class _PremiumApplicationCard extends ConsumerStatefulWidget {
       _PremiumApplicationCardState();
 }
 
-class _PremiumApplicationCardState extends ConsumerState<_PremiumApplicationCard> {
+class _PremiumApplicationCardState
+    extends ConsumerState<_PremiumApplicationCard> {
   bool _busy = false;
 
   void _openSheet() {
@@ -620,27 +633,34 @@ class _PremiumApplicationCardState extends ConsumerState<_PremiumApplicationCard
       color: Colors.transparent,
       child: Ink(
         width: double.infinity,
-        padding: const EdgeInsets.all(CampaignDetailPremiumPalette.kCardPadding),
+        padding: const EdgeInsets.all(
+          CampaignDetailPremiumPalette.kCardPadding,
+        ),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(CampaignDetailPremiumPalette.kCardRadius),
-          color: CampaignDetailPremiumPalette.surface1(context),
-          border: Border.all(color: CampaignDetailPremiumPalette.divider(context)),
-          boxShadow: CampaignDetailPremiumPalette.cardShadow(
-            context,
-            0.08,
+          borderRadius: BorderRadius.circular(
+            CampaignDetailPremiumPalette.kCardRadius,
           ),
+          color: CampaignDetailPremiumPalette.surface1(context),
+          border: Border.all(
+            color: CampaignDetailPremiumPalette.divider(context),
+          ),
+          boxShadow: CampaignDetailPremiumPalette.cardShadow(context, 0.08),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             InkWell(
-              borderRadius:
-                  BorderRadius.circular(CampaignDetailPremiumPalette.kCardRadius),
+              borderRadius: BorderRadius.circular(
+                CampaignDetailPremiumPalette.kCardRadius,
+              ),
               onTap: _openSheet,
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _PremiumAvatar(name: app.creatorName, avatarUrl: app.creatorAvatar),
+                  _PremiumAvatar(
+                    name: app.creatorName,
+                    avatarUrl: app.creatorAvatar,
+                  ),
                   const SizedBox(width: 14),
                   Expanded(
                     child: Row(
@@ -654,16 +674,22 @@ class _PremiumApplicationCardState extends ConsumerState<_PremiumApplicationCard
                                 app.creatorName,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: CampaignDetailPremiumPalette.bodyValue(context)
-                                    .copyWith(fontSize: 15, fontWeight: FontWeight.w700),
+                                style:
+                                    CampaignDetailPremiumPalette.bodyValue(
+                                      context,
+                                    ).copyWith(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w700,
+                                    ),
                               ),
                               const SizedBox(height: 4),
                               Text(
                                 handle,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: CampaignDetailPremiumPalette.bodyLabel(context)
-                                    .copyWith(fontSize: 13),
+                                style: CampaignDetailPremiumPalette.bodyLabel(
+                                  context,
+                                ).copyWith(fontSize: 13),
                               ),
                             ],
                           ),
@@ -721,7 +747,9 @@ class _PremiumApplicationCardState extends ConsumerState<_PremiumApplicationCard
                         ),
                         child: Text(
                           t.advertiser_campaigns.applications.reject_button,
-                          style: GoogleFonts.dmSans(fontWeight: FontWeight.w700),
+                          style: GoogleFonts.dmSans(
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ),
                     ),
@@ -739,7 +767,9 @@ class _PremiumApplicationCardState extends ConsumerState<_PremiumApplicationCard
                         ),
                         child: Text(
                           t.advertiser_campaigns.applications.approve_button,
-                          style: GoogleFonts.dmSans(fontWeight: FontWeight.w800),
+                          style: GoogleFonts.dmSans(
+                            fontWeight: FontWeight.w800,
+                          ),
                         ),
                       ),
                     ),
@@ -764,11 +794,14 @@ String _premiumApplicationStatLine(
   if (app.trustLevel != null && app.trustLevel!.trim().isNotEmpty) {
     mid = app.trustLevel!.trim().toUpperCase();
   } else if (app.trustScore != null) {
-    mid = t.advertiser_campaigns.applications.trust_score(score: app.trustScore!);
+    mid = t.advertiser_campaigns.applications.trust_score(
+      score: app.trustScore!,
+    );
   }
   final ds = app.createdAt;
-  final dateStr =
-      ds != null ? DateFormat.yMMMd(loc.toLanguageTag()).format(ds.toLocal()) : '—';
+  final dateStr = ds != null
+      ? DateFormat.yMMMd(loc.toLanguageTag()).format(ds.toLocal())
+      : '—';
   return '$plat · $mid · $dateStr';
 }
 
@@ -822,9 +855,7 @@ class _PremiumAvatarPlaceholder extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         gradient: CampaignDetailPremiumPalette.accentGradient,
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.35),
-        ),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.35)),
       ),
       alignment: Alignment.center,
       child: Text(
@@ -848,7 +879,12 @@ class _PremiumStatusChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ct = context.t;
-    final (Color bg, Color fg, Color borderColor, String label) = switch (status) {
+    final (
+      Color bg,
+      Color fg,
+      Color borderColor,
+      String label,
+    ) = switch (status) {
       CampaignApplicationStatus.approved => (
         const Color(0xFF1A3A2A),
         const Color(0xFF4ADE80),
@@ -911,7 +947,8 @@ class _ApplicationDetailSheet extends ConsumerStatefulWidget {
       _ApplicationDetailSheetState();
 }
 
-class _ApplicationDetailSheetState extends ConsumerState<_ApplicationDetailSheet> {
+class _ApplicationDetailSheetState
+    extends ConsumerState<_ApplicationDetailSheet> {
   bool _busy = false;
 
   Future<void> _onApprove() async {
@@ -997,7 +1034,10 @@ class _ApplicationDetailSheetState extends ConsumerState<_ApplicationDetailSheet
                     borderRadius: BorderRadius.circular(99),
                   ),
                 ),
-                _PremiumAvatar(name: app.creatorName, avatarUrl: app.creatorAvatar),
+                _PremiumAvatar(
+                  name: app.creatorName,
+                  avatarUrl: app.creatorAvatar,
+                ),
                 const SizedBox(height: 12),
                 Text(
                   app.creatorName,
@@ -1033,7 +1073,8 @@ class _ApplicationDetailSheetState extends ConsumerState<_ApplicationDetailSheet
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                      if (app.trustLevel != null) _TrustBadge(level: app.trustLevel!),
+                      if (app.trustLevel != null)
+                        _TrustBadge(level: app.trustLevel!),
                     ],
                   ),
                 ],
@@ -1054,7 +1095,9 @@ class _ApplicationDetailSheetState extends ConsumerState<_ApplicationDetailSheet
                 if (isPending) ...[
                   const SizedBox(height: 22),
                   if (_busy)
-                    const Center(child: CircularProgressIndicator(strokeWidth: 2))
+                    const Center(
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
                   else
                     Row(
                       children: [
@@ -1063,8 +1106,9 @@ class _ApplicationDetailSheetState extends ConsumerState<_ApplicationDetailSheet
                             onPressed: _onReject,
                             style: OutlinedButton.styleFrom(
                               foregroundColor: Colors.red.shade300,
-                              side:
-                                  BorderSide(color: Colors.red.withValues(alpha: 0.45)),
+                              side: BorderSide(
+                                color: Colors.red.withValues(alpha: 0.45),
+                              ),
                               padding: const EdgeInsets.symmetric(vertical: 14),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
@@ -1072,8 +1116,9 @@ class _ApplicationDetailSheetState extends ConsumerState<_ApplicationDetailSheet
                             ),
                             child: Text(
                               t.advertiser_campaigns.applications.reject_button,
-                              style:
-                                  GoogleFonts.dmSans(fontWeight: FontWeight.w700),
+                              style: GoogleFonts.dmSans(
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
                           ),
                         ),
@@ -1082,7 +1127,8 @@ class _ApplicationDetailSheetState extends ConsumerState<_ApplicationDetailSheet
                           child: FilledButton(
                             onPressed: _onApprove,
                             style: FilledButton.styleFrom(
-                              backgroundColor: CampaignDetailPremiumPalette.amber,
+                              backgroundColor:
+                                  CampaignDetailPremiumPalette.amber,
                               foregroundColor: Colors.black,
                               padding: const EdgeInsets.symmetric(vertical: 14),
                               shape: RoundedRectangleBorder(
@@ -1090,9 +1136,13 @@ class _ApplicationDetailSheetState extends ConsumerState<_ApplicationDetailSheet
                               ),
                             ),
                             child: Text(
-                              t.advertiser_campaigns.applications.approve_button,
-                              style:
-                                  GoogleFonts.dmSans(fontWeight: FontWeight.w800),
+                              t
+                                  .advertiser_campaigns
+                                  .applications
+                                  .approve_button,
+                              style: GoogleFonts.dmSans(
+                                fontWeight: FontWeight.w800,
+                              ),
                             ),
                           ),
                         ),
@@ -1114,9 +1164,9 @@ class _ClassicLoading extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Center(
-        child: Padding(
-          padding: EdgeInsets.all(24),
-          child: CircularProgressIndicator(),
+      child: Padding(
+        padding: EdgeInsets.all(24),
+        child: CircularProgressIndicator(),
       ),
     );
   }
@@ -1199,18 +1249,17 @@ class _EmptyState extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             t.advertiser_campaigns.applications.empty_title,
-            style: AppTextStyles.bodyLarge(context).copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+            style: AppTextStyles.bodyLarge(
+              context,
+            ).copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 4),
           Text(
             t.advertiser_campaigns.applications.empty_subtitle,
             textAlign: TextAlign.center,
-            style: AppTextStyles.caption(context).copyWith(
-              color: AppColors.textMutedOf(context),
-              fontSize: 14,
-            ),
+            style: AppTextStyles.caption(
+              context,
+            ).copyWith(color: AppColors.textMutedOf(context), fontSize: 14),
           ),
         ],
       ),
@@ -1271,11 +1320,13 @@ class _ApplicationsList extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
-        color: AppColors.surfaceElevatedOf(context)
-            .withValues(alpha: isDark ? 0.92 : 0.98),
+        color: AppColors.surfaceElevatedOf(
+          context,
+        ).withValues(alpha: isDark ? 0.92 : 0.98),
         border: Border.all(
-          color: AppColors.borderOf(context)
-              .withValues(alpha: isDark ? 0.5 : 0.65),
+          color: AppColors.borderOf(
+            context,
+          ).withValues(alpha: isDark ? 0.5 : 0.65),
         ),
         boxShadow: [
           BoxShadow(
@@ -1294,9 +1345,9 @@ class _ApplicationsList extends StatelessWidget {
           child: Divider(
             height: 1,
             thickness: 0.5,
-            color: AppColors.borderOf(context).withValues(
-              alpha: isDark ? 0.4 : 0.7,
-            ),
+            color: AppColors.borderOf(
+              context,
+            ).withValues(alpha: isDark ? 0.4 : 0.7),
           ),
         ),
         itemBuilder: (context, index) => _ApplicationTile(
@@ -1387,8 +1438,9 @@ class _ApplicationTileState extends ConsumerState<_ApplicationTile> {
               children: [
                 Text(
                   app.creatorName,
-                  style:
-                      AppTextStyles.bodyLarge(context).copyWith(fontWeight: FontWeight.w700),
+                  style: AppTextStyles.bodyLarge(
+                    context,
+                  ).copyWith(fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 4),
                 Wrap(
@@ -1406,7 +1458,8 @@ class _ApplicationTileState extends ConsumerState<_ApplicationTile> {
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                    if (app.trustLevel != null) _TrustBadge(level: app.trustLevel!),
+                    if (app.trustLevel != null)
+                      _TrustBadge(level: app.trustLevel!),
                   ],
                 ),
                 if (app.message != null && app.message!.isNotEmpty) ...[
@@ -1462,7 +1515,8 @@ class _Avatar extends StatelessWidget {
           memCacheWidth: 88,
           memCacheHeight: 88,
           fit: BoxFit.cover,
-          placeholder: (ctx, url) => _Placeholder(letter: letter, isDark: isDark),
+          placeholder: (ctx, url) =>
+              _Placeholder(letter: letter, isDark: isDark),
           errorWidget: (ctx, url, err) =>
               _Placeholder(letter: letter, isDark: isDark),
         ),

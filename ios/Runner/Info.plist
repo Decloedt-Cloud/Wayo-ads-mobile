@@ -52,6 +52,16 @@
                 <string>wayo</string>
             </array>
         </dict>
+        <dict>
+            <key>CFBundleTypeRole</key>
+            <string>Editor</string>
+            <key>CFBundleURLName</key>
+            <string>ma.wayo.wayoadsgo.widgets</string>
+            <key>CFBundleURLSchemes</key>
+            <array>
+                <string>wayoads</string>
+            </array>
+        </dict>
     </array>
     <key>CFBundleVersion</key>
     <string>$(FLUTTER_BUILD_NUMBER)</string>

@@ -24,6 +24,18 @@ void main() {
       expect(ok, isFalse);
     });
 
+    test('schedules heal path when suppressed but user push still enabled', () async {
+      // Default user push pref is enabled (null → true).
+      await deactivatePushDelivery();
+      final ok = await shouldDeliverFcmData({
+        'type': 'CREATOR_APPLIED',
+        'recipientUserId': 'user-1',
+      });
+      expect(ok, isFalse);
+      // Suppress must remain until a successful register activates delivery.
+      expect(await isPushExternalDeliverySuppressed(), isTrue);
+    });
+
     test('delivers after recipient mismatch and clears stale registration', () async {
       await activatePushDeliveryForWayoUser('user-old');
       final ok = await shouldDeliverFcmData({

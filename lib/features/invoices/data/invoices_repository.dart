@@ -102,6 +102,39 @@ final class InvoicesRepository {
         onProgress: onProgress,
       );
 
+  Future<Uint8List> downloadAdvertiserZip(
+    List<String> ids, {
+    required String locale,
+    void Function(int received, int total)? onProgress,
+  }) =>
+      _remote.fetchAdvertiserInvoicesZip(
+        ids,
+        locale: locale,
+        onProgress: onProgress,
+      );
+
+  Future<Uint8List> downloadCreatorPayoutsZip(
+    List<String> ids, {
+    required String locale,
+    void Function(int received, int total)? onProgress,
+  }) =>
+      _remote.fetchCreatorPayoutsZip(
+        ids,
+        locale: locale,
+        onProgress: onProgress,
+      );
+
+  Future<Uint8List> downloadCreatorInvoicesZip(
+    List<String> ids, {
+    required String locale,
+    void Function(int received, int total)? onProgress,
+  }) =>
+      _remote.fetchCreatorInvoicesZip(
+        ids,
+        locale: locale,
+        onProgress: onProgress,
+      );
+
   /// Normalises low-level [DioException] / network glitches into the typed
   /// [AuthException] tree, so screens can render proper i18n error states.
   ///

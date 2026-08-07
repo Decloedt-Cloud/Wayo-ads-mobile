@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:wayoadsgo/core/ui/wayo_dialog.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -818,9 +819,9 @@ class _AccountDeletionScreenState extends ConsumerState<AccountDeletionScreen> {
         const SizedBox(height: 20),
         TextButton.icon(
           onPressed: () {
-            showDialog<void>(
+            showWayoDialog<void>(
               context: context,
-              builder: (c) => AlertDialog(
+              builder: (c) => WayoAlertDialog(
                 title: Text(t.more_info_title),
                 content: SingleChildScrollView(child: Text(t.more_info_body)),
                 actions: [

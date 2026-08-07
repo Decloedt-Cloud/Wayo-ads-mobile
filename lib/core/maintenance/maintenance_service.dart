@@ -2,9 +2,11 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
 import '../config/auth_runtime_config.dart';
-import '../network/interceptors/certificate_pinning.dart';
 
 /// HTTP codes that indicate the Wayo-ads / reverse-proxy stack is in maintenance.
+///
+/// Deliberately excludes 401/403/404/422 — auth and validation errors must never
+/// flip the global maintenance overlay.
 bool isMaintenanceHttpStatus(int? statusCode) {
   return statusCode == 502 || statusCode == 503 || statusCode == 521;
 }
@@ -98,7 +100,10 @@ bool responseIndicatesMaintenance(Response<dynamic> response) {
       response.headers.value('content-type')?.toLowerCase() ?? '';
   final retryAfter = response.headers.value('retry-after');
 
-  if (retryAfter != null && retryAfter.trim().isNotEmpty && code != null && code >= 500) {
+  if (retryAfter != null &&
+      retryAfter.trim().isNotEmpty &&
+      code != null &&
+      code >= 500) {
     return true;
   }
 
@@ -126,13 +131,19 @@ bool dioExceptionIndicatesMaintenance(DioException err) {
 }
 
 /// Tracks platform maintenance and probes Wayo-ads (+ Auth when distinct) on demand.
+///
+/// State transitions are idempotent: listeners are notified only on real changes.
+/// Concurrent [probeOnLaunch] / [retry] calls share one in-flight probe so a late
+/// response cannot fight a newer one via duplicate HTTP work.
 class MaintenanceService extends ChangeNotifier {
   bool _active = false;
   bool _probing = false;
+  Future<bool>? _inFlightProbe;
 
   bool get isActive => _active;
   bool get isProbing => _probing;
 
+  /// Enters maintenance only when not already active.
   void enterMaintenance() {
     if (_active) return;
     _active = true;
@@ -142,6 +153,7 @@ class MaintenanceService extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Leaves maintenance only when currently active.
   void leaveMaintenance() {
     if (!_active) return;
     _active = false;
@@ -170,8 +182,11 @@ class MaintenanceService extends ChangeNotifier {
   /// explicit retry flow), a healthy probe clears maintenance. On cold start we
   /// only *enter* maintenance on failure so a late probe cannot undo a 503
   /// already reported by [MaintenanceInterceptor].
+  ///
+  /// Does **not** notify / leave when the app was never in maintenance — so a
+  /// healthy cold-start probe does not schedule a global data refresh.
   Future<void> probeOnLaunch({bool allowRecovery = false}) async {
-    final ok = await _probeOrigins();
+    final ok = await _sharedProbeOrigins();
     if (!ok) {
       enterMaintenance();
       return;
@@ -183,10 +198,13 @@ class MaintenanceService extends ChangeNotifier {
 
   /// Manual recovery probe (optional — [MaintenanceGate] polls automatically).
   Future<bool> retry() async {
-    _probing = true;
-    notifyListeners();
+    final wasProbing = _probing;
+    if (!wasProbing) {
+      _probing = true;
+      notifyListeners();
+    }
     try {
-      final ok = await _probeOrigins();
+      final ok = await _sharedProbeOrigins();
       if (ok) {
         leaveMaintenance();
         return true;
@@ -194,9 +212,26 @@ class MaintenanceService extends ChangeNotifier {
       enterMaintenance();
       return false;
     } finally {
-      _probing = false;
-      notifyListeners();
+      if (!wasProbing) {
+        _probing = false;
+        notifyListeners();
+      }
     }
+  }
+
+  /// Single-flight probe shared by concurrent callers.
+  Future<bool> _sharedProbeOrigins() {
+    final existing = _inFlightProbe;
+    if (existing != null) return existing;
+
+    late final Future<bool> future;
+    future = _probeOrigins().whenComplete(() {
+      if (identical(_inFlightProbe, future)) {
+        _inFlightProbe = null;
+      }
+    });
+    _inFlightProbe = future;
+    return future;
   }
 
   Future<bool> _probeOrigins() async {
@@ -251,11 +286,6 @@ class MaintenanceService extends ChangeNotifier {
           'X-Client-Version': runtime.effectiveAppRelease,
         },
       ),
-    );
-
-    CertificatePinning.attach(
-      dio,
-      pinnedSha256Base64: runtime.mergedPinnedSha256Base64,
     );
 
     try {

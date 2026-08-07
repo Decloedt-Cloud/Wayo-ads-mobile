@@ -450,6 +450,7 @@ class _TranslationsAdvertiserCampaignsFr extends TranslationsAdvertiserCampaigns
 	@override late final _TranslationsAdvertiserCampaignsDetailFr detail = _TranslationsAdvertiserCampaignsDetailFr._(_root);
 	@override late final _TranslationsAdvertiserCampaignsCreateFr create = _TranslationsAdvertiserCampaignsCreateFr._(_root);
 	@override late final _TranslationsAdvertiserCampaignsApplicationsFr applications = _TranslationsAdvertiserCampaignsApplicationsFr._(_root);
+	@override late final _TranslationsAdvertiserCampaignsActionsFr actions = _TranslationsAdvertiserCampaignsActionsFr._(_root);
 }
 
 // Path: advertiser_video_reviews
@@ -631,6 +632,8 @@ class _TranslationsCreatorFr extends TranslationsCreatorEn {
 	@override late final _TranslationsCreatorStatsFr stats = _TranslationsCreatorStatsFr._(_root);
 	@override late final _TranslationsCreatorApplicationsFr applications = _TranslationsCreatorApplicationsFr._(_root);
 	@override late final _TranslationsCreatorBusinessFr business = _TranslationsCreatorBusinessFr._(_root);
+	@override late final _TranslationsCreatorTrustFr trust = _TranslationsCreatorTrustFr._(_root);
+	@override late final _TranslationsCreatorAnalyticsFr analytics = _TranslationsCreatorAnalyticsFr._(_root);
 }
 
 // Path: advertiser_wallet
@@ -649,7 +652,7 @@ class _TranslationsAdvertiserWalletFr extends TranslationsAdvertiserWalletEn {
 	@override String get quick_50 => '50 USD';
 	@override String get quick_100 => '100 USD';
 	@override String get quick_250 => '500 USD';
-	@override String get min_deposit => 'Dépôt minimum : 50,00 USD.';
+	@override String get min_deposit => 'Dépôt minimum : {amount}.';
 	@override String get test_pay => 'Simuler le paiement (dev)';
 	@override String get test_hint => 'Mode test : pas de vraie carte. Crédit portefeuille de dev pour QA.';
 	@override String get pay_secure => 'Carte, Apple Pay ou Google Pay';
@@ -685,6 +688,68 @@ class _TranslationsAdvertiserWalletFr extends TranslationsAdvertiserWalletEn {
 	@override String get deposit_pending => 'Dépôt en attente';
 	@override String get deposit_resume_hint => 'Reprise de votre dépôt de {amount} — finalisez le paiement ou cliquez sur Annuler pour abandonner.';
 	@override String get deposit_cancel => 'Annuler';
+	@override String get funding_method_label => 'Méthode de financement';
+	@override String get funding_card_title => 'Carte';
+	@override String get funding_card_badge => 'Instantané';
+	@override String get funding_card_desc => 'Visa, Mastercard, Amex — fonds disponibles immédiatement.';
+	@override String get funding_ach_title => 'Prélèvement bancaire (ACH)';
+	@override String get funding_ach_badge => 'Frais réduits';
+	@override String get funding_ach_desc => 'Prélèvement direct sur votre compte bancaire US — frais plus faibles qu\'une carte.';
+	@override String get funding_ach_eta => 'Les fonds arrivent généralement en 1 à 3 jours ouvrés.';
+	@override String get funding_ach_usd_only => 'L\'ACH est disponible uniquement pour les portefeuilles en USD.';
+	@override String get funding_wire_title => 'Virement bancaire';
+	@override String get funding_wire_badge => 'Montants élevés';
+	@override String get funding_wire_desc => 'Envoyez un virement bancaire selon les instructions fournies.';
+	@override String get funding_wire_eta => 'Les fonds arrivent généralement en 1 à 3 jours ouvrés.';
+	@override String get funding_wire_currency_only => 'Le virement est disponible uniquement pour : {currencies}.';
+	@override String get saved_cards_loading => 'Chargement des cartes enregistrées…';
+	@override String get default_card_badge => 'Par défaut';
+	@override String get saved_card_badge => 'Enregistrée';
+	@override String get use_new_card => 'Utiliser une nouvelle carte';
+	@override String get use_saved_card => 'Utiliser une carte enregistrée';
+	@override String get change_method => 'Changer';
+	@override String get remove_card => 'Supprimer';
+	@override String get remove_card_confirm_title => 'Supprimer cette carte ?';
+	@override String get remove_card_confirm_desc => '{brand} •••• {last4} sera retirée de vos cartes enregistrées.';
+	@override String get remove_card_confirm_action => 'Supprimer';
+	@override String get card_removed_title => 'Carte supprimée';
+	@override String get card_removed_desc => '•••• {last4} a été supprimée.';
+	@override String get card_remove_failed => 'Impossible de supprimer cette carte. Réessayez.';
+	@override String get refresh_saved_cards => 'Actualiser';
+	@override String get pay_with_saved_card => 'Payer avec {brand} •••• {last4}';
+	@override String get wire_instructions_loading => 'Préparation des instructions de virement…';
+	@override String get wire_awaiting_title => 'En attente de votre virement';
+	@override String get wire_awaiting_desc => 'Envoyez un virement avec les informations ci-dessous. Votre solde sera mis à jour à réception des fonds.';
+	@override String get wire_exact_amount => 'Montant exact';
+	@override String get wire_reference => 'Référence (obligatoire)';
+	@override String get wire_reference_required_hint => 'Indiquez cette référence dans le motif du virement — sans elle, nous ne pouvons pas identifier votre paiement.';
+	@override String get wire_copy_action => 'Copier';
+	@override String get wire_copied_title => 'Copié';
+	@override String get wire_copied_desc => 'Copié dans le presse-papiers.';
+	@override String get wire_copy_failed => 'Impossible de copier. Réessayez.';
+	@override String get wire_network_swift => 'Virement SWIFT / international';
+	@override String get wire_network_aba => 'Virement domestique US (ABA)';
+	@override String get wire_network_iban => 'IBAN / SEPA';
+	@override String get wire_network_sort_code => 'Virement bancaire britannique';
+	@override String get wire_network_other => '{network}';
+	@override String get wire_account_holder => 'Titulaire du compte';
+	@override String get wire_bank_name => 'Nom de la banque';
+	@override String get wire_routing_number => 'Numéro de routage';
+	@override String get wire_sort_code => 'Sort code';
+	@override String get wire_account_number => 'Numéro de compte';
+	@override String get wire_swift_code => 'SWIFT/BIC';
+	@override String get wire_iban => 'IBAN';
+	@override String get wire_bic => 'BIC';
+	@override String get wire_hosted_instructions => 'Voir les instructions complètes';
+	@override String get wire_done_button => 'J\'ai effectué le virement';
+	@override String get ach_processing_banner => 'Le dépôt ACH de {amount} est en cours — les fonds arrivent généralement en 1 à 3 jours ouvrés.';
+	@override String get wire_awaiting_banner => 'Le dépôt par virement de {amount} est en attente de votre transfert bancaire.';
+	@override String get reconcile_button => 'Vérifier le statut';
+	@override String get reconcile_success => 'Statut mis à jour.';
+	@override String get reconcile_still_pending => 'Toujours en cours — revenez bientôt.';
+	@override String get reconcile_failed => 'Impossible de vérifier le statut. Réessayez.';
+	@override String get continue_to_payment => 'Continuer';
+	@override String get cancel => 'Annuler';
 }
 
 // Path: chat
@@ -700,6 +765,7 @@ class _TranslationsChatFr extends TranslationsChatEn {
 	@override String get thread_fallback_title => 'Chat';
 	@override String get role_creator => 'Créateur';
 	@override String get role_advertiser => 'Annonceur';
+	@override String get role_admin => 'Admin';
 	@override String get composer_hint => 'Écrire un message…';
 	@override String get typing => 'En train d’écrire…';
 	@override String get error_load_threads => 'Impossible de charger vos conversations. Réessayez.';
@@ -728,7 +794,29 @@ class _TranslationsChatFr extends TranslationsChatEn {
 	@override String get conversation_open_failed => 'Impossible d’ouvrir cette conversation. Réessayez.';
 	@override String get file_picker_restart_hint => 'Les pièces jointes nécessitent un redémarrage complet de l’app après une mise à jour. Arrêtez l’app puis relancez-la (évitez le hot restart).';
 	@override String get attachment_type_not_allowed => 'Seules les images (JPG, PNG, GIF, WebP, BMP) ou les PDF sont autorisées.';
-	@override String get inbox_swipe_soon => 'Épingler et archiver depuis la liste arrivent bientôt.';
+	@override String get inbox_filter_active => 'Boîte de réception';
+	@override String get inbox_filter_archived => 'Archivées';
+	@override String get inbox_pinned => 'Épinglée';
+	@override String get inbox_unpinned => 'Désépinglée';
+	@override String get inbox_archived => 'Archivée';
+	@override String get inbox_unarchived => 'Remise dans la boîte';
+	@override String get inbox_pin_failed => 'Impossible de mettre à jour l’épingle. Réessayez.';
+	@override String get inbox_archive_failed => 'Impossible de mettre à jour l’archive. Réessayez.';
+	@override String get inbox_pin_disabled => 'Épingler et archiver sont temporairement indisponibles.';
+	@override String get menu_more => 'Plus';
+	@override String get menu_pin => 'Épingler';
+	@override String get menu_unpin => 'Désépingler';
+	@override String get menu_archive => 'Archiver';
+	@override String get menu_unarchive => 'Désarchiver';
+	@override String get menu_delete => 'Supprimer';
+	@override String get delete_conversation => 'Supprimer la conversation';
+	@override String get delete_conversation_confirm_title => 'Supprimer cette conversation ?';
+	@override String get delete_conversation_confirm_text => 'Tous les messages seront définitivement supprimés pour les deux participants. Cette action est irréversible.';
+	@override String get delete_conversation_confirm_cta => 'Supprimer';
+	@override String get delete_conversation_failed => 'Impossible de supprimer la conversation. Réessayez.';
+	@override String get delete_conversation_done => 'Conversation supprimée';
+	@override String get empty_archived_title => 'Aucune conversation archivée';
+	@override String get empty_archived_hint => 'Balayez une conversation vers la gauche pour l’archiver.';
 	@override String get date_today => 'Aujourd\'hui';
 	@override String get date_yesterday => 'Hier';
 	@override String get bubble_reply => 'Répondre';
@@ -1041,6 +1129,46 @@ class _TranslationsAppSettingsFr extends TranslationsAppSettingsEn {
 	@override String get notifications_open_settings => 'Ouvrir les réglages';
 	@override String get notifications_enable_error => 'Impossible d’activer les notifications. Vérifiez les réglages système.';
 	@override String get notifications_update_error => 'Impossible de mettre à jour les notifications. Réessayez.';
+	@override String get notif_prefs_entry_title => 'Préférences de notification';
+	@override String get notif_prefs_entry_sub => 'Canaux et catégories pour les alertes in-app et e-mail';
+	@override String get notif_prefs_title => 'Préférences de notification';
+	@override String get notif_prefs_channels_title => 'Canaux';
+	@override String get notif_prefs_channels_sub => 'Interrupteurs principaux pour vous joindre.';
+	@override String get notif_prefs_categories_title => 'Catégories';
+	@override String get notif_prefs_categories_sub => 'Coupez certains types sans tout désactiver.';
+	@override String get notif_prefs_in_app => 'In-app';
+	@override String get notif_prefs_email => 'E-mail';
+	@override String get notif_prefs_sound => 'Son';
+	@override String get notif_prefs_load_error => 'Impossible de charger les préférences.';
+	@override String get notif_prefs_error => 'Enregistrement impossible. Réessayez.';
+	@override String get notif_prefs_retry => 'Réessayer';
+	@override String get notif_cat_video => 'Vidéos';
+	@override String get notif_cat_applications => 'Candidatures';
+	@override String get notif_cat_payouts => 'Paiements';
+	@override String get notif_cat_wallet => 'Portefeuille';
+	@override String get notif_cat_tokens => 'Jetons';
+	@override String get notif_cat_campaigns => 'Campagnes';
+	@override String get notif_cat_security => 'Sécurité';
+	@override String get export_data_title => 'Télécharger mes données';
+	@override String get export_data_sub => 'Exporter une copie JSON de votre compte Wayo Ads';
+	@override String get export_data_button => 'Télécharger l’export';
+	@override String get export_data_progress => 'Préparation de l’export…';
+	@override String get export_data_success => 'Export enregistré';
+	@override String get export_data_error => 'Impossible d’exporter vos données. Réessayez.';
+	@override String get passkeys_title => 'Passkeys';
+	@override String get passkeys_sub => 'Connexion sans mot de passe';
+	@override String get passkeys_web_only => 'La gestion des passkeys s’ouvre de façon sécurisée via Auth Wayo dans l’app.';
+	@override String get passkeys_manage_hint => 'Ajoutez ou retirez des passkeys. La gestion passe par Auth Wayo (requis pour WebAuthn).';
+	@override String get passkeys_open_manage => 'Gérer les passkeys';
+	@override String get connected_accounts_title => 'Comptes connectés';
+	@override String get connected_accounts_sub => 'Google et Apple liés à votre compte Wayo';
+	@override String get connected_accounts_web_only => 'Liez ou déliez Google/Apple via Auth Wayo dans l’app.';
+	@override String get connected_accounts_manage_hint => 'Liez ou déliez Google et Apple sur votre compte Auth Wayo.';
+	@override String get connected_accounts_open_manage => 'Gérer les comptes connectés';
+	@override String get handoff_error => 'Impossible d’ouvrir la gestion sécurisée. Ouverture du navigateur.';
+	@override String get open_web_settings => 'Ouvrir les réglages web';
+	@override String get guides_title => 'Guides et ressources';
+	@override String get guides_sub => 'Articles d’aide et guides produit Wayo Ads';
 	@override String get section_account => 'Compte';
 	@override String get section_security => 'Sécurité';
 	@override String get sessions_title => 'Sessions actives';
@@ -1486,6 +1614,30 @@ class _TranslationsAdvertiserCampaignsApplicationsFr extends TranslationsAdverti
 	@override String get rejected_status => 'Refusée';
 }
 
+// Path: advertiser_campaigns.actions
+class _TranslationsAdvertiserCampaignsActionsFr extends TranslationsAdvertiserCampaignsActionsEn {
+	_TranslationsAdvertiserCampaignsActionsFr._(TranslationsFr root) : this._root = root, super.internal(root);
+
+	final TranslationsFr _root; // ignore: unused_field
+
+	// Translations
+	@override String get publish => 'Publier';
+	@override String get pause => 'Mettre en pause';
+	@override String get resume => 'Reprendre';
+	@override String get cancel => 'Annuler la campagne';
+	@override String get edit => 'Modifier';
+	@override String get more => 'Plus';
+	@override String get analytics => 'Analytique';
+	@override String get financial => 'Santé financière';
+	@override String get financial_health => 'Santé financière';
+	@override String get status_updated => 'Statut de la campagne mis à jour';
+	@override String get status_error => 'Impossible de mettre à jour le statut';
+	@override String get cancel_confirm_title => 'Annuler cette campagne ?';
+	@override String get cancel_confirm_body => 'Le budget verrouillé restant sera remis dans votre portefeuille.';
+	@override String get dismiss => 'Garder la campagne';
+	@override String get confirm => 'Annuler la campagne';
+}
+
 // Path: creator.dashboard
 class _TranslationsCreatorDashboardFr extends TranslationsCreatorDashboardEn {
 	_TranslationsCreatorDashboardFr._(TranslationsFr root) : this._root = root, super.internal(root);
@@ -1564,6 +1716,8 @@ class _TranslationsCreatorWalletFr extends TranslationsCreatorWalletEn {
 	@override String get stripe_card_title_connected => 'Stripe est connecté';
 	@override String get stripe_card_subtitle_connected => 'Votre compte Stripe Express est actif. Les paiements arrivent sur votre banque.';
 	@override String get history_title => 'Historique des retraits';
+	@override String get documents_cta => 'Relevés';
+	@override String get documents_cta_subtitle => 'PDF de virements signés et documents de gains';
 	@override String get history_empty => 'Aucun retrait pour le moment — l’historique s’affichera ici.';
 	@override String get history_load_error => 'Impossible de charger l’historique des retraits.';
 	@override String get history_status_pending => 'En attente';
@@ -1771,6 +1925,54 @@ class _TranslationsCreatorBusinessFr extends TranslationsCreatorBusinessEn {
 	@override String get footer_info_global => 'Utilisées pour les factures et les recharges du portefeuille. Les paiements sont traités de façon sécurisée par Stripe.';
 	@override String get save_error => 'Impossible d’enregistrer vos infos. Veuillez réessayer.';
 	@override late final _TranslationsCreatorBusinessValidationFr validation = _TranslationsCreatorBusinessValidationFr._(_root);
+}
+
+// Path: creator.trust
+class _TranslationsCreatorTrustFr extends TranslationsCreatorTrustEn {
+	_TranslationsCreatorTrustFr._(TranslationsFr root) : this._root = root, super.internal(root);
+
+	final TranslationsFr _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'Score de confiance';
+	@override String tier({required Object name}) => 'Niveau ${name}';
+	@override String get verified => 'Vérifié';
+	@override String delta_up({required Object value}) => '+${value} cette semaine';
+	@override String delta_down({required Object value}) => '-${value} cette semaine';
+	@override String cpm_hint({required Object value}) => 'Hausse CPM potentielle : ${value}';
+	@override String get breakdown_title => 'Détail du score';
+	@override String get validation_points => 'Taux de validation';
+	@override String get fraud_points => 'Score fraude';
+	@override String get anomaly_points => 'Score anomalie';
+	@override String get open_analytics => 'Voir les analytics';
+}
+
+// Path: creator.analytics
+class _TranslationsCreatorAnalyticsFr extends TranslationsCreatorAnalyticsEn {
+	_TranslationsCreatorAnalyticsFr._(TranslationsFr root) : this._root = root, super.internal(root);
+
+	final TranslationsFr _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'Analytics créateur';
+	@override String get period_7d => '7j';
+	@override String get period_30d => '30j';
+	@override String get period_90d => '90j';
+	@override String get load_error => 'Impossible de charger les analytics';
+	@override String get empty => 'Pas encore de données pour cette période';
+	@override String get earnings => 'Gains';
+	@override String get pending => 'En attente';
+	@override String get validated_views => 'Vues validées';
+	@override String get validated_clicks => 'Clics validés';
+	@override String get recorded_views => 'Vues enregistrées';
+	@override String get recorded_clicks => 'Clics enregistrés';
+	@override String get view_validation_rate => 'Validation vues';
+	@override String get click_validation_rate => 'Validation clics';
+	@override String period_meta({required Object days, required Object currency}) => 'Derniers ${days} jours · ${currency}';
+	@override String get active_campaigns => 'Campagnes actives';
+	@override String get daily_title => 'Quotidien';
+	@override String get by_campaign => 'Par campagne';
+	@override String get server_authority_note => 'Montants et taux viennent du serveur. L\'app n\'invente pas de règles financières.';
 }
 
 // Path: onboarding.advertiser
@@ -2188,6 +2390,21 @@ extension on TranslationsFr {
 			case 'advertiser_campaigns.applications.reject_button': return 'Refuser';
 			case 'advertiser_campaigns.applications.approved_status': return 'Approuvée';
 			case 'advertiser_campaigns.applications.rejected_status': return 'Refusée';
+			case 'advertiser_campaigns.actions.publish': return 'Publier';
+			case 'advertiser_campaigns.actions.pause': return 'Mettre en pause';
+			case 'advertiser_campaigns.actions.resume': return 'Reprendre';
+			case 'advertiser_campaigns.actions.cancel': return 'Annuler la campagne';
+			case 'advertiser_campaigns.actions.edit': return 'Modifier';
+			case 'advertiser_campaigns.actions.more': return 'Plus';
+			case 'advertiser_campaigns.actions.analytics': return 'Analytique';
+			case 'advertiser_campaigns.actions.financial': return 'Santé financière';
+			case 'advertiser_campaigns.actions.financial_health': return 'Santé financière';
+			case 'advertiser_campaigns.actions.status_updated': return 'Statut de la campagne mis à jour';
+			case 'advertiser_campaigns.actions.status_error': return 'Impossible de mettre à jour le statut';
+			case 'advertiser_campaigns.actions.cancel_confirm_title': return 'Annuler cette campagne ?';
+			case 'advertiser_campaigns.actions.cancel_confirm_body': return 'Le budget verrouillé restant sera remis dans votre portefeuille.';
+			case 'advertiser_campaigns.actions.dismiss': return 'Garder la campagne';
+			case 'advertiser_campaigns.actions.confirm': return 'Annuler la campagne';
 			case 'advertiser_video_reviews.title': return 'Révision des vidéos';
 			case 'advertiser_video_reviews.subtitle': return 'Approuvez ou refusez les soumissions vidéo des créateurs pour vos campagnes.';
 			case 'advertiser_video_reviews.pending': return 'En attente';
@@ -2380,6 +2597,8 @@ extension on TranslationsFr {
 			case 'creator.wallet.stripe_card_title_connected': return 'Stripe est connecté';
 			case 'creator.wallet.stripe_card_subtitle_connected': return 'Votre compte Stripe Express est actif. Les paiements arrivent sur votre banque.';
 			case 'creator.wallet.history_title': return 'Historique des retraits';
+			case 'creator.wallet.documents_cta': return 'Relevés';
+			case 'creator.wallet.documents_cta_subtitle': return 'PDF de virements signés et documents de gains';
 			case 'creator.wallet.history_empty': return 'Aucun retrait pour le moment — l’historique s’affichera ici.';
 			case 'creator.wallet.history_load_error': return 'Impossible de charger l’historique des retraits.';
 			case 'creator.wallet.history_status_pending': return 'En attente';
@@ -2568,6 +2787,36 @@ extension on TranslationsFr {
 			case 'creator.business.validation.vat_number_invalid': return 'Format de TVA / n° fiscal invalide';
 			case 'creator.business.validation.state_required': return 'L’état / la province est requis';
 			case 'creator.business.validation.state_invalid': return 'État / région invalide';
+			case 'creator.trust.title': return 'Score de confiance';
+			case 'creator.trust.tier': return ({required Object name}) => 'Niveau ${name}';
+			case 'creator.trust.verified': return 'Vérifié';
+			case 'creator.trust.delta_up': return ({required Object value}) => '+${value} cette semaine';
+			case 'creator.trust.delta_down': return ({required Object value}) => '-${value} cette semaine';
+			case 'creator.trust.cpm_hint': return ({required Object value}) => 'Hausse CPM potentielle : ${value}';
+			case 'creator.trust.breakdown_title': return 'Détail du score';
+			case 'creator.trust.validation_points': return 'Taux de validation';
+			case 'creator.trust.fraud_points': return 'Score fraude';
+			case 'creator.trust.anomaly_points': return 'Score anomalie';
+			case 'creator.trust.open_analytics': return 'Voir les analytics';
+			case 'creator.analytics.title': return 'Analytics créateur';
+			case 'creator.analytics.period_7d': return '7j';
+			case 'creator.analytics.period_30d': return '30j';
+			case 'creator.analytics.period_90d': return '90j';
+			case 'creator.analytics.load_error': return 'Impossible de charger les analytics';
+			case 'creator.analytics.empty': return 'Pas encore de données pour cette période';
+			case 'creator.analytics.earnings': return 'Gains';
+			case 'creator.analytics.pending': return 'En attente';
+			case 'creator.analytics.validated_views': return 'Vues validées';
+			case 'creator.analytics.validated_clicks': return 'Clics validés';
+			case 'creator.analytics.recorded_views': return 'Vues enregistrées';
+			case 'creator.analytics.recorded_clicks': return 'Clics enregistrés';
+			case 'creator.analytics.view_validation_rate': return 'Validation vues';
+			case 'creator.analytics.click_validation_rate': return 'Validation clics';
+			case 'creator.analytics.period_meta': return ({required Object days, required Object currency}) => 'Derniers ${days} jours · ${currency}';
+			case 'creator.analytics.active_campaigns': return 'Campagnes actives';
+			case 'creator.analytics.daily_title': return 'Quotidien';
+			case 'creator.analytics.by_campaign': return 'Par campagne';
+			case 'creator.analytics.server_authority_note': return 'Montants et taux viennent du serveur. L\'app n\'invente pas de règles financières.';
 			case 'advertiser_wallet.hero_title': return 'Votre solde';
 			case 'advertiser_wallet.hero_subtitle': return 'Ajoutez des fonds pour lancer des campagnes. Paiements sécurisés via Stripe. Apple Pay (iOS) et Google Pay (Android) sont proposés lorsqu’ils sont disponibles.';
 			case 'advertiser_wallet.available': return 'Disponible';
@@ -2577,7 +2826,7 @@ extension on TranslationsFr {
 			case 'advertiser_wallet.quick_50': return '50 USD';
 			case 'advertiser_wallet.quick_100': return '100 USD';
 			case 'advertiser_wallet.quick_250': return '500 USD';
-			case 'advertiser_wallet.min_deposit': return 'Dépôt minimum : 50,00 USD.';
+			case 'advertiser_wallet.min_deposit': return 'Dépôt minimum : {amount}.';
 			case 'advertiser_wallet.test_pay': return 'Simuler le paiement (dev)';
 			case 'advertiser_wallet.test_hint': return 'Mode test : pas de vraie carte. Crédit portefeuille de dev pour QA.';
 			case 'advertiser_wallet.pay_secure': return 'Carte, Apple Pay ou Google Pay';
@@ -2613,12 +2862,75 @@ extension on TranslationsFr {
 			case 'advertiser_wallet.deposit_pending': return 'Dépôt en attente';
 			case 'advertiser_wallet.deposit_resume_hint': return 'Reprise de votre dépôt de {amount} — finalisez le paiement ou cliquez sur Annuler pour abandonner.';
 			case 'advertiser_wallet.deposit_cancel': return 'Annuler';
+			case 'advertiser_wallet.funding_method_label': return 'Méthode de financement';
+			case 'advertiser_wallet.funding_card_title': return 'Carte';
+			case 'advertiser_wallet.funding_card_badge': return 'Instantané';
+			case 'advertiser_wallet.funding_card_desc': return 'Visa, Mastercard, Amex — fonds disponibles immédiatement.';
+			case 'advertiser_wallet.funding_ach_title': return 'Prélèvement bancaire (ACH)';
+			case 'advertiser_wallet.funding_ach_badge': return 'Frais réduits';
+			case 'advertiser_wallet.funding_ach_desc': return 'Prélèvement direct sur votre compte bancaire US — frais plus faibles qu\'une carte.';
+			case 'advertiser_wallet.funding_ach_eta': return 'Les fonds arrivent généralement en 1 à 3 jours ouvrés.';
+			case 'advertiser_wallet.funding_ach_usd_only': return 'L\'ACH est disponible uniquement pour les portefeuilles en USD.';
+			case 'advertiser_wallet.funding_wire_title': return 'Virement bancaire';
+			case 'advertiser_wallet.funding_wire_badge': return 'Montants élevés';
+			case 'advertiser_wallet.funding_wire_desc': return 'Envoyez un virement bancaire selon les instructions fournies.';
+			case 'advertiser_wallet.funding_wire_eta': return 'Les fonds arrivent généralement en 1 à 3 jours ouvrés.';
+			case 'advertiser_wallet.funding_wire_currency_only': return 'Le virement est disponible uniquement pour : {currencies}.';
+			case 'advertiser_wallet.saved_cards_loading': return 'Chargement des cartes enregistrées…';
+			case 'advertiser_wallet.default_card_badge': return 'Par défaut';
+			case 'advertiser_wallet.saved_card_badge': return 'Enregistrée';
+			case 'advertiser_wallet.use_new_card': return 'Utiliser une nouvelle carte';
+			case 'advertiser_wallet.use_saved_card': return 'Utiliser une carte enregistrée';
+			case 'advertiser_wallet.change_method': return 'Changer';
+			case 'advertiser_wallet.remove_card': return 'Supprimer';
+			case 'advertiser_wallet.remove_card_confirm_title': return 'Supprimer cette carte ?';
+			case 'advertiser_wallet.remove_card_confirm_desc': return '{brand} •••• {last4} sera retirée de vos cartes enregistrées.';
+			case 'advertiser_wallet.remove_card_confirm_action': return 'Supprimer';
+			case 'advertiser_wallet.card_removed_title': return 'Carte supprimée';
+			case 'advertiser_wallet.card_removed_desc': return '•••• {last4} a été supprimée.';
+			case 'advertiser_wallet.card_remove_failed': return 'Impossible de supprimer cette carte. Réessayez.';
+			case 'advertiser_wallet.refresh_saved_cards': return 'Actualiser';
+			case 'advertiser_wallet.pay_with_saved_card': return 'Payer avec {brand} •••• {last4}';
+			case 'advertiser_wallet.wire_instructions_loading': return 'Préparation des instructions de virement…';
+			case 'advertiser_wallet.wire_awaiting_title': return 'En attente de votre virement';
+			case 'advertiser_wallet.wire_awaiting_desc': return 'Envoyez un virement avec les informations ci-dessous. Votre solde sera mis à jour à réception des fonds.';
+			case 'advertiser_wallet.wire_exact_amount': return 'Montant exact';
+			case 'advertiser_wallet.wire_reference': return 'Référence (obligatoire)';
+			case 'advertiser_wallet.wire_reference_required_hint': return 'Indiquez cette référence dans le motif du virement — sans elle, nous ne pouvons pas identifier votre paiement.';
+			case 'advertiser_wallet.wire_copy_action': return 'Copier';
+			case 'advertiser_wallet.wire_copied_title': return 'Copié';
+			case 'advertiser_wallet.wire_copied_desc': return 'Copié dans le presse-papiers.';
+			case 'advertiser_wallet.wire_copy_failed': return 'Impossible de copier. Réessayez.';
+			case 'advertiser_wallet.wire_network_swift': return 'Virement SWIFT / international';
+			case 'advertiser_wallet.wire_network_aba': return 'Virement domestique US (ABA)';
+			case 'advertiser_wallet.wire_network_iban': return 'IBAN / SEPA';
+			case 'advertiser_wallet.wire_network_sort_code': return 'Virement bancaire britannique';
+			case 'advertiser_wallet.wire_network_other': return '{network}';
+			case 'advertiser_wallet.wire_account_holder': return 'Titulaire du compte';
+			case 'advertiser_wallet.wire_bank_name': return 'Nom de la banque';
+			case 'advertiser_wallet.wire_routing_number': return 'Numéro de routage';
+			case 'advertiser_wallet.wire_sort_code': return 'Sort code';
+			case 'advertiser_wallet.wire_account_number': return 'Numéro de compte';
+			case 'advertiser_wallet.wire_swift_code': return 'SWIFT/BIC';
+			case 'advertiser_wallet.wire_iban': return 'IBAN';
+			case 'advertiser_wallet.wire_bic': return 'BIC';
+			case 'advertiser_wallet.wire_hosted_instructions': return 'Voir les instructions complètes';
+			case 'advertiser_wallet.wire_done_button': return 'J\'ai effectué le virement';
+			case 'advertiser_wallet.ach_processing_banner': return 'Le dépôt ACH de {amount} est en cours — les fonds arrivent généralement en 1 à 3 jours ouvrés.';
+			case 'advertiser_wallet.wire_awaiting_banner': return 'Le dépôt par virement de {amount} est en attente de votre transfert bancaire.';
+			case 'advertiser_wallet.reconcile_button': return 'Vérifier le statut';
+			case 'advertiser_wallet.reconcile_success': return 'Statut mis à jour.';
+			case 'advertiser_wallet.reconcile_still_pending': return 'Toujours en cours — revenez bientôt.';
+			case 'advertiser_wallet.reconcile_failed': return 'Impossible de vérifier le statut. Réessayez.';
+			case 'advertiser_wallet.continue_to_payment': return 'Continuer';
+			case 'advertiser_wallet.cancel': return 'Annuler';
 			case 'chat.inbox_title': return 'Messages';
 			case 'chat.inbox_subtitle': return 'Conversations sécurisées pour vos campagnes';
 			case 'chat.conversation_unknown': return 'Conversation';
 			case 'chat.thread_fallback_title': return 'Chat';
 			case 'chat.role_creator': return 'Créateur';
 			case 'chat.role_advertiser': return 'Annonceur';
+			case 'chat.role_admin': return 'Admin';
 			case 'chat.composer_hint': return 'Écrire un message…';
 			case 'chat.typing': return 'En train d’écrire…';
 			case 'chat.error_load_threads': return 'Impossible de charger vos conversations. Réessayez.';
@@ -2647,7 +2959,29 @@ extension on TranslationsFr {
 			case 'chat.conversation_open_failed': return 'Impossible d’ouvrir cette conversation. Réessayez.';
 			case 'chat.file_picker_restart_hint': return 'Les pièces jointes nécessitent un redémarrage complet de l’app après une mise à jour. Arrêtez l’app puis relancez-la (évitez le hot restart).';
 			case 'chat.attachment_type_not_allowed': return 'Seules les images (JPG, PNG, GIF, WebP, BMP) ou les PDF sont autorisées.';
-			case 'chat.inbox_swipe_soon': return 'Épingler et archiver depuis la liste arrivent bientôt.';
+			case 'chat.inbox_filter_active': return 'Boîte de réception';
+			case 'chat.inbox_filter_archived': return 'Archivées';
+			case 'chat.inbox_pinned': return 'Épinglée';
+			case 'chat.inbox_unpinned': return 'Désépinglée';
+			case 'chat.inbox_archived': return 'Archivée';
+			case 'chat.inbox_unarchived': return 'Remise dans la boîte';
+			case 'chat.inbox_pin_failed': return 'Impossible de mettre à jour l’épingle. Réessayez.';
+			case 'chat.inbox_archive_failed': return 'Impossible de mettre à jour l’archive. Réessayez.';
+			case 'chat.inbox_pin_disabled': return 'Épingler et archiver sont temporairement indisponibles.';
+			case 'chat.menu_more': return 'Plus';
+			case 'chat.menu_pin': return 'Épingler';
+			case 'chat.menu_unpin': return 'Désépingler';
+			case 'chat.menu_archive': return 'Archiver';
+			case 'chat.menu_unarchive': return 'Désarchiver';
+			case 'chat.menu_delete': return 'Supprimer';
+			case 'chat.delete_conversation': return 'Supprimer la conversation';
+			case 'chat.delete_conversation_confirm_title': return 'Supprimer cette conversation ?';
+			case 'chat.delete_conversation_confirm_text': return 'Tous les messages seront définitivement supprimés pour les deux participants. Cette action est irréversible.';
+			case 'chat.delete_conversation_confirm_cta': return 'Supprimer';
+			case 'chat.delete_conversation_failed': return 'Impossible de supprimer la conversation. Réessayez.';
+			case 'chat.delete_conversation_done': return 'Conversation supprimée';
+			case 'chat.empty_archived_title': return 'Aucune conversation archivée';
+			case 'chat.empty_archived_hint': return 'Balayez une conversation vers la gauche pour l’archiver.';
 			case 'chat.date_today': return 'Aujourd\'hui';
 			case 'chat.date_yesterday': return 'Hier';
 			case 'chat.bubble_reply': return 'Répondre';
@@ -2906,6 +3240,46 @@ extension on TranslationsFr {
 			case 'app_settings.notifications_open_settings': return 'Ouvrir les réglages';
 			case 'app_settings.notifications_enable_error': return 'Impossible d’activer les notifications. Vérifiez les réglages système.';
 			case 'app_settings.notifications_update_error': return 'Impossible de mettre à jour les notifications. Réessayez.';
+			case 'app_settings.notif_prefs_entry_title': return 'Préférences de notification';
+			case 'app_settings.notif_prefs_entry_sub': return 'Canaux et catégories pour les alertes in-app et e-mail';
+			case 'app_settings.notif_prefs_title': return 'Préférences de notification';
+			case 'app_settings.notif_prefs_channels_title': return 'Canaux';
+			case 'app_settings.notif_prefs_channels_sub': return 'Interrupteurs principaux pour vous joindre.';
+			case 'app_settings.notif_prefs_categories_title': return 'Catégories';
+			case 'app_settings.notif_prefs_categories_sub': return 'Coupez certains types sans tout désactiver.';
+			case 'app_settings.notif_prefs_in_app': return 'In-app';
+			case 'app_settings.notif_prefs_email': return 'E-mail';
+			case 'app_settings.notif_prefs_sound': return 'Son';
+			case 'app_settings.notif_prefs_load_error': return 'Impossible de charger les préférences.';
+			case 'app_settings.notif_prefs_error': return 'Enregistrement impossible. Réessayez.';
+			case 'app_settings.notif_prefs_retry': return 'Réessayer';
+			case 'app_settings.notif_cat_video': return 'Vidéos';
+			case 'app_settings.notif_cat_applications': return 'Candidatures';
+			case 'app_settings.notif_cat_payouts': return 'Paiements';
+			case 'app_settings.notif_cat_wallet': return 'Portefeuille';
+			case 'app_settings.notif_cat_tokens': return 'Jetons';
+			case 'app_settings.notif_cat_campaigns': return 'Campagnes';
+			case 'app_settings.notif_cat_security': return 'Sécurité';
+			case 'app_settings.export_data_title': return 'Télécharger mes données';
+			case 'app_settings.export_data_sub': return 'Exporter une copie JSON de votre compte Wayo Ads';
+			case 'app_settings.export_data_button': return 'Télécharger l’export';
+			case 'app_settings.export_data_progress': return 'Préparation de l’export…';
+			case 'app_settings.export_data_success': return 'Export enregistré';
+			case 'app_settings.export_data_error': return 'Impossible d’exporter vos données. Réessayez.';
+			case 'app_settings.passkeys_title': return 'Passkeys';
+			case 'app_settings.passkeys_sub': return 'Connexion sans mot de passe';
+			case 'app_settings.passkeys_web_only': return 'La gestion des passkeys s’ouvre de façon sécurisée via Auth Wayo dans l’app.';
+			case 'app_settings.passkeys_manage_hint': return 'Ajoutez ou retirez des passkeys. La gestion passe par Auth Wayo (requis pour WebAuthn).';
+			case 'app_settings.passkeys_open_manage': return 'Gérer les passkeys';
+			case 'app_settings.connected_accounts_title': return 'Comptes connectés';
+			case 'app_settings.connected_accounts_sub': return 'Google et Apple liés à votre compte Wayo';
+			case 'app_settings.connected_accounts_web_only': return 'Liez ou déliez Google/Apple via Auth Wayo dans l’app.';
+			case 'app_settings.connected_accounts_manage_hint': return 'Liez ou déliez Google et Apple sur votre compte Auth Wayo.';
+			case 'app_settings.connected_accounts_open_manage': return 'Gérer les comptes connectés';
+			case 'app_settings.handoff_error': return 'Impossible d’ouvrir la gestion sécurisée. Ouverture du navigateur.';
+			case 'app_settings.open_web_settings': return 'Ouvrir les réglages web';
+			case 'app_settings.guides_title': return 'Guides et ressources';
+			case 'app_settings.guides_sub': return 'Articles d’aide et guides produit Wayo Ads';
 			case 'app_settings.section_account': return 'Compte';
 			case 'app_settings.section_security': return 'Sécurité';
 			case 'app_settings.sessions_title': return 'Sessions actives';

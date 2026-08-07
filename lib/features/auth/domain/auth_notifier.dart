@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io' show Platform;
 
+import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -10,6 +11,7 @@ import '../../../core/network/auth_interceptor.dart';
 import '../../../core/network/auth_remote.dart';
 import '../../../core/network/wayo_ads_dio.dart';
 import '../../../core/providers/app_providers.dart';
+import '../../../core/push/push_registration_lifecycle.dart';
 import '../../../core/push/user_push_notifications_preference.dart';
 import '../../../core/push/wayo_push_device_register.dart';
 import '../../../core/push/wayo_push_service.dart';
@@ -25,6 +27,7 @@ import '../../creator_wallet/presentation/providers/creator_wallet_providers.dar
 import '../../wallet/presentation/providers/advertiser_wallet_providers.dart';
 import '../../dashboard/data/dashboard_hive_store.dart';
 import '../../dashboard/presentation/providers/dashboard_state_providers.dart';
+import '../../home_widgets/services/widget_refresh_service.dart';
 import '../data/auth_login_method_store.dart';
 import '../data/google_sign_in_facade.dart';
 import '../data/models/app_user.dart';
@@ -82,7 +85,13 @@ class AuthNotifier extends _$AuthNotifier {
     setAuthForceLogoutHandler(forceLogout);
     ref.onDispose(clearAuthForceLogoutHandler);
 
-    setFcmTokenBackendRegistrationCallback((_) => _syncPushTokenBestEffort());
+    setFcmTokenBackendRegistrationCallback(
+      (
+        _, {
+        PushRegisterReason reason = PushRegisterReason.tokenRefresh,
+      }) =>
+          _syncPushTokenBestEffort(reason: reason),
+    );
     ref.onDispose(() => setFcmTokenBackendRegistrationCallback(null));
 
     try {
@@ -127,9 +136,10 @@ class AuthNotifier extends _$AuthNotifier {
       switch (refreshed) {
         case Success(:final data):
           AuthInterceptor.resetSessionState();
+          allowPushRegistrationAfterAuth();
           final merged = _preserveExistingRoleIfNeeded(existingUser, data.user);
           await _persistAuthWithUser(storage, data, merged);
-          unawaited(_syncPushTokenBestEffort());
+          unawaited(_syncPushTokenBestEffort(reason: PushRegisterReason.appStart));
           _registerMobileSessionBestEffort();
           return AuthAuthenticated(merged);
         case Failure():
@@ -140,7 +150,8 @@ class AuthNotifier extends _$AuthNotifier {
 
     // Session valid — reset any stale invalidation flags.
     AuthInterceptor.resetSessionState();
-    unawaited(_syncPushTokenBestEffort());
+    allowPushRegistrationAfterAuth();
+    unawaited(_syncPushTokenBestEffort(reason: PushRegisterReason.appStart));
     _registerMobileSessionBestEffort();
     return AuthAuthenticated(existingUser);
   }
@@ -332,6 +343,7 @@ class AuthNotifier extends _$AuthNotifier {
     AuthInterceptor.resetSessionState();
     _resetDashboardNetworkSpacing();
     await resetPushDeliveryForAccountSwitch();
+    allowPushRegistrationAfterAuth();
     await dismissAllWayoLocalPushNotifications();
     await DashboardHiveStore.clearAll();
     markSessionBootstrapStarted(ref);
@@ -349,8 +361,17 @@ class AuthNotifier extends _$AuthNotifier {
     if (data.user.wayoAdsRole == WayoAdsAccountRole.creator) {
       unawaited(_prefetchCreatorWalletAfterLogin());
     }
-    unawaited(_syncPushTokenBestEffort());
+    unawaited(_syncPushTokenBestEffort(reason: PushRegisterReason.login));
     _registerMobileSessionBestEffort();
+    // Clear previous account widget snapshot before publishing the new one.
+    final accountHash = sha256
+        .convert(utf8.encode('${data.user.id}'))
+        .toString()
+        .substring(0, 12);
+    unawaited(() async {
+      await ref.read(widgetRefreshServiceProvider).onAccountSwitch(accountHash);
+      await ref.read(widgetRefreshServiceProvider).refresh(force: true);
+    }());
   }
 
   /// Lets Auth / Wayo-ads persist the session before [GET /api/chat/token] to avoid
@@ -516,7 +537,7 @@ class AuthNotifier extends _$AuthNotifier {
           .syncFromRemote(bypassCache: true)
           .catchError((_) {}),
     );
-    unawaited(_syncPushTokenBestEffort());
+    unawaited(_syncPushTokenBestEffort(reason: PushRegisterReason.login));
   }
 
   /// Refreshes JWT after role onboarding so Wayo-ads mutations see CREATOR/ADVERTISER claims.
@@ -611,9 +632,11 @@ class AuthNotifier extends _$AuthNotifier {
   Future<void> logout() async {
     _lastProfileRefreshUtc = null;
     _lastAuthUserFetchStartUtc = null;
+    // Block token-refresh re-register BEFORE DELETE, then clear auth.
     await unregisterWayoPushDeviceOnLogout(
       wayoAdsDio: ref.read(wayoAdsDioProvider),
       prefs: ref.read(appPrefsProvider),
+      reason: PushUnregisterReason.logout,
     );
     try {
       await ref.read(authRepositoryProvider).logout();
@@ -628,12 +651,15 @@ class AuthNotifier extends _$AuthNotifier {
     invalidateRoleSessionProviders(ref);
     _invalidateDashboardAndChatProviders();
     await GoogleSignInFacade.signOutFromGoogle();
+    unawaited(ref.read(widgetRefreshServiceProvider).clearForLogout());
   }
 
   void forceLogout() {
     _resetDashboardNetworkSpacing();
     _lastProfileRefreshUtc = null;
     _lastAuthUserFetchStartUtc = null;
+    // Block registration immediately so in-flight token refresh cannot POST.
+    PushRegistrationGate.block(reason: 'force_logout');
     unawaited(deactivatePushDelivery());
     unawaited(dismissAllWayoLocalPushNotifications());
     unawaited(AuthLoginMethodStore.clear());
@@ -646,6 +672,7 @@ class AuthNotifier extends _$AuthNotifier {
     await unregisterWayoPushDeviceOnLogout(
       wayoAdsDio: ref.read(wayoAdsDioProvider),
       prefs: ref.read(appPrefsProvider),
+      reason: PushUnregisterReason.forceLogout,
     );
     await DashboardHiveStore.clearAll();
     await ref.read(secureStorageProvider).clearAll();
@@ -653,6 +680,7 @@ class AuthNotifier extends _$AuthNotifier {
     invalidateRoleSessionProviders(ref);
     _invalidateDashboardAndChatProviders();
     await GoogleSignInFacade.signOutFromGoogle();
+    unawaited(ref.read(widgetRefreshServiceProvider).clearForLogout());
   }
 
   /// Dashboard tiles only — chat is reset separately on login (see [login] / [loginWithGoogle]).
@@ -703,12 +731,45 @@ class AuthNotifier extends _$AuthNotifier {
     ref.read(requestDeduplicatorProvider).clear();
   }
 
-  Future<void> _syncPushTokenBestEffort() async {
+  /// Re-registers FCM with Wayo-ads after the app returns to foreground.
+  /// Heals stale/missing server tokens without requiring the user to toggle push.
+  Future<void> syncPushRegistrationOnResume() =>
+      _syncPushTokenBestEffort(reason: PushRegisterReason.resumeRefresh);
+
+  Future<void> _syncPushTokenBestEffort({
+    PushRegisterReason reason = PushRegisterReason.login,
+  }) async {
     try {
       final auth = ref.read(authNotifierProvider).valueOrNull;
       if (auth is! AuthAuthenticated) {
         logPushLifecycle('sync: skipped — not authenticated');
         return;
+      }
+      if (PushRegistrationGate.isBlocked) {
+        // Reopen for intentional auth-ready / foreground / heal syncs only.
+        // Never reopen when the user opted out of push.
+        final mayReopen = reason == PushRegisterReason.login ||
+            reason == PushRegisterReason.appStart ||
+            reason == PushRegisterReason.resumeRefresh ||
+            reason == PushRegisterReason.forceHeal ||
+            reason == PushRegisterReason.tokenRefresh ||
+            reason == PushRegisterReason.userEnabled;
+        if (mayReopen) {
+          final prefs = ref.read(appPrefsProvider);
+          if (!await isUserPushNotificationsEnabled(prefs)) {
+            logPushLifecycle(
+              'sync: skipped — gate blocked + user disabled '
+              '(reason=${reason.name})',
+            );
+            return;
+          }
+          allowPushRegistrationAfterAuth();
+        } else {
+          logPushLifecycle(
+            'sync: skipped — gate blocked reason=${reason.name}',
+          );
+          return;
+        }
       }
       if (!wayoFirebaseCoreReady) {
         await initializeFirebaseForPush();
@@ -738,12 +799,12 @@ class AuthNotifier extends _$AuthNotifier {
           'sync: Android POST_NOTIFICATIONS not granted — continuing register',
         );
       }
-      await refreshAndCacheFcmToken(prefs);
-      final ok = await registerWayoPushDeviceIfTokenPresent(
+      final ok = await ensureWayoPushDeviceRegistered(
         wayoAdsDio: ref.read(wayoAdsDioProvider),
         prefs: prefs,
+        reason: reason,
       );
-      logPushLifecycle('sync: register result=$ok');
+      logPushLifecycle('sync: register result=$ok reason=${reason.name}');
     } catch (e, st) {
       logPushLifecycle('sync: failed: $e', error: e, stackTrace: st);
     }

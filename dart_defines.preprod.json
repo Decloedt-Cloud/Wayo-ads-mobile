@@ -1,0 +1,23 @@
+{
+  "AUTH_WAYO_BASE_URL": "https://preprodauth.wayo.ac",
+  "AUTH_API_URL": "https://preprodauth.wayo.ac",
+  "AUTH_OAUTH_CLIENT_ID": "019e0354-a09b-72c2-b6af-ecf723e6123d",
+
+  "AUTH_APP_NAME": "wayo_ads",
+  "AUTH_OAUTH_REDIRECT_URI": "com.wayo.wayoadsgo://oauthredirect",
+  "AUTH_GOOGLE_SERVER_CLIENT_ID": "458504508199-1ifkt7dc1g6cn2mrn9379k8u2uni4985.apps.googleusercontent.com",
+  "WAYO_ADS_APP_KEY": "oxz2HNCvFTGROqMw3KyAp9cV7qH5XxbquyJn6wrhRyk=",
+  "WAYO_ADS_API_BASE_URL": "https://ads.wayo.agency",
+  "CHAT_SERVICE_API_BASE_URL": "https://wayochat.wayo.agency",
+
+  "CERT_PIN_PRIMARY": "TTbpBlKPoadLPXyjnvG/wbzJ7eaNVGprhdQ97xYzcxM=",
+  "CERT_PIN_ALT": "rrH9dBDoO8lvXaPGp8LBu4NtH6XLhucIUViQ5Ciodws=",
+  "CERT_PIN_BACKUP": "slxI8eJ5lU7C1ZiJI1Tl49W3hTFiVJFDPlIscXxhBuc=",
+  "CERT_PIN_EXTRA": "21Txm8jPEUxmab+pUEJ6TAq5p5M1TpiOtoOIoLKdujg=",
+  "WAYO_VERBOSE_LOGS": "true",
+  "STRIPE_GOOGLE_PAY_TEST_ENV": "true",
+  "STRIPE_GOOGLE_PAY_MERCHANT_ID": "BCR2DN6D7KA3JGTW",
+  "STRIPE_APPLE_MERCHANT_ID": "merchant.ma.wayo.wayoadsgo",
+  "DISABLE_CERT_PINNING": "true"
+
+}

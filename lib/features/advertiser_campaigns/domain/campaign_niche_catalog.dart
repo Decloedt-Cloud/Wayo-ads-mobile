@@ -36,6 +36,66 @@ const List<String> kCampaignNicheApiValues = [
   'OTHER',
 ];
 
+/// Human-readable niche label for pickers (API value stays SCREAMING_SNAKE).
+String campaignNicheDisplayLabel(String apiValue) {
+  switch (apiValue) {
+    case 'FASHION_APPAREL':
+      return 'Fashion & Apparel';
+    case 'BEAUTY_PERSONAL_CARE':
+      return 'Beauty & Personal Care';
+    case 'TECH_SOFTWARE_ELECTRONICS':
+      return 'Tech, Software & Electronics';
+    case 'FOOD_BEVERAGE':
+      return 'Food & Beverage';
+    case 'HEALTH_WELLNESS':
+      return 'Health & Wellness';
+    case 'FITNESS_SPORTS':
+      return 'Fitness & Sports';
+    case 'HOME_LIVING':
+      return 'Home & Living';
+    case 'TRAVEL_HOSPITALITY':
+      return 'Travel & Hospitality';
+    case 'FINANCE_INSURANCE':
+      return 'Finance & Insurance';
+    case 'EDUCATION_LEARNING':
+      return 'Education & Learning';
+    case 'ENTERTAINMENT_MEDIA':
+      return 'Entertainment & Media';
+    case 'GAMING_ESPORTS':
+      return 'Gaming & Esports';
+    case 'AUTOMOTIVE':
+      return 'Automotive';
+    case 'PETS_ANIMALS':
+      return 'Pets & Animals';
+    case 'BABY_FAMILY':
+      return 'Baby & Family';
+    case 'B2B_PROFESSIONAL':
+      return 'B2B & Professional';
+    case 'ECOMMERCE_RETAIL':
+      return 'Ecommerce & Retail';
+    case 'NONPROFIT_CAUSE':
+      return 'Nonprofit & Cause';
+    case 'REAL_ESTATE':
+      return 'Real Estate';
+    case 'CRYPTO_WEB3':
+      return 'Crypto & Web3';
+    case 'ART_DESIGN_PHOTOGRAPHY':
+      return 'Art, Design & Photography';
+    case 'MUSIC_AUDIO':
+      return 'Music & Audio';
+    case 'LIFESTYLE_VLOGS':
+      return 'Lifestyle & Vlogs';
+    case 'DIY_CRAFTS':
+      return 'DIY & Crafts';
+    case 'ENVIRONMENT_SUSTAINABILITY':
+      return 'Environment & Sustainability';
+    case 'OTHER':
+      return 'Other';
+    default:
+      return apiValue.replaceAll('_', ' ');
+  }
+}
+
 /// Canonical form for API niche enum strings (e.g. `TRAVEL_HOSPITALITY`).
 String? normalizeCampaignNicheApiValue(String? raw) {
   final s = raw?.trim();
@@ -148,7 +208,9 @@ void _debugLogLocationMiss(Map<String, dynamic> m, String? debugSource) {
       '${allKeys.take(60).toList()}',
     );
   } else {
-    debugPrint('[WayoAds][campaignLocation]   all keys (${allKeys.length}): $allKeys');
+    debugPrint(
+      '[WayoAds][campaignLocation]   all keys (${allKeys.length}): $allKeys',
+    );
   }
   for (final root in const [
     'targeting',

@@ -31,6 +31,8 @@ import '../../../shell/presentation/widgets/shell_tutorial_replay_scope.dart';
 import '../../domain/creator_application.dart';
 import '../../domain/creator_stats.dart';
 import '../providers/creator_dashboard_providers.dart';
+import '../../../creator_trust/data/creator_trust_remote.dart';
+import '../../../creator_trust/presentation/widgets/creator_trust_score_card.dart';
 
 String _moneyLocale(AppLocale l) => switch (l) {
   AppLocale.en => 'en_US',
@@ -176,6 +178,7 @@ class _CreatorDashboardScreenState extends ConsumerState<CreatorDashboardScreen>
           ref.invalidate(creatorStatsProvider);
           ref.invalidate(creatorApplicationsProvider);
           ref.invalidate(dashboardStreamProvider);
+          ref.invalidate(creatorTrustScoreProvider);
           HapticFeedback.lightImpact();
         },
         child: CustomScrollView(
@@ -208,6 +211,12 @@ class _CreatorDashboardScreenState extends ConsumerState<CreatorDashboardScreen>
                   data: (s) =>
                       _StatsSection(stats: s, moneyLocale: moneyLocale),
                 ),
+              ),
+            ),
+            const SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(16, 4, 16, 8),
+                child: CreatorTrustScoreCard(),
               ),
             ),
             SliverToBoxAdapter(

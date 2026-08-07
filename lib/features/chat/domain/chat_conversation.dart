@@ -1,6 +1,8 @@
 import 'chat_message.dart';
 import 'chat_user_preview.dart';
 
+const Object _chatConversationUnset = Object();
+
 /// Anonymized account emails from chat-service after soft-delete purge.
 bool isDeletedChatUserEmail(String? email) {
   final e = email?.trim() ?? '';
@@ -33,6 +35,10 @@ final class ChatConversation {
     this.updatedAt,
     this.lastMessage,
     this.participants,
+    this.isPinned = false,
+    this.isArchived = false,
+    this.pinnedAt,
+    this.archivedAt,
   });
 
   final int id;
@@ -46,6 +52,48 @@ final class ChatConversation {
   final String? updatedAt;
   final ChatMessage? lastMessage;
   final List<ChatParticipant>? participants;
+
+  /// Per-participant inbox flags (`conversation_participants` pivot).
+  final bool isPinned;
+  final bool isArchived;
+  final String? pinnedAt;
+  final String? archivedAt;
+
+  ChatConversation copyWith({
+    int? id,
+    String? type,
+    String? status,
+    String? displayName,
+    String? displayAvatar,
+    int? unreadCount,
+    String? updatedAt,
+    ChatMessage? lastMessage,
+    List<ChatParticipant>? participants,
+    bool? isPinned,
+    bool? isArchived,
+    Object? pinnedAt = _chatConversationUnset,
+    Object? archivedAt = _chatConversationUnset,
+  }) {
+    return ChatConversation(
+      id: id ?? this.id,
+      type: type ?? this.type,
+      status: status ?? this.status,
+      displayName: displayName ?? this.displayName,
+      displayAvatar: displayAvatar ?? this.displayAvatar,
+      unreadCount: unreadCount ?? this.unreadCount,
+      updatedAt: updatedAt ?? this.updatedAt,
+      lastMessage: lastMessage ?? this.lastMessage,
+      participants: participants ?? this.participants,
+      isPinned: isPinned ?? this.isPinned,
+      isArchived: isArchived ?? this.isArchived,
+      pinnedAt: identical(pinnedAt, _chatConversationUnset)
+          ? this.pinnedAt
+          : pinnedAt as String?,
+      archivedAt: identical(archivedAt, _chatConversationUnset)
+          ? this.archivedAt
+          : archivedAt as String?,
+    );
+  }
 
   String title(String fallback) =>
       displayName?.trim().isNotEmpty == true ? displayName! : fallback;
@@ -71,6 +119,32 @@ final class ChatConversation {
       final uid = p.user?.id ?? p.userId;
       if (uid != 0 && uid != myChatUserId) {
         return p.user?.avatar;
+      }
+    }
+    return null;
+  }
+
+  /// Marketing roles string for the other participant (after enrichment).
+  String? partnerAppRoles(int myChatUserId) {
+    final parts = participants;
+    if (parts == null) return null;
+    for (final p in parts) {
+      final uid = p.user?.id ?? p.userId;
+      if (uid != 0 && uid != myChatUserId) {
+        return p.user?.appRoles;
+      }
+    }
+    return null;
+  }
+
+  /// Email of the other participant (for role lookup).
+  String? partnerEmail(int myChatUserId) {
+    final parts = participants;
+    if (parts == null) return null;
+    for (final p in parts) {
+      final uid = p.user?.id ?? p.userId;
+      if (uid != 0 && uid != myChatUserId) {
+        return p.user?.email;
       }
     }
     return null;

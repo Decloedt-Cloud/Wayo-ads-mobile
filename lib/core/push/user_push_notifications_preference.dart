@@ -4,10 +4,9 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../config/auth_runtime_config.dart';
-import '../network/api_endpoints.dart';
 import '../storage/app_prefs.dart';
 import 'push_registration_debug.dart';
+import 'push_registration_lifecycle.dart';
 import 'wayo_push_device_register.dart';
 import 'wayo_push_service.dart';
 
@@ -45,46 +44,23 @@ Future<void> disableUserPushNotifications({
 }) async {
   logPushLifecycle('disable: user opted out');
   await setUserPushNotificationsEnabled(prefs, false);
-  await deactivatePushDelivery();
-  await dismissAllWayoLocalPushNotifications();
-
-  if (!wayoFirebaseCoreReady) {
-    logPushLifecycle('disable: Firebase not ready — skipped server DELETE');
-    return;
-  }
-  final token = readCachedFcmToken(prefs);
-  if (token == null || token.isEmpty) {
-    logPushLifecycle('disable: no cached FCM token — skipped server DELETE');
-    return;
-  }
-  try {
-    final path = AuthRuntimeConfig.instance.wayoAdsRequestPath(
-      ApiEndpoints.userPushDevice,
-    );
-    logPushLifecycle('disable: DELETE $path fcmTokenLen=${token.length}');
-    await wayoAdsDio.delete<void>(
-      path,
-      queryParameters: <String, dynamic>{'fcmToken': token},
-    );
-    logPushLifecycle('disable: server DELETE succeeded');
-  } on DioException catch (e) {
-    logPushLifecycle(
-      'disable: server DELETE failed status=${e.response?.statusCode} '
-      'message=${e.message}',
-    );
-  } catch (e) {
-    logPushLifecycle('disable: server DELETE failed: $e');
-  }
+  await unregisterWayoPushDeviceOnLogout(
+    wayoAdsDio: wayoAdsDio,
+    prefs: prefs,
+    reason: PushUnregisterReason.userDisabled,
+  );
 }
 
 /// User turned on push: OS permission + FCM register with Wayo-ads.
 Future<bool> enableUserPushNotifications({
   required Dio wayoAdsDio,
   required AppPrefs prefs,
+  PushRegisterReason reason = PushRegisterReason.userEnabled,
 }) async {
   PushRegistrationDebug.reset();
   logPushLifecycle('enable: start');
   await setUserPushNotificationsEnabled(prefs, true);
+  allowPushRegistrationAfterAuth();
 
   if (!wayoFirebaseCoreReady) {
     logPushLifecycle('enable: Firebase not ready — initializing');
@@ -96,6 +72,7 @@ Future<bool> enableUserPushNotifications({
         'GoogleService-Info.plist / firebase_options.dart (project wayo-ads-27cbf)';
     PushRegistrationDebug.recordFailure(PushEnableStep.firebaseInit, msg);
     logPushLifecycle('enable: FAILED — $msg');
+    await setUserPushNotificationsEnabled(prefs, false);
     return false;
   }
 
@@ -113,6 +90,7 @@ Future<bool> enableUserPushNotifications({
         'iOS notification permission denied — enable in Settings → Wayo Ads → Notifications';
     PushRegistrationDebug.recordFailure(PushEnableStep.permission, msg);
     logPushLifecycle('enable: FAILED — $msg');
+    await setUserPushNotificationsEnabled(prefs, false);
     return false;
   }
   if (!granted && Platform.isAndroid) {
@@ -121,15 +99,19 @@ Future<bool> enableUserPushNotifications({
     );
   }
 
-  await refreshAndCacheFcmToken(prefs);
+  final registered = await ensureWayoPushDeviceRegistered(
+    wayoAdsDio: wayoAdsDio,
+    prefs: prefs,
+    reason: reason,
+  );
   final token = readCachedFcmToken(prefs);
   PushRegistrationDebug.recordToken(token);
   if (token == null || token.isEmpty) {
-    final isApple = !kIsWeb &&
+    final isApplePlatform = !kIsWeb &&
         (defaultTargetPlatform == TargetPlatform.iOS ||
             defaultTargetPlatform == TargetPlatform.macOS);
     final msg = granted
-        ? isApple
+        ? isApplePlatform
             ? 'FirebaseMessaging.getToken() returned empty — iOS: enable Push Notifications '
                 'in Xcode (aps-environment), upload APNs key in Firebase Console '
                 '(wayo-ads-27cbf), test on a physical device'
@@ -139,6 +121,7 @@ Future<bool> enableUserPushNotifications({
         : 'No FCM token — grant POST_NOTIFICATIONS (Android 13+) or fix Firebase SHA fingerprints';
     PushRegistrationDebug.recordFailure(PushEnableStep.getToken, msg);
     logPushLifecycle('enable: FAILED — $msg');
+    await setUserPushNotificationsEnabled(prefs, false);
     return false;
   }
   logPushLifecycle(
@@ -146,16 +129,13 @@ Future<bool> enableUserPushNotifications({
     '${PushRegistrationDebug.maskFcmToken(token)}',
   );
 
-  final registered = await registerWayoPushDeviceIfTokenPresent(
-    wayoAdsDio: wayoAdsDio,
-    prefs: prefs,
-  );
   if (!registered) {
     const msg =
         'POST /api/user/push-device failed — check auth Bearer token, '
         'WAYO_ADS_API_BASE_URL, and server logs';
     PushRegistrationDebug.recordFailure(PushEnableStep.backendRegister, msg);
     logPushLifecycle('enable: FAILED — $msg');
+    await setUserPushNotificationsEnabled(prefs, false);
     return false;
   }
 

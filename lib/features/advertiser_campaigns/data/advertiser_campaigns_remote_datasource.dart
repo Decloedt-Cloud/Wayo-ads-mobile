@@ -51,6 +51,30 @@ abstract interface class AdvertiserCampaignsRemote {
     String? niche,
     String? countryCode,
   });
+
+  /// Create campaign — `POST /api/campaigns` (+ optional Idempotency-Key).
+  Future<Map<String, dynamic>> createCampaign(
+    Map<String, dynamic> body, {
+    String? idempotencyKey,
+  });
+
+  /// Update campaign — `PATCH /api/campaigns/:id`.
+  Future<Map<String, dynamic>> updateCampaign(
+    String id,
+    Map<String, dynamic> body,
+  );
+
+  /// Upload brand logo — `POST /api/campaigns/upload-logo`.
+  Future<String> uploadCampaignLogoDataUrl(String dataUrl);
+
+  /// Status transition — `PATCH /api/campaigns/:id` with `{ status }`.
+  Future<Map<String, dynamic>> setCampaignStatus(String id, String status);
+
+  /// Analytics — `GET /api/campaigns/:id/analytics`.
+  Future<Map<String, dynamic>> fetchCampaignAnalytics(String id);
+
+  /// Financial summary — `GET /api/advertiser/campaigns/:id/financial-summary`.
+  Future<Map<String, dynamic>> fetchCampaignFinancialSummary(String id);
 }
 
 final class AdvertiserCampaignsRemoteDatasource
@@ -570,13 +594,13 @@ final class AdvertiserCampaignsRemoteDatasource
     final raw = map['campaigns'];
     final list = raw is List
         ? raw
-            .whereType<Map>()
-            .map(
-              (e) => CreatorBrowseCampaign.fromJson(
-                Map<String, dynamic>.from(e),
-              ),
-            )
-            .toList(growable: false)
+              .whereType<Map>()
+              .map(
+                (e) => CreatorBrowseCampaign.fromJson(
+                  Map<String, dynamic>.from(e),
+                ),
+              )
+              .toList(growable: false)
         : const <CreatorBrowseCampaign>[];
     final total = _parseInt(map['total'], list.length);
     final pageNum = _parseInt(map['page'], page);
@@ -592,5 +616,147 @@ final class AdvertiserCampaignsRemoteDatasource
       totalPages: totalPages,
       facets: CampaignMarketplaceFacets.fromJson(map),
     );
+  }
+
+  Map<String, dynamic> _asMap(Object? data) {
+    if (data is Map<String, dynamic>) return data;
+    if (data is Map) return Map<String, dynamic>.from(data);
+    return <String, dynamic>{};
+  }
+
+  Never _throwApiError(Object? data, int? statusCode) {
+    final map = _asMap(data);
+    final err =
+        map['error']?.toString() ??
+        map['message']?.toString() ??
+        'Request failed';
+    final code = map['errorCode']?.toString();
+    if (code == 'INSUFFICIENT_FUNDS') {
+      final campaign = map['campaign'];
+      String? draftId;
+      if (campaign is Map) draftId = campaign['id']?.toString();
+      final details = map['details'];
+      final d = details is Map ? Map<String, dynamic>.from(details) : null;
+      int asInt(Object? v) {
+        if (v is int) return v;
+        if (v is num) return v.toInt();
+        return int.tryParse('$v') ?? 0;
+      }
+
+      throw CampaignInsufficientFundsException(
+        draftCampaignId: draftId,
+        requiredCents: d == null ? null : asInt(d['required']),
+        availableCents: d == null ? null : asInt(d['available']),
+        platformFeeCents: d == null ? null : asInt(d['platformFee']),
+        taxCents: d == null ? null : asInt(d['tax']),
+        message: err,
+      );
+    }
+    throw ServerException(err, statusCode);
+  }
+
+  @override
+  Future<Map<String, dynamic>> createCampaign(
+    Map<String, dynamic> body, {
+    String? idempotencyKey,
+  }) async {
+    final headers = <String, dynamic>{};
+    final key = idempotencyKey?.trim();
+    if (key != null && key.length >= 8 && key.length <= 128) {
+      headers['Idempotency-Key'] = key;
+    }
+    try {
+      final res = await _dio.post<Object?>(
+        _path(ApiEndpoints.campaigns),
+        data: body,
+        options: Options(headers: headers),
+      );
+      final map = _asMap(res.data);
+      if (map['error'] != null) {
+        _throwApiError(map, res.statusCode);
+      }
+      return map;
+    } on DioException catch (e) {
+      if (e.response?.data != null) {
+        _throwApiError(e.response!.data, e.response?.statusCode);
+      }
+      rethrow;
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>> updateCampaign(
+    String id,
+    Map<String, dynamic> body,
+  ) async {
+    try {
+      final res = await _dio.patch<Object?>(
+        _path(ApiEndpoints.campaignDetail(id)),
+        data: body,
+      );
+      final map = _asMap(res.data);
+      if (map['error'] != null) {
+        _throwApiError(map, res.statusCode);
+      }
+      return map;
+    } on DioException catch (e) {
+      if (e.response?.data != null) {
+        _throwApiError(e.response!.data, e.response?.statusCode);
+      }
+      rethrow;
+    }
+  }
+
+  @override
+  Future<String> uploadCampaignLogoDataUrl(String dataUrl) async {
+    try {
+      final res = await _dio.post<Object?>(
+        _path(ApiEndpoints.campaignUploadLogo),
+        data: <String, dynamic>{'data': dataUrl},
+      );
+      final map = _asMap(res.data);
+      final url = map['url']?.toString();
+      if (url == null || url.isEmpty) {
+        _throwApiError(map, res.statusCode);
+      }
+      return url;
+    } on DioException catch (e) {
+      if (e.response?.data != null) {
+        _throwApiError(e.response!.data, e.response?.statusCode);
+      }
+      rethrow;
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>> setCampaignStatus(
+    String id,
+    String status,
+  ) async {
+    return updateCampaign(id, <String, dynamic>{'status': status});
+  }
+
+  @override
+  Future<Map<String, dynamic>> fetchCampaignAnalytics(String id) async {
+    final res = await _dio.get<Object?>(
+      _path(ApiEndpoints.campaignAnalytics(id)),
+    );
+    final map = _asMap(res.data);
+    if (map['error'] != null) {
+      _throwApiError(map, res.statusCode);
+    }
+    return map;
+  }
+
+  @override
+  Future<Map<String, dynamic>> fetchCampaignFinancialSummary(String id) async {
+    final res = await _dio.get<Object?>(
+      _path(ApiEndpoints.campaignFinancialSummary(id)),
+    );
+    final map = _asMap(res.data);
+    if (map['error'] != null) {
+      _throwApiError(map, res.statusCode);
+    }
+    return map;
   }
 }

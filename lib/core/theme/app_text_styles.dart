@@ -19,28 +19,28 @@ abstract final class AppTextStyles {
   /// Use once at the top of a full-screen route or shell tab. Section headings
   /// and card titles use [headlineMedium] or smaller tokens instead.
   static TextStyle pageTitle(BuildContext context) => GoogleFonts.inter(
-    fontSize: 32,
-    fontWeight: FontWeight.w800,
-    height: 1.1,
-    letterSpacing: -0.85,
+    fontSize: 22,
+    fontWeight: FontWeight.w700,
+    height: 1.2,
+    letterSpacing: -0.4,
     color: AppColors.textPrimaryOf(context),
   );
 
   /// Same metrics as [pageTitle], with an explicit color (for [ThemeData.appBarTheme]).
   static TextStyle pageTitleForTheme(Color onSurface) => GoogleFonts.inter(
-    fontSize: 32,
-    fontWeight: FontWeight.w800,
-    height: 1.1,
-    letterSpacing: -0.85,
+    fontSize: 22,
+    fontWeight: FontWeight.w700,
+    height: 1.2,
+    letterSpacing: -0.4,
     color: onSurface,
   );
 
   /// **H2 / sections** — in-page blocks (e.g. “Campaigns”, “History”).
   static TextStyle headlineMedium(BuildContext context) => GoogleFonts.inter(
-    fontSize: 24,
+    fontSize: 18,
     fontWeight: FontWeight.w700,
-    height: 1.2,
-    letterSpacing: -0.4,
+    height: 1.25,
+    letterSpacing: -0.3,
     color: AppColors.textPrimaryOf(context),
   );
 

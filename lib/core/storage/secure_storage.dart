@@ -37,11 +37,16 @@ class SecureStorageService {
   String? _cachedAccessToken;
   String? _cachedRefreshToken;
 
+  /// Bumped on [saveTokens] / [clearAll] so in-flight disk reads cannot clobber
+  /// a newer in-memory session (Android secure-storage race after Google login).
+  int _tokenEpoch = 0;
+
   Future<void> saveTokens({
     required String accessToken,
     required String refreshToken,
     required int expiresIn,
   }) async {
+    _tokenEpoch++;
     _cachedAccessToken = accessToken;
     _cachedRefreshToken = refreshToken;
     final expiresAt = DateTime.now().add(Duration(seconds: expiresIn));
@@ -60,14 +65,20 @@ class SecureStorageService {
 
   Future<String?> getAccessToken() async {
     if (_cachedAccessToken != null) return _cachedAccessToken;
+    final epoch = _tokenEpoch;
     final val = await _tokens.readAccess();
+    if (epoch != _tokenEpoch) return _cachedAccessToken;
+    if (_cachedAccessToken != null) return _cachedAccessToken;
     _cachedAccessToken = val;
     return val;
   }
 
   Future<String?> getRefreshToken() async {
     if (_cachedRefreshToken != null) return _cachedRefreshToken;
+    final epoch = _tokenEpoch;
     final val = await _tokens.readRefresh();
+    if (epoch != _tokenEpoch) return _cachedRefreshToken;
+    if (_cachedRefreshToken != null) return _cachedRefreshToken;
     _cachedRefreshToken = val;
     return val;
   }
@@ -99,6 +110,7 @@ class SecureStorageService {
   }
 
   Future<void> clearAll() async {
+    _tokenEpoch++;
     _cachedAccessToken = null;
     _cachedRefreshToken = null;
     _cachedMobileSessionId = null;

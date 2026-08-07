@@ -109,10 +109,23 @@ abstract final class WayoToast {
         ScaffoldMessenger.maybeOf(context);
     if (messenger == null) return;
 
-    final resolvedBottomInset =
-        bottomInset ?? wayoToastBottomMargin(context);
+    // Prefer a still-active context for Theme / MediaQuery. After Google Sign-In
+    // the login route is often deactivated while `State.mounted` is still true.
+    final themeContext = rootScaffoldMessengerKey.currentContext ?? context;
+    double resolvedBottomInset;
+    try {
+      resolvedBottomInset = bottomInset ?? wayoToastBottomMargin(themeContext);
+    } catch (_) {
+      resolvedBottomInset = bottomInset ?? 24;
+    }
 
-    final dark = Theme.of(context).brightness == Brightness.dark;
+    Brightness brightness;
+    try {
+      brightness = Theme.of(themeContext).brightness;
+    } catch (_) {
+      brightness = Brightness.dark;
+    }
+    final dark = brightness == Brightness.dark;
     final accent = _accent(variant);
     final dur = duration ??
         (variant == WayoToastVariant.error ||

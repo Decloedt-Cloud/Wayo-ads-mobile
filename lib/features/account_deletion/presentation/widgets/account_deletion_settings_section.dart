@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:wayoadsgo/core/ui/wayo_dialog.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -59,9 +60,9 @@ class _AccountDeletionSettingsSectionState
 
   Future<void> _cancelDeletion() async {
     final t = context.t.account_deletion;
-    final ok = await showDialog<bool>(
+    final ok = await showWayoDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
+      builder: (ctx) => WayoAlertDialog(
         title: Text(t.banner_cancel_dialog_title),
         content: Text(t.banner_cancel_dialog_body),
         actions: [

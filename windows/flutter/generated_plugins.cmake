@@ -4,6 +4,7 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   connectivity_plus
+  desktop_webview_window
   firebase_core
   flutter_secure_storage_windows
   gal
@@ -11,6 +12,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   sentry_flutter
   share_plus
   url_launcher_windows
+  window_to_front
 )
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST

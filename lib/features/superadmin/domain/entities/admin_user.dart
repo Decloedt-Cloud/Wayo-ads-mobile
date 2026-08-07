@@ -304,11 +304,12 @@ class AdminUser {
     
     // Check onboarding completion
     final isOnboardingCompleted = json['onboardingCompleted'] == true;
+    final email = (json['email'] ?? '').toString();
 
     return AdminUser(
       id: (json['id'] ?? '').toString(),
       authUserId: _parseInt(json['authUserId'] ?? json['auth_user_id']),
-      email: (json['email'] ?? '').toString(),
+      email: email,
       name: json['name']?.toString(),
       avatar: json['image']?.toString() ?? json['avatar']?.toString(),
       role: AdminUserRole.fromString(roles),
@@ -339,17 +340,30 @@ class AdminUser {
     return null;
   }
 
-  String get displayName => name ?? email.split('@').first;
+  String get displayName {
+    final n = name?.trim();
+    if (n != null && n.isNotEmpty) return n;
+    if (email.isNotEmpty) return email.split('@').first;
+    return 'User';
+  }
 
   String get initials {
-    if (name != null && name!.isNotEmpty) {
-      final parts = name!.trim().split(' ');
+    final n = name?.trim();
+    if (n != null && n.isNotEmpty) {
+      final parts = n.split(RegExp(r'\s+')).where((p) => p.isNotEmpty).toList();
       if (parts.length >= 2) {
-        return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+        final a = parts[0].isNotEmpty ? parts[0][0] : '';
+        final b = parts[1].isNotEmpty ? parts[1][0] : '';
+        final s = '$a$b'.toUpperCase();
+        if (s.isNotEmpty) return s;
       }
-      return parts[0].substring(0, parts[0].length.clamp(0, 2)).toUpperCase();
+      if (parts.isNotEmpty && parts[0].isNotEmpty) {
+        return parts[0].substring(0, parts[0].length.clamp(0, 2)).toUpperCase();
+      }
     }
-    return email.substring(0, email.length.clamp(0, 2)).toUpperCase();
+    if (email.length >= 2) return email.substring(0, 2).toUpperCase();
+    if (email.isNotEmpty) return email[0].toUpperCase();
+    return '?';
   }
 }
 
@@ -471,7 +485,11 @@ class AdminUsersPage {
     if (usersRaw is List) {
       for (final item in usersRaw) {
         if (item is Map) {
-          users.add(AdminUser.fromJson(Map<String, dynamic>.from(item)));
+          try {
+            users.add(AdminUser.fromJson(Map<String, dynamic>.from(item)));
+          } catch (_) {
+            // Skip malformed rows so one bad user does not blank the whole page.
+          }
         }
       }
     }
@@ -489,7 +507,7 @@ class AdminUsersPage {
       total: _parseInt(json['total']),
       page: _parseInt(json['page'], fallback: 1),
       totalPages: _parseInt(json['totalPages'], fallback: 1),
-      limit: _parseInt(json['limit'], fallback: 20),
+      limit: _parseInt(json['limit'], fallback: kAdminUsersPageSize),
     );
   }
 

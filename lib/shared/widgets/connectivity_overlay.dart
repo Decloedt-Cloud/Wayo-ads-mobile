@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -59,10 +60,7 @@ class _ConnectivityOverlayState extends ConsumerState<ConnectivityOverlay>
   void _reloadAfterReconnect() {
     try {
       ref.invalidate(chatConversationsProvider);
-      scheduleInvalidateChatRealtimeBinding(
-        () => ref.invalidate(chatRealtimeBindingProvider),
-      );
-      ref.invalidate(chatRealtimeServiceProvider);
+      unawaited(forceReconnectChatRealtime(ref));
       ref.invalidate(dashboardStreamProvider);
       ref.invalidate(notificationsListProvider);
     } catch (_) {}

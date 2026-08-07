@@ -15,7 +15,7 @@ String? _pickAvatarUrl(String? raw, String chatApiBaseUrl) {
   return resolveChatAvatarUrl(raw.trim(), chatApiBaseUrl);
 }
 
-/// Fetches Wayo-ads marketing profiles and patches missing partner avatars.
+/// Fetches Wayo-ads marketing profiles + roles and patches partner avatars/roles.
 Future<List<ChatConversation>> enrichChatConversationsWithMarketingAvatars(
   List<ChatConversation> conversations,
   int myChatUserId,
@@ -34,10 +34,6 @@ Future<List<ChatConversation>> enrichChatConversationsWithMarketingAvatars(
     for (final p in parts) {
       final uid = p.user?.id ?? p.userId;
       if (uid == 0 || uid == myChatUserId) continue;
-      if (c.displayAvatar?.trim().isNotEmpty == true &&
-          p.user?.avatar?.trim().isNotEmpty == true) {
-        continue;
-      }
       final email = p.user?.email;
       if (!_isPlaceholderChatEmail(email)) {
         emails.add(email!.trim().toLowerCase());
@@ -53,32 +49,66 @@ Future<List<ChatConversation>> enrichChatConversationsWithMarketingAvatars(
     return conversations;
   }
 
-  final q = <String>[];
-  if (emails.isNotEmpty) {
-    q.add('emails=${Uri.encodeQueryComponent(emails.join(','))}');
-  }
-  if (marketingIds.isNotEmpty) {
-    q.add('userIds=${Uri.encodeQueryComponent(marketingIds.join(','))}');
+  Map<String, dynamic> byEmail = {};
+  Map<String, dynamic> byUserId = {};
+  Map<String, String> rolesByEmail = {};
+
+  if (emails.isNotEmpty || marketingIds.isNotEmpty) {
+    final q = <String>[];
+    if (emails.isNotEmpty) {
+      q.add('emails=${Uri.encodeQueryComponent(emails.join(','))}');
+    }
+    if (marketingIds.isNotEmpty) {
+      q.add('userIds=${Uri.encodeQueryComponent(marketingIds.join(','))}');
+    }
+    final path =
+        '${AuthRuntimeConfig.instance.wayoAdsRequestPath(ApiEndpoints.chatUserProfiles)}?${q.join('&')}';
+    try {
+      final payload = await fetchWayoAdsJson(path);
+      if (payload != null && payload['success'] == true) {
+        final data = payload['data'];
+        if (data is Map<String, dynamic>) {
+          final byEmailRaw = data['byEmail'];
+          final byUserIdRaw = data['byUserId'];
+          byEmail = byEmailRaw is Map
+              ? Map<String, dynamic>.from(byEmailRaw)
+              : <String, dynamic>{};
+          byUserId = byUserIdRaw is Map
+              ? Map<String, dynamic>.from(byUserIdRaw)
+              : <String, dynamic>{};
+        }
+      }
+    } catch (_) {
+      /* best effort */
+    }
   }
 
-  final path =
-      '${AuthRuntimeConfig.instance.wayoAdsRequestPath(ApiEndpoints.chatUserProfiles)}?${q.join('&')}';
-  final payload = await fetchWayoAdsJson(path);
-  if (payload == null || payload['success'] != true) {
+  if (emails.isNotEmpty) {
+    final rolesPath =
+        '${AuthRuntimeConfig.instance.wayoAdsRequestPath(ApiEndpoints.chatUserRoles)}'
+        '?emails=${Uri.encodeQueryComponent(emails.join(','))}';
+    try {
+      final payload = await fetchWayoAdsJson(rolesPath);
+      if (payload != null && payload['success'] == true) {
+        final data = payload['data'];
+        if (data is Map) {
+          for (final e in data.entries) {
+            final key = e.key.toString().trim().toLowerCase();
+            final val = e.value?.toString();
+            if (key.isNotEmpty && val != null && val.isNotEmpty) {
+              rolesByEmail[key] = val;
+            }
+          }
+        }
+      }
+    } catch (_) {
+      /* best effort */
+    }
+  }
+
+  if (byEmail.isEmpty && byUserId.isEmpty && rolesByEmail.isEmpty) {
     return conversations;
   }
-
-  final data = payload['data'];
-  if (data is! Map<String, dynamic>) return conversations;
-
-  final byEmailRaw = data['byEmail'];
-  final byUserIdRaw = data['byUserId'];
-  final byEmail = byEmailRaw is Map
-      ? Map<String, dynamic>.from(byEmailRaw)
-      : <String, dynamic>{};
-  final byUserId = byUserIdRaw is Map
-      ? Map<String, dynamic>.from(byUserIdRaw)
-      : <String, dynamic>{};
 
   String? imageForPartner(ChatParticipant p) {
     final email = p.user?.email?.trim().toLowerCase();
@@ -100,6 +130,12 @@ Future<List<ChatConversation>> enrichChatConversationsWithMarketingAvatars(
     return null;
   }
 
+  String? rolesForPartner(ChatParticipant p) {
+    final email = p.user?.email?.trim().toLowerCase();
+    if (email == null || _isPlaceholderChatEmail(email)) return p.user?.appRoles;
+    return rolesByEmail[email] ?? p.user?.appRoles;
+  }
+
   return conversations.map((c) {
     if (c.type != 'direct') return c;
     final parts = c.participants;
@@ -115,29 +151,41 @@ Future<List<ChatConversation>> enrichChatConversationsWithMarketingAvatars(
         break;
       }
     }
-    if (partnerImage == null) return c;
-
-    final resolvedDisplay = c.displayAvatar?.trim().isNotEmpty == true
-        ? c.displayAvatar
-        : _pickAvatarUrl(partnerImage, chatApiBaseUrl);
 
     final nextParticipants = parts.map((p) {
-      if (p.user?.avatar?.trim().isNotEmpty == true) return p;
-      if (partnerPart != null && p.userId != partnerPart.userId) return p;
+      final uid = p.user?.id ?? p.userId;
+      final isPartner = uid != 0 && uid != myChatUserId;
       final u = p.user;
       if (u == null) return p;
+
+      final roles = isPartner ? rolesForPartner(p) : u.appRoles;
+      final needsAvatar = isPartner &&
+          partnerPart != null &&
+          p.userId == partnerPart.userId &&
+          (u.avatar == null || u.avatar!.trim().isEmpty);
+      final avatar = needsAvatar
+          ? (_pickAvatarUrl(partnerImage, chatApiBaseUrl) ?? u.avatar)
+          : u.avatar;
+
+      if (roles == u.appRoles && avatar == u.avatar) return p;
+
       return ChatParticipant(
         userId: p.userId,
         lastReadAt: p.lastReadAt,
         user: ChatUserPreview(
           id: u.id,
           name: u.name,
-          avatar: _pickAvatarUrl(partnerImage, chatApiBaseUrl) ?? u.avatar,
+          avatar: avatar,
           email: u.email,
           marketingUserId: u.marketingUserId,
+          appRoles: roles,
         ),
       );
     }).toList();
+
+    final resolvedDisplay = c.displayAvatar?.trim().isNotEmpty == true
+        ? c.displayAvatar
+        : _pickAvatarUrl(partnerImage, chatApiBaseUrl);
 
     return ChatConversation(
       id: c.id,
@@ -149,6 +197,10 @@ Future<List<ChatConversation>> enrichChatConversationsWithMarketingAvatars(
       updatedAt: c.updatedAt,
       lastMessage: c.lastMessage,
       participants: nextParticipants,
+      isPinned: c.isPinned,
+      isArchived: c.isArchived,
+      pinnedAt: c.pinnedAt,
+      archivedAt: c.archivedAt,
     );
   }).toList();
 }

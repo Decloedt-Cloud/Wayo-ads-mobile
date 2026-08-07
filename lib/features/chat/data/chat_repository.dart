@@ -363,9 +363,15 @@ final class ChatRepository {
   Future<List<ChatConversation>> fetchConversations(
     ChatCredentials c, {
     String? Function()? socketId,
+    bool includeArchived = false,
   }) async {
     final dio = _chatDio(c, socketId: socketId);
-    final res = await dio.get<Map<String, dynamic>>('api/v1/conversations');
+    final res = await dio.get<Map<String, dynamic>>(
+      'api/v1/conversations',
+      queryParameters: <String, dynamic>{
+        if (includeArchived) 'include_archived': '1',
+      },
+    );
     final data = res.data;
     if (data == null || data['success'] != true) {
       throw ServerException(
@@ -384,8 +390,13 @@ final class ChatRepository {
   Future<List<ChatConversation>> fetchConversationsEnriched(
     ChatCredentials c, {
     String? Function()? socketId,
+    bool includeArchived = false,
   }) async {
-    final list = await fetchConversations(c, socketId: socketId);
+    final list = await fetchConversations(
+      c,
+      socketId: socketId,
+      includeArchived: includeArchived,
+    );
     try {
       return await enrichChatConversationsWithMarketingAvatars(
         list,
@@ -634,6 +645,88 @@ final class ChatRepository {
     );
   }
 
+  Future<void> pinConversation(
+    ChatCredentials c,
+    int conversationId, {
+    String? Function()? socketId,
+  }) =>
+      _postInboxFlag(c, conversationId, 'pin', socketId: socketId);
+
+  Future<void> unpinConversation(
+    ChatCredentials c,
+    int conversationId, {
+    String? Function()? socketId,
+  }) =>
+      _postInboxFlag(c, conversationId, 'unpin', socketId: socketId);
+
+  Future<void> archiveConversation(
+    ChatCredentials c,
+    int conversationId, {
+    String? Function()? socketId,
+  }) =>
+      _postInboxFlag(c, conversationId, 'archive', socketId: socketId);
+
+  Future<void> unarchiveConversation(
+    ChatCredentials c,
+    int conversationId, {
+    String? Function()? socketId,
+  }) =>
+      _postInboxFlag(c, conversationId, 'unarchive', socketId: socketId);
+
+  /// `DELETE /api/v1/conversations/{id}` — hard-wipes messages for all participants
+  /// (matches Wayo-ads web inbox trash). Soft-deletes the conversation row.
+  Future<void> deleteConversation(
+    ChatCredentials c,
+    int conversationId, {
+    String? Function()? socketId,
+  }) async {
+    final dio = _chatDio(c, socketId: socketId);
+    try {
+      final res = await dio.delete<Map<String, dynamic>>(
+        'api/v1/conversations/$conversationId',
+      );
+      final data = res.data;
+      if (data != null && data['success'] == false) {
+        throw ServerException(
+          data['message'] as String? ?? 'Could not delete conversation',
+        );
+      }
+    } on DioException catch (e) {
+      final msg = e.response?.data is Map
+          ? (e.response!.data as Map)['message']?.toString()
+          : null;
+      throw ServerException(msg ?? 'Could not delete conversation');
+    }
+  }
+
+  Future<void> _postInboxFlag(
+    ChatCredentials c,
+    int conversationId,
+    String action, {
+    String? Function()? socketId,
+  }) async {
+    final dio = _chatDio(c, socketId: socketId);
+    try {
+      final res = await dio.post<Map<String, dynamic>>(
+        'api/v1/conversations/$conversationId/$action',
+      );
+      final data = res.data;
+      if (data == null || data['success'] != true) {
+        throw ServerException(
+          data?['message'] as String? ?? 'Could not update conversation',
+        );
+      }
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 501) {
+        throw const ServerException('Pin/archive is disabled');
+      }
+      final msg = e.response?.data is Map
+          ? (e.response!.data as Map)['message']?.toString()
+          : null;
+      throw ServerException(msg ?? 'Could not update conversation');
+    }
+  }
+
   /// Downloads a remote URL then uploads as attachment (never as plain text link).
   Future<ChatMessage> uploadMessageFromRemoteReference(
     ChatCredentials c,
@@ -772,6 +865,10 @@ final class ChatRepository {
       updatedAt: m['updated_at'] as String? ?? m['updatedAt'] as String?,
       lastMessage: last is Map<String, dynamic> ? _parseMessage(last) : null,
       participants: _parseParticipants(m['participants']),
+      isPinned: m['is_pinned'] == true || m['isPinned'] == true,
+      isArchived: m['is_archived'] == true || m['isArchived'] == true,
+      pinnedAt: m['pinned_at'] as String? ?? m['pinnedAt'] as String?,
+      archivedAt: m['archived_at'] as String? ?? m['archivedAt'] as String?,
     );
   }
 

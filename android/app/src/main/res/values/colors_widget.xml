@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="wayo_widget_bg">#0A0A0A</color>
+    <color name="wayo_widget_surface">#141414</color>
+    <color name="wayo_widget_orange">#F47A1F</color>
+    <color name="wayo_widget_orange_soft">#33F47A1F</color>
+    <color name="wayo_widget_text">#FAFAFA</color>
+    <color name="wayo_widget_muted">#8B90A0</color>
+    <color name="wayo_widget_border">#2A2A2A</color>
+</resources>

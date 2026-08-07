@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../../i18n/strings.g.dart';
+import '../../../../core/ui/wayo_popup_menu.dart';
 import '../formatting/chat_partner_role.dart';
 import '../formatting/chat_unread_badge_label.dart';
 import '../theme/premium_chat_tokens.dart';
@@ -41,8 +43,12 @@ class PremiumConversationCard extends StatefulWidget {
     this.typingName,
     this.onTap,
     this.onLongPress,
+    this.onPin,
+    this.onArchive,
+    this.onDelete,
     this.verified = false,
     this.partnerRole,
+    this.isArchived = false,
   });
 
   final String title;
@@ -59,11 +65,15 @@ class PremiumConversationCard extends StatefulWidget {
   final bool typing;
   final String? typingName;
   final bool verified;
+  final bool isArchived;
 
   /// Role badge (Creator / Advertiser) shown next to the title; null hides it.
   final ChatPartnerRole? partnerRole;
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
+  final VoidCallback? onPin;
+  final VoidCallback? onArchive;
+  final VoidCallback? onDelete;
 
   @override
   State<PremiumConversationCard> createState() =>
@@ -93,7 +103,7 @@ class _PremiumConversationCardState extends State<PremiumConversationCard>
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 220),
           curve: Curves.easeOutCubic,
-          margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+          margin: const EdgeInsets.symmetric(vertical: 2, horizontal: 2),
           decoration: BoxDecoration(
             borderRadius: radius,
             boxShadow: _pressed
@@ -179,7 +189,7 @@ class _PremiumConversationCardState extends State<PremiumConversationCard>
                     splashColor: p.accentWarm.withValues(alpha: 0.1),
                     highlightColor: p.accentWarm.withValues(alpha: 0.06),
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(12, 11, 14, 11),
+                      padding: const EdgeInsets.fromLTRB(10, 7, 8, 7),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
@@ -188,9 +198,9 @@ class _PremiumConversationCardState extends State<PremiumConversationCard>
                             imageUrl: widget.avatarUrl,
                             online: widget.online,
                             unread: hasUnread,
-                            size: 48,
+                            size: 40,
                           ),
-                          const SizedBox(width: 12),
+                          const SizedBox(width: 10),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -248,25 +258,102 @@ class _PremiumConversationCardState extends State<PremiumConversationCard>
                                         ],
                                       ),
                                     ),
-                                    const SizedBox(width: 8),
+                                    const SizedBox(width: 4),
                                     SizedBox(
-                                      width: 64,
-                                      child: Text(
-                                        widget.time,
-                                        maxLines: 1,
-                                        textAlign: TextAlign.right,
-                                        softWrap: false,
-                                        overflow: TextOverflow.visible,
-                                        style: GoogleFonts.inter(
-                                          fontSize: 11,
-                                          fontWeight: hasUnread
-                                              ? FontWeight.w700
-                                              : FontWeight.w500,
-                                          color: hasUnread
-                                              ? p.accentWarm
-                                              : p.textTertiary,
-                                          letterSpacing: 0.1,
-                                        ),
+                                      width: 88,
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.end,
+                                        children: [
+                                          Flexible(
+                                            child: Text(
+                                              widget.time,
+                                              maxLines: 1,
+                                              textAlign: TextAlign.right,
+                                              softWrap: false,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: GoogleFonts.inter(
+                                                fontSize: 11,
+                                                fontWeight: hasUnread
+                                                    ? FontWeight.w700
+                                                    : FontWeight.w500,
+                                                color: hasUnread
+                                                    ? p.accentWarm
+                                                    : p.textTertiary,
+                                                letterSpacing: 0.1,
+                                              ),
+                                            ),
+                                          ),
+                                          if (widget.onPin != null ||
+                                              widget.onArchive != null ||
+                                              widget.onDelete != null)
+                                            PopupMenuButton<String>(
+                                              padding: EdgeInsets.zero,
+                                              iconSize: 18,
+                                              tooltip: context.t.chat.menu_more,
+                                              offset: const Offset(0, 8),
+                                              shape: WayoPopupMenu.shape(
+                                                context,
+                                              ),
+                                              color: WayoPopupMenu.color(
+                                                context,
+                                              ),
+                                              elevation: 10,
+                                              icon: Icon(
+                                                Icons.more_vert_rounded,
+                                                size: 18,
+                                                color: p.textTertiary,
+                                              ),
+                                              onSelected: (value) {
+                                                HapticFeedback.selectionClick();
+                                                if (value == 'pin') {
+                                                  widget.onPin?.call();
+                                                } else if (value == 'archive') {
+                                                  widget.onArchive?.call();
+                                                } else if (value == 'delete') {
+                                                  widget.onDelete?.call();
+                                                }
+                                              },
+                                              itemBuilder: (context) {
+                                                final t = context.t;
+                                                return [
+                                                  if (widget.onPin != null)
+                                                    wayoPopupMenuItem(
+                                                      value: 'pin',
+                                                      icon: widget.pinned
+                                                          ? Icons
+                                                              .push_pin_outlined
+                                                          : Icons
+                                                              .push_pin_rounded,
+                                                      label: widget.pinned
+                                                          ? t.chat.menu_unpin
+                                                          : t.chat.menu_pin,
+                                                    ),
+                                                  if (widget.onArchive != null)
+                                                    wayoPopupMenuItem(
+                                                      value: 'archive',
+                                                      icon: widget.isArchived
+                                                          ? Icons
+                                                              .unarchive_rounded
+                                                          : Icons
+                                                              .archive_rounded,
+                                                      label: widget.isArchived
+                                                          ? t.chat
+                                                              .menu_unarchive
+                                                          : t.chat.menu_archive,
+                                                    ),
+                                                  if (widget.onDelete != null)
+                                                    wayoPopupMenuItem(
+                                                      value: 'delete',
+                                                      icon: Icons
+                                                          .delete_outline_rounded,
+                                                      label: t.chat.menu_delete,
+                                                      destructive: true,
+                                                    ),
+                                                ];
+                                              },
+                                            ),
+                                        ],
                                       ),
                                     ),
                                   ],

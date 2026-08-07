@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:wayoadsgo/core/ui/wayo_dialog.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -131,9 +132,9 @@ class _WithdrawalTileState extends ConsumerState<_WithdrawalTile> {
 
   Future<void> _confirmAndCancel() async {
     final t = context.t;
-    final ok = await showDialog<bool>(
+    final ok = await showWayoDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
+      builder: (ctx) => WayoAlertDialog(
         title: Text(t.creator.wallet.cancel_dialog_title),
         content: Text(t.creator.wallet.cancel_dialog_message),
         actions: [

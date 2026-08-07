@@ -2,8 +2,10 @@ import 'dart:io' show Platform;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 
+import '../../../core/platform/android_window_insets.dart';
 import '../../../core/stripe/stripe_mobile_config.dart';
 
 /// Thin wrapper around [Stripe] for the advertiser wallet deposit flow.
@@ -38,35 +40,142 @@ final class AdvertiserStripeDeposit {
     await Stripe.instance.applySettings();
   }
 
+  /// Stripe Link / Payment Sheet draw under the Android nav bar when
+  /// MainActivity is edge-to-edge (`setDecorFitsSystemWindows(false)`).
+  /// [SystemChrome] alone does not flip that flag — we toggle it natively.
+  /// Failures here must never abort ACH/card present (native crash risk).
+  static Future<T> _withNavBarSafeChrome<T>(Future<T> Function() action) async {
+    final android = !kIsWeb && Platform.isAndroid;
+    if (android) {
+      try {
+        await AndroidWindowInsets.setDecorFitsSystemWindows(true);
+        await SystemChrome.setEnabledSystemUIMode(
+          SystemUiMode.manual,
+          overlays: SystemUiOverlay.values,
+        );
+        SystemChrome.setSystemUIOverlayStyle(
+          const SystemUiOverlayStyle(
+            systemNavigationBarColor: Colors.black,
+            systemNavigationBarDividerColor: Colors.black,
+            systemNavigationBarIconBrightness: Brightness.light,
+            systemNavigationBarContrastEnforced: true,
+            statusBarColor: Colors.transparent,
+          ),
+        );
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+      } catch (e) {
+        if (kDebugMode) {
+          debugPrint('[Stripe] nav-bar chrome prepare failed: $e');
+        }
+      }
+    }
+    try {
+      return await action();
+    } finally {
+      if (android) {
+        try {
+          await AndroidWindowInsets.setDecorFitsSystemWindows(false);
+          await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+        } catch (e) {
+          if (kDebugMode) {
+            debugPrint('[Stripe] nav-bar chrome restore failed: $e');
+          }
+        }
+      }
+    }
+  }
+
+  static PaymentSheetAppearance get _appearance => PaymentSheetAppearance(
+        colors: PaymentSheetAppearanceColors(
+          primary: const Color(0xFFF4A237),
+          componentBackground: const Color(0xFF1C1C1E),
+          componentText: Colors.white,
+          primaryText: Colors.white,
+          placeholderText: const Color(0xFF8E8E93),
+          icon: const Color(0xFFF4A237),
+          error: const Color(0xFFFF4D4D),
+        ),
+        shapes: const PaymentSheetShape(borderRadius: 16),
+      );
+
   /// Card-only Payment Sheet for a one-off wallet top-up (no in-app card storage).
   static Future<void> presentCardPaymentSheet({
     required String clientSecret,
     required String currency,
+  }) =>
+      _withNavBarSafeChrome(() async {
+        await Stripe.instance.initPaymentSheet(
+          paymentSheetParameters: SetupPaymentSheetParameters(
+            paymentIntentClientSecret: clientSecret,
+            merchantDisplayName: 'Wayo Ads',
+            style: ThemeMode.system,
+            appearance: _appearance,
+            // iOS: required for 3DS / redirect PMs (Stripe native maps `{scheme}://safepay`).
+            // Without this, Payment Sheet often works on Android but fails on iOS after authentication.
+            returnURL: Platform.isIOS ? '$kStripeUrlScheme://safepay' : null,
+          ),
+        );
+        await Stripe.instance.presentPaymentSheet();
+      });
+
+  /// ACH (`us_bank_account`) Payment Sheet — mirrors web Payment Element for ACH.
+  ///
+  /// Must use [allowsDelayedPaymentMethods]; ACH PIs are not card-capable, so the
+  /// card-only sheet fails. Settlement is async (1–3 business days).
+  static Future<void> presentAchPaymentSheet({
+    required String clientSecret,
+  }) =>
+      _withNavBarSafeChrome(() async {
+        await Stripe.instance.initPaymentSheet(
+          paymentSheetParameters: SetupPaymentSheetParameters(
+            paymentIntentClientSecret: clientSecret,
+            merchantDisplayName: 'Wayo Ads',
+            style: ThemeMode.system,
+            appearance: _appearance,
+            allowsDelayedPaymentMethods: true,
+            returnURL: Platform.isIOS ? '$kStripeUrlScheme://safepay' : null,
+          ),
+        );
+        await Stripe.instance.presentPaymentSheet();
+      });
+
+  static String? get _iosReturnUrl =>
+      Platform.isIOS ? '$kStripeUrlScheme://safepay' : null;
+
+  /// One-click pay with a saved Stripe payment method id.
+  ///
+  /// On iOS, 3DS may return [PaymentIntentsStatus.RequiresAction] — without
+  /// [handleNextAction] + return URL the UI spins forever (no Payment Sheet).
+  static Future<void> confirmSavedCard({
+    required String clientSecret,
+    required String paymentMethodId,
   }) async {
-    final appearance = PaymentSheetAppearance(
-      colors: PaymentSheetAppearanceColors(
-        primary: const Color(0xFFF4A237),
-        componentBackground: const Color(0xFF1C1C1E),
-        componentText: Colors.white,
-        primaryText: Colors.white,
-        placeholderText: const Color(0xFF8E8E93),
-        icon: const Color(0xFFF4A237),
-        error: const Color(0xFFFF4D4D),
-      ),
-      shapes: const PaymentSheetShape(borderRadius: 16),
-    );
-    await Stripe.instance.initPaymentSheet(
-      paymentSheetParameters: SetupPaymentSheetParameters(
-        paymentIntentClientSecret: clientSecret,
-        merchantDisplayName: 'Wayo Ads',
-        style: ThemeMode.system,
-        appearance: appearance,
-        // iOS: required for 3DS / redirect PMs (Stripe native maps `{scheme}://safepay`).
-        // Without this, Payment Sheet often works on Android but fails on iOS after authentication.
-        returnURL: Platform.isIOS ? '$kStripeUrlScheme://safepay' : null,
+    var paymentIntent = await Stripe.instance.confirmPayment(
+      paymentIntentClientSecret: clientSecret,
+      data: PaymentMethodParams.cardFromMethodId(
+        paymentMethodData: PaymentMethodDataCardFromMethod(
+          paymentMethodId: paymentMethodId,
+        ),
       ),
     );
-    await Stripe.instance.presentPaymentSheet();
+
+    if (paymentIntent.status == PaymentIntentsStatus.RequiresAction) {
+      paymentIntent = await Stripe.instance.handleNextAction(
+        clientSecret,
+        returnURL: _iosReturnUrl,
+      );
+    }
+
+    if (paymentIntent.status != PaymentIntentsStatus.Succeeded &&
+        paymentIntent.status != PaymentIntentsStatus.Processing) {
+      throw StripeException(
+        error: LocalizedErrorMessage(
+          code: FailureCode.Failed,
+          localizedMessage:
+              'Payment was not completed (${paymentIntent.status.name}).',
+        ),
+      );
+    }
   }
 
   /// Apple Pay — iOS with a configured [kStripeAppleMerchantId].
@@ -144,7 +253,8 @@ final class AdvertiserStripeDeposit {
   static Future<void> confirmWithGooglePay({
     required String clientSecret,
     required String currency,
-  }) async {
+  }) =>
+      _withNavBarSafeChrome(() async {
     if (!Platform.isAndroid) {
       throw const _PlatformPayUnavailable();
     }
@@ -160,7 +270,7 @@ final class AdvertiserStripeDeposit {
         ),
       ),
     );
-  }
+      });
 
   /// True for the common "user closed the sheet / cancelled the wallet" exceptions.
   static bool isUserCancelled(Object error) {

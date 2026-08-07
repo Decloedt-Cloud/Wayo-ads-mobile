@@ -36,21 +36,32 @@ String _invoicesErrorDebugText(Object error) {
 /// Invoices tab — role-aware (advertiser or creator endpoint), with hero KPI,
 /// segmented filters, animated card grid, server pagination (prev/next),
 /// pull-to-refresh and 60s foreground polling.
+///
+/// [standalone] — deep-link / settings host (`/creator/payouts`) with back chrome.
 class InvoicesTabScreen extends StatelessWidget {
-  const InvoicesTabScreen({super.key});
+  const InvoicesTabScreen({super.key, this.standalone = false});
+
+  final bool standalone;
 
   @override
   Widget build(BuildContext context) {
     return ShellTabSignedInGate(
-      builder: (context, ref, AppUser user) => _InvoicesTabBody(user: user),
+      builder: (context, ref, AppUser user) => _InvoicesTabBody(
+        user: user,
+        standalone: standalone,
+      ),
     );
   }
 }
 
 class _InvoicesTabBody extends ConsumerStatefulWidget {
-  const _InvoicesTabBody({required this.user});
+  const _InvoicesTabBody({
+    required this.user,
+    this.standalone = false,
+  });
 
   final AppUser user;
+  final bool standalone;
 
   @override
   ConsumerState<_InvoicesTabBody> createState() => _InvoicesTabBodyState();
@@ -177,6 +188,13 @@ class _InvoicesTabBodyState extends ConsumerState<_InvoicesTabBody>
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      appBar: widget.standalone
+          ? AppBar(
+              title: Text(pageTitle),
+              backgroundColor: Colors.transparent,
+              surfaceTintColor: Colors.transparent,
+            )
+          : null,
       body: SafeArea(
         bottom: false,
         child: RefreshIndicator(
@@ -194,34 +212,36 @@ class _InvoicesTabBodyState extends ConsumerState<_InvoicesTabBody>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Padding(
-                        padding: const EdgeInsets.only(top: 4, bottom: 4),
-                        child: Text(
-                          pageTitle,
-                          style: AppTextStyles.pageTitle(context),
+                      if (!widget.standalone) ...[
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4, bottom: 4),
+                          child: Text(
+                            pageTitle,
+                            style: AppTextStyles.pageTitle(context),
+                          ),
+                        ),
+                      ],
+                      Text(
+                        subtitle,
+                        style: AppTextStyles.bodyLarge(context).copyWith(
+                          height: 1.45,
                         ),
                       ),
-                    Text(
-                      subtitle,
-                      style: AppTextStyles.bodyLarge(context).copyWith(
-                        height: 1.45,
-                      ),
-                    ),
-                    const SizedBox(height: 18),
-                    InvoicesHeroKpi(role: role, isLive: isPolling),
-                    const SizedBox(height: 16),
-                    InvoiceFilterBar(role: role),
-                    if (invoicesUsePagedList(role)) ...[
-                      const SizedBox(height: 8),
-                      const InvoiceDateFilterBar(),
+                      const SizedBox(height: 18),
+                      InvoicesHeroKpi(role: role, isLive: isPolling),
+                      const SizedBox(height: 16),
+                      InvoiceFilterBar(role: role),
+                      if (invoicesUsePagedList(role)) ...[
+                        const SizedBox(height: 8),
+                        const InvoiceDateFilterBar(),
+                      ],
+                      const InvoiceAdvertiserToolbar(),
+                      const SizedBox(height: 4),
                     ],
-                    const InvoiceAdvertiserToolbar(),
-                    const SizedBox(height: 4),
-                  ],
+                  ),
                 ),
               ),
-            ),
-            ...state.when(
+              ...state.when(
               loading: () => [_buildSkeletonList(context)],
               error: (e, _) => [_buildError(context, e)],
               data: (s) {

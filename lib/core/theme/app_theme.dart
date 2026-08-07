@@ -84,6 +84,70 @@ abstract final class AppTheme {
           borderRadius: BorderRadius.circular(16),
         ),
       ),
+      // Premium baseline for every [AlertDialog] / [Dialog] (WayoAlertDialog
+      // adds icon badge + action button polish on top of this).
+      dialogTheme: DialogThemeData(
+        backgroundColor: brightness == Brightness.dark
+            ? const Color(0xFF1C1816)
+            : const Color(0xFFFFFBF8),
+        surfaceTintColor: Colors.transparent,
+        elevation: 28,
+        shadowColor: Colors.black.withValues(
+          alpha: brightness == Brightness.dark ? 0.55 : 0.22,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(28),
+          side: BorderSide(
+            color: (brightness == Brightness.dark ? Colors.white : Colors.black)
+                .withValues(alpha: 0.06),
+          ),
+        ),
+        titleTextStyle: GoogleFonts.sora(
+          fontSize: 18,
+          fontWeight: FontWeight.w700,
+          letterSpacing: -0.3,
+          height: 1.25,
+          color: onSurface,
+        ),
+        contentTextStyle: GoogleFonts.dmSans(
+          fontSize: 14.5,
+          fontWeight: FontWeight.w500,
+          height: 1.45,
+          color: brightness == Brightness.dark
+              ? AppColors.textSecondary
+              : const Color(0xFF525252),
+        ),
+        actionsPadding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+        insetPadding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: brightness == Brightness.dark
+              ? AppColors.textSecondary
+              : const Color(0xFF525252),
+          textStyle: GoogleFonts.sora(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+        ),
+      ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          backgroundColor: AppColors.primary,
+          foregroundColor: Colors.white,
+          textStyle: GoogleFonts.sora(
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+          elevation: 0,
+        ),
+      ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: fill,

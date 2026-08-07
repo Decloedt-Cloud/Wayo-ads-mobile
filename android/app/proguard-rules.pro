@@ -27,8 +27,13 @@
 -keep class io.flutter.** { *; }
 -dontwarn io.flutter.**
 
-## App package (MethodChannels, native entrypoints).
+## App package (MethodChannels, native entrypoints, AppWidgets).
 -keep class ma.wayo.** { *; }
+
+## home_widget bridge used by OS AppWidgetProviders.
+-keep class es.antonborri.home_widget.** { *; }
+-dontwarn es.antonborri.home_widget.**
+-dontwarn androidx.glance.**
 
 ## Firebase / FCM
 -keep class com.google.firebase.** { *; }

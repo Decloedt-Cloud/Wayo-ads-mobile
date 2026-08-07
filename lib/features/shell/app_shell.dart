@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/providers/app_providers.dart';
+import '../../core/riverpod/defer_after_build.dart';
 import '../../core/storage/app_prefs.dart';
 import '../../i18n/strings.g.dart';
 import '../account_deletion/presentation/providers/account_deletion_providers.dart';
@@ -119,9 +120,12 @@ class _AppShellState extends ConsumerState<AppShell>
   }
 
   void _syncShellTabIndex() {
-    if (!mounted) return;
-    ref.read(shellCurrentIndexProvider.notifier).state =
-        widget.navigationShell.currentIndex;
+    deferAfterBuild(() {
+      if (!mounted) return;
+      final next = widget.navigationShell.currentIndex;
+      if (ref.read(shellCurrentIndexProvider) == next) return;
+      ref.read(shellCurrentIndexProvider.notifier).state = next;
+    });
   }
 
   @override

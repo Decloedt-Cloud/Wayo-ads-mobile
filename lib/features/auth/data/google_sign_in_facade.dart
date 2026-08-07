@@ -30,13 +30,17 @@ final class GoogleSignInFacade {
 
   /// Clears cached Google account so the next [signIn] shows the account picker.
   ///
-  /// [disconnect] is Android-only — on iOS it can abort the process when no
-  /// prior Google session exists. [signOut] is enough to show the account picker.
-  static Future<void> _clearGoogleSession(GoogleSignIn google) async {
+  /// Prefer [signOut] only before interactive sign-in. [disconnect] revokes the
+  /// grant and can leave Android without an [idToken] on the immediate next
+  /// [signIn] (SignInHub returns an account with a null token).
+  static Future<void> _clearGoogleSession(
+    GoogleSignIn google, {
+    bool disconnect = false,
+  }) async {
     try {
       await google.signOut();
     } catch (_) {}
-    if (defaultTargetPlatform != TargetPlatform.android) {
+    if (!disconnect || defaultTargetPlatform != TargetPlatform.android) {
       return;
     }
     try {
@@ -56,7 +60,7 @@ final class GoogleSignInFacade {
     }
     try {
       final client = _client ?? _buildClient(cid);
-      await _clearGoogleSession(client);
+      await _clearGoogleSession(client, disconnect: true);
     } catch (_) {
       // Non-fatal: user may not have signed in with Google this session.
     } finally {
@@ -93,7 +97,19 @@ final class GoogleSignInFacade {
     return combined.contains('ApiException: 10');
   }
 
-  /// Returns Google [id_token] for the signed-in account, or `null` if cancelled / no token.
+  /// Account picker returned a user but no OpenID [idToken] (almost always a
+  /// wrong [serverClientId] — must be the Google Cloud **Web** client).
+  static bool isMissingIdTokenError(Object e) {
+    final s = e.toString();
+    return s.contains('GoogleIdTokenMissing') ||
+        s.contains('id_token missing') ||
+        s.contains('idToken missing');
+  }
+
+  /// Returns Google [id_token] for the signed-in account, or `null` if cancelled.
+  ///
+  /// Throws when Google returns an account without an ID token (misconfigured
+  /// Web client id) so the UI can show an error instead of failing silently.
   static Future<String?> signInForIdToken(String serverClientId) async {
     await SchedulerBinding.instance.endOfFrame;
     await Future<void>.delayed(const Duration(milliseconds: 32));
@@ -109,7 +125,11 @@ final class GoogleSignInFacade {
       final auth = await account.authentication;
       final id = auth.idToken;
       if (id == null || id.isEmpty) {
-        return null;
+        throw StateError(
+          'GoogleIdTokenMissing: id_token empty after sign-in. '
+          'AUTH_GOOGLE_SERVER_CLIENT_ID must be the Google Cloud Web client ID '
+          '(same as Auth_Wayo GOOGLE_CLIENT_ID), not the Android client.',
+        );
       }
       return id;
     }

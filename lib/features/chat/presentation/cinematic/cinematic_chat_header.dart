@@ -4,6 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../../core/ui/wayo_popup_menu.dart';
 import '../../../../i18n/strings.g.dart';
 import '../formatting/chat_partner_role.dart';
 import '../widgets/chat_role_badge.dart';
@@ -28,6 +29,7 @@ class CinematicChatHeaderDelegate extends SliverPersistentHeaderDelegate {
     required this.topSafeInset,
     this.partnerAvatarUrl = '',
     this.partnerRole,
+    this.onDeleteConversation,
   });
 
   final String headerTitle;
@@ -43,15 +45,24 @@ class CinematicChatHeaderDelegate extends SliverPersistentHeaderDelegate {
   /// Resolved URL ([resolveChatMediaUrl]); empty = monogram in avatar.
   final String partnerAvatarUrl;
 
+  /// Opens delete-conversation flow (mobile-only; web deletes from inbox).
+  final VoidCallback? onDeleteConversation;
+
   /// Must match [MediaQuery.paddingOf(context).top] so the sliver height includes
   /// the status bar inset (otherwise inner height ≈ minExtent − inset and overflows).
   final double topSafeInset;
 
-  @override
-  double get minExtent => 56 + topSafeInset;
+  /// Collapsed content budget (below status bar). Title + role badge + status
+  /// pill used to sit at ~50.6px vs a 50px budget → "BOTTOM OVERFLOWED BY 0.6".
+  static const double _collapsedBody = 62;
+  static const double _expandedBody = 108;
+  static const double _bottomPad = 4;
 
   @override
-  double get maxExtent => 108 + topSafeInset;
+  double get minExtent => _collapsedBody + topSafeInset;
+
+  @override
+  double get maxExtent => _expandedBody + topSafeInset;
 
   @override
   Widget build(
@@ -68,6 +79,7 @@ class CinematicChatHeaderDelegate extends SliverPersistentHeaderDelegate {
     final u = Curves.easeOutExpo.transform(t.clamp(0.0, 1.0));
     final avatar = 64.0 - (64.0 - 36.0) * u;
     final titleSize = 22.0 - (22.0 - 14.0) * u;
+    final bodyHeight = (extent - topSafeInset - _bottomPad).clamp(0.0, double.infinity);
     return SizedBox(
       height: extent,
       child: Material(
@@ -76,62 +88,102 @@ class CinematicChatHeaderDelegate extends SliverPersistentHeaderDelegate {
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
             child: Padding(
-              padding: EdgeInsets.fromLTRB(4, topSafeInset, 12, 6),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  IconButton(
-                    onPressed: onBack,
-                    icon: Icon(
-                      Icons.arrow_back_ios_new_rounded,
-                      color: ct.textPrimary,
+              padding: EdgeInsets.fromLTRB(4, topSafeInset, 12, _bottomPad),
+              child: SizedBox(
+                height: bodyHeight,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    IconButton(
+                      onPressed: onBack,
+                      visualDensity: VisualDensity.compact,
+                      style: IconButton.styleFrom(
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        minimumSize: const Size(40, 40),
+                        padding: const EdgeInsets.all(8),
+                      ),
+                      icon: Icon(
+                        Icons.arrow_back_ios_new_rounded,
+                        color: ct.textPrimary,
+                      ),
                     ),
-                  ),
-                  _AvatarRing(
-                    letter: titleLetter,
-                    diameter: avatar,
-                    typing: typing,
-                    imageUrl: partnerAvatarUrl,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Flexible(
-                              child: Text(
-                                headerTitle,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: GoogleFonts.outfit(
-                                  fontSize: titleSize,
-                                  fontWeight: FontWeight.w700,
-                                  color: ct.textPrimary,
-                                  height: 1.1,
+                    _AvatarRing(
+                      letter: titleLetter,
+                      diameter: avatar,
+                      typing: typing,
+                      imageUrl: partnerAvatarUrl,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Row(
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  headerTitle,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: GoogleFonts.outfit(
+                                    fontSize: titleSize,
+                                    fontWeight: FontWeight.w700,
+                                    color: ct.textPrimary,
+                                    height: 1.05,
+                                  ),
                                 ),
                               ),
-                            ),
-                            if (partnerRole != null) ...[
-                              const SizedBox(width: 8),
-                              ChatRoleBadge(role: partnerRole!),
+                              if (partnerRole != null) ...[
+                                const SizedBox(width: 8),
+                                ChatRoleBadge(
+                                  role: partnerRole!,
+                                  compact: u > 0.55,
+                                ),
+                              ],
                             ],
-                          ],
-                        ),
-                        SizedBox(height: u > 0.92 ? 2 : 4),
-                        _StatusPill(
-                          typing: typing,
-                          online: partnerOnline,
-                          line: statusLine,
-                        ),
-                      ],
+                          ),
+                          SizedBox(height: u > 0.92 ? 1 : 3),
+                          _StatusPill(
+                            typing: typing,
+                            online: partnerOnline,
+                            line: statusLine,
+                            compact: u > 0.55,
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                    if (onDeleteConversation != null)
+                      PopupMenuButton<String>(
+                        tooltip: context.t.chat.menu_more,
+                        offset: const Offset(0, 8),
+                        shape: WayoPopupMenu.shape(context),
+                        color: WayoPopupMenu.color(context),
+                        elevation: 10,
+                        icon: Icon(
+                          Icons.more_vert_rounded,
+                          color: ct.textPrimary,
+                        ),
+                        onSelected: (value) {
+                          if (value == 'delete') {
+                            onDeleteConversation?.call();
+                          }
+                        },
+                        itemBuilder: (context) {
+                          final t = context.t;
+                          return [
+                            wayoPopupMenuItem(
+                              value: 'delete',
+                              icon: Icons.delete_outline_rounded,
+                              label: t.chat.menu_delete,
+                              destructive: true,
+                            ),
+                          ];
+                        },
+                      ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -150,7 +202,8 @@ class CinematicChatHeaderDelegate extends SliverPersistentHeaderDelegate {
       oldDelegate.titleLetter != titleLetter ||
       oldDelegate.onBack != onBack ||
       oldDelegate.partnerAvatarUrl != partnerAvatarUrl ||
-      oldDelegate.partnerRole != partnerRole;
+      oldDelegate.partnerRole != partnerRole ||
+      oldDelegate.onDeleteConversation != onDeleteConversation;
 }
 
 class _AvatarRing extends StatefulWidget {
@@ -294,11 +347,13 @@ class _StatusPill extends StatelessWidget {
     required this.typing,
     required this.online,
     required this.line,
+    this.compact = false,
   });
 
   final bool typing;
   final bool online;
   final String line;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
@@ -310,7 +365,10 @@ class _StatusPill extends StatelessWidget {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeOutCubic,
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: EdgeInsets.symmetric(
+        horizontal: compact ? 8 : 10,
+        vertical: compact ? 2 : 3,
+      ),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(99),
         color: ct.textPrimary.withValues(
@@ -331,7 +389,8 @@ class _StatusPill extends StatelessWidget {
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: GoogleFonts.inter(
-          fontSize: 11,
+          fontSize: compact ? 10.5 : 11,
+          height: 1.1,
           fontWeight: FontWeight.w600,
           color: typing
               ? ct.amber

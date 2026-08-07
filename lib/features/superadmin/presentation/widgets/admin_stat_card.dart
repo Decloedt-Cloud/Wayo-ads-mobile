@@ -173,7 +173,7 @@ class AdminStatCard extends StatelessWidget {
                     fontSize: 12,
                     color: AppColors.textMutedOf(context),
                   ),
-                  maxLines: 1,
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
               ],

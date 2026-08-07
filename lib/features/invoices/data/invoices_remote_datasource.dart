@@ -53,6 +53,27 @@ abstract interface class InvoicesRemote {
     required String locale,
     void Function(int received, int total)? onProgress,
   });
+
+  /// POST `/api/advertiser/invoices/zip` — ZIP of invoice PDFs for [ids].
+  Future<Uint8List> fetchAdvertiserInvoicesZip(
+    List<String> ids, {
+    required String locale,
+    void Function(int received, int total)? onProgress,
+  });
+
+  /// POST `/api/creator/payouts/zip` — ZIP of payout PDFs ([ids] = withdrawal IDs).
+  Future<Uint8List> fetchCreatorPayoutsZip(
+    List<String> ids, {
+    required String locale,
+    void Function(int received, int total)? onProgress,
+  });
+
+  /// POST `/api/creator/invoices/zip` — ZIP of creator invoice PDFs for [ids].
+  Future<Uint8List> fetchCreatorInvoicesZip(
+    List<String> ids, {
+    required String locale,
+    void Function(int received, int total)? onProgress,
+  });
 }
 
 final class InvoicesRemoteDatasource implements InvoicesRemote {
@@ -545,14 +566,7 @@ final class InvoicesRemoteDatasource implements InvoicesRemote {
       options: Options(responseType: ResponseType.bytes),
       onReceiveProgress: onProgress,
     );
-    final data = res.data;
-    if (data is Uint8List) {
-      return data;
-    }
-    if (data is List<int>) {
-      return Uint8List.fromList(data);
-    }
-    throw const FormatException('Invoice PDF: expected binary body');
+    return _requireBytes(res.data, label: 'Invoice PDF');
   }
 
   @override
@@ -569,13 +583,88 @@ final class InvoicesRemoteDatasource implements InvoicesRemote {
       options: Options(responseType: ResponseType.bytes),
       onReceiveProgress: onProgress,
     );
-    final data = res.data;
+    return _requireBytes(res.data, label: 'Payout PDF');
+  }
+
+  @override
+  Future<Uint8List> fetchAdvertiserInvoicesZip(
+    List<String> ids, {
+    required String locale,
+    void Function(int received, int total)? onProgress,
+  }) =>
+      _postZip(
+        ApiEndpoints.advertiserInvoicesZip,
+        ids: ids,
+        locale: locale,
+        onProgress: onProgress,
+        label: 'Advertiser invoices ZIP',
+      );
+
+  @override
+  Future<Uint8List> fetchCreatorPayoutsZip(
+    List<String> ids, {
+    required String locale,
+    void Function(int received, int total)? onProgress,
+  }) =>
+      _postZip(
+        ApiEndpoints.creatorPayoutsZip,
+        ids: ids,
+        locale: locale,
+        onProgress: onProgress,
+        label: 'Creator payouts ZIP',
+      );
+
+  @override
+  Future<Uint8List> fetchCreatorInvoicesZip(
+    List<String> ids, {
+    required String locale,
+    void Function(int received, int total)? onProgress,
+  }) =>
+      _postZip(
+        ApiEndpoints.creatorInvoicesZip,
+        ids: ids,
+        locale: locale,
+        onProgress: onProgress,
+        label: 'Creator invoices ZIP',
+      );
+
+  Future<Uint8List> _postZip(
+    String endpoint, {
+    required List<String> ids,
+    required String locale,
+    void Function(int received, int total)? onProgress,
+    required String label,
+  }) async {
+    final cleanIds = ids
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toList(growable: false);
+    if (cleanIds.isEmpty) {
+      throw const FormatException('ZIP download: no IDs provided');
+    }
+
+    final res = await _dio.post<Object?>(
+      AuthRuntimeConfig.instance.wayoAdsRequestPath(endpoint),
+      data: <String, dynamic>{
+        'ids': cleanIds,
+        'locale': locale,
+      },
+      options: Options(
+        responseType: ResponseType.bytes,
+        contentType: Headers.jsonContentType,
+      ),
+      onReceiveProgress: onProgress,
+    );
+    return _requireBytes(res.data, label: label);
+  }
+
+  static Uint8List _requireBytes(Object? data, {required String label}) {
     if (data is Uint8List) {
       return data;
     }
     if (data is List<int>) {
       return Uint8List.fromList(data);
     }
-    throw const FormatException('Payout PDF: expected binary body');
+    throw FormatException('$label: expected binary body');
   }
 }

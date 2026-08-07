@@ -27,6 +27,7 @@ import '../maintenance/maintenance_recovery_hub.dart';
 import '../maintenance/maintenance_service.dart';
 import 'wayo_background_chat_quick_reply.dart';
 import 'push_registration_debug.dart';
+import 'push_registration_lifecycle.dart';
 import 'user_push_notifications_preference.dart';
 import 'account_deletion_refresh_hub.dart';
 import 'wayo_push_intent.dart';
@@ -63,13 +64,15 @@ void logPushLifecycle(
 }
 
 typedef FcmTokenBackendRegistrationCallback = Future<void> Function(
-  String token,
-);
+  String token, {
+  PushRegisterReason reason,
+});
 
 FcmTokenBackendRegistrationCallback? _fcmTokenBackendRegistrationCallback;
 
 Timer? _pushRegistrationRetryTimer;
 var _pushRegistrationRetryCoalesced = false;
+var _pushRegistrationRetryForceHeal = false;
 
 /// When FCM rotates the device token, re-register with Wayo-ads (wired from [AuthNotifier]).
 void setFcmTokenBackendRegistrationCallback(
@@ -79,22 +82,33 @@ void setFcmTokenBackendRegistrationCallback(
 }
 
 /// Debounced backend re-register when FCM arrives before POST /api/user/push-device completes.
+///
+/// [forceHeal] also reopens a stuck registration gate (sticky suppress after logout races).
 void schedulePushRegistrationRetry({
   Duration delay = const Duration(seconds: 2),
+  bool forceHeal = false,
 }) {
+  if (forceHeal) {
+    _pushRegistrationRetryForceHeal = true;
+  }
   if (_pushRegistrationRetryCoalesced) return;
   _pushRegistrationRetryCoalesced = true;
   _pushRegistrationRetryTimer?.cancel();
   _pushRegistrationRetryTimer = Timer(delay, () {
     _pushRegistrationRetryCoalesced = false;
+    final heal = _pushRegistrationRetryForceHeal;
+    _pushRegistrationRetryForceHeal = false;
     final hook = _fcmTokenBackendRegistrationCallback;
     if (hook == null) {
       logPushLifecycle('register retry: skipped — no backend hook');
       return;
     }
-    logPushLifecycle('register retry: invoking backend sync');
+    final reason = heal
+        ? PushRegisterReason.forceHeal
+        : PushRegisterReason.tokenRefresh;
+    logPushLifecycle('register retry: invoking backend sync reason=${reason.name}');
     unawaited(
-      hook('').catchError((Object e, StackTrace st) {
+      hook('', reason: reason).catchError((Object e, StackTrace st) {
         _logPush(
           'register retry backend sync failed: $e',
           error: e,
@@ -218,6 +232,12 @@ Future<bool> shouldDeliverFcmData(Map<String, dynamic> data) async {
     return false;
   }
   if (await isPushExternalDeliverySuppressed()) {
+    // Sticky suppress after logout/disable races: heal instead of staying mute
+    // until the user toggles push. Still drop this payload (may be for prior session).
+    _logPush(
+      'FCM ignored — delivery suppressed; scheduling forceHeal re-register',
+    );
+    schedulePushRegistrationRetry(forceHeal: true);
     return false;
   }
   final registered = await readRegisteredPushWayoUserId();
@@ -231,12 +251,12 @@ Future<bool> shouldDeliverFcmData(Map<String, dynamic> data) async {
       'clearing stale id and scheduling register retry',
     );
     await clearRegisteredPushWayoUserId();
-    schedulePushRegistrationRetry();
+    schedulePushRegistrationRetry(forceHeal: true);
   } else if (registered == null) {
     _logPush(
       'FCM before push-device register — delivering and scheduling register retry',
     );
-    schedulePushRegistrationRetry();
+    schedulePushRegistrationRetry(forceHeal: true);
   }
   if (isCreatorYoutubeConnectFcmPayload(data)) {
     _logPush('FCM ignored — creator YouTube connect notification suppressed');
@@ -276,14 +296,28 @@ Future<void> resetPushDeliveryForAccountSwitch() async {
   await clearRegisteredPushWayoUserId();
 }
 
-/// Logout: block FCM until the next user re-registers successfully.
+/// Logout / unregister: block FCM delivery until the next user re-registers.
 Future<void> deactivatePushDelivery() async {
   await setPushExternalDeliverySuppressed(true);
   await clearRegisteredPushWayoUserId();
 }
 
-/// Revokes the FCM token on this device so Firebase stops routing to the old session.
-Future<void> revokeLocalFcmToken(AppPrefs prefs) async {
+/// Clears the locally cached FCM token string without rotating the Firebase
+/// installation token. Prefer this on logout to avoid onTokenRefresh races.
+Future<void> clearCachedFcmToken(AppPrefs prefs) async {
+  final p = await SharedPreferences.getInstance();
+  await p.remove(_kFcmTokenPrefKey);
+  await prefs.setString(_kFcmTokenPrefKey, '');
+  logPushLifecycle('[FCM] clearCachedFcmToken — local prefs only (no deleteToken)');
+}
+
+/// Rotates the Firebase installation token. Use only for explicit security
+/// reset / broken-token recovery — **not** normal logout.
+Future<void> revokeLocalFcmToken(
+  AppPrefs prefs, {
+  String reason = 'manual_reset',
+}) async {
+  logPushLifecycle('[FCM][DELETE_FIREBASE_TOKEN] reason=$reason');
   if (_firebaseCoreReady) {
     try {
       await FirebaseMessaging.instance.deleteToken();
@@ -292,9 +326,7 @@ Future<void> revokeLocalFcmToken(AppPrefs prefs) async {
     }
     _tokenRefreshAttached = false;
   }
-  final p = await SharedPreferences.getInstance();
-  await p.remove(_kFcmTokenPrefKey);
-  await prefs.setString(_kFcmTokenPrefKey, '');
+  await clearCachedFcmToken(prefs);
 }
 
 /// Clears tray notifications created by [flutter_local_notifications].
@@ -388,12 +420,22 @@ String _resolvePushNavigationTarget({
   String? payload,
   WayoAdsAccountRole role = WayoAdsAccountRole.unknown,
 }) {
-  return resolvePushRouteForRole(
-        data: payloadData,
-        payload: payload,
-        role: role,
-      ) ??
-      fallbackRoute;
+  final resolved = resolvePushRouteForRole(
+    data: payloadData,
+    payload: payload,
+    role: role,
+  );
+  if (resolved == null) return fallbackRoute;
+
+  // Prefer an explicit thread deep link over a generic inbox fallback from role
+  // routing (`CHAT_MESSAGE_RECEIVED` → `/chat`).
+  final fallbackBase = fallbackRoute.split('?').first;
+  final resolvedBase = resolved.split('?').first;
+  if (fallbackBase.startsWith('/chat/thread/') &&
+      (resolvedBase == '/chat' || resolvedBase == '/messages')) {
+    return fallbackRoute;
+  }
+  return resolved;
 }
 
 Future<void> _navigateOrDeferPushRoute(
@@ -1254,7 +1296,59 @@ Future<bool> _waitForApnsTokenIfNeeded() async {
   return false;
 }
 
-Future<void> refreshAndCacheFcmToken(AppPrefs prefs) async {
+/// Per-attempt ceiling so a hung [FirebaseMessaging.getToken] cannot block
+/// backend registration forever (cold start still has a cached token).
+const _kFcmGetTokenAttemptTimeout = Duration(seconds: 8);
+const _kFcmGetTokenAttemptTimeoutCached = Duration(seconds: 4);
+
+void _attachFcmTokenRefreshListener(AppPrefs prefs) {
+  if (_tokenRefreshAttached) return;
+  _tokenRefreshAttached = true;
+  FirebaseMessaging.instance.onTokenRefresh.listen((t) {
+    final old = prefs.getString(_kFcmTokenPrefKey);
+    if (old == t) {
+      logPushLifecycle(
+        'FCM onTokenRefresh same token — skip backend re-register',
+      );
+      return;
+    }
+    _logPush('FCM token refreshed (${t.length} chars) — re-registering with backend');
+    unawaited(prefs.setString(_kFcmTokenPrefKey, t));
+    PushRegistrationDebug.recordToken(t);
+    // Import is via push_registration_lifecycle through callers; check gate
+    // dynamically to avoid circular imports — see schedule below.
+    unawaited(_onTokenRefreshBackendSync(t));
+  });
+  logPushLifecycle('getToken: onTokenRefresh listener attached');
+}
+
+Future<void> _onTokenRefreshBackendSync(String token) async {
+  // Lazy import path: gate lives in push_registration_lifecycle.
+  // ignore: avoid_relative_lib_imports
+  final gateBlocked = PushRegistrationGate.isBlocked;
+  if (gateBlocked) {
+    logPushLifecycle(
+      '[FCM][REGISTER_ATTEMPT] reason=tokenRefresh skipped — gate blocked',
+    );
+    return;
+  }
+  final hook = _fcmTokenBackendRegistrationCallback;
+  if (hook == null) {
+    logPushLifecycle('FCM onTokenRefresh: no backend hook installed yet');
+    return;
+  }
+  try {
+    await hook(token, reason: PushRegisterReason.tokenRefresh);
+  } catch (e, st) {
+    _logPush('FCM token refresh backend sync failed: $e', error: e, stackTrace: st);
+  }
+}
+
+Future<void> refreshAndCacheFcmToken(
+  AppPrefs prefs, {
+  /// When true, use fewer/shorter getToken attempts — a prefs token already exists.
+  bool preferCached = false,
+}) async {
   if (!_firebaseCoreReady) {
     logPushLifecycle('getToken: skipped — Firebase not ready');
     return;
@@ -1270,15 +1364,28 @@ Future<void> refreshAndCacheFcmToken(AppPrefs prefs) async {
       await FirebaseMessaging.instance.setAutoInitEnabled(true);
     }
     await _waitForApnsTokenIfNeeded();
+    // Attach even when getToken fails so a later rotation still re-registers.
+    _attachFcmTokenRefreshListener(prefs);
     String? token;
-    const maxAttempts = 10;
+    final maxAttempts = preferCached ? 3 : 10;
+    final attemptTimeout = preferCached
+        ? _kFcmGetTokenAttemptTimeoutCached
+        : _kFcmGetTokenAttemptTimeout;
     for (var attempt = 0; attempt < maxAttempts; attempt++) {
       try {
-        token = await FirebaseMessaging.instance.getToken();
+        token = await FirebaseMessaging.instance
+            .getToken()
+            .timeout(attemptTimeout);
         logPushLifecycle(
           'getToken: attempt ${attempt + 1}/$maxAttempts '
           'result=${token == null ? 'null' : '${token.length} chars'}',
         );
+      } on TimeoutException {
+        logPushLifecycle(
+          'getToken: attempt ${attempt + 1}/$maxAttempts timed out '
+          '(${attemptTimeout.inSeconds}s)',
+        );
+        token = null;
       } catch (e, st) {
         _logPush(
           'FCM getToken attempt ${attempt + 1} failed: $e',
@@ -1299,6 +1406,8 @@ Future<void> refreshAndCacheFcmToken(AppPrefs prefs) async {
       await Future<void>.delayed(Duration(milliseconds: delayMs));
     }
     if (token == null || token.isEmpty) {
+      final cached = readCachedFcmToken(prefs);
+      PushRegistrationDebug.recordToken(cached);
       final isApple = defaultTargetPlatform == TargetPlatform.iOS ||
           defaultTargetPlatform == TargetPlatform.macOS;
       _logPush(
@@ -1320,6 +1429,7 @@ Future<void> refreshAndCacheFcmToken(AppPrefs prefs) async {
     }
     final prev = prefs.getString(_kFcmTokenPrefKey);
     await prefs.setString(_kFcmTokenPrefKey, token);
+    PushRegistrationDebug.recordToken(token);
     if (prev != token) {
       _logPush('FCM token cached (${token.length} chars)');
       wayoConfigDiagPrint(
@@ -1328,29 +1438,6 @@ Future<void> refreshAndCacheFcmToken(AppPrefs prefs) async {
       );
     } else {
       logPushLifecycle('getToken: unchanged (${token.length} chars)');
-    }
-    if (!_tokenRefreshAttached) {
-      _tokenRefreshAttached = true;
-      FirebaseMessaging.instance.onTokenRefresh.listen((t) {
-        final old = prefs.getString(_kFcmTokenPrefKey);
-        if (old != t) {
-          _logPush('FCM token refreshed (${t.length} chars) — re-registering with backend');
-        } else {
-          logPushLifecycle('FCM onTokenRefresh (${t.length} chars)');
-        }
-        unawaited(prefs.setString(_kFcmTokenPrefKey, t));
-        final hook = _fcmTokenBackendRegistrationCallback;
-        if (hook != null) {
-          unawaited(
-            hook(t).catchError((Object e, StackTrace st) {
-              _logPush('FCM token refresh backend sync failed: $e', error: e, stackTrace: st);
-            }),
-          );
-        } else {
-          logPushLifecycle('FCM onTokenRefresh: no backend hook installed yet');
-        }
-      });
-      logPushLifecycle('getToken: onTokenRefresh listener attached');
     }
   } catch (e, st) {
     _logPush('FCM getToken failed: $e', error: e, stackTrace: st);

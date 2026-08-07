@@ -232,7 +232,7 @@ class _RealtimeDashboardWireState extends ConsumerState<RealtimeDashboardWire>
       ref.invalidate(creatorCampaignDetailProvider);
       ref.invalidate(creatorMySubmissionsProvider);
     } else if (role == WayoAdsAccountRole.superAdmin) {
-      invalidateSuperadminRealtimePanels(ref);
+      invalidateSuperadminRealtimePanelsForWidget(ref);
     } else {
       ref.invalidate(advertiserWalletPageProvider);
       ref.invalidate(creatorBusinessProfileProvider);
@@ -262,7 +262,7 @@ class _RealtimeDashboardWireState extends ConsumerState<RealtimeDashboardWire>
           ref.invalidate(creatorStatsProvider);
           ref.invalidate(creatorApplicationsProvider);
         } else if (role == WayoAdsAccountRole.superAdmin) {
-          invalidateSuperadminRealtimePanels(ref);
+          invalidateSuperadminRealtimePanelsForWidget(ref);
         } else if (role == WayoAdsAccountRole.advertiser) {
           ref.invalidate(advertiserWalletPageProvider);
         }

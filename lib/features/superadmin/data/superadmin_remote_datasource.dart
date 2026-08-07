@@ -539,6 +539,8 @@ final class SuperadminRemoteDatasource implements SuperadminRemote {
     if (data is Map) {
       return Map<String, dynamic>.from(data);
     }
-    return {};
+    throw const FormatException(
+      'Expected JSON object from admin API (got non-Map body)',
+    );
   }
 }

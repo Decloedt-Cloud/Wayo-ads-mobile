@@ -24,8 +24,8 @@ enum AdvertiserCampaignsViewMode { mine, browse }
 
 final advertiserCampaignsViewModeProvider =
     StateProvider<AdvertiserCampaignsViewMode>(
-  (ref) => AdvertiserCampaignsViewMode.mine,
-);
+      (ref) => AdvertiserCampaignsViewMode.mine,
+    );
 
 String apiStatusForAdvertiserTab(AdvertiserCampaignsTab tab) => switch (tab) {
   AdvertiserCampaignsTab.active => 'ACTIVE',
@@ -82,26 +82,23 @@ final advertiserCampaignsPagedProvider = FutureProvider.autoDispose
     ) async {
       await awaitPostLoginBootstrap(ref);
       final repo = ref.watch(advertiserCampaignsRepositoryProvider);
-      return fetchWithSessionRetry(
-        ref,
-        () async {
-          try {
-            final status = apiStatusForAdvertiserTab(key.tab);
-            final q = key.search.trim();
-            return await repo.loadCampaignsPage(
-              status: status,
-              page: key.page,
-              limit: 10,
-              search: q.isEmpty ? null : q,
-              type: key.typeApi,
-              niche: key.nicheApi,
-              countryCode: key.countryApi,
-            );
-          } catch (e) {
-            throw AdvertiserCampaignsRepository.mapError(e);
-          }
-        },
-      );
+      return fetchWithSessionRetry(ref, () async {
+        try {
+          final status = apiStatusForAdvertiserTab(key.tab);
+          final q = key.search.trim();
+          return await repo.loadCampaignsPage(
+            status: status,
+            page: key.page,
+            limit: 10,
+            search: q.isEmpty ? null : q,
+            type: key.typeApi,
+            niche: key.nicheApi,
+            countryCode: key.countryApi,
+          );
+        } catch (e) {
+          throw AdvertiserCampaignsRepository.mapError(e);
+        }
+      });
     });
 
 /// Tab totals from `statusCounts` on advertiser list API.
@@ -110,16 +107,13 @@ final advertiserCampaignsCountsProvider =
       ref.keepAlive();
       await awaitPostLoginBootstrap(ref);
       final repo = ref.watch(advertiserCampaignsRepositoryProvider);
-      return fetchWithSessionRetry(
-        ref,
-        () async {
-          try {
-            return await repo.loadCampaignStatusCounts();
-          } catch (e) {
-            throw AdvertiserCampaignsRepository.mapError(e);
-          }
-        },
-      );
+      return fetchWithSessionRetry(ref, () async {
+        try {
+          return await repo.loadCampaignStatusCounts();
+        } catch (e) {
+          throw AdvertiserCampaignsRepository.mapError(e);
+        }
+      });
     });
 
 final advertiserCampaignDetailProvider = FutureProvider.family
@@ -139,8 +133,9 @@ final advertiserCampaignDetailProvider = FutureProvider.family
 /// (Wayo-ads `GET /api/campaigns/:id` already embeds them for owners).
 final campaignApplicationsProvider = FutureProvider.family
     .autoDispose<List<CampaignApplication>, String>((ref, campaignId) async {
-      final embeddedDetail =
-          ref.watch(advertiserCampaignDetailProvider(campaignId)).valueOrNull;
+      final embeddedDetail = ref
+          .watch(advertiserCampaignDetailProvider(campaignId))
+          .valueOrNull;
       if (embeddedDetail != null) {
         final embedded = campaignApplicationsFromCampaignDetail(embeddedDetail);
         if (embedded != null) {
@@ -178,8 +173,9 @@ final advertiserBrowseCampaignSearchProvider = StateProvider<String>(
 final advertiserBrowseExplorerLayoutProvider =
     StateProvider<CampaignExplorerLayout>((ref) => CampaignExplorerLayout.list);
 
-final advertiserBrowseTypeFilterProvider =
-    StateProvider<CreatorCampaignType?>((ref) => null);
+final advertiserBrowseTypeFilterProvider = StateProvider<CreatorCampaignType?>(
+  (ref) => null,
+);
 
 final advertiserBrowseNicheProvider = StateProvider<String?>((ref) => null);
 
@@ -195,26 +191,26 @@ typedef AdvertiserBrowsePagedKey = ({
 
 /// Public marketplace — `GET /api/campaigns?status=ACTIVE`.
 final advertiserBrowseCampaignsPagedProvider = FutureProvider.autoDispose
-    .family<CreatorBrowsePageResult, AdvertiserBrowsePagedKey>((ref, key) async {
+    .family<CreatorBrowsePageResult, AdvertiserBrowsePagedKey>((
+      ref,
+      key,
+    ) async {
       await awaitPostLoginBootstrap(ref);
       final repo = ref.watch(advertiserCampaignsRepositoryProvider);
-      return fetchWithSessionRetry(
-        ref,
-        () async {
-          try {
-            return await repo.loadMarketplaceBrowsePage(
-              page: key.page,
-              limit: 10,
-              search: key.search.trim().isEmpty ? null : key.search.trim(),
-              type: key.typeApi,
-              niche: key.nicheApi,
-              countryCode: key.countryApi,
-            );
-          } catch (e) {
-            throw AdvertiserCampaignsRepository.mapError(e);
-          }
-        },
-      );
+      return fetchWithSessionRetry(ref, () async {
+        try {
+          return await repo.loadMarketplaceBrowsePage(
+            page: key.page,
+            limit: 10,
+            search: key.search.trim().isEmpty ? null : key.search.trim(),
+            type: key.typeApi,
+            niche: key.nicheApi,
+            countryCode: key.countryApi,
+          );
+        } catch (e) {
+          throw AdvertiserCampaignsRepository.mapError(e);
+        }
+      });
     });
 
 void invalidateAdvertiserBrowseCampaigns(dynamic ref) {

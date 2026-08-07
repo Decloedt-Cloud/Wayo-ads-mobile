@@ -6,15 +6,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../../../../core/network/wayo_ads_dio.dart';
-import '../../../../core/observability/app_log.dart';
 import '../../../../core/providers/app_providers.dart';
-import '../../../../core/push/push_registration_debug.dart';
 import '../../../../core/push/system_push_permission.dart';
 import '../../../../core/push/push_notifications_status_provider.dart';
 import '../../../../core/push/user_push_notifications_preference.dart';
 import '../../../../core/ui/wayo_toast.dart';
 import '../../../../i18n/strings.g.dart';
-import 'push_registration_debug_panel.dart';
 
 /// Push notifications toggle in the preferences panel (creator + advertiser).
 class AppSettingsNotificationsTile extends ConsumerStatefulWidget {
@@ -77,12 +74,9 @@ class _AppSettingsNotificationsTileState
         );
         if (!mounted) return;
         if (!ok) {
-          final debugHint = kWayoShowPushDebugUi
-              ? '\n${PushRegistrationDebug.failureSummary}'
-              : '';
           WayoToast.error(
             context,
-            '${t.app_settings.notifications_enable_error}$debugHint',
+            t.app_settings.notifications_enable_error,
             duration: const Duration(seconds: 6),
           );
         }
@@ -176,7 +170,6 @@ class _AppSettingsNotificationsTileState
                 ),
               ),
             ],
-            const PushRegistrationDebugPanel(),
           ],
         ),
       ),

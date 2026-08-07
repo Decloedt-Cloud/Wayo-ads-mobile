@@ -106,8 +106,14 @@ android {
             // debug keystore for release — that risks shipping a debug-signed,
             // debuggable artifact. For local/CI smoke builds that intentionally
             // accept debug signing, pass `-PallowDebugSigning=true`.
+            //
+            // Only throw when a *Release* task is requested — otherwise debug
+            // builds fail at configuration time even though they don't need it.
             val allowDebugSigning =
                 (project.findProperty("allowDebugSigning") as String?)?.toBoolean() == true
+            val requestingRelease = gradle.startParameter.taskNames.any {
+                it.contains("Release", ignoreCase = true)
+            }
             signingConfig =
                 if (keystorePropertiesFile.exists()) {
                     signingConfigs.getByName("release")
@@ -117,12 +123,14 @@ android {
                         "(allowDebugSigning=true). Do NOT upload this artifact to Play."
                     )
                     signingConfigs.getByName("debug")
-                } else {
+                } else if (requestingRelease) {
                     throw GradleException(
                         "Release build requires android/key.properties (upload keystore). " +
                         "It is missing. For an intentional local/CI debug-signed smoke build, " +
                         "re-run with -PallowDebugSigning=true."
                     )
+                } else {
+                    signingConfigs.getByName("debug")
                 }
 
             isMinifyEnabled = true
@@ -162,3 +170,7 @@ dependencies {
 
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }
+
+// Do NOT force stripe-android past flutter_stripe's pin (21.6.+).
+// Forcing 21.29.0 caused native process crashes when presenting ACH /
+// Financial Connections PaymentSheet (binary mismatch with stripe_android 11.5).

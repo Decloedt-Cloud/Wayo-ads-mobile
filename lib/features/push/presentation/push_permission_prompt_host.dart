@@ -3,17 +3,16 @@ import 'dart:isolate';
 import 'dart:ui' show IsolateNameServer;
 
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import '../../../core/observability/app_log.dart';
-import '../../../core/push/push_registration_debug.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/network/wayo_ads_dio.dart';
 import '../../../core/providers/app_providers.dart';
+import '../../../core/riverpod/defer_after_build.dart';
 import '../../../core/push/push_permission_policy.dart';
+import '../../../core/push/push_registration_lifecycle.dart';
 import '../../../core/push/system_push_permission.dart';
 import '../../../core/push/user_push_notifications_preference.dart';
 import '../../../core/push/wayo_push_intent.dart';
@@ -44,8 +43,10 @@ class _PushPermissionPromptHostState
   bool _overlayVisible = false;
   PushPermissionContext _overlayContext = PushPermissionContext.generic;
   Timer? _debounce;
+  Timer? _periodicPushHealTimer;
   RawReceivePort? _deferredPushPort;
   bool _deferredPushInFlight = false;
+  DateTime? _lastResumePushSyncAt;
 
   Future<void> _consumeDeferredPushIntents() async {
     if (!mounted || _deferredPushInFlight) return;
@@ -237,6 +238,8 @@ class _PushPermissionPromptHostState
     );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _tryConsumeDeferredPush();
+      unawaited(_syncPushRegistrationOnResume(force: true));
+      _startPeriodicPushHeal();
     });
   }
 
@@ -247,6 +250,7 @@ class _PushPermissionPromptHostState
     _deferredPushPort = null;
     WidgetsBinding.instance.removeObserver(this);
     _debounce?.cancel();
+    _periodicPushHealTimer?.cancel();
     super.dispose();
   }
 
@@ -255,13 +259,47 @@ class _PushPermissionPromptHostState
     if (state == AppLifecycleState.resumed) {
       _tryConsumeDeferredPush();
       _tryScheduleGenericPrompt();
+      unawaited(_syncPushRegistrationOnResume());
+      _startPeriodicPushHeal();
+    } else if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached ||
+        state == AppLifecycleState.hidden) {
+      _periodicPushHealTimer?.cancel();
+      _periodicPushHealTimer = null;
     }
+  }
+
+  /// Periodic foreground heal — same effect as toggle off/on, without UI.
+  Future<void> _syncPushRegistrationOnResume({bool force = false}) async {
+    final auth = ref.read(authNotifierProvider).valueOrNull;
+    if (auth is! AuthAuthenticated) return;
+    final now = DateTime.now();
+    final last = _lastResumePushSyncAt;
+    if (!force &&
+        last != null &&
+        now.difference(last) < const Duration(seconds: 20)) {
+      return;
+    }
+    _lastResumePushSyncAt = now;
+    await ref
+        .read(authNotifierProvider.notifier)
+        .syncPushRegistrationOnResume();
+  }
+
+  /// Keep the server token + local delivery flag healthy while the app stays open.
+  void _startPeriodicPushHeal() {
+    _periodicPushHealTimer?.cancel();
+    _periodicPushHealTimer = Timer.periodic(const Duration(minutes: 3), (_) {
+      unawaited(_syncPushRegistrationOnResume(force: true));
+    });
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _tryScheduleGenericPrompt();
+    deferAfterBuild(() {
+      if (mounted) _tryScheduleGenericPrompt();
+    });
   }
 
   @override
@@ -306,6 +344,7 @@ class _PushPermissionPromptHostState
               final ok = await enableUserPushNotifications(
                 wayoAdsDio: ref.read(wayoAdsDioProvider),
                 prefs: prefs,
+                reason: PushRegisterReason.permissionPrompt,
               );
               if (ok) {
                 await PushPermissionPolicy(prefs).recordEnabled(auth.user.id);
@@ -314,9 +353,6 @@ class _PushPermissionPromptHostState
               setState(() => _overlayVisible = false);
 
               if (!context.mounted) return;
-              final debugHint = !ok && kWayoShowPushDebugUi
-                  ? '\n${PushRegistrationDebug.failureSummary}'
-                  : '';
               if (ok) {
                 WayoToast.success(
                   context,
@@ -326,7 +362,7 @@ class _PushPermissionPromptHostState
               } else {
                 WayoToast.warning(
                   context,
-                  '${context.t.push.onboarding_denied_hint}$debugHint',
+                  context.t.push.onboarding_denied_hint,
                   duration: const Duration(seconds: 6),
                 );
               }

@@ -39,8 +39,8 @@ final class CampaignTopCreator extends Equatable {
     final name = (rawName != null && rawName.isNotEmpty)
         ? rawName
         : (rawEmail != null && rawEmail.isNotEmpty)
-            ? rawEmail.split('@').first
-            : '—';
+        ? rawEmail.split('@').first
+        : '—';
 
     return CampaignTopCreator(
       creatorId: '${m['creatorId'] ?? ''}',
@@ -59,15 +59,15 @@ final class CampaignTopCreator extends Equatable {
 
   @override
   List<Object?> get props => [
-        creatorId,
-        creatorName,
-        creatorEmail,
-        creatorImage,
-        validViews,
-        paidViews,
-        netEarningsCents,
-        grossEarningsCents,
-      ];
+    creatorId,
+    creatorName,
+    creatorEmail,
+    creatorImage,
+    validViews,
+    paidViews,
+    netEarningsCents,
+    grossEarningsCents,
+  ];
 }
 
 /// Parses `topCreators` embedded in `GET /api/campaigns/:id`.

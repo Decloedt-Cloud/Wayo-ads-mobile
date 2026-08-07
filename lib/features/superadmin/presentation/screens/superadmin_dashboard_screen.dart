@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../data/superadmin_ops_remote.dart';
 import '../../domain/entities/admin_transaction.dart';
 import '../../domain/entities/dashboard_stats.dart';
 import '../../../chat/presentation/providers/chat_providers.dart';
@@ -57,6 +59,12 @@ class _SuperadminDashboardScreenState
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
               sliver: SliverToBoxAdapter(
+                child: _buildBusinessKpis(context),
+              ),
+            ),
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
+              sliver: SliverToBoxAdapter(
                 child: trafficAsync.when(
                   data: (tq) => _buildTrafficQualitySection(context, tq),
                   loading: () => const _StatsLoadingGrid(),
@@ -107,8 +115,137 @@ class _SuperadminDashboardScreenState
     ref.invalidate(dashboardStatsProvider);
     ref.invalidate(trafficQualitySummaryProvider);
     ref.invalidate(adminRecentTransactionsProvider);
+    ref.invalidate(platformHealthProvider);
+    ref.invalidate(advertiserDepositsProvider);
     ref.invalidate(notificationsListProvider);
     ref.invalidate(notificationsUnreadCountsProvider);
+  }
+
+  Widget _buildBusinessKpis(BuildContext context) {
+    final healthAsync = ref.watch(platformHealthProvider);
+    final depositsAsync = ref.watch(
+      advertiserDepositsProvider((search: '', page: 1)),
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const AdminSectionHeader(
+          title: 'Platform overview',
+          subtitle: 'Fees, payouts, fraud, campaigns, and deposits',
+          padding: EdgeInsets.zero,
+        ),
+        const SizedBox(height: 12),
+        healthAsync.when(
+          data: (h) {
+            final money = _currencyFormat;
+            return Column(
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: AdminStatCard(
+                        title: 'Total platform fees',
+                        value: money.format(h.platformFeeTotalCents / 100),
+                        subtitle:
+                            'Payouts ${money.format(h.platformFeePayoutCents / 100)} · '
+                            'Campaign activation ${money.format(h.platformFeeActivationCents / 100)}',
+                        icon: Icons.monetization_on_outlined,
+                        iconColor: const Color(0xFF84CC16),
+                        onTap: () => context.push('/superadmin/ledger'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: AdminStatCard(
+                        title: 'Pending withdrawals',
+                        value: '${h.pendingWithdrawals}',
+                        subtitle: 'Requires processing',
+                        icon: Icons.schedule_rounded,
+                        iconColor: const Color(0xFFF59E0B),
+                        onTap: () => context.go('/superadmin?tab=withdrawals'),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: AdminStatCard(
+                        title: 'Fraud rate',
+                        value: '${h.fraudRatePct}%',
+                        subtitle: '${h.rejectedFraud} rejected today',
+                        icon: Icons.shield_outlined,
+                        iconColor: const Color(0xFFEF4444),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: AdminStatCard(
+                        title: 'Active campaigns',
+                        value: '${h.activeCampaigns}',
+                        subtitle: '${h.totalCreators} creators',
+                        icon: Icons.campaign_rounded,
+                        iconColor: const Color(0xFFF47A1F),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            );
+          },
+          loading: () => const _StatsLoadingGrid(),
+          error: (e, _) {
+            if (shouldSuppressSessionLoadError(ref, e)) {
+              return const _StatsLoadingGrid();
+            }
+            return _ErrorCard(
+              message: 'Could not load platform health',
+              onRetry: () => ref.invalidate(platformHealthProvider),
+            );
+          },
+        ),
+        const SizedBox(height: 12),
+        depositsAsync.when(
+          data: (page) {
+            final summary = page.preferredPlatformSummary;
+            final charged = summary?.totalChargedCents ?? 0;
+            final net = summary?.totalNetCents ?? 0;
+            final count = summary?.depositCount ?? 0;
+            final money = _currencyFormat;
+            return Row(
+              children: [
+                Expanded(
+                  child: AdminStatCard(
+                    title: 'Total charged deposits',
+                    value: money.format(charged / 100),
+                    subtitle: '$count deposits',
+                    icon: Icons.credit_card_rounded,
+                    iconColor: const Color(0xFF10B981),
+                    onTap: () => context.push('/superadmin/payment-audits'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: AdminStatCard(
+                    title: 'Total net deposits',
+                    value: money.format(net / 100),
+                    subtitle:
+                        'Charged minus all Stripe fees (card + Radar/other)',
+                    icon: Icons.account_balance_wallet_outlined,
+                    iconColor: const Color(0xFF14B8A6),
+                    onTap: () => context.push('/superadmin/payment-audits'),
+                  ),
+                ),
+              ],
+            );
+          },
+          loading: () => const _StatsLoadingGrid(),
+          error: (_, _) => const SizedBox.shrink(),
+        ),
+      ],
+    );
   }
 
   Widget _buildHeader(BuildContext context) {
@@ -173,6 +310,14 @@ class _SuperadminDashboardScreenState
                     ),
                   ),
                 ],
+              ),
+            ),
+            IconButton(
+              tooltip: 'Messages',
+              onPressed: () => context.go('/superadmin?tab=chat'),
+              icon: Icon(
+                Icons.chat_bubble_outline_rounded,
+                color: AppColors.textPrimaryOf(context),
               ),
             ),
             const SuperadminChromeActions(showNotifications: true),

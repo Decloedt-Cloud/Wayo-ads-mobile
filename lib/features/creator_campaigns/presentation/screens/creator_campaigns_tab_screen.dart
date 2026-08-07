@@ -10,6 +10,7 @@ import '../../../../core/campaigns/campaign_marketplace_facets.dart';
 import '../../../../core/format/campaign_finance_display.dart';
 import '../../../../core/campaigns/campaigns_explorer_toolbar_expanded_provider.dart';
 import '../../../../core/providers/app_providers.dart';
+import '../../../../core/riverpod/defer_after_build.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/campaigns_explorer_toolbar.dart';
@@ -33,36 +34,38 @@ void _sanitizeCreatorBrowseFilters(
   WidgetRef ref,
   CampaignMarketplaceFacets facets,
 ) {
-  var tSel = ref.read(creatorCampaignExplorerTypeFilterProvider);
-  final typeSet = marketplaceTypesFromFacets(facets);
-  if (tSel != null && typeSet.isNotEmpty && !typeSet.contains(tSel)) {
-    ref.read(creatorCampaignExplorerTypeFilterProvider.notifier).state = null;
-    tSel = null;
-  }
-
-  final nSel = ref.read(creatorCampaignExplorerNicheProvider);
-  if (nSel != null && nSel.isNotEmpty && facets.activeNiches.isNotEmpty) {
-    final want = normalizeCampaignNicheApiValue(nSel);
-    if (want != null &&
-        !facets.activeNiches
-            .map(normalizeCampaignNicheApiValue)
-            .whereType<String>()
-            .contains(want)) {
-      ref.read(creatorCampaignExplorerNicheProvider.notifier).state = null;
+  deferAfterBuild(() {
+    var tSel = ref.read(creatorCampaignExplorerTypeFilterProvider);
+    final typeSet = marketplaceTypesFromFacets(facets);
+    if (tSel != null && typeSet.isNotEmpty && !typeSet.contains(tSel)) {
+      ref.read(creatorCampaignExplorerTypeFilterProvider.notifier).state = null;
+      tSel = null;
     }
-  }
 
-  final lSel = ref.read(creatorCampaignExplorerLocationProvider);
-  if (lSel != null && lSel.isNotEmpty && facets.activeCountries.isNotEmpty) {
-    final wantLoc = normalizeCampaignLocationValue(lSel);
-    if (wantLoc != null &&
-        !facets.activeCountries
-            .map(normalizeCampaignLocationValue)
-            .whereType<String>()
-            .contains(wantLoc)) {
-      ref.read(creatorCampaignExplorerLocationProvider.notifier).state = null;
+    final nSel = ref.read(creatorCampaignExplorerNicheProvider);
+    if (nSel != null && nSel.isNotEmpty && facets.activeNiches.isNotEmpty) {
+      final want = normalizeCampaignNicheApiValue(nSel);
+      if (want != null &&
+          !facets.activeNiches
+              .map(normalizeCampaignNicheApiValue)
+              .whereType<String>()
+              .contains(want)) {
+        ref.read(creatorCampaignExplorerNicheProvider.notifier).state = null;
+      }
     }
-  }
+
+    final lSel = ref.read(creatorCampaignExplorerLocationProvider);
+    if (lSel != null && lSel.isNotEmpty && facets.activeCountries.isNotEmpty) {
+      final wantLoc = normalizeCampaignLocationValue(lSel);
+      if (wantLoc != null &&
+          !facets.activeCountries
+              .map(normalizeCampaignLocationValue)
+              .whereType<String>()
+              .contains(wantLoc)) {
+        ref.read(creatorCampaignExplorerLocationProvider.notifier).state = null;
+      }
+    }
+  });
 }
 
 /// Creator **campaigns** tab — browse active campaigns and see the state

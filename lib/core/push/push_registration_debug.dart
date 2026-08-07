@@ -6,6 +6,7 @@ import 'package:permission_handler/permission_handler.dart';
 
 import '../config/auth_runtime_config.dart';
 import '../storage/app_prefs.dart';
+import 'push_registration_lifecycle.dart';
 import 'system_push_permission.dart';
 import 'user_push_notifications_preference.dart';
 import 'wayo_push_service.dart';
@@ -33,6 +34,11 @@ class PushRegistrationDebug {
   static String? lastHttpRequestBody;
   static String? lastRegisteredUserId;
   static DateTime? lastAttemptAt;
+  static String? lastRegisterReason;
+  static String? lastUnregisterReason;
+  static String? lastHttpKind;
+  static int? lastUnregisterHttpStatus;
+  static int? lastRegisterHttpStatus;
 
   static void reset() {
     lastFailedStep = null;
@@ -75,16 +81,31 @@ class PushRegistrationDebug {
     );
   }
 
+  static void recordRegisterReason(String reason) {
+    lastRegisterReason = reason;
+  }
+
+  static void recordUnregisterReason(String reason) {
+    lastUnregisterReason = reason;
+  }
+
   static void recordHttp({
     required int? status,
     required String requestBody,
     required String responseBody,
+    String kind = 'register',
   }) {
     lastHttpStatus = status;
     lastHttpRequestBody = requestBody;
     lastHttpResponse = responseBody;
+    lastHttpKind = kind;
+    if (kind == 'unregister') {
+      lastUnregisterHttpStatus = status;
+    } else {
+      lastRegisterHttpStatus = status;
+    }
     logPushLifecycle(
-      'debug: HTTP status=$status request=$requestBody response=$responseBody',
+      'debug: HTTP kind=$kind status=$status request=$requestBody response=$responseBody',
     );
   }
 
@@ -141,25 +162,43 @@ class PushRegistrationDebug {
     final suppressed = await isPushExternalDeliverySuppressed();
     final apiBase = AuthRuntimeConfig.instance.resolvedWayoAdsBaseUrl;
 
+    if ((lastTokenPreview == null || lastTokenPreview == '(empty)') &&
+        cachedToken != null &&
+        cachedToken.isNotEmpty) {
+      lastTokenPreview = maskFcmToken(cachedToken);
+    }
+    if ((lastRegisteredUserId == null || lastRegisteredUserId!.isEmpty) &&
+        registeredUser != null &&
+        registeredUser.isNotEmpty) {
+      lastRegisteredUserId = registeredUser;
+    }
+    lastPermissionGranted ??= systemGranted;
+
+    final registrationState = suppressed
+        ? 'suppressed'
+        : PushRegistrationGate.isBlocked
+            ? 'blocked (logout/disable)'
+            : registeredUser != null && registeredUser.isNotEmpty
+                ? 'active'
+                : 'not registered';
+
     return {
-      'Platform': platform,
       'Firebase': firebaseProject,
-      'google-services': Platform.isAndroid
-          ? 'android/app/google-services.json (wayo-ads-27cbf)'
-          : Platform.isIOS
-          ? 'ios/Runner/GoogleService-Info.plist'
-          : 'n/a',
-      'API base': apiBase.isEmpty ? '(empty!)' : apiBase,
+      'Permission': systemGranted ? 'granted' : permissionLine,
+      'Token': lastTokenPreview ?? maskFcmToken(cachedToken),
+      'Cached token': maskFcmToken(cachedToken),
+      'User': lastRegisteredUserId ?? registeredUser ?? '(none)',
+      'Client app': 'wayo-ads-go',
+      'Platform': platform,
+      'Registration': registrationState,
       'User pref enabled': userEnabled ? 'yes' : 'no',
-      'OS permission': permissionLine,
-      'OS granted (check)': systemGranted ? 'yes' : 'no',
-      'Cached FCM token': maskFcmToken(cachedToken),
-      'Registered userId': registeredUser ?? '(none)',
-      'Delivery suppressed': suppressed ? 'yes' : 'no',
+      'Last register': lastRegisterReason ?? '(none)',
+      'Register HTTP': '${lastRegisterHttpStatus ?? lastHttpStatus ?? "-"}',
+      'Last unregister': lastUnregisterReason ?? '(none)',
+      'Unregister HTTP': '${lastUnregisterHttpStatus ?? "-"}',
       'Last failure': failureSummary,
-      'Last HTTP': lastHttpStatus == null
-          ? '(none)'
-          : '$lastHttpStatus ${lastHttpResponse ?? ""}',
+      'API base': apiBase.isEmpty ? '(empty!)' : apiBase,
+      'Delivery suppressed': suppressed ? 'yes' : 'no',
     };
   }
 }

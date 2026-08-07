@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../../../core/format/money_formatter.dart';
@@ -191,9 +192,19 @@ class CreatorWalletTabScreen extends ConsumerWidget {
                     ? const SizedBox.shrink()
                     : Row(
                         children: [
-                          Text(
-                            t.creator.wallet.history_title,
-                            style: AppTextStyles.headlineMedium(context),
+                          Expanded(
+                            child: Text(
+                              t.creator.wallet.history_title,
+                              style: AppTextStyles.headlineMedium(context),
+                            ),
+                          ),
+                          TextButton.icon(
+                            onPressed: () {
+                              HapticFeedback.selectionClick();
+                              context.push('/creator/payouts');
+                            },
+                            icon: const Icon(Icons.receipt_long_rounded, size: 18),
+                            label: Text(t.creator.wallet.documents_cta),
                           ),
                         ],
                       ),

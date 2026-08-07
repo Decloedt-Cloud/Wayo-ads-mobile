@@ -450,6 +450,7 @@ class _TranslationsAdvertiserCampaignsAr extends TranslationsAdvertiserCampaigns
 	@override late final _TranslationsAdvertiserCampaignsDetailAr detail = _TranslationsAdvertiserCampaignsDetailAr._(_root);
 	@override late final _TranslationsAdvertiserCampaignsCreateAr create = _TranslationsAdvertiserCampaignsCreateAr._(_root);
 	@override late final _TranslationsAdvertiserCampaignsApplicationsAr applications = _TranslationsAdvertiserCampaignsApplicationsAr._(_root);
+	@override late final _TranslationsAdvertiserCampaignsActionsAr actions = _TranslationsAdvertiserCampaignsActionsAr._(_root);
 }
 
 // Path: advertiser_video_reviews
@@ -630,6 +631,8 @@ class _TranslationsCreatorAr extends TranslationsCreatorEn {
 	@override late final _TranslationsCreatorStatsAr stats = _TranslationsCreatorStatsAr._(_root);
 	@override late final _TranslationsCreatorApplicationsAr applications = _TranslationsCreatorApplicationsAr._(_root);
 	@override late final _TranslationsCreatorBusinessAr business = _TranslationsCreatorBusinessAr._(_root);
+	@override late final _TranslationsCreatorTrustAr trust = _TranslationsCreatorTrustAr._(_root);
+	@override late final _TranslationsCreatorAnalyticsAr analytics = _TranslationsCreatorAnalyticsAr._(_root);
 }
 
 // Path: advertiser_wallet
@@ -648,7 +651,7 @@ class _TranslationsAdvertiserWalletAr extends TranslationsAdvertiserWalletEn {
 	@override String get quick_50 => '50 USD';
 	@override String get quick_100 => '100 USD';
 	@override String get quick_250 => '500 USD';
-	@override String get min_deposit => 'الحد الأدنى للإيداع 50.00 USD.';
+	@override String get min_deposit => 'الحد الأدنى للإيداع {amount}.';
 	@override String get test_pay => 'محاكاة الدفع (تطوير)';
 	@override String get test_hint => 'وضع اختباري: بدون بطاقة حقيقية.';
 	@override String get pay_secure => 'بطاقة أو Apple Pay أو Google Pay';
@@ -684,6 +687,68 @@ class _TranslationsAdvertiserWalletAr extends TranslationsAdvertiserWalletEn {
 	@override String get deposit_pending => 'إيداع قيد الانتظار';
 	@override String get deposit_resume_hint => 'استئناف إيداعك بقيمة {amount} — أكمل الدفع أو اضغط إلغاء للتخلي عنه.';
 	@override String get deposit_cancel => 'إلغاء';
+	@override String get funding_method_label => 'طريقة التمويل';
+	@override String get funding_card_title => 'بطاقة';
+	@override String get funding_card_badge => 'فوري';
+	@override String get funding_card_desc => 'Visa وMastercard وAmex — تتوفر الأموال فوراً.';
+	@override String get funding_ach_title => 'خصم بنكي (ACH)';
+	@override String get funding_ach_badge => 'رسوم أقل';
+	@override String get funding_ach_desc => 'خصم مباشر من حسابك البنكي الأمريكي — رسوم أقل من البطاقة.';
+	@override String get funding_ach_eta => 'تستقر الأموال عادة خلال 1-3 أيام عمل.';
+	@override String get funding_ach_usd_only => 'ACH متاح فقط للمحافظ بالدولار الأمريكي.';
+	@override String get funding_wire_title => 'حوالة بنكية';
+	@override String get funding_wire_badge => 'مبالغ كبيرة';
+	@override String get funding_wire_desc => 'أرسل حوالة بنكية باستخدام التعليمات المقدمة.';
+	@override String get funding_wire_eta => 'تصل الأموال عادة خلال 1-3 أيام عمل.';
+	@override String get funding_wire_currency_only => 'الحوالة متاحة فقط لـ: {currencies}.';
+	@override String get saved_cards_loading => 'جارٍ تحميل البطاقات المحفوظة…';
+	@override String get default_card_badge => 'افتراضية';
+	@override String get saved_card_badge => 'محفوظة';
+	@override String get use_new_card => 'استخدام بطاقة جديدة';
+	@override String get use_saved_card => 'استخدام بطاقة محفوظة';
+	@override String get change_method => 'تغيير';
+	@override String get remove_card => 'إزالة';
+	@override String get remove_card_confirm_title => 'إزالة هذه البطاقة؟';
+	@override String get remove_card_confirm_desc => 'سيتم إزالة {brand} •••• {last4} من بطاقاتك المحفوظة.';
+	@override String get remove_card_confirm_action => 'إزالة';
+	@override String get card_removed_title => 'تمت إزالة البطاقة';
+	@override String get card_removed_desc => 'تمت إزالة •••• {last4}.';
+	@override String get card_remove_failed => 'تعذّر إزالة هذه البطاقة. أعد المحاولة.';
+	@override String get refresh_saved_cards => 'تحديث';
+	@override String get pay_with_saved_card => 'الدفع بـ {brand} •••• {last4}';
+	@override String get wire_instructions_loading => 'تجهيز تعليمات الحوالة…';
+	@override String get wire_awaiting_title => 'في انتظار حوالتك البنكية';
+	@override String get wire_awaiting_desc => 'أرسل حوالة باستخدام التفاصيل أدناه. سيتم تحديث رصيدك عند استلام الأموال.';
+	@override String get wire_exact_amount => 'المبلغ الدقيق';
+	@override String get wire_reference => 'المرجع (مطلوب)';
+	@override String get wire_reference_required_hint => 'أضف هذا المرجع في بيان الحوالة — بدونه لا يمكننا مطابقة دفعتك.';
+	@override String get wire_copy_action => 'نسخ';
+	@override String get wire_copied_title => 'تم النسخ';
+	@override String get wire_copied_desc => 'تم النسخ إلى الحافظة.';
+	@override String get wire_copy_failed => 'تعذّر النسخ. أعد المحاولة.';
+	@override String get wire_network_swift => 'حوالة SWIFT / دولية';
+	@override String get wire_network_aba => 'حوالة أمريكية محلية (ABA)';
+	@override String get wire_network_iban => 'IBAN / SEPA';
+	@override String get wire_network_sort_code => 'حوالة بنكية بريطانية';
+	@override String get wire_network_other => '{network}';
+	@override String get wire_account_holder => 'اسم صاحب الحساب';
+	@override String get wire_bank_name => 'اسم البنك';
+	@override String get wire_routing_number => 'رقم التوجيه';
+	@override String get wire_sort_code => 'Sort code';
+	@override String get wire_account_number => 'رقم الحساب';
+	@override String get wire_swift_code => 'SWIFT/BIC';
+	@override String get wire_iban => 'IBAN';
+	@override String get wire_bic => 'BIC';
+	@override String get wire_hosted_instructions => 'عرض التعليمات الكاملة';
+	@override String get wire_done_button => 'لقد أرسلت الحوالة';
+	@override String get ach_processing_banner => 'إيداع ACH بقيمة {amount} قيد المعالجة — تستقر الأموال عادة خلال 1-3 أيام عمل.';
+	@override String get wire_awaiting_banner => 'إيداع الحوالة بقيمة {amount} في انتظار حوالتك البنكية.';
+	@override String get reconcile_button => 'تحقق من الحالة';
+	@override String get reconcile_success => 'تم تحديث الحالة.';
+	@override String get reconcile_still_pending => 'لا يزال قيد المعالجة — تحقق قريباً.';
+	@override String get reconcile_failed => 'تعذّر التحقق من الحالة. أعد المحاولة.';
+	@override String get continue_to_payment => 'استمرار';
+	@override String get cancel => 'إلغاء';
 }
 
 // Path: chat
@@ -699,6 +764,7 @@ class _TranslationsChatAr extends TranslationsChatEn {
 	@override String get thread_fallback_title => 'محادثة';
 	@override String get role_creator => 'منشئ';
 	@override String get role_advertiser => 'معلن';
+	@override String get role_admin => 'أدمن';
 	@override String get composer_hint => 'اكتب رسالة…';
 	@override String get typing => 'يكتب…';
 	@override String get error_load_threads => 'تعذّر تحميل محادثاتك. أعد المحاولة.';
@@ -727,7 +793,29 @@ class _TranslationsChatAr extends TranslationsChatEn {
 	@override String get conversation_open_failed => 'تعذّر فتح هذه المحادثة. حاول مرة أخرى.';
 	@override String get file_picker_restart_hint => 'المرفقات تحتاج إعادة تشغيل كاملة للتطبيق بعد التحديثات. أوقف التطبيق ثم شغّله من جديد (تجنّب hot restart).';
 	@override String get attachment_type_not_allowed => 'يُسمح فقط بالصور (JPG أو PNG أو GIF أو WebP أو BMP) أو ملفات PDF.';
-	@override String get inbox_swipe_soon => 'التثبيت والأرشفة من القائمة ستتوفر قريبًا.';
+	@override String get inbox_filter_active => 'الوارد';
+	@override String get inbox_filter_archived => 'المؤرشفة';
+	@override String get inbox_pinned => 'مثبّتة';
+	@override String get inbox_unpinned => 'أُزيل التثبيت';
+	@override String get inbox_archived => 'مؤرشفة';
+	@override String get inbox_unarchived => 'أُعيدت إلى الوارد';
+	@override String get inbox_pin_failed => 'تعذّر تحديث التثبيت. حاول مرة أخرى.';
+	@override String get inbox_archive_failed => 'تعذّر تحديث الأرشفة. حاول مرة أخرى.';
+	@override String get inbox_pin_disabled => 'التثبيت والأرشفة غير متاحين مؤقتًا.';
+	@override String get menu_more => 'المزيد';
+	@override String get menu_pin => 'تثبيت';
+	@override String get menu_unpin => 'إلغاء التثبيت';
+	@override String get menu_archive => 'أرشفة';
+	@override String get menu_unarchive => 'إلغاء الأرشفة';
+	@override String get menu_delete => 'حذف';
+	@override String get delete_conversation => 'حذف المحادثة';
+	@override String get delete_conversation_confirm_title => 'حذف هذه المحادثة؟';
+	@override String get delete_conversation_confirm_text => 'سيتم حذف جميع الرسائل نهائيًا لكلا الطرفين. لا يمكن التراجع عن هذا الإجراء.';
+	@override String get delete_conversation_confirm_cta => 'حذف';
+	@override String get delete_conversation_failed => 'تعذّر حذف المحادثة. حاول مرة أخرى.';
+	@override String get delete_conversation_done => 'تم حذف المحادثة';
+	@override String get empty_archived_title => 'لا محادثات مؤرشفة';
+	@override String get empty_archived_hint => 'اسحب محادثة إلى اليسار لأرشفتها.';
 	@override String get date_today => 'اليوم';
 	@override String get date_yesterday => 'أمس';
 	@override String get bubble_reply => 'رد';
@@ -1040,6 +1128,46 @@ class _TranslationsAppSettingsAr extends TranslationsAppSettingsEn {
 	@override String get notifications_open_settings => 'فتح إعدادات الهاتف';
 	@override String get notifications_enable_error => 'تعذّر تفعيل الإشعارات. تحقق من إعدادات النظام.';
 	@override String get notifications_update_error => 'تعذّر تحديث إعدادات الإشعارات. أعد المحاولة.';
+	@override String get notif_prefs_entry_title => 'تفضيلات الإشعارات';
+	@override String get notif_prefs_entry_sub => 'القنوات والفئات للتنبيهات داخل التطبيق والبريد';
+	@override String get notif_prefs_title => 'تفضيلات الإشعارات';
+	@override String get notif_prefs_channels_title => 'القنوات';
+	@override String get notif_prefs_channels_sub => 'مفاتيح رئيسية لكيفية وصول Wayo إليك.';
+	@override String get notif_prefs_categories_title => 'الفئات';
+	@override String get notif_prefs_categories_sub => 'كتم أنواع معينة دون إيقاف الكل.';
+	@override String get notif_prefs_in_app => 'داخل التطبيق';
+	@override String get notif_prefs_email => 'البريد';
+	@override String get notif_prefs_sound => 'الصوت';
+	@override String get notif_prefs_load_error => 'تعذّر تحميل التفضيلات.';
+	@override String get notif_prefs_error => 'تعذّر الحفظ. أعد المحاولة.';
+	@override String get notif_prefs_retry => 'إعادة المحاولة';
+	@override String get notif_cat_video => 'الفيديوهات';
+	@override String get notif_cat_applications => 'الطلبات';
+	@override String get notif_cat_payouts => 'المدفوعات';
+	@override String get notif_cat_wallet => 'المحفظة';
+	@override String get notif_cat_tokens => 'الرموز';
+	@override String get notif_cat_campaigns => 'الحملات';
+	@override String get notif_cat_security => 'الأمان';
+	@override String get export_data_title => 'تنزيل بياناتي';
+	@override String get export_data_sub => 'تصدير نسخة JSON من حساب Wayo Ads';
+	@override String get export_data_button => 'تنزيل التصدير';
+	@override String get export_data_progress => 'جارٍ تجهيز التصدير…';
+	@override String get export_data_success => 'تم حفظ التصدير';
+	@override String get export_data_error => 'تعذّر تصدير بياناتك. أعد المحاولة.';
+	@override String get passkeys_title => 'مفاتيح المرور';
+	@override String get passkeys_sub => 'تسجيل دخول بدون كلمة مرور';
+	@override String get passkeys_web_only => 'إدارة مفاتيح المرور تُفتح بأمان عبر Auth Wayo داخل التطبيق.';
+	@override String get passkeys_manage_hint => 'أضف أو أزل مفاتيح المرور. تتم الإدارة عبر Auth Wayo (مطلوب لـ WebAuthn).';
+	@override String get passkeys_open_manage => 'إدارة مفاتيح المرور';
+	@override String get connected_accounts_title => 'الحسابات المرتبطة';
+	@override String get connected_accounts_sub => 'Google وApple المرتبطة بحساب Wayo';
+	@override String get connected_accounts_web_only => 'اربط أو ألغِ ربط Google/Apple عبر Auth Wayo في التطبيق.';
+	@override String get connected_accounts_manage_hint => 'اربط أو ألغِ ربط Google وApple في حساب Auth Wayo.';
+	@override String get connected_accounts_open_manage => 'إدارة الحسابات المرتبطة';
+	@override String get handoff_error => 'تعذّر فتح الإدارة الآمنة. سيتم فتح المتصفح.';
+	@override String get open_web_settings => 'فتح إعدادات الويب';
+	@override String get guides_title => 'الأدلة والموارد';
+	@override String get guides_sub => 'مقالات المساعدة وأدلة منتج Wayo Ads';
 	@override String get section_account => 'الحساب';
 	@override String get section_security => 'الأمان';
 	@override String get sessions_title => 'الجلسات النشطة';
@@ -1485,6 +1613,30 @@ class _TranslationsAdvertiserCampaignsApplicationsAr extends TranslationsAdverti
 	@override String get rejected_status => 'مرفوض';
 }
 
+// Path: advertiser_campaigns.actions
+class _TranslationsAdvertiserCampaignsActionsAr extends TranslationsAdvertiserCampaignsActionsEn {
+	_TranslationsAdvertiserCampaignsActionsAr._(TranslationsAr root) : this._root = root, super.internal(root);
+
+	final TranslationsAr _root; // ignore: unused_field
+
+	// Translations
+	@override String get publish => 'نشر';
+	@override String get pause => 'إيقاف مؤقت';
+	@override String get resume => 'استئناف';
+	@override String get cancel => 'إلغاء الحملة';
+	@override String get edit => 'تعديل';
+	@override String get more => 'المزيد';
+	@override String get analytics => 'التحليلات';
+	@override String get financial => 'الصحة المالية';
+	@override String get financial_health => 'الصحة المالية';
+	@override String get status_updated => 'تم تحديث حالة الحملة';
+	@override String get status_error => 'تعذّر تحديث حالة الحملة';
+	@override String get cancel_confirm_title => 'إلغاء هذه الحملة؟';
+	@override String get cancel_confirm_body => 'ستُعاد الميزانية المحجوزة المتبقية إلى محفظتك.';
+	@override String get dismiss => 'الإبقاء على الحملة';
+	@override String get confirm => 'إلغاء الحملة';
+}
+
 // Path: creator.dashboard
 class _TranslationsCreatorDashboardAr extends TranslationsCreatorDashboardEn {
 	_TranslationsCreatorDashboardAr._(TranslationsAr root) : this._root = root, super.internal(root);
@@ -1563,6 +1715,8 @@ class _TranslationsCreatorWalletAr extends TranslationsCreatorWalletEn {
 	@override String get stripe_card_title_connected => 'Stripe متصل';
 	@override String get stripe_card_subtitle_connected => 'حساب Stripe Express نشط. المدفوعات تصل إلى بنكك.';
 	@override String get history_title => 'سجل السحوبات';
+	@override String get documents_cta => 'الكشوفات';
+	@override String get documents_cta_subtitle => 'ملفات PDF موقعة للمدفوعات ووثائق الأرباح';
 	@override String get history_empty => 'لا توجد سحوبات بعد — ستظهر هنا.';
 	@override String get history_load_error => 'تعذّر تحميل سجل السحوبات.';
 	@override String get history_status_pending => 'قيد الانتظار';
@@ -1770,6 +1924,54 @@ class _TranslationsCreatorBusinessAr extends TranslationsCreatorBusinessEn {
 	@override String get footer_info_global => 'تُستخدم للفواتير وشحن المحفظة. تتم معالجة المدفوعات بأمان عبر Stripe.';
 	@override String get save_error => 'تعذّر حفظ المعلومات. يرجى المحاولة مجددًا.';
 	@override late final _TranslationsCreatorBusinessValidationAr validation = _TranslationsCreatorBusinessValidationAr._(_root);
+}
+
+// Path: creator.trust
+class _TranslationsCreatorTrustAr extends TranslationsCreatorTrustEn {
+	_TranslationsCreatorTrustAr._(TranslationsAr root) : this._root = root, super.internal(root);
+
+	final TranslationsAr _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'درجة الثقة';
+	@override String tier({required Object name}) => 'المستوى ${name}';
+	@override String get verified => 'موثّق';
+	@override String delta_up({required Object value}) => '+${value} هذا الأسبوع';
+	@override String delta_down({required Object value}) => '-${value} هذا الأسبوع';
+	@override String cpm_hint({required Object value}) => 'ارتفاع CPM محتمل: ${value}';
+	@override String get breakdown_title => 'تفصيل الدرجة';
+	@override String get validation_points => 'معدل التحقق';
+	@override String get fraud_points => 'درجة الاحتيال';
+	@override String get anomaly_points => 'درجة الشذوذ';
+	@override String get open_analytics => 'عرض التحليلات';
+}
+
+// Path: creator.analytics
+class _TranslationsCreatorAnalyticsAr extends TranslationsCreatorAnalyticsEn {
+	_TranslationsCreatorAnalyticsAr._(TranslationsAr root) : this._root = root, super.internal(root);
+
+	final TranslationsAr _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'تحليلات المنشئ';
+	@override String get period_7d => '7ي';
+	@override String get period_30d => '30ي';
+	@override String get period_90d => '90ي';
+	@override String get load_error => 'تعذّر تحميل التحليلات';
+	@override String get empty => 'لا توجد بيانات لهذه الفترة بعد';
+	@override String get earnings => 'الأرباح';
+	@override String get pending => 'قيد الانتظار';
+	@override String get validated_views => 'مشاهدات موثّقة';
+	@override String get validated_clicks => 'نقرات موثّقة';
+	@override String get recorded_views => 'مشاهدات مسجّلة';
+	@override String get recorded_clicks => 'نقرات مسجّلة';
+	@override String get view_validation_rate => 'تحقق المشاهدات';
+	@override String get click_validation_rate => 'تحقق النقرات';
+	@override String period_meta({required Object days, required Object currency}) => 'آخر ${days} يوماً · ${currency}';
+	@override String get active_campaigns => 'الحملات النشطة';
+	@override String get daily_title => 'يومي';
+	@override String get by_campaign => 'حسب الحملة';
+	@override String get server_authority_note => 'المبالغ والمعدلات من الخادم. التطبيق لا يخترع قواعد مالية.';
 }
 
 // Path: onboarding.advertiser
@@ -2187,6 +2389,21 @@ extension on TranslationsAr {
 			case 'advertiser_campaigns.applications.reject_button': return 'رفض';
 			case 'advertiser_campaigns.applications.approved_status': return 'معتمد';
 			case 'advertiser_campaigns.applications.rejected_status': return 'مرفوض';
+			case 'advertiser_campaigns.actions.publish': return 'نشر';
+			case 'advertiser_campaigns.actions.pause': return 'إيقاف مؤقت';
+			case 'advertiser_campaigns.actions.resume': return 'استئناف';
+			case 'advertiser_campaigns.actions.cancel': return 'إلغاء الحملة';
+			case 'advertiser_campaigns.actions.edit': return 'تعديل';
+			case 'advertiser_campaigns.actions.more': return 'المزيد';
+			case 'advertiser_campaigns.actions.analytics': return 'التحليلات';
+			case 'advertiser_campaigns.actions.financial': return 'الصحة المالية';
+			case 'advertiser_campaigns.actions.financial_health': return 'الصحة المالية';
+			case 'advertiser_campaigns.actions.status_updated': return 'تم تحديث حالة الحملة';
+			case 'advertiser_campaigns.actions.status_error': return 'تعذّر تحديث حالة الحملة';
+			case 'advertiser_campaigns.actions.cancel_confirm_title': return 'إلغاء هذه الحملة؟';
+			case 'advertiser_campaigns.actions.cancel_confirm_body': return 'ستُعاد الميزانية المحجوزة المتبقية إلى محفظتك.';
+			case 'advertiser_campaigns.actions.dismiss': return 'الإبقاء على الحملة';
+			case 'advertiser_campaigns.actions.confirm': return 'إلغاء الحملة';
 			case 'advertiser_video_reviews.title': return 'مراجعة الفيديوهات';
 			case 'advertiser_video_reviews.subtitle': return 'اعتمد أو ارفض فيديوهات المنشئين المقدّمة لحملاتك.';
 			case 'advertiser_video_reviews.pending': return 'قيد الانتظار';
@@ -2378,6 +2595,8 @@ extension on TranslationsAr {
 			case 'creator.wallet.stripe_card_title_connected': return 'Stripe متصل';
 			case 'creator.wallet.stripe_card_subtitle_connected': return 'حساب Stripe Express نشط. المدفوعات تصل إلى بنكك.';
 			case 'creator.wallet.history_title': return 'سجل السحوبات';
+			case 'creator.wallet.documents_cta': return 'الكشوفات';
+			case 'creator.wallet.documents_cta_subtitle': return 'ملفات PDF موقعة للمدفوعات ووثائق الأرباح';
 			case 'creator.wallet.history_empty': return 'لا توجد سحوبات بعد — ستظهر هنا.';
 			case 'creator.wallet.history_load_error': return 'تعذّر تحميل سجل السحوبات.';
 			case 'creator.wallet.history_status_pending': return 'قيد الانتظار';
@@ -2566,6 +2785,36 @@ extension on TranslationsAr {
 			case 'creator.business.validation.vat_number_invalid': return 'صيغة الرقم الضريبي غير صالحة';
 			case 'creator.business.validation.state_required': return 'الولاية / المقاطعة مطلوبة';
 			case 'creator.business.validation.state_invalid': return 'الولاية / المنطقة غير صالحة';
+			case 'creator.trust.title': return 'درجة الثقة';
+			case 'creator.trust.tier': return ({required Object name}) => 'المستوى ${name}';
+			case 'creator.trust.verified': return 'موثّق';
+			case 'creator.trust.delta_up': return ({required Object value}) => '+${value} هذا الأسبوع';
+			case 'creator.trust.delta_down': return ({required Object value}) => '-${value} هذا الأسبوع';
+			case 'creator.trust.cpm_hint': return ({required Object value}) => 'ارتفاع CPM محتمل: ${value}';
+			case 'creator.trust.breakdown_title': return 'تفصيل الدرجة';
+			case 'creator.trust.validation_points': return 'معدل التحقق';
+			case 'creator.trust.fraud_points': return 'درجة الاحتيال';
+			case 'creator.trust.anomaly_points': return 'درجة الشذوذ';
+			case 'creator.trust.open_analytics': return 'عرض التحليلات';
+			case 'creator.analytics.title': return 'تحليلات المنشئ';
+			case 'creator.analytics.period_7d': return '7ي';
+			case 'creator.analytics.period_30d': return '30ي';
+			case 'creator.analytics.period_90d': return '90ي';
+			case 'creator.analytics.load_error': return 'تعذّر تحميل التحليلات';
+			case 'creator.analytics.empty': return 'لا توجد بيانات لهذه الفترة بعد';
+			case 'creator.analytics.earnings': return 'الأرباح';
+			case 'creator.analytics.pending': return 'قيد الانتظار';
+			case 'creator.analytics.validated_views': return 'مشاهدات موثّقة';
+			case 'creator.analytics.validated_clicks': return 'نقرات موثّقة';
+			case 'creator.analytics.recorded_views': return 'مشاهدات مسجّلة';
+			case 'creator.analytics.recorded_clicks': return 'نقرات مسجّلة';
+			case 'creator.analytics.view_validation_rate': return 'تحقق المشاهدات';
+			case 'creator.analytics.click_validation_rate': return 'تحقق النقرات';
+			case 'creator.analytics.period_meta': return ({required Object days, required Object currency}) => 'آخر ${days} يوماً · ${currency}';
+			case 'creator.analytics.active_campaigns': return 'الحملات النشطة';
+			case 'creator.analytics.daily_title': return 'يومي';
+			case 'creator.analytics.by_campaign': return 'حسب الحملة';
+			case 'creator.analytics.server_authority_note': return 'المبالغ والمعدلات من الخادم. التطبيق لا يخترع قواعد مالية.';
 			case 'advertiser_wallet.hero_title': return 'رصيدك';
 			case 'advertiser_wallet.hero_subtitle': return 'أضف رصيداً لتشغيل الحملات. تتم المعالجة بأمان عبر Stripe. يتوفر Apple Pay على iOS وGoogle Pay على Android عند دعمهما.';
 			case 'advertiser_wallet.available': return 'المتاح';
@@ -2575,7 +2824,7 @@ extension on TranslationsAr {
 			case 'advertiser_wallet.quick_50': return '50 USD';
 			case 'advertiser_wallet.quick_100': return '100 USD';
 			case 'advertiser_wallet.quick_250': return '500 USD';
-			case 'advertiser_wallet.min_deposit': return 'الحد الأدنى للإيداع 50.00 USD.';
+			case 'advertiser_wallet.min_deposit': return 'الحد الأدنى للإيداع {amount}.';
 			case 'advertiser_wallet.test_pay': return 'محاكاة الدفع (تطوير)';
 			case 'advertiser_wallet.test_hint': return 'وضع اختباري: بدون بطاقة حقيقية.';
 			case 'advertiser_wallet.pay_secure': return 'بطاقة أو Apple Pay أو Google Pay';
@@ -2611,12 +2860,75 @@ extension on TranslationsAr {
 			case 'advertiser_wallet.deposit_pending': return 'إيداع قيد الانتظار';
 			case 'advertiser_wallet.deposit_resume_hint': return 'استئناف إيداعك بقيمة {amount} — أكمل الدفع أو اضغط إلغاء للتخلي عنه.';
 			case 'advertiser_wallet.deposit_cancel': return 'إلغاء';
+			case 'advertiser_wallet.funding_method_label': return 'طريقة التمويل';
+			case 'advertiser_wallet.funding_card_title': return 'بطاقة';
+			case 'advertiser_wallet.funding_card_badge': return 'فوري';
+			case 'advertiser_wallet.funding_card_desc': return 'Visa وMastercard وAmex — تتوفر الأموال فوراً.';
+			case 'advertiser_wallet.funding_ach_title': return 'خصم بنكي (ACH)';
+			case 'advertiser_wallet.funding_ach_badge': return 'رسوم أقل';
+			case 'advertiser_wallet.funding_ach_desc': return 'خصم مباشر من حسابك البنكي الأمريكي — رسوم أقل من البطاقة.';
+			case 'advertiser_wallet.funding_ach_eta': return 'تستقر الأموال عادة خلال 1-3 أيام عمل.';
+			case 'advertiser_wallet.funding_ach_usd_only': return 'ACH متاح فقط للمحافظ بالدولار الأمريكي.';
+			case 'advertiser_wallet.funding_wire_title': return 'حوالة بنكية';
+			case 'advertiser_wallet.funding_wire_badge': return 'مبالغ كبيرة';
+			case 'advertiser_wallet.funding_wire_desc': return 'أرسل حوالة بنكية باستخدام التعليمات المقدمة.';
+			case 'advertiser_wallet.funding_wire_eta': return 'تصل الأموال عادة خلال 1-3 أيام عمل.';
+			case 'advertiser_wallet.funding_wire_currency_only': return 'الحوالة متاحة فقط لـ: {currencies}.';
+			case 'advertiser_wallet.saved_cards_loading': return 'جارٍ تحميل البطاقات المحفوظة…';
+			case 'advertiser_wallet.default_card_badge': return 'افتراضية';
+			case 'advertiser_wallet.saved_card_badge': return 'محفوظة';
+			case 'advertiser_wallet.use_new_card': return 'استخدام بطاقة جديدة';
+			case 'advertiser_wallet.use_saved_card': return 'استخدام بطاقة محفوظة';
+			case 'advertiser_wallet.change_method': return 'تغيير';
+			case 'advertiser_wallet.remove_card': return 'إزالة';
+			case 'advertiser_wallet.remove_card_confirm_title': return 'إزالة هذه البطاقة؟';
+			case 'advertiser_wallet.remove_card_confirm_desc': return 'سيتم إزالة {brand} •••• {last4} من بطاقاتك المحفوظة.';
+			case 'advertiser_wallet.remove_card_confirm_action': return 'إزالة';
+			case 'advertiser_wallet.card_removed_title': return 'تمت إزالة البطاقة';
+			case 'advertiser_wallet.card_removed_desc': return 'تمت إزالة •••• {last4}.';
+			case 'advertiser_wallet.card_remove_failed': return 'تعذّر إزالة هذه البطاقة. أعد المحاولة.';
+			case 'advertiser_wallet.refresh_saved_cards': return 'تحديث';
+			case 'advertiser_wallet.pay_with_saved_card': return 'الدفع بـ {brand} •••• {last4}';
+			case 'advertiser_wallet.wire_instructions_loading': return 'تجهيز تعليمات الحوالة…';
+			case 'advertiser_wallet.wire_awaiting_title': return 'في انتظار حوالتك البنكية';
+			case 'advertiser_wallet.wire_awaiting_desc': return 'أرسل حوالة باستخدام التفاصيل أدناه. سيتم تحديث رصيدك عند استلام الأموال.';
+			case 'advertiser_wallet.wire_exact_amount': return 'المبلغ الدقيق';
+			case 'advertiser_wallet.wire_reference': return 'المرجع (مطلوب)';
+			case 'advertiser_wallet.wire_reference_required_hint': return 'أضف هذا المرجع في بيان الحوالة — بدونه لا يمكننا مطابقة دفعتك.';
+			case 'advertiser_wallet.wire_copy_action': return 'نسخ';
+			case 'advertiser_wallet.wire_copied_title': return 'تم النسخ';
+			case 'advertiser_wallet.wire_copied_desc': return 'تم النسخ إلى الحافظة.';
+			case 'advertiser_wallet.wire_copy_failed': return 'تعذّر النسخ. أعد المحاولة.';
+			case 'advertiser_wallet.wire_network_swift': return 'حوالة SWIFT / دولية';
+			case 'advertiser_wallet.wire_network_aba': return 'حوالة أمريكية محلية (ABA)';
+			case 'advertiser_wallet.wire_network_iban': return 'IBAN / SEPA';
+			case 'advertiser_wallet.wire_network_sort_code': return 'حوالة بنكية بريطانية';
+			case 'advertiser_wallet.wire_network_other': return '{network}';
+			case 'advertiser_wallet.wire_account_holder': return 'اسم صاحب الحساب';
+			case 'advertiser_wallet.wire_bank_name': return 'اسم البنك';
+			case 'advertiser_wallet.wire_routing_number': return 'رقم التوجيه';
+			case 'advertiser_wallet.wire_sort_code': return 'Sort code';
+			case 'advertiser_wallet.wire_account_number': return 'رقم الحساب';
+			case 'advertiser_wallet.wire_swift_code': return 'SWIFT/BIC';
+			case 'advertiser_wallet.wire_iban': return 'IBAN';
+			case 'advertiser_wallet.wire_bic': return 'BIC';
+			case 'advertiser_wallet.wire_hosted_instructions': return 'عرض التعليمات الكاملة';
+			case 'advertiser_wallet.wire_done_button': return 'لقد أرسلت الحوالة';
+			case 'advertiser_wallet.ach_processing_banner': return 'إيداع ACH بقيمة {amount} قيد المعالجة — تستقر الأموال عادة خلال 1-3 أيام عمل.';
+			case 'advertiser_wallet.wire_awaiting_banner': return 'إيداع الحوالة بقيمة {amount} في انتظار حوالتك البنكية.';
+			case 'advertiser_wallet.reconcile_button': return 'تحقق من الحالة';
+			case 'advertiser_wallet.reconcile_success': return 'تم تحديث الحالة.';
+			case 'advertiser_wallet.reconcile_still_pending': return 'لا يزال قيد المعالجة — تحقق قريباً.';
+			case 'advertiser_wallet.reconcile_failed': return 'تعذّر التحقق من الحالة. أعد المحاولة.';
+			case 'advertiser_wallet.continue_to_payment': return 'استمرار';
+			case 'advertiser_wallet.cancel': return 'إلغاء';
 			case 'chat.inbox_title': return 'الرسائل';
 			case 'chat.inbox_subtitle': return 'محادثات آمنة لحملاتك';
 			case 'chat.conversation_unknown': return 'محادثة';
 			case 'chat.thread_fallback_title': return 'محادثة';
 			case 'chat.role_creator': return 'منشئ';
 			case 'chat.role_advertiser': return 'معلن';
+			case 'chat.role_admin': return 'أدمن';
 			case 'chat.composer_hint': return 'اكتب رسالة…';
 			case 'chat.typing': return 'يكتب…';
 			case 'chat.error_load_threads': return 'تعذّر تحميل محادثاتك. أعد المحاولة.';
@@ -2645,7 +2957,29 @@ extension on TranslationsAr {
 			case 'chat.conversation_open_failed': return 'تعذّر فتح هذه المحادثة. حاول مرة أخرى.';
 			case 'chat.file_picker_restart_hint': return 'المرفقات تحتاج إعادة تشغيل كاملة للتطبيق بعد التحديثات. أوقف التطبيق ثم شغّله من جديد (تجنّب hot restart).';
 			case 'chat.attachment_type_not_allowed': return 'يُسمح فقط بالصور (JPG أو PNG أو GIF أو WebP أو BMP) أو ملفات PDF.';
-			case 'chat.inbox_swipe_soon': return 'التثبيت والأرشفة من القائمة ستتوفر قريبًا.';
+			case 'chat.inbox_filter_active': return 'الوارد';
+			case 'chat.inbox_filter_archived': return 'المؤرشفة';
+			case 'chat.inbox_pinned': return 'مثبّتة';
+			case 'chat.inbox_unpinned': return 'أُزيل التثبيت';
+			case 'chat.inbox_archived': return 'مؤرشفة';
+			case 'chat.inbox_unarchived': return 'أُعيدت إلى الوارد';
+			case 'chat.inbox_pin_failed': return 'تعذّر تحديث التثبيت. حاول مرة أخرى.';
+			case 'chat.inbox_archive_failed': return 'تعذّر تحديث الأرشفة. حاول مرة أخرى.';
+			case 'chat.inbox_pin_disabled': return 'التثبيت والأرشفة غير متاحين مؤقتًا.';
+			case 'chat.menu_more': return 'المزيد';
+			case 'chat.menu_pin': return 'تثبيت';
+			case 'chat.menu_unpin': return 'إلغاء التثبيت';
+			case 'chat.menu_archive': return 'أرشفة';
+			case 'chat.menu_unarchive': return 'إلغاء الأرشفة';
+			case 'chat.menu_delete': return 'حذف';
+			case 'chat.delete_conversation': return 'حذف المحادثة';
+			case 'chat.delete_conversation_confirm_title': return 'حذف هذه المحادثة؟';
+			case 'chat.delete_conversation_confirm_text': return 'سيتم حذف جميع الرسائل نهائيًا لكلا الطرفين. لا يمكن التراجع عن هذا الإجراء.';
+			case 'chat.delete_conversation_confirm_cta': return 'حذف';
+			case 'chat.delete_conversation_failed': return 'تعذّر حذف المحادثة. حاول مرة أخرى.';
+			case 'chat.delete_conversation_done': return 'تم حذف المحادثة';
+			case 'chat.empty_archived_title': return 'لا محادثات مؤرشفة';
+			case 'chat.empty_archived_hint': return 'اسحب محادثة إلى اليسار لأرشفتها.';
 			case 'chat.date_today': return 'اليوم';
 			case 'chat.date_yesterday': return 'أمس';
 			case 'chat.bubble_reply': return 'رد';
@@ -2904,6 +3238,46 @@ extension on TranslationsAr {
 			case 'app_settings.notifications_open_settings': return 'فتح إعدادات الهاتف';
 			case 'app_settings.notifications_enable_error': return 'تعذّر تفعيل الإشعارات. تحقق من إعدادات النظام.';
 			case 'app_settings.notifications_update_error': return 'تعذّر تحديث إعدادات الإشعارات. أعد المحاولة.';
+			case 'app_settings.notif_prefs_entry_title': return 'تفضيلات الإشعارات';
+			case 'app_settings.notif_prefs_entry_sub': return 'القنوات والفئات للتنبيهات داخل التطبيق والبريد';
+			case 'app_settings.notif_prefs_title': return 'تفضيلات الإشعارات';
+			case 'app_settings.notif_prefs_channels_title': return 'القنوات';
+			case 'app_settings.notif_prefs_channels_sub': return 'مفاتيح رئيسية لكيفية وصول Wayo إليك.';
+			case 'app_settings.notif_prefs_categories_title': return 'الفئات';
+			case 'app_settings.notif_prefs_categories_sub': return 'كتم أنواع معينة دون إيقاف الكل.';
+			case 'app_settings.notif_prefs_in_app': return 'داخل التطبيق';
+			case 'app_settings.notif_prefs_email': return 'البريد';
+			case 'app_settings.notif_prefs_sound': return 'الصوت';
+			case 'app_settings.notif_prefs_load_error': return 'تعذّر تحميل التفضيلات.';
+			case 'app_settings.notif_prefs_error': return 'تعذّر الحفظ. أعد المحاولة.';
+			case 'app_settings.notif_prefs_retry': return 'إعادة المحاولة';
+			case 'app_settings.notif_cat_video': return 'الفيديوهات';
+			case 'app_settings.notif_cat_applications': return 'الطلبات';
+			case 'app_settings.notif_cat_payouts': return 'المدفوعات';
+			case 'app_settings.notif_cat_wallet': return 'المحفظة';
+			case 'app_settings.notif_cat_tokens': return 'الرموز';
+			case 'app_settings.notif_cat_campaigns': return 'الحملات';
+			case 'app_settings.notif_cat_security': return 'الأمان';
+			case 'app_settings.export_data_title': return 'تنزيل بياناتي';
+			case 'app_settings.export_data_sub': return 'تصدير نسخة JSON من حساب Wayo Ads';
+			case 'app_settings.export_data_button': return 'تنزيل التصدير';
+			case 'app_settings.export_data_progress': return 'جارٍ تجهيز التصدير…';
+			case 'app_settings.export_data_success': return 'تم حفظ التصدير';
+			case 'app_settings.export_data_error': return 'تعذّر تصدير بياناتك. أعد المحاولة.';
+			case 'app_settings.passkeys_title': return 'مفاتيح المرور';
+			case 'app_settings.passkeys_sub': return 'تسجيل دخول بدون كلمة مرور';
+			case 'app_settings.passkeys_web_only': return 'إدارة مفاتيح المرور تُفتح بأمان عبر Auth Wayo داخل التطبيق.';
+			case 'app_settings.passkeys_manage_hint': return 'أضف أو أزل مفاتيح المرور. تتم الإدارة عبر Auth Wayo (مطلوب لـ WebAuthn).';
+			case 'app_settings.passkeys_open_manage': return 'إدارة مفاتيح المرور';
+			case 'app_settings.connected_accounts_title': return 'الحسابات المرتبطة';
+			case 'app_settings.connected_accounts_sub': return 'Google وApple المرتبطة بحساب Wayo';
+			case 'app_settings.connected_accounts_web_only': return 'اربط أو ألغِ ربط Google/Apple عبر Auth Wayo في التطبيق.';
+			case 'app_settings.connected_accounts_manage_hint': return 'اربط أو ألغِ ربط Google وApple في حساب Auth Wayo.';
+			case 'app_settings.connected_accounts_open_manage': return 'إدارة الحسابات المرتبطة';
+			case 'app_settings.handoff_error': return 'تعذّر فتح الإدارة الآمنة. سيتم فتح المتصفح.';
+			case 'app_settings.open_web_settings': return 'فتح إعدادات الويب';
+			case 'app_settings.guides_title': return 'الأدلة والموارد';
+			case 'app_settings.guides_sub': return 'مقالات المساعدة وأدلة منتج Wayo Ads';
 			case 'app_settings.section_account': return 'الحساب';
 			case 'app_settings.section_security': return 'الأمان';
 			case 'app_settings.sessions_title': return 'الجلسات النشطة';

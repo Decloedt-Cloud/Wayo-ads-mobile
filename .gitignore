@@ -64,3 +64,14 @@ app.*.map.json
 /wayo_creator_studio/
 
 /android/build/
+
+# Java heap dumps
+*.hprof
+
+# Java heap dumps
+*.hprof
+
+# Local Gradle backups/cache
+android/.gradle.bad.*
+android/gradle.properties.backup-*
+android/gradle.properties.before-*

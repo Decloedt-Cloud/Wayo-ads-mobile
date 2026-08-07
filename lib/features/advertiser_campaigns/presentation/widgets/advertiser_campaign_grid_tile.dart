@@ -118,186 +118,201 @@ class _GridCampaignCardBodyState extends State<_GridCampaignCardBody> {
             boxShadow: AdvertiserCampaignsChrome.cardElevation(context),
           ),
           child: Material(
-          color: AdvertiserCampaignsChrome.card(context),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-            side: AdvertiserCampaignsChrome.cardBorderSide(context),
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: InkWell(
-            onTap: () {
-              HapticFeedback.lightImpact();
-              widget.onTap();
-            },
-            splashColor:
-                AdvertiserCampaignsChrome.amber(context).withValues(alpha: 0.14),
-            highlightColor:
-                AdvertiserCampaignsChrome.amber(context).withValues(alpha: 0.06),
-            borderRadius: BorderRadius.circular(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                AspectRatio(
-                  aspectRatio: 1.2,
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      final scrimH = constraints.maxHeight *
-                          AdvertiserCampaignsChrome.heroScrimHeightFactor(
-                            context,
-                          );
-                      return Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          _GridHeroVisual(
-                            coverUrl: normalizeWayoAdsMediaUrl(c.coverUrl),
-                            brandLogoUrl:
-                                resolveWayoAdsPublicUrl(c.brandLogoUrl),
-                          ),
-                          if (scrimH > 0)
-                            Positioned(
-                              left: 0,
-                              right: 0,
-                              bottom: 0,
-                              height: scrimH,
-                              child: DecoratedBox(
-                                decoration: AdvertiserCampaignsChrome
-                                    .heroImageBottomFade(context),
+            color: AdvertiserCampaignsChrome.card(context),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: AdvertiserCampaignsChrome.cardBorderSide(context),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: () {
+                HapticFeedback.lightImpact();
+                widget.onTap();
+              },
+              splashColor: AdvertiserCampaignsChrome.amber(
+                context,
+              ).withValues(alpha: 0.14),
+              highlightColor: AdvertiserCampaignsChrome.amber(
+                context,
+              ).withValues(alpha: 0.06),
+              borderRadius: BorderRadius.circular(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  AspectRatio(
+                    aspectRatio: 1.2,
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final scrimH =
+                            constraints.maxHeight *
+                            AdvertiserCampaignsChrome.heroScrimHeightFactor(
+                              context,
+                            );
+                        return Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            _GridHeroVisual(
+                              coverUrl: normalizeWayoAdsMediaUrl(c.coverUrl),
+                              brandLogoUrl: resolveWayoAdsPublicUrl(
+                                c.brandLogoUrl,
                               ),
                             ),
-                          PositionedDirectional(
-                            top: 8,
-                            end: 8,
-                            child: _GridCompactStatus(status: c.status, t: t),
-                          ),
-                          if (isCampaignNew(c.createdAt))
+                            if (scrimH > 0)
+                              Positioned(
+                                left: 0,
+                                right: 0,
+                                bottom: 0,
+                                height: scrimH,
+                                child: DecoratedBox(
+                                  decoration:
+                                      AdvertiserCampaignsChrome.heroImageBottomFade(
+                                        context,
+                                      ),
+                                ),
+                              ),
                             PositionedDirectional(
                               top: 8,
-                              start: 8,
-                              child: CampaignNewBadge(
-                                label: t.advertiser_campaigns.card.badge_new,
-                              ),
+                              end: 8,
+                              child: _GridCompactStatus(status: c.status, t: t),
                             ),
-                        ],
-                      );
-                    },
+                            if (isCampaignNew(c.createdAt))
+                              PositionedDirectional(
+                                top: 8,
+                                start: 8,
+                                child: CampaignNewBadge(
+                                  label: t.advertiser_campaigns.card.badge_new,
+                                ),
+                              ),
+                          ],
+                        );
+                      },
+                    ),
                   ),
-                ),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(10, 10, 10, 14),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SizedBox(
-                          height: _AdvertiserGridTileLayout.titleBlockHeight,
-                          child: Align(
-                            alignment: Alignment.topLeft,
-                            child: Text(
-                              c.name,
-                              maxLines: _AdvertiserGridTileLayout.titleMaxLines,
-                              overflow: TextOverflow.ellipsis,
-                              style: GoogleFonts.sora(
-                                fontSize:
-                                    _AdvertiserGridTileLayout.titleFontSize,
-                                fontWeight: FontWeight.w800,
-                                height:
-                                    _AdvertiserGridTileLayout.titleLineHeight,
-                                color: AdvertiserCampaignsChrome.value(context),
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        SizedBox(
-                          height: _AdvertiserGridTileLayout.platformRowHeight,
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Icon(
-                                _platformGlyph(c.platform),
-                                size: 14,
-                                color: AdvertiserCampaignsChrome.muted(context),
-                              ),
-                              const SizedBox(width: 6),
-                              Expanded(
-                                child: Text(
-                                  _platformLabel(widget.t, c.platform),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: GoogleFonts.dmSans(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
-                                    color:
-                                        AdvertiserCampaignsChrome.muted(context),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(10, 10, 10, 14),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SizedBox(
+                            height: _AdvertiserGridTileLayout.titleBlockHeight,
+                            child: Align(
+                              alignment: Alignment.topLeft,
+                              child: Text(
+                                c.name,
+                                maxLines:
+                                    _AdvertiserGridTileLayout.titleMaxLines,
+                                overflow: TextOverflow.ellipsis,
+                                style: GoogleFonts.sora(
+                                  fontSize:
+                                      _AdvertiserGridTileLayout.titleFontSize,
+                                  fontWeight: FontWeight.w800,
+                                  height:
+                                      _AdvertiserGridTileLayout.titleLineHeight,
+                                  color: AdvertiserCampaignsChrome.value(
+                                    context,
                                   ),
                                 ),
                               ),
-                            ],
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 10),
-                        SizedBox(
-                          height: _AdvertiserGridTileLayout.budgetLabelHeight,
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              t.advertiser_campaigns.card.budget_total,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: GoogleFonts.dmSans(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
-                                color: AdvertiserCampaignsChrome.muted(context)
-                                    .withValues(alpha: 0.9),
-                                letterSpacing: 0.2,
-                                height: 1.2,
+                          const SizedBox(height: 8),
+                          SizedBox(
+                            height: _AdvertiserGridTileLayout.platformRowHeight,
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  _platformGlyph(c.platform),
+                                  size: 14,
+                                  color: AdvertiserCampaignsChrome.muted(
+                                    context,
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                Expanded(
+                                  child: Text(
+                                    _platformLabel(widget.t, c.platform),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: GoogleFonts.dmSans(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                      color: AdvertiserCampaignsChrome.muted(
+                                        context,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          SizedBox(
+                            height: _AdvertiserGridTileLayout.budgetLabelHeight,
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                t.advertiser_campaigns.card.budget_total,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: GoogleFonts.dmSans(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                  color: AdvertiserCampaignsChrome.muted(
+                                    context,
+                                  ).withValues(alpha: 0.9),
+                                  letterSpacing: 0.2,
+                                  height: 1.2,
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                        SizedBox(
-                          height: _AdvertiserGridTileLayout.budgetValueHeight,
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              budgetFmt,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: GoogleFonts.dmSans(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w800,
-                                height: 1.25,
-                                color: AdvertiserCampaignsChrome.value(context),
+                          SizedBox(
+                            height: _AdvertiserGridTileLayout.budgetValueHeight,
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                budgetFmt,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: GoogleFonts.dmSans(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w800,
+                                  height: 1.25,
+                                  color: AdvertiserCampaignsChrome.value(
+                                    context,
+                                  ),
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
-        ),
         ),
       ),
     );
   }
 
   IconData _platformGlyph(CampaignPlatform p) => switch (p) {
-        CampaignPlatform.youtube => Icons.play_circle_filled_rounded,
-        CampaignPlatform.tiktok => Icons.music_note_rounded,
-        CampaignPlatform.instagram => Icons.photo_camera_rounded,
-        CampaignPlatform.unknown => Icons.public_rounded,
-      };
+    CampaignPlatform.youtube => Icons.play_circle_filled_rounded,
+    CampaignPlatform.tiktok => Icons.music_note_rounded,
+    CampaignPlatform.instagram => Icons.photo_camera_rounded,
+    CampaignPlatform.unknown => Icons.public_rounded,
+  };
 
   String _platformLabel(Translations t, CampaignPlatform p) => switch (p) {
-        CampaignPlatform.youtube => t.advertiser_campaigns.platform.youtube,
-        CampaignPlatform.tiktok => t.advertiser_campaigns.platform.tiktok,
-        CampaignPlatform.instagram => t.advertiser_campaigns.platform.instagram,
-        CampaignPlatform.unknown => t.advertiser_campaigns.platform.other,
-      };
+    CampaignPlatform.youtube => t.advertiser_campaigns.platform.youtube,
+    CampaignPlatform.tiktok => t.advertiser_campaigns.platform.tiktok,
+    CampaignPlatform.instagram => t.advertiser_campaigns.platform.instagram,
+    CampaignPlatform.unknown => t.advertiser_campaigns.platform.other,
+  };
 }
 
 class _GridHeroVisual extends StatelessWidget {
@@ -316,7 +331,9 @@ class _GridHeroVisual extends StatelessWidget {
         color: AppColors.surfaceElevatedOf(context),
         child: Icon(
           Icons.campaign_outlined,
-          color: AdvertiserCampaignsChrome.amber(context).withValues(alpha: 0.85),
+          color: AdvertiserCampaignsChrome.amber(
+            context,
+          ).withValues(alpha: 0.85),
           size: 40,
         ),
       ),
@@ -334,8 +351,10 @@ class _GridCompactStatus extends StatelessWidget {
   Widget build(BuildContext context) {
     final label = campaignStatusLabel(t, status);
 
-    final (bg, fg, borderClr) =
-        AdvertiserCampaignsChrome.statusChip(context, status);
+    final (bg, fg, borderClr) = AdvertiserCampaignsChrome.statusChip(
+      context,
+      status,
+    );
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
@@ -343,9 +362,7 @@ class _GridCompactStatus extends StatelessWidget {
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(999),
-        border: borderClr != null
-            ? Border.all(color: borderClr)
-            : null,
+        border: borderClr != null ? Border.all(color: borderClr) : null,
         boxShadow: isDark
             ? null
             : [

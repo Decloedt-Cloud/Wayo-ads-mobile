@@ -7,12 +7,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/maintenance/maintenance_providers.dart';
+import '../../core/maintenance/maintenance_recovery_coordinator.dart';
 import '../../core/maintenance/maintenance_recovery_hub.dart';
 import '../../core/maintenance/maintenance_service.dart';
 import '../../core/providers/app_providers.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/ui/wayo_toast.dart';
-import '../../features/dashboard/presentation/providers/dashboard_state_providers.dart';
 import '../../i18n/strings.g.dart';
 import 'wayo_ads_brand_mark.dart';
 
@@ -41,6 +41,7 @@ class _MaintenanceGateState extends ConsumerState<MaintenanceGate>
     with WidgetsBindingObserver {
   Timer? _periodicProbe;
   bool _wasMaintenanceActive = false;
+  bool _recoveryScheduled = false;
 
   @override
   void initState() {
@@ -75,13 +76,25 @@ class _MaintenanceGateState extends ConsumerState<MaintenanceGate>
 
   void _onMaintenanceChanged() {
     final active = MaintenanceServiceHolder.instance.isActive;
-    if (_wasMaintenanceActive && !active && mounted) {
-      refreshAppDataAfterMaintenanceRecovery(ref);
-    }
+    final leftMaintenance = _wasMaintenanceActive && !active;
     if (active != _wasMaintenanceActive) {
       _wasMaintenanceActive = active;
       _restartProbeTimer();
     }
+    if (!leftMaintenance) return;
+    _scheduleRecoveryAfterFrame();
+  }
+
+  /// Never invalidate Riverpod providers synchronously inside [notifyListeners]
+  /// (ListenableBuilder may still be building).
+  void _scheduleRecoveryAfterFrame() {
+    if (_recoveryScheduled) return;
+    _recoveryScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _recoveryScheduled = false;
+      if (!mounted) return;
+      unawaited(ref.read(maintenanceRecoveryCoordinatorProvider).recoverNow());
+    });
   }
 
   void _restartProbeTimer() {
@@ -166,19 +179,17 @@ class _MaintenanceScreen extends ConsumerWidget {
               Text(
                 t.maintenance.title,
                 textAlign: TextAlign.center,
-                style: AppTextStyles.headlineMedium(context).copyWith(
-                  color: onSurface,
-                  fontWeight: FontWeight.w800,
-                ),
+                style: AppTextStyles.headlineMedium(
+                  context,
+                ).copyWith(color: onSurface, fontWeight: FontWeight.w800),
               ),
               const SizedBox(height: 12),
               Text(
                 t.maintenance.subtitle,
                 textAlign: TextAlign.center,
-                style: AppTextStyles.bodyLarge(context).copyWith(
-                  color: muted,
-                  height: 1.45,
-                ),
+                style: AppTextStyles.bodyLarge(
+                  context,
+                ).copyWith(color: muted, height: 1.45),
               ),
               const SizedBox(height: 12),
               Text(
@@ -192,13 +203,15 @@ class _MaintenanceScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 28),
               ClipRRect(
-                borderRadius: BorderRadius.circular(99),
-                child: LinearProgressIndicator(
-                  minHeight: 4,
-                  backgroundColor: scheme.outlineVariant.withValues(alpha: 0.35),
-                  color: amber,
-                ),
-              )
+                    borderRadius: BorderRadius.circular(99),
+                    child: LinearProgressIndicator(
+                      minHeight: 4,
+                      backgroundColor: scheme.outlineVariant.withValues(
+                        alpha: 0.35,
+                      ),
+                      color: amber,
+                    ),
+                  )
                   .animate(onPlay: (c) => c.repeat())
                   .shimmer(
                     duration: 1400.ms,
@@ -208,10 +221,9 @@ class _MaintenanceScreen extends ConsumerWidget {
               Text(
                 t.maintenance.copyright,
                 textAlign: TextAlign.center,
-                style: AppTextStyles.caption(context).copyWith(
-                  color: muted.withValues(alpha: 0.75),
-                  fontSize: 12,
-                ),
+                style: AppTextStyles.caption(
+                  context,
+                ).copyWith(color: muted.withValues(alpha: 0.75), fontSize: 12),
               ),
               const SizedBox(height: 8),
               _SupportEmailLink(email: t.maintenance.support_email),
@@ -268,9 +280,9 @@ class _MaintenanceThemeToggle extends ConsumerWidget {
           customBorder: const CircleBorder(),
           onTap: () {
             HapticFeedback.selectionClick();
-            ref.read(themeModeProvider.notifier).set(
-              isDark ? ThemeMode.light : ThemeMode.dark,
-            );
+            ref
+                .read(themeModeProvider.notifier)
+                .set(isDark ? ThemeMode.light : ThemeMode.dark);
           },
           child: SizedBox(
             width: 44,
@@ -314,9 +326,7 @@ class _MaintenanceLanguagePill extends ConsumerWidget {
       decoration: BoxDecoration(
         color: shellFill,
         borderRadius: BorderRadius.circular(99),
-        border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: 0.5),
-        ),
+        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.5)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -463,9 +473,7 @@ class _PulseIcon extends StatelessWidget {
     );
 
     if (probing) {
-      return icon
-          .animate(onPlay: (c) => c.repeat())
-          .rotate(duration: 1200.ms);
+      return icon.animate(onPlay: (c) => c.repeat()).rotate(duration: 1200.ms);
     }
     return icon
         .animate(onPlay: (c) => c.repeat(reverse: true))

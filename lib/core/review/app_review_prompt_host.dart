@@ -7,6 +7,7 @@ import '../../features/auth/domain/auth_notifier.dart';
 import '../../features/auth/domain/wayo_ads_account_role.dart';
 import '../../features/onboarding/presentation/shell_tutorial_controller.dart';
 import '../providers/app_providers.dart';
+import '../riverpod/defer_after_build.dart';
 import 'app_review_service.dart';
 
 /// Records authenticated shell sessions and may trigger native review prompts.
@@ -21,6 +22,7 @@ class AppReviewPromptHost extends ConsumerStatefulWidget {
 
 class _AppReviewPromptHostState extends ConsumerState<AppReviewPromptHost> {
   int? _lastRecordedUserId;
+  var _sessionCheckScheduled = false;
 
   void _maybeRecordShellSession() {
     final auth = ref.read(authNotifierProvider).valueOrNull;
@@ -49,24 +51,29 @@ class _AppReviewPromptHostState extends ConsumerState<AppReviewPromptHost> {
     );
   }
 
+  void _scheduleSessionCheck() {
+    if (_sessionCheckScheduled) return;
+    _sessionCheckScheduled = true;
+    deferAfterBuild(() {
+      _sessionCheckScheduled = false;
+      if (mounted) _maybeRecordShellSession();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     ref.listen<AsyncValue<AuthState>>(authNotifierProvider, (prev, next) {
       next.whenData((s) {
         if (s is AuthAuthenticated &&
             s.user.wayoAdsRole != WayoAdsAccountRole.unknown) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) _maybeRecordShellSession();
-          });
+          _scheduleSessionCheck();
         } else {
           _lastRecordedUserId = null;
         }
       });
     });
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _maybeRecordShellSession();
-    });
+    _scheduleSessionCheck();
 
     return widget.child;
   }

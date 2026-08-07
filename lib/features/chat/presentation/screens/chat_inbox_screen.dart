@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:wayoadsgo/core/ui/wayo_dialog.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -37,7 +38,8 @@ class ChatInboxScreen extends ConsumerStatefulWidget {
   ConsumerState<ChatInboxScreen> createState() => _ChatInboxScreenState();
 }
 
-class _ChatInboxScreenState extends ConsumerState<ChatInboxScreen> {
+class _ChatInboxScreenState extends ConsumerState<ChatInboxScreen>
+    with WidgetsBindingObserver {
   StreamSubscription<ChatRealtimeEvent>? _rtSub;
   final Map<int, String> _typingUserByConv = {};
   final Map<int, Timer> _typingClearTimers = {};
@@ -61,6 +63,7 @@ class _ChatInboxScreenState extends ConsumerState<ChatInboxScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     ChatShareIntent.bind((files) {
       ref.read(chatPendingShareProvider.notifier).state = files;
     });
@@ -68,6 +71,7 @@ class _ChatInboxScreenState extends ConsumerState<ChatInboxScreen> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _inboxAutoRetryTimer?.cancel();
     _inboxRefreshDebounce?.cancel();
     _scroll.dispose();
@@ -77,6 +81,21 @@ class _ChatInboxScreenState extends ConsumerState<ChatInboxScreen> {
     _typingClearTimers.clear();
     _rtSub?.cancel();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      unawaited(_resyncAfterForeground());
+    }
+  }
+
+  Future<void> _resyncAfterForeground() async {
+    if (!mounted) return;
+    ref.invalidate(chatConversationsProvider);
+    await forceReconnectChatRealtime(ref);
+    if (!mounted) return;
+    await _resyncConversationChannels();
   }
 
   void _scheduleTypingClear(int conversationId) {
@@ -308,6 +327,16 @@ class _ChatInboxScreenState extends ConsumerState<ChatInboxScreen> {
                     subtitle: t.chat.inbox_subtitle,
                   ),
                   Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                    child: _InboxFilterBar(
+                      showArchived: ref.watch(chatInboxShowArchivedProvider),
+                      onChanged: (archived) {
+                        ref.read(chatInboxShowArchivedProvider.notifier).state =
+                            archived;
+                      },
+                    ),
+                  ),
+                  Padding(
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                     child: ref
                         .watch(chatBootstrapProvider)
@@ -364,9 +393,15 @@ class _ChatInboxScreenState extends ConsumerState<ChatInboxScreen> {
                             .watch(chatBootstrapProvider)
                             .valueOrNull;
                         if (list.isEmpty) {
+                          final archived =
+                              ref.watch(chatInboxShowArchivedProvider);
                           return _ChatEmpty(
-                            message: t.chat.empty_threads_title,
-                            hint: t.chat.empty_threads_hint,
+                            message: archived
+                                ? t.chat.empty_archived_title
+                                : t.chat.empty_threads_title,
+                            hint: archived
+                                ? t.chat.empty_archived_hint
+                                : t.chat.empty_threads_hint,
                           );
                         }
                         return ListenableBuilder(
@@ -451,10 +486,18 @@ class _ChatInboxScreenState extends ConsumerState<ChatInboxScreen> {
                                             readOverrides,
                                           ),
                                           online: partnerOnline,
+                                          pinned: c.isPinned,
+                                          isArchived: c.isArchived,
                                           typing: isTyping,
                                           typingName: typingName,
-                                          partnerRole:
-                                              chatPartnerRoleFor(role),
+                                          partnerRole: resolveChatPartnerRole(
+                                            myRole: role,
+                                            partnerAppRoles: myChatUserId == null
+                                                ? null
+                                                : c.partnerAppRoles(
+                                                    myChatUserId,
+                                                  ),
+                                          ),
                                           onTap: () {
                                             FocusManager.instance.primaryFocus
                                                 ?.unfocus();
@@ -463,6 +506,18 @@ class _ChatInboxScreenState extends ConsumerState<ChatInboxScreen> {
                                               extra: title,
                                             );
                                           },
+                                          onPin: () => _togglePin(
+                                            context,
+                                            conversation: c,
+                                          ),
+                                          onArchive: () => _toggleArchive(
+                                            context,
+                                            conversation: c,
+                                          ),
+                                          onDelete: () => _deleteConversation(
+                                            context,
+                                            conversation: c,
+                                          ),
                                         ),
                                       );
 
@@ -485,23 +540,15 @@ class _ChatInboxScreenState extends ConsumerState<ChatInboxScreen> {
 
                                       return RepaintBoundary(
                                         child: Dismissible(
-                                          key: ValueKey('conv_${c.id}'),
-                                          confirmDismiss: (dir) async {
-                                            if (dir ==
-                                                    DismissDirection
-                                                        .endToStart ||
-                                                dir ==
-                                                    DismissDirection
-                                                        .startToEnd) {
-                                              if (context.mounted) {
-                                                WayoToast.info(
-                                                  context,
-                                                  t.chat.inbox_swipe_soon,
-                                                );
-                                              }
-                                            }
-                                            return false;
-                                          },
+                                          key: ValueKey(
+                                            'conv_${c.id}_${c.isPinned}_${c.isArchived}',
+                                          ),
+                                          confirmDismiss: (dir) =>
+                                              _onInboxSwipe(
+                                            context,
+                                            conversation: c,
+                                            direction: dir,
+                                          ),
                                           background: Container(
                                             alignment: Alignment.centerLeft,
                                             padding: const EdgeInsets.only(
@@ -528,8 +575,14 @@ class _ChatInboxScreenState extends ConsumerState<ChatInboxScreen> {
                                                 ],
                                               ),
                                             ),
-                                            child: const Icon(
-                                              Icons.push_pin_rounded,
+                                            child: Icon(
+                                              c.isArchived
+                                                  ? Icons.unarchive_rounded
+                                                  : (c.isPinned
+                                                      ? Icons
+                                                          .push_pin_outlined
+                                                      : Icons
+                                                          .push_pin_rounded),
                                               color: Colors.white,
                                             ),
                                           ),
@@ -546,12 +599,15 @@ class _ChatInboxScreenState extends ConsumerState<ChatInboxScreen> {
                                                   BorderRadius.circular(
                                                     p.radiusXL,
                                                   ),
-                                              color: AppColors.error.withValues(
-                                                alpha: 0.55,
-                                              ),
+                                              color: (c.isArchived
+                                                      ? p.accentWarm
+                                                      : AppColors.error)
+                                                  .withValues(alpha: 0.55),
                                             ),
-                                            child: const Icon(
-                                              Icons.delete_outline_rounded,
+                                            child: Icon(
+                                              c.isArchived
+                                                  ? Icons.unarchive_rounded
+                                                  : Icons.archive_rounded,
                                               color: Colors.white,
                                             ),
                                           ),
@@ -575,6 +631,151 @@ class _ChatInboxScreenState extends ConsumerState<ChatInboxScreen> {
         ),
       ),
     );
+  }
+
+  Future<bool> _onInboxSwipe(
+    BuildContext context, {
+    required ChatConversation conversation,
+    required DismissDirection direction,
+  }) async {
+    final showArchived = ref.read(chatInboxShowArchivedProvider);
+
+    if (showArchived || conversation.isArchived) {
+      await _toggleArchive(context, conversation: conversation);
+      return true;
+    }
+
+    if (direction == DismissDirection.startToEnd) {
+      await _togglePin(context, conversation: conversation);
+      return false;
+    }
+
+    if (direction == DismissDirection.endToStart) {
+      await _toggleArchive(context, conversation: conversation);
+      return true;
+    }
+    return false;
+  }
+
+  Future<void> _togglePin(
+    BuildContext context, {
+    required ChatConversation conversation,
+  }) async {
+    final t = context.t;
+    final creds = ref.read(chatBootstrapProvider).valueOrNull;
+    if (creds == null) return;
+
+    final repo = ref.read(chatRepositoryProvider);
+    final rt = ref.read(chatRealtimeServiceProvider);
+
+    try {
+      if (conversation.isPinned) {
+        await repo.unpinConversation(
+          creds,
+          conversation.id,
+          socketId: () => rt.socketId,
+        );
+        if (context.mounted) {
+          WayoToast.info(context, t.chat.inbox_unpinned);
+        }
+      } else {
+        await repo.pinConversation(
+          creds,
+          conversation.id,
+          socketId: () => rt.socketId,
+        );
+        if (context.mounted) {
+          WayoToast.info(context, t.chat.inbox_pinned);
+        }
+      }
+      ref.invalidate(chatConversationsProvider);
+    } catch (e) {
+      if (!context.mounted) return;
+      final msg = '$e';
+      if (msg.contains('disabled') || msg.contains('501')) {
+        WayoToast.error(context, t.chat.inbox_pin_disabled);
+      } else {
+        WayoToast.error(context, t.chat.inbox_pin_failed);
+      }
+    }
+  }
+
+  Future<void> _toggleArchive(
+    BuildContext context, {
+    required ChatConversation conversation,
+  }) async {
+    final t = context.t;
+    final creds = ref.read(chatBootstrapProvider).valueOrNull;
+    if (creds == null) return;
+
+    final repo = ref.read(chatRepositoryProvider);
+    final rt = ref.read(chatRealtimeServiceProvider);
+    final showArchived = ref.read(chatInboxShowArchivedProvider);
+
+    try {
+      if (showArchived || conversation.isArchived) {
+        await repo.unarchiveConversation(
+          creds,
+          conversation.id,
+          socketId: () => rt.socketId,
+        );
+        if (context.mounted) {
+          WayoToast.info(context, t.chat.inbox_unarchived);
+        }
+      } else {
+        await repo.archiveConversation(
+          creds,
+          conversation.id,
+          socketId: () => rt.socketId,
+        );
+        if (context.mounted) {
+          WayoToast.info(context, t.chat.inbox_archived);
+        }
+      }
+      ref.invalidate(chatConversationsProvider);
+    } catch (e) {
+      if (!context.mounted) return;
+      WayoToast.error(context, t.chat.inbox_archive_failed);
+    }
+  }
+
+  Future<void> _deleteConversation(
+    BuildContext context, {
+    required ChatConversation conversation,
+  }) async {
+    final t = context.t;
+    final confirmed = await showWayoConfirmDialog(
+      context: context,
+      title: t.chat.delete_conversation_confirm_title,
+      message: t.chat.delete_conversation_confirm_text,
+      cancelLabel: t.chat.delete_confirm_cancel,
+      confirmLabel: t.chat.delete_conversation_confirm_cta,
+      tone: WayoDialogTone.destructive,
+    );
+    if (!confirmed || !context.mounted) return;
+
+    final creds = ref.read(chatBootstrapProvider).valueOrNull;
+    if (creds == null) return;
+
+    final repo = ref.read(chatRepositoryProvider);
+    final rt = ref.read(chatRealtimeServiceProvider);
+    try {
+      await repo.deleteConversation(
+        creds,
+        conversation.id,
+        socketId: () => rt.socketId,
+      );
+      invalidateChatRealtimeBindingImmediate(
+        () => ref.invalidate(chatRealtimeBindingProvider),
+      );
+      ref.invalidate(chatConversationsProvider);
+      if (context.mounted) {
+        WayoToast.info(context, t.chat.delete_conversation_done);
+      }
+    } catch (_) {
+      if (!context.mounted) return;
+      WayoToast.error(context, t.chat.delete_conversation_failed);
+    }
   }
 
   String _inboxLastPreview(ChatConversation c, Translations t) {
@@ -623,6 +824,43 @@ Set<int> _existingPartnerChatUserIds(List<ChatConversation> list, int me) {
     }
   }
   return out;
+}
+
+class _InboxFilterBar extends StatelessWidget {
+  const _InboxFilterBar({
+    required this.showArchived,
+    required this.onChanged,
+  });
+
+  final bool showArchived;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.t;
+    return SegmentedButton<bool>(
+      segments: [
+        ButtonSegment(
+          value: false,
+          label: Text(t.chat.inbox_filter_active),
+          icon: const Icon(Icons.inbox_rounded, size: 18),
+        ),
+        ButtonSegment(
+          value: true,
+          label: Text(t.chat.inbox_filter_archived),
+          icon: const Icon(Icons.archive_rounded, size: 18),
+        ),
+      ],
+      selected: {showArchived},
+      onSelectionChanged: (s) => onChanged(s.first),
+      style: ButtonStyle(
+        visualDensity: VisualDensity.compact,
+        textStyle: WidgetStatePropertyAll(
+          GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600),
+        ),
+      ),
+    );
+  }
 }
 
 String _firstLetter(String title) {

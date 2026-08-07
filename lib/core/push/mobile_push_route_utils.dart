@@ -23,9 +23,13 @@ int superadminTabIndexFromQuery(String? tab) {
     case 'withdrawals':
     case 'payouts':
       return 2;
-    case 'announcements':
+    case 'chat':
+    case 'messages':
       return 3;
     case 'more':
+      return 4;
+    case 'announcements':
+      // Legacy deep link — handled by home → /superadmin/announcements.
       return 4;
     default:
       return 0;
@@ -33,8 +37,9 @@ int superadminTabIndexFromQuery(String? tab) {
 }
 
 String superadminShellRouteForTabIndex(int index) {
-  const tabs = ['dashboard', 'users', 'withdrawals', 'announcements', 'more'];
+  const tabs = ['dashboard', 'users', 'withdrawals', 'chat', 'more'];
   if (index <= 0) return kSuperadminHomeRoute;
+  if (index >= tabs.length) return '$kSuperadminHomeRoute?tab=more';
   return '$kSuperadminHomeRoute?tab=${tabs[index]}';
 }
 
@@ -67,7 +72,7 @@ String? resolveSuperadminShellTabRoute(String route) {
     case '/superadmin/withdrawals':
       return '$kSuperadminHomeRoute?tab=withdrawals';
     case '/superadmin/announcements':
-      return '$kSuperadminHomeRoute?tab=announcements';
+      return '/superadmin/announcements';
     case '/admin/withdrawals':
       return '$kSuperadminHomeRoute?tab=withdrawals';
     default:
@@ -85,6 +90,11 @@ String? shellTabParentForPushRoute(String route) {
   if (base.startsWith('/chat/thread/')) return '/chat';
   if (RegExp(r'^/invoices/[^/]+').hasMatch(base)) return '/invoices';
   if (base == '/notifications') return '/dashboard';
+  if (base == '/advertiser/business' ||
+      base == '/creator/business' ||
+      base == '/settings/business') {
+    return '/wallet';
+  }
   if (base.startsWith('/advertiser/')) return '/campaigns';
   return null;
 }
@@ -99,6 +109,13 @@ bool isShellEmbeddedPushRoute(String route) {
 String normalizeWayoPushNavigationRoute(String route) {
   final shell = resolveSuperadminShellTabRoute(route);
   if (shell != null) return shell;
+
+  // Keep concrete chat thread deep links (FCM → conversation body). The web
+  // normalizer below historically collapsed any `/chat…` path to the inbox.
+  final base = route.split('?').first.split('#').first;
+  if (RegExp(r'^/chat/thread/[^/]+$').hasMatch(base)) {
+    return route;
+  }
 
   final fromAction = normalizeMobilePushRoute(route);
   if (fromAction != null) return fromAction;
@@ -115,7 +132,23 @@ const Set<String> _kAllowedExactPushRoutes = {
   '/chat',
   '/notifications',
   '/advertiser/video-reviews',
+  '/advertiser/creators',
+  '/advertiser/campaigns/new',
+  '/advertiser/business',
+  '/creator/business',
+  '/settings/business',
   '/settings/delete-account',
+  '/settings/youtube',
+  '/settings/notifications',
+  '/settings/privacy',
+  '/settings/passkeys',
+  '/settings/connected-accounts',
+  '/settings/profile',
+  '/settings/security',
+  '/settings/trusted-devices',
+  '/resources',
+  '/creator/analytics',
+  '/creator/payouts',
   '/superadmin',
   '/superadmin/ai-usage',
   '/superadmin/ledger',
@@ -125,6 +158,23 @@ const Set<String> _kAllowedExactPushRoutes = {
   '/superadmin/announcements',
   '/superadmin/browse-campaigns',
   '/superadmin/tax-rates',
+  '/superadmin/payment-audits',
+  '/superadmin/audit-log',
+  '/superadmin/health',
+  '/superadmin/token-purchases',
+  '/superadmin/click-pipeline',
+  '/superadmin/creator-velocity',
+  '/superadmin/email-logs',
+  '/superadmin/email-templates',
+  '/superadmin/recent-activity',
+  '/superadmin/financial-documents',
+  '/superadmin/youtube-monitoring',
+  '/superadmin/jobs',
+  '/superadmin/token-packages',
+  '/superadmin/platform-settings',
+  '/superadmin/stripe-settings',
+  '/superadmin/email-settings',
+  '/superadmin/broadcast',
 };
 
 /// Parameterised in-app routes (matched on the path, query ignored).
@@ -133,6 +183,7 @@ final List<RegExp> _kAllowedParamPushRoutes = [
   RegExp(r'^/superadmin/campaigns/[^/]+$'),
   RegExp(r'^/creator/campaigns/[^/]+$'),
   RegExp(r'^/creator/campaigns/[^/]+/application$'),
+  RegExp(r'^/advertiser/campaigns/[^/]+/(edit|analytics|financial-health)$'),
   RegExp(r'^/invoices/[^/]+$'),
   RegExp(r'^/chat/thread/[^/]+$'),
 ];
@@ -248,6 +299,27 @@ String? normalizeMobilePushRoute(String? actionUrl) {
 
   final lower = path.toLowerCase();
 
+  // FCM / web chat deep links must open the thread, not only the inbox tab.
+  final chatThread = RegExp(
+    r'^/chat/thread/([^/?#]+)',
+    caseSensitive: false,
+  ).firstMatch(path);
+  if (chatThread != null) {
+    final id = chatThread.group(1)!.trim();
+    if (id.isNotEmpty) {
+      final q = path.contains('?') ? path.substring(path.indexOf('?')) : '';
+      return '/chat/thread/$id$q';
+    }
+  }
+  final messagesThread = RegExp(
+    r'^/messages/([^/?#]+)',
+    caseSensitive: false,
+  ).firstMatch(path);
+  if (messagesThread != null) {
+    final id = messagesThread.group(1)!.trim();
+    if (id.isNotEmpty) return '/chat/thread/$id';
+  }
+
   if (lower.contains('/chat') || lower.contains('/messages')) {
     return '/chat';
   }
@@ -258,6 +330,17 @@ String? normalizeMobilePushRoute(String? actionUrl) {
       lower.contains('/deposit') ||
       lower.contains('/billing')) {
     return '/wallet';
+  }
+
+  // Business / billing profile (gates deposits + Stripe Connect).
+  if (lower.contains('/advertiser/business') ||
+      lower.contains('/dashboard/advertiser/business')) {
+    return '/advertiser/business';
+  }
+  if (lower.contains('/creator/business') ||
+      lower.contains('/dashboard/creator/business') ||
+      lower.contains('/settings/business')) {
+    return '/creator/business';
   }
 
   if (lower.contains('/superadmin') &&

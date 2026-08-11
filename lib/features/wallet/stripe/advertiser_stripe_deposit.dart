@@ -46,6 +46,7 @@ final class AdvertiserStripeDeposit {
   /// Failures here must never abort ACH/card present (native crash risk).
   static Future<T> _withNavBarSafeChrome<T>(Future<T> Function() action) async {
     final android = !kIsWeb && Platform.isAndroid;
+    final ios = !kIsWeb && Platform.isIOS;
     if (android) {
       try {
         await AndroidWindowInsets.setDecorFitsSystemWindows(true);
@@ -62,12 +63,21 @@ final class AdvertiserStripeDeposit {
             statusBarColor: Colors.transparent,
           ),
         );
-        await Future<void>.delayed(const Duration(milliseconds: 50));
+        // Give native chrome + content padding a frame to settle before Stripe opens.
+        await Future<void>.delayed(const Duration(milliseconds: 120));
       } catch (e) {
         if (kDebugMode) {
           debugPrint('[Stripe] nav-bar chrome prepare failed: $e');
         }
       }
+    } else if (ios) {
+      // Keep system UI visible so Stripe sheets can respect the home indicator.
+      try {
+        await SystemChrome.setEnabledSystemUIMode(
+          SystemUiMode.manual,
+          overlays: SystemUiOverlay.values,
+        );
+      } catch (_) {}
     }
     try {
       return await action();

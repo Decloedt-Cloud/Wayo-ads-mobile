@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../data/superadmin_ops_remote.dart';
 import '../../domain/entities/admin_ops.dart';
-import '../widgets/superadmin_chrome_actions.dart';
+import '../widgets/superadmin_scaffold.dart';
 
 /// Top creators by traffic velocity — `GET /api/admin/creator-velocity`.
 class CreatorVelocityScreen extends ConsumerStatefulWidget {
@@ -22,14 +22,8 @@ class _CreatorVelocityScreenState extends ConsumerState<CreatorVelocityScreen> {
   Widget build(BuildContext context) {
     final async = ref.watch(creatorVelocityProvider(_period));
 
-    return Scaffold(
-      backgroundColor: AppColors.surfaceOf(context),
-      appBar: AppBar(
-        title: const Text('Creator velocity'),
-        backgroundColor: Colors.transparent,
-        surfaceTintColor: Colors.transparent,
-        actions: const [SuperadminChromeActions(trailingPadding: 12)],
-      ),
+    return SuperadminScaffold(
+      title: 'Creator velocity',
       body: Column(
         children: [
           Padding(
@@ -74,7 +68,7 @@ class _CreatorVelocityScreenState extends ConsumerState<CreatorVelocityScreen> {
                     await ref.read(creatorVelocityProvider(_period).future);
                   },
                   child: ListView.separated(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+                    padding: superadminPagePadding(context),
                     itemCount: snap.topCreators.length,
                     separatorBuilder: (_, _) => const SizedBox(height: 10),
                     itemBuilder: (context, i) =>

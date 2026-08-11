@@ -37,11 +37,22 @@ final class AuthRuntimeConfig {
   String _reverbKey = '';
   String _reverbPort = '';
   String _reverbScheme = '';
+  String _appleWebClientId = '';
+  String _appleAndroidRedirectUri = '';
 
   String get authWayoBaseUrl => _authWayoBaseUrl;
   String get googleServerClientId => _googleServerClientId;
   String get wayoAdsAppKey => _wayoAdsAppKey;
   String get authAppName => _authAppName;
+
+  /// Apple Services ID for Android Sign in with Apple (web OAuth).
+  String get appleWebClientId =>
+      _appleWebClientId.isNotEmpty ? _appleWebClientId : AppConfig.appleWebClientId;
+
+  /// Auth_Wayo Android bridge Return URL (must match Apple Developer Services ID).
+  String get appleAndroidRedirectUri => _appleAndroidRedirectUri.isNotEmpty
+      ? _appleAndroidRedirectUri
+      : AppConfig.appleAndroidRedirectUri;
 
   /// Non-empty → use as chat-service origin instead of bootstrap `apiBaseUrl`.
   String get chatServiceApiBaseUrl => _chatServiceApiBaseUrl;
@@ -284,6 +295,8 @@ final class AuthRuntimeConfig {
     i._googleServerClientId = c.authGoogleServerClientId.trim();
     i._wayoAdsAppKey = c.wayoAdsAppKey.trim();
     i._authAppName = c.authAppName.trim();
+    i._appleWebClientId = AppConfig.appleWebClientId.trim();
+    i._appleAndroidRedirectUri = AppConfig.appleAndroidRedirectUri.trim();
 
     // SECURITY: Only load dart_defines.json overlay in debug builds.
     // In release, secrets MUST come from --dart-define at compile time.
@@ -311,6 +324,11 @@ final class AuthRuntimeConfig {
       );
       overlay('WAYO_ADS_APP_KEY', (v) => i._wayoAdsAppKey = v);
       overlay('AUTH_APP_NAME', (v) => i._authAppName = v);
+      overlay('AUTH_APPLE_WEB_CLIENT_ID', (v) => i._appleWebClientId = v);
+      overlay(
+        'AUTH_APPLE_ANDROID_REDIRECT_URI',
+        (v) => i._appleAndroidRedirectUri = v,
+      );
       overlay('SENTRY_DSN', (v) => i._overlaySentryDsn = v);
       overlay('SENTRY_ENV', (v) => i._overlaySentryEnv = v);
       overlay('APP_RELEASE', (v) => i._overlayAppRelease = v);

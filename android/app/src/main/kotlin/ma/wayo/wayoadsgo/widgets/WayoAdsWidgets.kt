@@ -140,7 +140,6 @@ class WalletWidgetProvider : AppWidgetProvider() {
                 val role = prefs.str("role", "advertiser")
                 val auth = prefs.str("auth_state", "logged_out")
                 val status = prefs.str("status_message")
-                val stale = prefs.str("stale_hint")
                 val title = prefs.str("wallet_title").ifBlank {
                     context.getString(R.string.widget_wallet_label)
                 }
@@ -166,7 +165,6 @@ class WalletWidgetProvider : AppWidgetProvider() {
                     else -> "—"
                 }
                 views.setTextViewText(R.id.widget_wallet_balance, balanceText)
-                views.setTextViewText(R.id.widget_wallet_available_label, availableLabel)
 
                 val pendingText = when {
                     pendingFmt.isNotBlank() -> pendingFmt
@@ -175,12 +173,6 @@ class WalletWidgetProvider : AppWidgetProvider() {
                     else -> ""
                 }
                 val showPending = pendingText.isNotBlank()
-                views.setViewVisibility(
-                    R.id.widget_wallet_pending_row,
-                    if (showPending) View.VISIBLE else View.GONE,
-                )
-                views.setTextViewText(R.id.widget_wallet_pending_label, pendingLabel)
-                views.setTextViewText(R.id.widget_wallet_pending, pendingText)
 
                 // Wallet-specific empty: only when zero balance messaging is present
                 // and there's no pending row (avoid clutter on normal wallets).
@@ -189,6 +181,22 @@ class WalletWidgetProvider : AppWidgetProvider() {
                     zeroish &&
                     !showPending &&
                     (emptyHeadline.isNotBlank() || emptyCta.isNotBlank())
+
+                // Keep chrome minimal so the KPI + one footer label always fit.
+                val showAvailable = auth == "logged_in" && !showEmpty && !showPending
+                views.setViewVisibility(
+                    R.id.widget_wallet_available_label,
+                    if (showAvailable) View.VISIBLE else View.GONE,
+                )
+                views.setTextViewText(R.id.widget_wallet_available_label, availableLabel)
+
+                views.setViewVisibility(
+                    R.id.widget_wallet_pending_row,
+                    if (showPending && !showEmpty) View.VISIBLE else View.GONE,
+                )
+                views.setTextViewText(R.id.widget_wallet_pending_label, pendingLabel)
+                views.setTextViewText(R.id.widget_wallet_pending, pendingText)
+
                 views.setViewVisibility(
                     R.id.widget_empty_headline,
                     if (showEmpty && emptyHeadline.isNotBlank()) View.VISIBLE else View.GONE,
@@ -200,14 +208,20 @@ class WalletWidgetProvider : AppWidgetProvider() {
                 )
                 views.setTextViewText(R.id.widget_empty_cta, emptyCta)
 
-                views.setTextViewText(
+                val statusText = when {
+                    auth != "logged_in" ->
+                        status.ifBlank { context.getString(R.string.widget_sign_in) }
+                    else -> ""
+                }
+                views.setTextViewText(R.id.widget_status, statusText)
+                views.setViewVisibility(
                     R.id.widget_status,
-                    when {
-                        auth != "logged_in" ->
-                            status.ifBlank { context.getString(R.string.widget_sign_in) }
-                        showEmpty -> ""
-                        else -> stale
-                    },
+                    if (statusText.isNotBlank()) View.VISIBLE else View.GONE,
+                )
+                // Logged-out / empty: hide the KPI so footer copy isn't crushed.
+                views.setViewVisibility(
+                    R.id.widget_wallet_balance,
+                    if (auth == "logged_in" && !showEmpty) View.VISIBLE else View.GONE,
                 )
 
                 val tap = when {

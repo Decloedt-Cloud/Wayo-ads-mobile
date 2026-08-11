@@ -7,7 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../data/superadmin_ops_remote.dart';
 import '../../domain/entities/admin_ops.dart';
-import '../widgets/superadmin_chrome_actions.dart';
+import '../widgets/superadmin_scaffold.dart';
 
 /// Admin invoices + payout statements — mirrors web financial-documents.
 class FinancialDocumentsScreen extends ConsumerStatefulWidget {
@@ -40,23 +40,17 @@ class _FinancialDocumentsScreenState
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.surfaceOf(context),
-      appBar: AppBar(
-        title: const Text('Financial documents'),
-        backgroundColor: Colors.transparent,
-        surfaceTintColor: Colors.transparent,
-        actions: const [SuperadminChromeActions(trailingPadding: 12)],
-        bottom: TabBar(
-          controller: _tabs,
-          tabs: const [
-            Tab(text: 'Invoices'),
-            Tab(text: 'Payouts'),
-          ],
-        ),
-      ),
+    return SuperadminScaffold(
+      title: 'Financial documents',
       body: Column(
         children: [
+          TabBar(
+            controller: _tabs,
+            tabs: const [
+              Tab(text: 'Invoices'),
+              Tab(text: 'Payouts'),
+            ],
+          ),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
             child: TextField(
@@ -126,7 +120,7 @@ class _InvoicesTabState extends ConsumerState<_InvoicesTab> {
             await ref.read(adminInvoicesProvider(widget.query).future);
           },
           child: ListView.separated(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+            padding: superadminPagePadding(context),
             itemCount: page.invoices.length + 1,
             separatorBuilder: (_, _) => const SizedBox(height: 10),
             itemBuilder: (context, i) {
@@ -179,7 +173,7 @@ class _PayoutsTabState extends ConsumerState<_PayoutsTab> {
             await ref.read(adminPaymentStatementsProvider(widget.query).future);
           },
           child: ListView.separated(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+            padding: superadminPagePadding(context),
             itemCount: page.statements.length + 1,
             separatorBuilder: (_, _) => const SizedBox(height: 10),
             itemBuilder: (context, i) {

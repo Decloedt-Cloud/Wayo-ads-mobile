@@ -6,10 +6,11 @@ String localizeAuthError(Object error, Translations t) {
   if (error is AuthException) {
     return switch (error) {
       InvalidCredentialsException(:final message) =>
-        _fromServerMessage(message, t) ?? t.errors.invalid_credentials,
+        _credentialsMessage(message, t),
       NetworkException() => t.errors.network,
       ServerException(:final message) =>
-        _fromServerMessage(message, t) ?? t.errors.server_generic,
+        _fromServerMessage(message, t) ??
+            (message.trim().isNotEmpty ? message : t.errors.server_generic),
       RateLimitedException(:final retryAfterSeconds) =>
         t.login.rate_limit_remaining(seconds: retryAfterSeconds),
       SessionInvalidException() => t.errors.session_invalid,
@@ -19,6 +20,23 @@ String localizeAuthError(Object error, Translations t) {
     };
   }
   return _fromServerMessage(error.toString(), t) ?? t.errors.unknown;
+}
+
+String _credentialsMessage(String message, Translations t) {
+  final mapped = _fromServerMessage(message, t);
+  if (mapped != null) return mapped;
+  const defaults = {
+    'These credentials do not match our records.',
+    'Invalid credentials.',
+    'Validation failed.',
+    'Validation failed',
+  };
+  final trimmed = message.trim();
+  if (trimmed.isEmpty || defaults.contains(trimmed)) {
+    return t.errors.invalid_credentials;
+  }
+  // Keep specific API messages (e.g. password breached / email taken).
+  return trimmed;
 }
 
 String? _fromServerMessage(String raw, Translations t) {

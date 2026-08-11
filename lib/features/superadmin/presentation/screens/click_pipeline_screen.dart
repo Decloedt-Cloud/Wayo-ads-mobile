@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/theme/app_colors.dart';
 import '../../data/superadmin_ops_remote.dart';
 import '../../domain/entities/admin_ops.dart';
 import '../widgets/admin_stat_card.dart';
-import '../widgets/superadmin_chrome_actions.dart';
+import '../widgets/superadmin_scaffold.dart';
 
 /// Click billing pipeline (24h) — `GET /api/admin/click-pipeline`.
 class ClickPipelineScreen extends ConsumerWidget {
@@ -24,20 +23,9 @@ class ClickPipelineScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final async = ref.watch(clickPipelineProvider);
 
-    return Scaffold(
-      backgroundColor: AppColors.surfaceOf(context),
-      appBar: AppBar(
-        title: const Text('Click pipeline'),
-        backgroundColor: Colors.transparent,
-        surfaceTintColor: Colors.transparent,
-        actions: [
-          IconButton(
-            onPressed: () => ref.invalidate(clickPipelineProvider),
-            icon: const Icon(Icons.refresh_rounded),
-          ),
-          const SuperadminChromeActions(trailingPadding: 12),
-        ],
-      ),
+    return SuperadminScaffold(
+      title: 'Click pipeline',
+      onRefresh: () => ref.invalidate(clickPipelineProvider),
       body: RefreshIndicator(
         onRefresh: () async {
           ref.invalidate(clickPipelineProvider);
@@ -54,7 +42,7 @@ class ClickPipelineScreen extends ConsumerWidget {
             ],
           ),
           data: (snap) => ListView(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+            padding: superadminPagePadding(context),
             children: [
               AdminStatCard(
                 title: 'Clicks (24h)',

@@ -5,7 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../data/superadmin_ops_remote.dart';
 import '../../domain/entities/admin_ops.dart';
-import '../widgets/superadmin_chrome_actions.dart';
+import '../widgets/superadmin_scaffold.dart';
 
 /// Unified security + admin audit log — `GET /api/admin/audit-log`.
 class AuditLogScreen extends ConsumerStatefulWidget {
@@ -29,14 +29,8 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
   Widget build(BuildContext context) {
     final async = ref.watch(auditLogProvider(_query));
 
-    return Scaffold(
-      backgroundColor: AppColors.surfaceOf(context),
-      appBar: AppBar(
-        title: const Text('Audit log'),
-        backgroundColor: Colors.transparent,
-        surfaceTintColor: Colors.transparent,
-        actions: const [SuperadminChromeActions(trailingPadding: 12)],
-      ),
+    return SuperadminScaffold(
+      title: 'Audit log',
       body: Column(
         children: [
           Padding(
@@ -93,7 +87,7 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
                     await ref.read(auditLogProvider(_query).future);
                   },
                   child: ListView.separated(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+                    padding: superadminPagePadding(context),
                     itemCount: page.entries.length + 1,
                     separatorBuilder: (_, _) => const SizedBox(height: 10),
                     itemBuilder: (context, i) {

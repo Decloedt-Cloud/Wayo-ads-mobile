@@ -160,16 +160,19 @@ struct WalletWidgetView: View {
                 if entry.isLoggedIn {
                     let symbol = entry.currency.uppercased() == "EUR" ? "€" : "$"
                     Text(entry.balance.isEmpty ? "—" : "\(symbol)\(entry.balance)")
-                        .font(.system(size: 24, weight: .bold))
+                        .font(.system(size: 22, weight: .bold))
                         .foregroundStyle(.white)
+                        .minimumScaleFactor(0.7)
+                        .lineLimit(1)
+                    Text("Available")
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(wayoMuted)
+                        .lineLimit(1)
                     if !entry.pending.isEmpty {
                         Text("Pending \(symbol)\(entry.pending)")
                             .font(.caption2)
                             .foregroundStyle(wayoMuted)
-                    } else {
-                        Text(entry.staleHint)
-                            .font(.caption2)
-                            .foregroundStyle(wayoMuted)
+                            .lineLimit(1)
                     }
                 } else {
                     Text(entry.statusMessage.isEmpty ? "Open Wayo to sign in" : entry.statusMessage)

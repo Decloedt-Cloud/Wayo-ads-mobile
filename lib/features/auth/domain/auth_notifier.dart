@@ -6,6 +6,7 @@ import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../core/errors/auth_exceptions.dart';
 import '../../../core/network/auth_force_logout_hub.dart';
 import '../../../core/network/auth_interceptor.dart';
 import '../../../core/network/auth_remote.dart';
@@ -255,7 +256,19 @@ class AuthNotifier extends _$AuthNotifier {
     required String role,
   }) async {
     if (_credentialLoginInFlight) {
-      return null;
+      // Avoid a silent no-op if a previous auth call is still winding down.
+      var spins = 0;
+      while (_credentialLoginInFlight && spins < 40) {
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+        spins++;
+      }
+      if (_credentialLoginInFlight) {
+        state = AsyncValue.error(
+          const ServerException('Registration already in progress'),
+          StackTrace.current,
+        );
+        return null;
+      }
     }
     _credentialLoginInFlight = true;
     try {

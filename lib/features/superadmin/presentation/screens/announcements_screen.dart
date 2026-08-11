@@ -7,7 +7,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/ui/wayo_toast.dart';
 import '../../domain/entities/announcement.dart';
 import '../providers/superadmin_providers.dart';
-import '../widgets/superadmin_chrome_actions.dart';
+import '../widgets/superadmin_scaffold.dart';
 
 class AnnouncementsScreen extends ConsumerWidget {
   const AnnouncementsScreen({super.key});
@@ -16,16 +16,8 @@ class AnnouncementsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final announcementsAsync = ref.watch(announcementsNotifierProvider);
 
-    return Scaffold(
-      backgroundColor: AppColors.surfaceOf(context),
-      appBar: AppBar(
-        title: const Text('Announcements'),
-        backgroundColor: Colors.transparent,
-        surfaceTintColor: Colors.transparent,
-        actions: const [
-          SuperadminChromeActions(trailingPadding: 12),
-        ],
-      ),
+    return SuperadminScaffold(
+      title: 'Announcements',
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showAnnouncementForm(context, ref),
         backgroundColor: AppColors.primary,
@@ -141,10 +133,8 @@ class AnnouncementsScreen extends ConsumerWidget {
     WidgetRef ref, {
     Announcement? announcement,
   }) async {
-    final result = await showModalBottomSheet<Announcement>(
+    final result = await showSuperadminSheet<Announcement>(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
       builder: (context) => _AnnouncementFormSheet(
         announcement: announcement,
       ),

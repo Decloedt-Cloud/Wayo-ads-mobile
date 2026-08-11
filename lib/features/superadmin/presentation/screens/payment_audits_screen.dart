@@ -8,7 +8,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/ui/wayo_toast.dart';
 import '../../data/superadmin_ops_remote.dart';
 import '../../domain/entities/admin_ops.dart';
-import '../widgets/superadmin_chrome_actions.dart';
+import '../widgets/superadmin_scaffold.dart';
 
 /// Payment audits — Transactions + By advertiser (web `/admin/payment-audits`).
 class PaymentAuditsScreen extends ConsumerStatefulWidget {
@@ -80,23 +80,17 @@ class _PaymentAuditsScreenState extends ConsumerState<PaymentAuditsScreen>
   Widget build(BuildContext context) {
     final money = NumberFormat.currency(symbol: '€', decimalDigits: 2);
 
-    return Scaffold(
-      backgroundColor: AppColors.surfaceOf(context),
-      appBar: AppBar(
-        title: const Text('Payment audits'),
-        backgroundColor: Colors.transparent,
-        surfaceTintColor: Colors.transparent,
-        actions: const [SuperadminChromeActions(trailingPadding: 12)],
-        bottom: TabBar(
-          controller: _tabs,
-          tabs: const [
-            Tab(text: 'Transactions'),
-            Tab(text: 'By advertiser'),
-          ],
-        ),
-      ),
+    return SuperadminScaffold(
+      title: 'Payment audits',
       body: Column(
         children: [
+          TabBar(
+            controller: _tabs,
+            tabs: const [
+              Tab(text: 'Transactions'),
+              Tab(text: 'By advertiser'),
+            ],
+          ),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
             child: TextField(
@@ -221,7 +215,7 @@ class _TransactionsTab extends ConsumerWidget {
             await ref.read(paymentAuditsProvider(query).future);
           },
           child: ListView.separated(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+            padding: superadminPagePadding(context),
             itemCount: page.records.length + 1,
             separatorBuilder: (_, _) => const SizedBox(height: 10),
             itemBuilder: (context, i) {
@@ -285,7 +279,7 @@ class _ByAdvertiserTab extends ConsumerWidget {
             await ref.read(advertiserDepositsProvider(query).future);
           },
           child: ListView.separated(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+            padding: superadminPagePadding(context),
             itemCount: page.rows.length + 1,
             separatorBuilder: (_, _) => const SizedBox(height: 10),
             itemBuilder: (context, i) {

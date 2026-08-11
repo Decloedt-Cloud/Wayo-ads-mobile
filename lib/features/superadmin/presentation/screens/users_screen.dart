@@ -15,6 +15,7 @@ import '../../domain/entities/admin_user.dart';
 import '../../domain/entities/banned_user.dart';
 import '../providers/superadmin_providers.dart';
 import '../widgets/superadmin_chrome_actions.dart';
+import '../widgets/superadmin_scaffold.dart';
 
 class UsersScreen extends ConsumerStatefulWidget {
   const UsersScreen({super.key});
@@ -571,7 +572,7 @@ class _UsersScreenState extends ConsumerState<UsersScreen>
                       Text(
                         page.total == 0
                             ? 'No users'
-                            : '$start–$end of ${page.total} users',
+                            : '$startÂ–$end of ${page.total} users',
                         style: TextStyle(
                           fontSize: 12,
                           color: AppColors.textMutedOf(context),
@@ -686,10 +687,9 @@ class _UsersScreenState extends ConsumerState<UsersScreen>
   // -- Dialogs --
   Future<void> _showBanDialog(AdminUser user) async {
     final reasonController = TextEditingController();
-    final confirmed = await showModalBottomSheet<bool>(
-      context: context, isScrollControlled: true, backgroundColor: Colors.transparent,
+    final confirmed = await showSuperadminSheet<bool>(
+      context: context,
       builder: (ctx) => Container(
-        padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
         decoration: BoxDecoration(
           color: AppColors.surfaceOf(context),
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
@@ -893,8 +893,8 @@ class _UsersScreenState extends ConsumerState<UsersScreen>
   }
 
   void _showUserDetails(AdminUser user) {
-    showModalBottomSheet(
-      context: context, isScrollControlled: true, backgroundColor: Colors.transparent,
+    showSuperadminSheet(
+      context: context,
       builder: (context) => _UserDetailsSheet(user: user),
     );
   }
@@ -1117,7 +1117,7 @@ class _UserCard extends StatelessWidget {
                                     Expanded(
                                       child: Text(
                                         lastLoginHours != null
-                                            ? 'Last seen · $lastLoginLabel'
+                                            ? 'Last seen Â· $lastLoginLabel'
                                             : lastLoginLabel,
                                         style: TextStyle(
                                           fontSize: 12,
@@ -1427,7 +1427,7 @@ class _UserMetricsGrid extends StatelessWidget {
       _UserMetricTile(
         icon: Icons.schedule_rounded,
         label: 'Last login',
-        value: lastLoginHours != null ? '$lastLoginHours h' : '—',
+        value: lastLoginHours != null ? '$lastLoginHours h' : 'Â—',
         subtitle: lastLoginHours != null ? lastLoginLabel : 'Never',
         color: lastLoginTint,
       ),
@@ -1440,7 +1440,7 @@ class _UserMetricsGrid extends StatelessWidget {
         ),
     ];
 
-    // Pair into rows of 2 Expanded — no IntrinsicHeight / LayoutBuilder.
+    // Pair into rows of 2 Expanded Â— no IntrinsicHeight / LayoutBuilder.
     final rows = <Widget>[];
     for (var i = 0; i < tiles.length; i += 2) {
       final left = tiles[i];
@@ -1597,7 +1597,7 @@ class _CardActionButton extends StatelessWidget {
 class _UserDetailsSheet extends ConsumerWidget {
   const _UserDetailsSheet({required this.user});
   final AdminUser user;
-  static final _dateTimeFormat = DateFormat('MMM d, yyyy • hh:mm a');
+  static final _dateTimeFormat = DateFormat('MMM d, yyyy Â• hh:mm a');
   static final _money = NumberFormat.simpleCurrency(name: 'EUR');
 
   @override
@@ -1930,7 +1930,7 @@ class _UserDetailsSheet extends ConsumerWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '${c.status} · ${_money.format(c.spentBudgetCents / 100)} / ${_money.format(c.totalBudgetCents / 100)} · ${c.totalBillableViews} views',
+                        '${c.status} Â· ${_money.format(c.spentBudgetCents / 100)} / ${_money.format(c.totalBudgetCents / 100)} Â· ${c.totalBillableViews} views',
                         style: TextStyle(
                           fontSize: 12,
                           color: AppColors.textSecondaryOf(context),
@@ -1981,7 +1981,7 @@ class _UserDetailsSheet extends ConsumerWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '${a.status} · campaign ${a.campaignStatus}',
+                        '${a.status} Â· campaign ${a.campaignStatus}',
                         style: TextStyle(
                           fontSize: 12,
                           color: AppColors.textSecondaryOf(context),

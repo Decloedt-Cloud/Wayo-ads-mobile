@@ -5,7 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../data/superadmin_ops_remote.dart';
 import '../../domain/entities/admin_ops.dart';
-import '../widgets/superadmin_chrome_actions.dart';
+import '../widgets/superadmin_scaffold.dart';
 
 /// Platform feed — `GET /api/admin/recent-activity`.
 class RecentActivityScreen extends ConsumerStatefulWidget {
@@ -31,14 +31,8 @@ class _RecentActivityScreenState extends ConsumerState<RecentActivityScreen> {
     final async = ref.watch(recentActivityProvider(_query));
     final money = NumberFormat.currency(symbol: '€', decimalDigits: 0);
 
-    return Scaffold(
-      backgroundColor: AppColors.surfaceOf(context),
-      appBar: AppBar(
-        title: const Text('Recent activity'),
-        backgroundColor: Colors.transparent,
-        surfaceTintColor: Colors.transparent,
-        actions: const [SuperadminChromeActions(trailingPadding: 12)],
-      ),
+    return SuperadminScaffold(
+      title: 'Recent activity',
       body: Column(
         children: [
           Padding(
@@ -95,7 +89,7 @@ class _RecentActivityScreenState extends ConsumerState<RecentActivityScreen> {
                     await ref.read(recentActivityProvider(_query).future);
                   },
                   child: ListView.separated(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+                    padding: superadminPagePadding(context),
                     itemCount: page.activities.length + 1,
                     separatorBuilder: (_, _) => const SizedBox(height: 10),
                     itemBuilder: (context, i) {

@@ -2,12 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/layout/wayo_black_bottom_bar.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/ui/wayo_toast.dart';
 import '../../domain/entities/country_tax_rate.dart';
 import '../providers/superadmin_providers.dart';
-import '../widgets/superadmin_chrome_actions.dart';
+import '../widgets/superadmin_scaffold.dart';
 
 /// Superadmin tax rates — mirrors web `/admin` tax panel (GET/POST/DELETE
 /// `/api/admin/tax-rates`).
@@ -129,23 +128,14 @@ class _TaxRatesScreenState extends ConsumerState<TaxRatesScreen> {
     final taxAsync = ref.watch(taxRatesProvider);
     final cc = widget.countryCode?.toUpperCase();
 
-    return Scaffold(
-      backgroundColor: AppColors.surfaceOf(context),
-      appBar: AppBar(
-        title: Text(_isSubdivisions ? 'Tax rates — $cc' : 'Tax rates'),
-        backgroundColor: Colors.transparent,
-        surfaceTintColor: Colors.transparent,
-        leading: _isSubdivisions
-            ? IconButton(
-                icon: const Icon(Icons.arrow_back_rounded),
-                onPressed: () => context.pop(),
-              )
-            : null,
-        actions: const [
-          SuperadminChromeActions(trailingPadding: 12),
-        ],
-      ),
-      bottomNavigationBar: const WayoBlackBottomBar(),
+    return SuperadminScaffold(
+      title: _isSubdivisions ? 'Tax rates — $cc' : 'Tax rates',
+      leading: _isSubdivisions
+          ? IconButton(
+              icon: const Icon(Icons.arrow_back_rounded),
+              onPressed: () => context.pop(),
+            )
+          : null,
       body: taxAsync.when(
         data: (page) {
           if (_isSubdivisions) {

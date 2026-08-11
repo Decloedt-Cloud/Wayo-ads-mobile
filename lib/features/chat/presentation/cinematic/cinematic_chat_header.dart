@@ -52,11 +52,11 @@ class CinematicChatHeaderDelegate extends SliverPersistentHeaderDelegate {
   /// the status bar inset (otherwise inner height ≈ minExtent − inset and overflows).
   final double topSafeInset;
 
-  /// Collapsed content budget (below status bar). Title + role badge + status
-  /// pill used to sit at ~50.6px vs a 50px budget → "BOTTOM OVERFLOWED BY 0.6".
-  static const double _collapsedBody = 62;
-  static const double _expandedBody = 108;
-  static const double _bottomPad = 4;
+  /// Collapsed content budget (below status bar). Keep dense so the name
+  /// row isn't crushed and the header doesn't dominate the thread.
+  static const double _collapsedBody = 48;
+  static const double _expandedBody = 52;
+  static const double _bottomPad = 2;
 
   @override
   double get minExtent => _collapsedBody + topSafeInset;
@@ -70,16 +70,18 @@ class CinematicChatHeaderDelegate extends SliverPersistentHeaderDelegate {
     double shrinkOffset,
     bool overlapsContent,
   ) {
-    final t = (shrinkOffset / (maxExtent - minExtent)).clamp(0.0, 1.0);
+    final t = (shrinkOffset / (maxExtent - minExtent).clamp(1.0, double.infinity))
+        .clamp(0.0, 1.0);
 
     /// Hauteur exacte imposée par le sliver (obligatoire pour [pinned: true] : sinon
     /// `layoutExtent` > `paintExtent` et le [CustomScrollView] ne layout plus).
     final extent = (maxExtent - shrinkOffset).clamp(minExtent, maxExtent);
     final ct = CinematicChatTheme.of(context);
     final u = Curves.easeOutExpo.transform(t.clamp(0.0, 1.0));
-    final avatar = 64.0 - (64.0 - 36.0) * u;
-    final titleSize = 22.0 - (22.0 - 14.0) * u;
-    final bodyHeight = (extent - topSafeInset - _bottomPad).clamp(0.0, double.infinity);
+    final avatar = 36.0 - (36.0 - 32.0) * u;
+    final titleSize = 16.0 - (16.0 - 15.0) * u;
+    final bodyHeight =
+        (extent - topSafeInset - _bottomPad).clamp(0.0, double.infinity);
     return SizedBox(
       height: extent,
       child: Material(
@@ -88,7 +90,7 @@ class CinematicChatHeaderDelegate extends SliverPersistentHeaderDelegate {
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
             child: Padding(
-              padding: EdgeInsets.fromLTRB(4, topSafeInset, 12, _bottomPad),
+              padding: EdgeInsets.fromLTRB(2, topSafeInset, 4, _bottomPad),
               child: SizedBox(
                 height: bodyHeight,
                 child: Row(
@@ -99,11 +101,12 @@ class CinematicChatHeaderDelegate extends SliverPersistentHeaderDelegate {
                       visualDensity: VisualDensity.compact,
                       style: IconButton.styleFrom(
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        minimumSize: const Size(40, 40),
-                        padding: const EdgeInsets.all(8),
+                        minimumSize: const Size(36, 36),
+                        padding: const EdgeInsets.all(6),
                       ),
                       icon: Icon(
                         Icons.arrow_back_ios_new_rounded,
+                        size: 18,
                         color: ct.textPrimary,
                       ),
                     ),
@@ -113,7 +116,7 @@ class CinematicChatHeaderDelegate extends SliverPersistentHeaderDelegate {
                       typing: typing,
                       imageUrl: partnerAvatarUrl,
                     ),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -122,34 +125,38 @@ class CinematicChatHeaderDelegate extends SliverPersistentHeaderDelegate {
                         children: [
                           Row(
                             children: [
-                              Flexible(
-                                child: Text(
-                                  headerTitle,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: GoogleFonts.outfit(
-                                    fontSize: titleSize,
-                                    fontWeight: FontWeight.w700,
-                                    color: ct.textPrimary,
-                                    height: 1.05,
+                              Expanded(
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  alignment: Alignment.centerLeft,
+                                  child: Text(
+                                    headerTitle,
+                                    maxLines: 1,
+                                    softWrap: false,
+                                    style: GoogleFonts.outfit(
+                                      fontSize: titleSize,
+                                      fontWeight: FontWeight.w700,
+                                      color: ct.textPrimary,
+                                      height: 1.05,
+                                    ),
                                   ),
                                 ),
                               ),
                               if (partnerRole != null) ...[
-                                const SizedBox(width: 8),
+                                const SizedBox(width: 6),
                                 ChatRoleBadge(
                                   role: partnerRole!,
-                                  compact: u > 0.55,
+                                  compact: true,
                                 ),
                               ],
                             ],
                           ),
-                          SizedBox(height: u > 0.92 ? 1 : 3),
+                          const SizedBox(height: 1),
                           _StatusPill(
                             typing: typing,
                             online: partnerOnline,
                             line: statusLine,
-                            compact: u > 0.55,
+                            compact: true,
                           ),
                         ],
                       ),
@@ -161,8 +168,10 @@ class CinematicChatHeaderDelegate extends SliverPersistentHeaderDelegate {
                         shape: WayoPopupMenu.shape(context),
                         color: WayoPopupMenu.color(context),
                         elevation: 10,
+                        padding: EdgeInsets.zero,
                         icon: Icon(
                           Icons.more_vert_rounded,
+                          size: 20,
                           color: ct.textPrimary,
                         ),
                         onSelected: (value) {
@@ -261,7 +270,7 @@ class _AvatarRingState extends State<_AvatarRing>
   @override
   Widget build(BuildContext context) {
     final ct = CinematicChatTheme.of(context);
-    final d = widget.diameter.clamp(36.0, 64.0);
+    final d = widget.diameter.clamp(32.0, 40.0);
     final inner = d - 4;
     final hasPhoto = widget.imageUrl.isNotEmpty;
     final core = ClipOval(
@@ -366,8 +375,8 @@ class _StatusPill extends StatelessWidget {
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeOutCubic,
       padding: EdgeInsets.symmetric(
-        horizontal: compact ? 8 : 10,
-        vertical: compact ? 2 : 3,
+        horizontal: compact ? 6 : 8,
+        vertical: compact ? 1 : 2,
       ),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(99),

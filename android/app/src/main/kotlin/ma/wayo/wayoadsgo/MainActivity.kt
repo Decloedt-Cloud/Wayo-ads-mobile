@@ -91,6 +91,7 @@ class MainActivity : FlutterFragmentActivity() {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 window.isNavigationBarContrastEnforced = false
             }
+            StripeOverlayChrome.clearPadding(this)
         }
     }
 
@@ -100,6 +101,14 @@ class MainActivity : FlutterFragmentActivity() {
 
         // Screenshots / screen recording are allowed in all builds.
         // (FLAG_SECURE was previously set on release builds to block them.)
+
+        // Stripe Link / FC / PaymentSheet are separate activities — keep their
+        // CTAs above the system nav bar even while MainActivity stays edge-to-edge.
+        try {
+            StripeOverlayChrome.install(application)
+        } catch (e: Exception) {
+            Log.w(TAG, "StripeOverlayChrome install failed", e)
+        }
 
         // Edge-to-edge: Flutter draws behind system gesture/nav insets ([SystemUiMode.edgeToEdge]),
         // so our bottom bar [ColoredBox] can cover the inset without an OS scrim stripe.

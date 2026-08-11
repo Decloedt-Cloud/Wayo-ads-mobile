@@ -6,7 +6,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/ledger_entry.dart';
 import '../providers/superadmin_providers.dart';
 import '../widgets/admin_stat_card.dart';
-import '../widgets/superadmin_chrome_actions.dart';
+import '../widgets/superadmin_scaffold.dart';
 
 class LedgerScreen extends ConsumerStatefulWidget {
   const LedgerScreen({super.key});
@@ -54,41 +54,35 @@ class _LedgerScreenState extends ConsumerState<LedgerScreen> {
       ),
     );
 
-    return Scaffold(
-      backgroundColor: AppColors.surfaceOf(context),
-      appBar: AppBar(
-        title: const Text('Ledger'),
-        backgroundColor: Colors.transparent,
-        surfaceTintColor: Colors.transparent,
-        actions: [
-          Stack(
-            children: [
-              IconButton(
-                onPressed: _showFilters,
-                icon: const Icon(Icons.filter_list_rounded),
-              ),
-              if (_hasActiveFilters)
-                Positioned(
-                  right: 8,
-                  top: 8,
-                  child: Container(
-                    width: 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      color: AppColors.primary,
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: AppColors.surfaceOf(context),
-                        width: 1.5,
-                      ),
+    return SuperadminScaffold(
+      title: 'Ledger',
+      actions: [
+        Stack(
+          children: [
+            IconButton(
+              onPressed: _showFilters,
+              icon: const Icon(Icons.filter_list_rounded),
+            ),
+            if (_hasActiveFilters)
+              Positioned(
+                right: 8,
+                top: 8,
+                child: Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: AppColors.surfaceOf(context),
+                      width: 1.5,
                     ),
                   ),
                 ),
-            ],
-          ),
-          const SuperadminChromeActions(trailingPadding: 12),
-        ],
-      ),
+              ),
+          ],
+        ),
+      ],
       body: Column(
         children: [
           // Type filter chips
@@ -342,11 +336,10 @@ class _LedgerScreenState extends ConsumerState<LedgerScreen> {
   }
 
   Future<void> _showFilters() async {
-    await showModalBottomSheet(
+    await showSuperadminSheet(
       context: context,
-      backgroundColor: Colors.transparent,
       builder: (context) => Container(
-        padding: const EdgeInsets.fromLTRB(24, 12, 24, 32),
+        padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
         decoration: BoxDecoration(
           color: AppColors.surfaceOf(context),
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),

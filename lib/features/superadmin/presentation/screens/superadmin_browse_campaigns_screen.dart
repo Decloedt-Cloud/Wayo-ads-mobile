@@ -7,7 +7,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/campaigns/campaign_explorer_layout.dart';
 import '../../../../core/campaigns/campaigns_explorer_toolbar_expanded_provider.dart';
-import '../../../../core/layout/wayo_black_bottom_bar.dart';
 import '../../../../core/layout/wayo_system_insets.dart';
 import '../../../../core/providers/app_providers.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -20,7 +19,7 @@ import '../../../creator_campaigns/presentation/theme/creator_campaigns_chrome.d
 import '../../../creator_campaigns/presentation/widgets/creator_browse_campaign_grid_tile.dart';
 import '../../../creator_campaigns/presentation/widgets/creator_browse_explorer_filters.dart';
 import '../providers/superadmin_providers.dart';
-import '../widgets/superadmin_chrome_actions.dart';
+import '../widgets/superadmin_scaffold.dart';
 
 String _moneyLocale(AppLocale l) => switch (l) {
       AppLocale.en => 'en_US',
@@ -134,17 +133,8 @@ class _SuperadminBrowseCampaignsScreenState
     final browseAsync = ref.watch(superadminBrowseCampaignsPagedProvider(browseKey));
     ref.watch(superadminBrowseLivePulseProvider);
 
-    return Scaffold(
-      backgroundColor: CreatorCampaignsChrome.bg(context),
-      appBar: AppBar(
-        title: const Text('Browse campaigns'),
-        backgroundColor: Colors.transparent,
-        surfaceTintColor: Colors.transparent,
-        actions: const [
-          SuperadminChromeActions(trailingPadding: 12),
-        ],
-      ),
-      bottomNavigationBar: const WayoBlackBottomBar(),
+    return SuperadminScaffold(
+      title: 'Browse campaigns',
       body: SafeArea(
         top: false,
         bottom: false,

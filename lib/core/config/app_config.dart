@@ -57,4 +57,17 @@ abstract final class AppConfig {
   /// Certificate pinning is permanently disabled.
   /// To re-enable, change this to `false` and configure CERT_PIN_* values.
   static const bool disableCertPinning = true;
+
+  /// Apple Services ID (web) used for Sign in with Apple on Android.
+  static const String appleWebClientId = String.fromEnvironment(
+    'AUTH_APPLE_WEB_CLIENT_ID',
+    defaultValue: 'com.wayo.ads.web',
+  );
+
+  /// HTTPS Return URL registered on the Apple Services ID; Auth_Wayo
+  /// 307-redirects into `signinwithapple://callback`.
+  static const String appleAndroidRedirectUri = String.fromEnvironment(
+    'AUTH_APPLE_ANDROID_REDIRECT_URI',
+    defaultValue: 'https://myaccount.wayo.ac/auth/apple/android/ads',
+  );
 }

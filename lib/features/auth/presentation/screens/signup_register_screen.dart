@@ -31,6 +31,7 @@ import '../widgets/noise_overlay.dart';
 import '../widgets/password_requirements_panel.dart';
 import '../widgets/rate_limit_cooldown_banner.dart';
 import '../widgets/register_field_alert_banner.dart';
+import '../widgets/signup_chosen_role_panel.dart';
 import '../widgets/signup_legal_consent_checkbox.dart';
 import '../widgets/wayo_logo.dart';
 import '../widgets/wayo_login_button.dart';
@@ -291,14 +292,24 @@ class _SignupRegisterScreenState extends ConsumerState<SignupRegisterScreen> {
       FocusScope.of(context).unfocus();
       if (!_ensureLegalAccepted(t)) return;
       final ok = _formKey.currentState?.validate() ?? false;
-      if (!ok) return;
+      if (!ok) {
+        WayoToast.error(context, t.validation.required);
+        return;
+      }
       if (_password.text != _confirmPassword.text) {
         WayoToast.error(context, t.validation.mismatch);
         return;
       }
       final nameOk = await _runNameCheck(_name.text, force: true);
       final emailOk = await _runEmailCheck(_email.text, force: true);
-      if (!nameOk || !emailOk) return;
+      if (!mounted) return;
+      if (!nameOk || !emailOk) {
+        final msg = _nameCheck.message ??
+            _emailCheck.message ??
+            t.signup.email_check_failed;
+        WayoToast.error(context, msg);
+        return;
+      }
       final outcome = await ref.read(authNotifierProvider.notifier).register(
             name: _name.text.trim(),
             email: _email.text.trim(),
@@ -306,7 +317,6 @@ class _SignupRegisterScreenState extends ConsumerState<SignupRegisterScreen> {
             role: widget.role,
           );
       if (!mounted) return;
-      if (ref.read(authNotifierProvider).hasError) return;
       if (outcome == RegisterOutcome.needsEmailVerification) {
         final email = _email.text.trim();
         final dispatch = await _dispatchSignupVerificationEmail(email, t);
@@ -319,10 +329,12 @@ class _SignupRegisterScreenState extends ConsumerState<SignupRegisterScreen> {
           initialSendError: dispatch.errorMessage,
         );
         stashPendingSignupVerifyPayload(payload);
+        if (!context.mounted) return;
         context.go('/signup/verify-otp', extra: payload);
         return;
       }
-      _goAfterAuth(ref);
+      if (ref.read(authNotifierProvider).hasError) return;
+      WayoToast.error(context, t.errors.unknown);
     } finally {
       if (mounted) _submitInProgress = false;
     }
@@ -376,11 +388,11 @@ class _SignupRegisterScreenState extends ConsumerState<SignupRegisterScreen> {
   Future<void> _signInWithApple(Translations t) async {
     if (_appleSigningIn) return;
     if (!_ensureLegalAccepted(t)) return;
-    if (kIsWeb || Theme.of(context).platform != TargetPlatform.iOS) return;
+    if (!AppleSignInFacade.isSupportedPlatform) return;
     FocusScope.of(context).unfocus();
     setState(() => _appleSigningIn = true);
     try {
-      final cred = await AppleSignInFacade.signInOnIos();
+      final cred = await AppleSignInFacade.signIn();
       if (!mounted) return;
       if (cred == null) {
         WayoToast.error(context, t.login.apple_unavailable);
@@ -465,8 +477,7 @@ class _SignupRegisterScreenState extends ConsumerState<SignupRegisterScreen> {
       orElse: () => false,
     );
     final formLocked = loading || _googleSigningIn || _appleSigningIn;
-    final showApple =
-        !kIsWeb && Theme.of(context).platform == TargetPlatform.iOS;
+    final showApple = AppleSignInFacade.isSupportedPlatform;
     final rateLimit = auth.maybeWhen(
       error: (e, _) => e is RateLimitedException ? e : null,
       orElse: () => null,
@@ -515,7 +526,7 @@ class _SignupRegisterScreenState extends ConsumerState<SignupRegisterScreen> {
                           IconButton(
                             onPressed: formLocked
                                 ? null
-                                : () => context.go('/signup'),
+                                : () => context.go('/login'),
                             icon: const Icon(Icons.arrow_back_rounded),
                           ),
                           const WayoLogo(size: 40),
@@ -540,7 +551,17 @@ class _SignupRegisterScreenState extends ConsumerState<SignupRegisterScreen> {
                           height: 1.4,
                         ),
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 16),
+                      SignupChosenRolePanel(
+                        selectedRole: widget.role,
+                        onRoleSelected: formLocked
+                            ? null
+                            : (role) {
+                                if (role == widget.role) return;
+                                context.go('/signup/register?role=$role');
+                              },
+                      ),
+                      const SizedBox(height: 20),
                       if (_nameCheck.message != null) ...[
                         RegisterFieldAlertBanner(message: _nameCheck.message!),
                         const SizedBox(height: 10),
@@ -663,7 +684,7 @@ class _SignupRegisterScreenState extends ConsumerState<SignupRegisterScreen> {
                           OutlinedButton(
                             onPressed: formLocked
                                 ? null
-                                : () => context.go('/signup'),
+                                : () => context.go('/login'),
                             style: OutlinedButton.styleFrom(
                               minimumSize: const Size(96, 52),
                               padding: const EdgeInsets.symmetric(
@@ -712,8 +733,9 @@ class _SignupRegisterScreenState extends ConsumerState<SignupRegisterScreen> {
                         onPressed: () => unawaited(_signInWithGoogle(t)),
                       ),
                       const SizedBox(height: 16),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                      Wrap(
+                        alignment: WrapAlignment.center,
+                        crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
                           Text(
                             t.signup.already_have_account,
@@ -722,6 +744,11 @@ class _SignupRegisterScreenState extends ConsumerState<SignupRegisterScreen> {
                             ),
                           ),
                           TextButton(
+                            style: TextButton.styleFrom(
+                              visualDensity: VisualDensity.compact,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              padding: const EdgeInsets.symmetric(horizontal: 6),
+                            ),
                             onPressed:
                                 formLocked ? null : () => context.go('/login'),
                             child: Text(t.signup.sign_in_link),

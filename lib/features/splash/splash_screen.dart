@@ -25,7 +25,12 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     with SingleTickerProviderStateMixin {
   static const int _timelineMs = 2500;
 
+  /// Never block forever if auth hangs (network / secure storage).
+  static const Duration _authWaitCap = Duration(seconds: 5);
+  static const Duration _maxSplashCap = Duration(seconds: 6);
+
   late final AnimationController _controller;
+  Timer? _watchdog;
 
   bool _exitScheduled = false;
 
@@ -39,9 +44,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   }
 
   double _screenFadeOpacity() {
-    const start = 2300 / _timelineMs;
-    if (_t < start) return 1.0;
-    return 1.0 - Curves.easeIn.transform((_t - start) / (1.0 - start));
+    // Keep splash fully opaque until navigation — fading to 0 exposes the
+    // Android window background and can flash white on some devices.
+    return 1.0;
   }
 
   @override
@@ -51,6 +56,13 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       vsync: this,
       duration: const Duration(milliseconds: _timelineMs),
     );
+
+    _watchdog = Timer(_maxSplashCap, () {
+      unawaited(_finish(
+        const AuthUnauthenticated(),
+        authThrew: true,
+      ));
+    });
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       unawaited(_bootstrap());
@@ -75,21 +87,30 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     }
 
     var authThrew = false;
-    final stateFuture = _authStateResolved().onError((Object _, StackTrace st) {
+    final stateFuture = _authStateResolved()
+        .timeout(_authWaitCap, onTimeout: () {
+      authThrew = true;
+      return const AuthUnauthenticated();
+    }).onError((Object _, StackTrace st) {
       authThrew = true;
       return const AuthUnauthenticated();
     });
 
     await Future.wait([animationDone, stateFuture]);
 
+    final state = await stateFuture;
+    await _finish(state, authThrew: authThrew);
+  }
+
+  Future<void> _finish(AuthState state, {required bool authThrew}) async {
     if (!mounted || _exitScheduled) return;
     _exitScheduled = true;
+    _watchdog?.cancel();
 
-    final state = await stateFuture;
     final target = _destinationFor(state);
     final snap = ref.read(authNotifierProvider);
-    final sessionExpired = target == '/login' &&
-        (authThrew || snap.hasError);
+    final sessionExpired =
+        target == '/login' && (authThrew || snap.hasError);
 
     if (!mounted) return;
     if (sessionExpired) {
@@ -122,6 +143,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
   @override
   void dispose() {
+    _watchdog?.cancel();
     _controller.dispose();
     unawaited(
       SystemChrome.setPreferredOrientations(const [

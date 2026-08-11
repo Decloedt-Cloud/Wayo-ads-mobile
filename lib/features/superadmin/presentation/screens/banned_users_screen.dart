@@ -7,7 +7,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/ui/wayo_toast.dart';
 import '../../domain/entities/banned_user.dart';
 import '../providers/superadmin_providers.dart';
-import '../widgets/superadmin_chrome_actions.dart';
+import '../widgets/superadmin_scaffold.dart';
 
 class BannedUsersScreen extends ConsumerStatefulWidget {
   const BannedUsersScreen({super.key});
@@ -53,21 +53,15 @@ class _BannedUsersScreenState extends ConsumerState<BannedUsersScreen> {
       bannedUsersNotifierProvider(search: _searchQuery),
     );
 
-    return Scaffold(
-      backgroundColor: AppColors.surfaceOf(context),
-      appBar: AppBar(
-        title: const Text('Banned Users'),
-        backgroundColor: Colors.transparent,
-        surfaceTintColor: Colors.transparent,
-        actions: [
-          IconButton(
-            onPressed: _showBanUserDialog,
-            icon: const Icon(Icons.person_add_disabled_rounded),
-            tooltip: 'Ban User',
-          ),
-          const SuperadminChromeActions(trailingPadding: 12),
-        ],
-      ),
+    return SuperadminScaffold(
+      title: 'Banned Users',
+      actions: [
+        IconButton(
+          onPressed: _showBanUserDialog,
+          icon: const Icon(Icons.person_add_disabled_rounded),
+          tooltip: 'Ban User',
+        ),
+      ],
       body: Column(
         children: [
           Padding(
@@ -272,10 +266,8 @@ class _BannedUsersScreenState extends ConsumerState<BannedUsersScreen> {
     final searchController = TextEditingController();
     SearchUser? selectedUser;
 
-    await showModalBottomSheet(
+    await showSuperadminSheet(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
       builder: (context) => StatefulBuilder(
         builder: (context, setModalState) {
           return Container(

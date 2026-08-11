@@ -5,7 +5,7 @@ import '../../../../core/network/admin_api_endpoints.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../data/superadmin_ops_remote.dart';
 import '../widgets/admin_stat_card.dart';
-import '../widgets/superadmin_chrome_actions.dart';
+import '../widgets/superadmin_scaffold.dart';
 
 /// YouTube post monitoring — `GET|POST /api/admin/jobs/check-post-views`.
 class YoutubeMonitoringScreen extends ConsumerStatefulWidget {
@@ -49,20 +49,9 @@ class _YoutubeMonitoringScreenState
   Widget build(BuildContext context) {
     final async = ref.watch(youtubeMonitoringProvider);
 
-    return Scaffold(
-      backgroundColor: AppColors.surfaceOf(context),
-      appBar: AppBar(
-        title: const Text('YouTube monitoring'),
-        backgroundColor: Colors.transparent,
-        surfaceTintColor: Colors.transparent,
-        actions: [
-          IconButton(
-            onPressed: () => ref.invalidate(youtubeMonitoringProvider),
-            icon: const Icon(Icons.refresh_rounded),
-          ),
-          const SuperadminChromeActions(trailingPadding: 12),
-        ],
-      ),
+    return SuperadminScaffold(
+      title: 'YouTube monitoring',
+      onRefresh: () => ref.invalidate(youtubeMonitoringProvider),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _running ? null : _runCheck,
         icon: _running

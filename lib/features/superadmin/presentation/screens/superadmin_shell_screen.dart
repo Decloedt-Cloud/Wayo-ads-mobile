@@ -4,11 +4,13 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/layout/wayo_system_insets.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../auth/domain/auth_notifier.dart';
 import '../../../auth/domain/wayo_ads_account_role.dart';
 import '../../../shell/widgets/wayo_bottom_nav.dart';
 import '../widgets/superadmin_chrome_actions.dart';
+import '../widgets/superadmin_scaffold.dart';
 
 class SuperadminShellScreen extends ConsumerWidget {
   const SuperadminShellScreen({super.key, required this.child});
@@ -111,6 +113,7 @@ class SuperadminBottomNav extends StatelessWidget {
       ),
       child: SafeArea(
         top: false,
+        minimum: const EdgeInsets.only(bottom: kWayoAndroidNavBarFallback),
         child: Container(
           height: kWayoBottomNavBarHeight,
           padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -152,16 +155,19 @@ class SuperadminMoreScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.surfaceOf(context),
-      appBar: AppBar(
-        title: const Text('More'),
-        backgroundColor: Colors.transparent,
-        surfaceTintColor: Colors.transparent,
-        actions: const [
-          SuperadminChromeActions(trailingPadding: 12),
+      appBar: const SuperadminAppBar(
+        title: 'More',
+        actions: [
+          SuperadminChromeActions(trailingPadding: 8),
         ],
       ),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+        padding: EdgeInsets.fromLTRB(
+          16,
+          12,
+          16,
+          wayoScrollBottomReserve(context, gap: 24),
+        ),
         children: [
           Text(
             'Tools & Settings',

@@ -6,7 +6,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/ui/wayo_toast.dart';
 import '../../data/superadmin_ops_remote.dart';
 import '../../domain/entities/admin_ops.dart';
-import '../widgets/superadmin_chrome_actions.dart';
+import '../widgets/superadmin_scaffold.dart';
 
 /// Token packages catalog — `GET|POST|PUT /api/admin/token-packages`.
 class TokenPackagesScreen extends ConsumerWidget {
@@ -17,20 +17,9 @@ class TokenPackagesScreen extends ConsumerWidget {
     final async = ref.watch(adminTokenPackagesProvider);
     final money = NumberFormat.simpleCurrency();
 
-    return Scaffold(
-      backgroundColor: AppColors.surfaceOf(context),
-      appBar: AppBar(
-        title: const Text('Token packages'),
-        backgroundColor: Colors.transparent,
-        surfaceTintColor: Colors.transparent,
-        actions: [
-          IconButton(
-            onPressed: () => ref.invalidate(adminTokenPackagesProvider),
-            icon: const Icon(Icons.refresh_rounded),
-          ),
-          const SuperadminChromeActions(trailingPadding: 12),
-        ],
-      ),
+    return SuperadminScaffold(
+      title: 'Token packages',
+      onRefresh: () => ref.invalidate(adminTokenPackagesProvider),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showPackageForm(context, ref),
         backgroundColor: AppColors.primary,
@@ -80,10 +69,8 @@ class TokenPackagesScreen extends ConsumerWidget {
     WidgetRef ref, {
     AdminTokenPackage? package,
   }) async {
-    final result = await showModalBottomSheet<_PackageFormValues>(
+    final result = await showSuperadminSheet<_PackageFormValues>(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
       builder: (context) => _PackageFormSheet(package: package),
     );
     if (result == null || !context.mounted) return;
@@ -269,19 +256,16 @@ class _PackageFormSheetState extends State<_PackageFormSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final bottom = MediaQuery.viewInsetsOf(context).bottom;
-
-    return Padding(
-      padding: EdgeInsets.only(bottom: bottom),
-      child: Container(
-        margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-        decoration: BoxDecoration(
-          color: AppColors.surfaceOf(context),
-          borderRadius: BorderRadius.circular(24),
-        ),
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
-          child: Form(
+    // Keyboard inset is applied by [showSuperadminSheet]; avoid double-padding.
+    return Container(
+      margin: const EdgeInsets.fromLTRB(12, 0, 12, 0),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceOf(context),
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+        child: Form(
             key: _formKey,
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -474,7 +458,6 @@ class _PackageFormSheetState extends State<_PackageFormSheet> {
             ),
           ),
         ),
-      ),
     );
   }
 }

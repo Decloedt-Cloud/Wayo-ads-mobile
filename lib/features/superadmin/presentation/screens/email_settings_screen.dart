@@ -6,7 +6,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/ui/wayo_toast.dart';
 import '../../data/superadmin_ops_remote.dart';
 import '../../domain/entities/admin_ops.dart';
-import '../widgets/superadmin_chrome_actions.dart';
+import '../widgets/superadmin_scaffold.dart';
 
 /// SMTP / email settings — `GET|PUT /api/admin/email-settings` +
 /// `POST /api/admin/email-settings/test-email`.
@@ -125,27 +125,16 @@ class _EmailSettingsScreenState extends ConsumerState<EmailSettingsScreen> {
   Widget build(BuildContext context) {
     final async = ref.watch(emailSettingsProvider);
 
-    return Scaffold(
-      backgroundColor: AppColors.surfaceOf(context),
-      appBar: AppBar(
-        title: const Text('Email settings'),
-        backgroundColor: Colors.transparent,
-        surfaceTintColor: Colors.transparent,
-        actions: [
-          IconButton(
-            onPressed: () => ref.invalidate(emailSettingsProvider),
-            icon: const Icon(Icons.refresh_rounded),
-          ),
-          const SuperadminChromeActions(trailingPadding: 12),
-        ],
-      ),
+    return SuperadminScaffold(
+      title: 'Email settings',
+      onRefresh: () => ref.invalidate(emailSettingsProvider),
       body: async.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('$e')),
         data: (s) {
           _hydrate(s);
           return ListView(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+            padding: superadminPagePadding(context),
             children: [
               if (s != null)
                 Padding(
@@ -181,13 +170,7 @@ class _EmailSettingsScreenState extends ConsumerState<EmailSettingsScreen> {
                     ],
                   ),
                 ),
-              Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceElevatedOf(context),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.borderOf(context).withValues(alpha: 0.3)),
-                ),
+              SuperadminSectionCard(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -276,13 +259,7 @@ class _EmailSettingsScreenState extends ConsumerState<EmailSettingsScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceElevatedOf(context),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.borderOf(context).withValues(alpha: 0.3)),
-                ),
+              SuperadminSectionCard(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [

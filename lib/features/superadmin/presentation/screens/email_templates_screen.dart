@@ -6,7 +6,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/ui/wayo_toast.dart';
 import '../../data/superadmin_ops_remote.dart';
 import '../../domain/entities/admin_ops.dart';
-import '../widgets/superadmin_chrome_actions.dart';
+import '../widgets/superadmin_scaffold.dart';
 
 /// Email template catalog + plaintext preview —
 /// `GET /api/admin/emails/templates` and `…/preview/[template]`.
@@ -17,20 +17,9 @@ class EmailTemplatesScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final async = ref.watch(emailTemplatesProvider);
 
-    return Scaffold(
-      backgroundColor: AppColors.surfaceOf(context),
-      appBar: AppBar(
-        title: const Text('Email templates'),
-        backgroundColor: Colors.transparent,
-        surfaceTintColor: Colors.transparent,
-        actions: [
-          IconButton(
-            onPressed: () => ref.invalidate(emailTemplatesProvider),
-            icon: const Icon(Icons.refresh_rounded),
-          ),
-          const SuperadminChromeActions(trailingPadding: 12),
-        ],
-      ),
+    return SuperadminScaffold(
+      title: 'Email templates',
+      onRefresh: () => ref.invalidate(emailTemplatesProvider),
       body: async.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(
@@ -64,7 +53,7 @@ class EmailTemplatesScreen extends ConsumerWidget {
               await ref.read(emailTemplatesProvider.future);
             },
             child: ListView.builder(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+              padding: superadminPagePadding(context),
               itemCount: categories.length,
               itemBuilder: (context, i) {
                 final cat = categories[i];
@@ -112,10 +101,8 @@ class _TemplateCard extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(14),
         onTap: () {
-          showModalBottomSheet<void>(
+          showSuperadminSheet<void>(
             context: context,
-            isScrollControlled: true,
-            backgroundColor: Colors.transparent,
             builder: (_) => _PreviewSheet(name: template.name),
           );
         },

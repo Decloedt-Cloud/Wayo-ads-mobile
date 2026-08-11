@@ -178,13 +178,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   Future<void> _signInWithApple(Translations t) async {
     if (_appleSigningIn) return;
-    if (kIsWeb || Theme.of(context).platform != TargetPlatform.iOS) {
+    if (!AppleSignInFacade.isSupportedPlatform) {
       return;
     }
     FocusScope.of(context).unfocus();
     setState(() => _appleSigningIn = true);
     try {
-      final cred = await AppleSignInFacade.signInOnIos();
+      final cred = await AppleSignInFacade.signIn();
       if (!mounted) return;
       if (cred == null) {
         WayoToast.error(context, t.login.apple_unavailable);
@@ -248,8 +248,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       orElse: () => false,
     );
     final formLocked = loading || _googleSigningIn || _appleSigningIn;
-    final showAppleLogin =
-        !kIsWeb && Theme.of(context).platform == TargetPlatform.iOS;
+    final showAppleLogin = AppleSignInFacade.isSupportedPlatform;
     final rateLimit = auth.maybeWhen(
       error: (e, _) => e is RateLimitedException ? e : null,
       orElse: () => null,
@@ -484,8 +483,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             ),
                           ),
                           const SizedBox(height: 12),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
+                          Wrap(
+                            alignment: WrapAlignment.center,
+                            crossAxisAlignment: WrapCrossAlignment.center,
                             children: [
                               Text(
                                 t.signup.no_account_yet,
@@ -494,9 +494,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 ),
                               ),
                               TextButton(
-                                onPressed: formLocked
+                                style: TextButton.styleFrom(
+                                  visualDensity: VisualDensity.compact,
+                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                  padding:
+                                      const EdgeInsets.symmetric(horizontal: 6),
+                                ),
+                                    onPressed: formLocked
                                     ? null
-                                    : () => context.go('/signup'),
+                                    : () {
+                                        ref
+                                            .read(authNotifierProvider.notifier)
+                                            .clearLoginError();
+                                        context.go('/signup');
+                                      },
                                 child: Text(t.signup.create_account_link),
                               ),
                             ],

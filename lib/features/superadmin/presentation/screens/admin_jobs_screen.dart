@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/network/admin_api_endpoints.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../data/superadmin_ops_remote.dart';
-import '../widgets/superadmin_chrome_actions.dart';
+import '../widgets/superadmin_scaffold.dart';
 
 class _JobDef {
   const _JobDef({
@@ -109,16 +109,10 @@ class _AdminJobsScreenState extends ConsumerState<AdminJobsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.surfaceOf(context),
-      appBar: AppBar(
-        title: const Text('Admin jobs'),
-        backgroundColor: Colors.transparent,
-        surfaceTintColor: Colors.transparent,
-        actions: const [SuperadminChromeActions(trailingPadding: 12)],
-      ),
+    return SuperadminScaffold(
+      title: 'Admin jobs',
       body: ListView.separated(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+        padding: superadminPagePadding(context),
         itemCount: _jobs.length,
         separatorBuilder: (_, _) => const SizedBox(height: 10),
         itemBuilder: (context, i) {

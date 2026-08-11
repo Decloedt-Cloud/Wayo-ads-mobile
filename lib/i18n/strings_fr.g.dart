@@ -217,6 +217,11 @@ class _TranslationsSignupFr extends TranslationsSignupEn {
 	@override String get confirm_password_label => 'Confirmer le mot de passe';
 	@override String get password_need_symbol => 'Un symbole est requis (!@#%…)';
 	@override String get register_cta => 'Créer un compte';
+	@override String get your_role => 'Votre rôle';
+	@override String get role_creator_label => 'Créateur';
+	@override String get role_creator_blurb => 'Monétisez votre audience';
+	@override String get role_advertiser_label => 'Annonceur';
+	@override String get role_advertiser_blurb => 'Promouvez vos produits';
 	@override String get google_cta => 'S\'inscrire avec Google';
 	@override String get apple_cta => 'S\'inscrire avec Apple';
 	@override String get already_have_account => 'Vous avez déjà un compte ?';
@@ -2140,6 +2145,11 @@ extension on TranslationsFr {
 			case 'signup.confirm_password_label': return 'Confirmer le mot de passe';
 			case 'signup.password_need_symbol': return 'Un symbole est requis (!@#%…)';
 			case 'signup.register_cta': return 'Créer un compte';
+			case 'signup.your_role': return 'Votre rôle';
+			case 'signup.role_creator_label': return 'Créateur';
+			case 'signup.role_creator_blurb': return 'Monétisez votre audience';
+			case 'signup.role_advertiser_label': return 'Annonceur';
+			case 'signup.role_advertiser_blurb': return 'Promouvez vos produits';
 			case 'signup.google_cta': return 'S\'inscrire avec Google';
 			case 'signup.apple_cta': return 'S\'inscrire avec Apple';
 			case 'signup.already_have_account': return 'Vous avez déjà un compte ?';

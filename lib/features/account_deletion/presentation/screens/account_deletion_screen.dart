@@ -467,7 +467,7 @@ class _AccountDeletionScreenState extends ConsumerState<AccountDeletionScreen> {
         }
         reauth = buildGoogleDeletionReauth(idToken);
       } else {
-        final cred = await AppleSignInFacade.signInOnIos();
+        final cred = await AppleSignInFacade.signIn();
         if (cred == null) {
           if (!mounted) return;
           setState(() => _reauthing = false);
@@ -539,8 +539,7 @@ class _AccountDeletionScreenState extends ConsumerState<AccountDeletionScreen> {
       label: Text(t.oauth_reauth_apple),
     );
 
-    final showApple =
-        !kIsWeb && Theme.of(context).platform == TargetPlatform.iOS;
+    final showApple = AppleSignInFacade.isSupportedPlatform;
     final preferApple = _lastLoginMethod == AuthLoginMethod.apple;
 
     if (!showApple) {

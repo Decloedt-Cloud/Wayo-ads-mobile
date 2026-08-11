@@ -2,6 +2,7 @@ import Flutter
 import UIKit
 import UserNotifications
 import flutter_local_notifications
+import ObjectiveC
 
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
@@ -25,6 +26,7 @@ import flutter_local_notifications
     let ok = super.application(application, didFinishLaunchingWithOptions: launchOptions)
     // APNs device token registration (FCM getToken/getAPNSToken on iOS depends on this).
     application.registerForRemoteNotifications()
+    StripeSafeAreaGuard.install()
     return ok
   }
 
@@ -99,5 +101,64 @@ import flutter_local_notifications
       willPresent: notification,
       withCompletionHandler: completionHandler
     )
+  }
+}
+
+/// Keeps Stripe Link / Financial Connections / PaymentSheet CTAs above the
+/// home indicator by bumping [additionalSafeAreaInsets] on Stripe VCs.
+enum StripeSafeAreaGuard {
+  private static var installed = false
+
+  static func install() {
+    guard !installed else { return }
+    installed = true
+    UIViewController.wayo_swizzleViewDidLayoutSubviews()
+  }
+}
+
+private extension UIViewController {
+  static func wayo_swizzleViewDidLayoutSubviews() {
+    let original = class_getInstanceMethod(UIViewController.self, #selector(viewDidLayoutSubviews))
+    let swizzled = class_getInstanceMethod(
+      UIViewController.self,
+      #selector(wayo_viewDidLayoutSubviews)
+    )
+    guard let original, let swizzled else { return }
+    method_exchangeImplementations(original, swizzled)
+  }
+
+  @objc func wayo_viewDidLayoutSubviews() {
+    wayo_viewDidLayoutSubviews()
+    wayo_applyStripeSafeAreaIfNeeded()
+  }
+
+  func wayo_applyStripeSafeAreaIfNeeded() {
+    let name = NSStringFromClass(type(of: self))
+    let isStripe =
+      name.contains("Stripe") ||
+      name.hasPrefix("STP") ||
+      name.contains("FinancialConnections") ||
+      name.contains("PaymentSheet") ||
+      name.contains("PayWithLink") ||
+      name.contains("LinkSheet") ||
+      name.contains("LinkAccount") ||
+      name.contains("LinkNavigationController")
+    guard isStripe else { return }
+    guard let window = view.window else { return }
+
+    let needed = window.safeAreaInsets.bottom
+    guard needed > 0 else { return }
+
+    // Only bump if the VC isn't already accounting for the home indicator.
+    let current = additionalSafeAreaInsets.bottom
+    let viewBottom = view.safeAreaInsets.bottom
+    if viewBottom >= needed - 1 {
+      return
+    }
+    let target = max(current, needed - viewBottom)
+    if abs(current - target) < 0.5 {
+      return
+    }
+    additionalSafeAreaInsets.bottom = target
   }
 }

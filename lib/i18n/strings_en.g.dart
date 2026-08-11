@@ -221,6 +221,11 @@ class TranslationsSignupEn {
 	String get confirm_password_label => 'Confirm password';
 	String get password_need_symbol => 'Needs a symbol (!@#%…)';
 	String get register_cta => 'Create account';
+	String get your_role => 'Your role';
+	String get role_creator_label => 'Creator';
+	String get role_creator_blurb => 'Monetize your audience';
+	String get role_advertiser_label => 'Advertiser';
+	String get role_advertiser_blurb => 'Promote your products';
 	String get google_cta => 'Sign up with Google';
 	String get apple_cta => 'Sign up with Apple';
 	String get already_have_account => 'Already have an account?';
@@ -2323,6 +2328,11 @@ extension on Translations {
 			case 'signup.confirm_password_label': return 'Confirm password';
 			case 'signup.password_need_symbol': return 'Needs a symbol (!@#%…)';
 			case 'signup.register_cta': return 'Create account';
+			case 'signup.your_role': return 'Your role';
+			case 'signup.role_creator_label': return 'Creator';
+			case 'signup.role_creator_blurb': return 'Monetize your audience';
+			case 'signup.role_advertiser_label': return 'Advertiser';
+			case 'signup.role_advertiser_blurb': return 'Promote your products';
 			case 'signup.google_cta': return 'Sign up with Google';
 			case 'signup.apple_cta': return 'Sign up with Apple';
 			case 'signup.already_have_account': return 'Already have an account?';

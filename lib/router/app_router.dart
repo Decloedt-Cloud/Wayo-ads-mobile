@@ -12,7 +12,6 @@ import '../features/auth/domain/onboarding_gate.dart';
 import '../features/auth/presentation/screens/email_verification_otp_onboarding_screen.dart';
 import '../features/auth/presentation/screens/signup_email_verification_screen.dart';
 import '../features/auth/presentation/screens/signup_register_screen.dart';
-import '../features/auth/presentation/screens/signup_role_screen.dart';
 import '../features/auth/presentation/screens/wayo_ads_role_onboarding_screen.dart';
 import '../features/auth/presentation/models/pending_signup_verify_store.dart';
 import '../features/auth/presentation/models/signup_verify_payload.dart';
@@ -337,17 +336,25 @@ GoRouter goRouter(GoRouterRef ref) {
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(
         path: '/signup',
-        builder: (context, state) => const SignupRoleScreen(),
+        redirect: (context, state) {
+          // Only bare `/signup` — do not steal `/signup/register` or `/signup/verify-otp`.
+          if (state.uri.path != '/signup') return null;
+          final role =
+              state.uri.queryParameters['role']?.trim().toUpperCase() ?? '';
+          if (role == 'CREATOR' || role == 'ADVERTISER') {
+            return '/signup/register?role=$role';
+          }
+          return '/signup/register?role=CREATOR';
+        },
         routes: [
           GoRoute(
             path: 'register',
             builder: (context, state) {
               final role =
                   state.uri.queryParameters['role']?.trim().toUpperCase() ?? '';
-              if (role != 'CREATOR' && role != 'ADVERTISER') {
-                return const SignupRoleScreen();
-              }
-              return SignupRegisterScreen(role: role);
+              final resolved =
+                  role == 'ADVERTISER' ? 'ADVERTISER' : 'CREATOR';
+              return SignupRegisterScreen(role: resolved);
             },
           ),
           GoRoute(
@@ -358,7 +365,7 @@ GoRouter goRouter(GoRouterRef ref) {
                   ? extra
                   : readPendingSignupVerifyPayload();
               if (payload == null) {
-                return const SignupRoleScreen();
+                return const LoginScreen();
               }
               return SignupEmailVerificationScreen(payload: payload);
             },

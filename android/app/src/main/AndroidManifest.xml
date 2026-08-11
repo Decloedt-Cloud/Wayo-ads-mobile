@@ -99,6 +99,18 @@
 
         </activity>
 
+            <!-- Required by sign_in_with_apple Android (Chrome Custom Tabs → app). -->
+            <activity
+                android:name="com.aboutyou.dart_packages.sign_in_with_apple.SignInWithAppleCallback"
+                android:exported="true">
+                <intent-filter>
+                    <action android:name="android.intent.action.VIEW" />
+                    <category android:name="android.intent.category.DEFAULT" />
+                    <category android:name="android.intent.category.BROWSABLE" />
+                    <data android:scheme="signinwithapple" android:host="callback" />
+                </intent-filter>
+            </activity>
+
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
@@ -113,10 +125,11 @@
             android:name="com.google.android.gms.wallet.api.enabled"
             android:value="true" />
 
-        <!-- Do not tools:replace Stripe activity themes. Overriding Financial
-             Connections / Link with Theme.AppCompat crashed ACH prepaid
-             ("Wayo Ads keeps stopping"). Nav-bar insets are handled via
-             MainActivity setDecorFitsSystemWindows around presentPaymentSheet. -->
+        <!-- Do not tools:replace Stripe activity themes here — that crashed ACH
+             ("Wayo Ads keeps stopping"). Nav-bar overlap is fixed by:
+             1) StripeOverlayChrome (runtime decor-fits on com.stripe.* activities)
+             2) values/stripe_overlay_themes.xml (opaque nav on FC DefaultTheme only)
+             3) AndroidWindowInsets around presentPaymentSheet for MainActivity sheets -->
 
         <activity
             android:name="com.linusu.flutter_secure_storage.FlutterSecureStorageActivity"

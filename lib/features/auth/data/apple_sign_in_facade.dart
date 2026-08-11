@@ -5,7 +5,12 @@ import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
-/// iOS Sign in with Apple — yields an identity token for Auth_Wayo (`POST …/apple`).
+import '../../../core/config/auth_runtime_config.dart';
+
+/// Sign in with Apple — yields an identity token for Auth_Wayo (`POST …/apple`).
+///
+/// - **iOS:** native ASAuthorization
+/// - **Android:** Apple web OAuth via Chrome Custom Tabs (`WebAuthenticationOptions`)
 final class AppleSignInResult {
   const AppleSignInResult({
     required this.identityToken,
@@ -23,6 +28,12 @@ final class AppleSignInResult {
 abstract final class AppleSignInFacade {
   AppleSignInFacade._();
 
+  static bool get isSupportedPlatform {
+    if (kIsWeb) return false;
+    return defaultTargetPlatform == TargetPlatform.iOS ||
+        defaultTargetPlatform == TargetPlatform.android;
+  }
+
   static String _generateNonce([int length = 32]) {
     const charset =
         '0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._';
@@ -39,18 +50,39 @@ abstract final class AppleSignInFacade {
     return digest.toString();
   }
 
-  /// Returns `null` if Apple did not return an identity token (e.g. dismissed sheet).
-  static Future<AppleSignInResult?> signInOnIos() async {
-    if (kIsWeb || defaultTargetPlatform != TargetPlatform.iOS) {
+  /// Native iOS Sign in with Apple.
+  ///
+  /// Prefer [signIn] which also supports Android.
+  static Future<AppleSignInResult?> signInOnIos() => signIn();
+
+  /// Returns `null` if Apple did not return an identity token (e.g. dismissed).
+  static Future<AppleSignInResult?> signIn() async {
+    if (!isSupportedPlatform) {
       return null;
     }
-    final isAvail = await SignInWithApple.isAvailable();
-    if (!isAvail) {
-      return null;
+
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      final isAvail = await SignInWithApple.isAvailable();
+      if (!isAvail) {
+        return null;
+      }
     }
 
     final rawNonce = _generateNonce();
     final nonce = _sha256ofString(rawNonce);
+
+    WebAuthenticationOptions? webOptions;
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      final clientId = AuthRuntimeConfig.instance.appleWebClientId.trim();
+      final redirect = AuthRuntimeConfig.instance.appleAndroidRedirectUri.trim();
+      if (clientId.isEmpty || redirect.isEmpty) {
+        return null;
+      }
+      webOptions = WebAuthenticationOptions(
+        clientId: clientId,
+        redirectUri: Uri.parse(redirect),
+      );
+    }
 
     final AuthorizationCredentialAppleID credential;
     try {
@@ -60,6 +92,7 @@ abstract final class AppleSignInFacade {
           AppleIDAuthorizationScopes.fullName,
         ],
         nonce: nonce,
+        webAuthenticationOptions: webOptions,
       );
     } on SignInWithAppleAuthorizationException catch (e) {
       if (e.code == AuthorizationErrorCode.canceled) {

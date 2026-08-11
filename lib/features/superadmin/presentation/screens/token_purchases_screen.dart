@@ -6,7 +6,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../data/superadmin_ops_remote.dart';
 import '../../domain/entities/admin_ops.dart';
 import '../widgets/admin_stat_card.dart';
-import '../widgets/superadmin_chrome_actions.dart';
+import '../widgets/superadmin_scaffold.dart';
 
 /// Creator AI token purchases — `GET /api/admin/token-purchases`.
 class TokenPurchasesScreen extends ConsumerStatefulWidget {
@@ -32,14 +32,8 @@ class _TokenPurchasesScreenState extends ConsumerState<TokenPurchasesScreen> {
     final async = ref.watch(tokenPurchasesProvider(_query));
     final money = NumberFormat.currency(symbol: '€', decimalDigits: 2);
 
-    return Scaffold(
-      backgroundColor: AppColors.surfaceOf(context),
-      appBar: AppBar(
-        title: const Text('Token purchases'),
-        backgroundColor: Colors.transparent,
-        surfaceTintColor: Colors.transparent,
-        actions: const [SuperadminChromeActions(trailingPadding: 12)],
-      ),
+    return SuperadminScaffold(
+      title: 'Token purchases',
       body: Column(
         children: [
           Padding(
@@ -79,7 +73,7 @@ class _TokenPurchasesScreenState extends ConsumerState<TokenPurchasesScreen> {
                   await ref.read(tokenPurchasesProvider(_query).future);
                 },
                 child: ListView(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+                  padding: superadminPagePadding(context),
                   children: [
                     GridView.count(
                       shrinkWrap: true,

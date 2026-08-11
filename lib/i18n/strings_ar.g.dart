@@ -217,6 +217,11 @@ class _TranslationsSignupAr extends TranslationsSignupEn {
 	@override String get confirm_password_label => 'تأكيد كلمة المرور';
 	@override String get password_need_symbol => 'مطلوب رمز (!@#%…)';
 	@override String get register_cta => 'إنشاء حساب';
+	@override String get your_role => 'دورك';
+	@override String get role_creator_label => 'منشئ';
+	@override String get role_creator_blurb => 'حقق دخلاً من جمهورك';
+	@override String get role_advertiser_label => 'معلن';
+	@override String get role_advertiser_blurb => 'روّج لمنتجاتك';
 	@override String get google_cta => 'إنشاء حساب عبر Google';
 	@override String get apple_cta => 'إنشاء حساب عبر Apple';
 	@override String get already_have_account => 'لديك حساب بالفعل؟';
@@ -2139,6 +2144,11 @@ extension on TranslationsAr {
 			case 'signup.confirm_password_label': return 'تأكيد كلمة المرور';
 			case 'signup.password_need_symbol': return 'مطلوب رمز (!@#%…)';
 			case 'signup.register_cta': return 'إنشاء حساب';
+			case 'signup.your_role': return 'دورك';
+			case 'signup.role_creator_label': return 'منشئ';
+			case 'signup.role_creator_blurb': return 'حقق دخلاً من جمهورك';
+			case 'signup.role_advertiser_label': return 'معلن';
+			case 'signup.role_advertiser_blurb': return 'روّج لمنتجاتك';
 			case 'signup.google_cta': return 'إنشاء حساب عبر Google';
 			case 'signup.apple_cta': return 'إنشاء حساب عبر Apple';
 			case 'signup.already_have_account': return 'لديك حساب بالفعل؟';

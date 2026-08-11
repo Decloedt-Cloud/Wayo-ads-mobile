@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../data/superadmin_ops_remote.dart';
-import '../widgets/superadmin_chrome_actions.dart';
+import '../widgets/superadmin_scaffold.dart';
 
 /// In-app notification broadcast — `POST /api/admin/notifications/broadcast`.
 class BroadcastScreen extends ConsumerStatefulWidget {
@@ -59,16 +59,10 @@ class _BroadcastScreenState extends ConsumerState<BroadcastScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.surfaceOf(context),
-      appBar: AppBar(
-        title: const Text('Broadcast'),
-        backgroundColor: Colors.transparent,
-        surfaceTintColor: Colors.transparent,
-        actions: const [SuperadminChromeActions(trailingPadding: 12)],
-      ),
+    return SuperadminScaffold(
+      title: 'Broadcast',
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+        padding: superadminPagePadding(context),
         children: [
           Text(
             'Send an in-app notification to everyone or a role.',

@@ -254,7 +254,7 @@ class _SuperadminDashboardScreenState
 
     return SliverToBoxAdapter(
       child: Container(
-        padding: EdgeInsets.fromLTRB(20, topInset + 12, 20, 20),
+        padding: EdgeInsets.fromLTRB(20, topInset + 8, 20, 14),
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,

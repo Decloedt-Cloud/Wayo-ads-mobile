@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      Only override nav/status bar colors. Keep Stripe's BaseTheme (colors,
+      translucent window, dim) intact — full theme replaces have crashed ACH.
+      Runtime chrome is also forced in StripeOverlayChrome.
+    -->
+    <style name="StripeFinancialConnectionsDefaultTheme" parent="StripeFinancialConnectionsBaseTheme">
+        <item name="android:statusBarColor">@android:color/black</item>
+        <item name="android:navigationBarColor">@android:color/black</item>
+        <item name="android:navigationBarDividerColor">@android:color/black</item>
+        <item name="android:enforceNavigationBarContrast">true</item>
+    </style>
+</resources>

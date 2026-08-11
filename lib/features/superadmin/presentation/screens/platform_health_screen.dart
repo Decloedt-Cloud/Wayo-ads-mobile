@@ -6,7 +6,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../data/superadmin_ops_remote.dart';
 import '../../domain/entities/admin_ops.dart';
 import '../widgets/admin_stat_card.dart';
-import '../widgets/superadmin_chrome_actions.dart';
+import '../widgets/superadmin_scaffold.dart';
 
 /// Platform KPIs + dependency health — `GET /api/admin/health(+services)`.
 class PlatformHealthScreen extends ConsumerWidget {
@@ -18,23 +18,12 @@ class PlatformHealthScreen extends ConsumerWidget {
     final servicesAsync = ref.watch(adminServicesHealthProvider);
     final money = NumberFormat.currency(symbol: '€', decimalDigits: 0);
 
-    return Scaffold(
-      backgroundColor: AppColors.surfaceOf(context),
-      appBar: AppBar(
-        title: const Text('Platform health'),
-        backgroundColor: Colors.transparent,
-        surfaceTintColor: Colors.transparent,
-        actions: [
-          IconButton(
-            onPressed: () {
-              ref.invalidate(platformHealthProvider);
-              ref.invalidate(adminServicesHealthProvider);
-            },
-            icon: const Icon(Icons.refresh_rounded),
-          ),
-          const SuperadminChromeActions(trailingPadding: 12),
-        ],
-      ),
+    return SuperadminScaffold(
+      title: 'Platform health',
+      onRefresh: () {
+        ref.invalidate(platformHealthProvider);
+        ref.invalidate(adminServicesHealthProvider);
+      },
       body: RefreshIndicator(
         onRefresh: () async {
           ref.invalidate(platformHealthProvider);
@@ -45,7 +34,7 @@ class PlatformHealthScreen extends ConsumerWidget {
           ]);
         },
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+          padding: superadminPagePadding(context),
           children: [
             healthAsync.when(
               loading: () => const Padding(

@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../data/superadmin_ops_remote.dart';
 import '../../domain/entities/admin_ops.dart';
-import '../widgets/superadmin_chrome_actions.dart';
+import '../widgets/superadmin_scaffold.dart';
 
 /// Platform fee / hold settings — `GET|PUT /api/admin/platform-settings`.
 class PlatformSettingsScreen extends ConsumerStatefulWidget {
@@ -81,21 +81,15 @@ class _PlatformSettingsScreenState
   Widget build(BuildContext context) {
     final async = ref.watch(platformSettingsProvider);
 
-    return Scaffold(
-      backgroundColor: AppColors.surfaceOf(context),
-      appBar: AppBar(
-        title: const Text('Platform settings'),
-        backgroundColor: Colors.transparent,
-        surfaceTintColor: Colors.transparent,
-        actions: const [SuperadminChromeActions(trailingPadding: 12)],
-      ),
+    return SuperadminScaffold(
+      title: 'Platform settings',
       body: async.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('$e')),
         data: (s) {
           _hydrate(s);
           return ListView(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+            padding: superadminPagePadding(context),
             children: [
               Text(
                 'Stripe mode: ${s.stripeActiveMode}',

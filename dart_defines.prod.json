@@ -21,6 +21,8 @@
   "STRIPE_GOOGLE_PAY_MERCHANT_ID": "BCR2DN5T42SPJCIF",
   "STRIPE_APPLE_MERCHANT_ID": "merchant.ma.wayo.wayoCreatorStudio",
   "STRIPE_URL_SCHEME": "com.wayo.wayocreatorstudio",
-  "DISABLE_CERT_PINNING": "true"
+  "DISABLE_CERT_PINNING": "true",
+  "AUTH_APPLE_WEB_CLIENT_ID": "com.wayo.ads.web",
+  "AUTH_APPLE_ANDROID_REDIRECT_URI": "https://myaccount.wayo.ac/auth/apple/android/ads"
 
 }

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../../core/theme/app_text_styles.dart';
 
-/// Apple HIG–style black button for Sign in with Apple (iOS).
+/// Apple HIG–style black button for Sign in with Apple (iOS + Android).
 class PremiumAppleSignInButton extends StatelessWidget {
   const PremiumAppleSignInButton({
     super.key,

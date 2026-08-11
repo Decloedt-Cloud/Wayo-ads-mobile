@@ -133,14 +133,23 @@ class AuthRepositoryImpl implements IAuthRepository {
       }
       if (data['success'] == false) {
         final msg = data['message'] as String? ?? 'Registration failed';
-        return Failure(InvalidCredentialsException(msg));
+        return Failure(ServerException(msg));
       }
-      return Success(RegisterResponse.fromJson(data));
+      try {
+        return Success(RegisterResponse.fromJson(data));
+      } catch (_) {
+        // Registration succeeded on the server — continue OTP even if payload shape drifts.
+        return Success(
+          RegisterResponse(
+            user: AppUser(id: 0, email: request.email.trim()),
+          ),
+        );
+      }
     } on DioException catch (e) {
       if (e.response?.statusCode == 422) {
         return Failure(_mapRegisterValidation(e));
       }
-      return Failure(_mapDioLogin(e));
+      return Failure(_mapRegisterDio(e));
     } catch (e) {
       return Failure(ServerException('$e'));
     }
@@ -876,17 +885,37 @@ class AuthRepositoryImpl implements IAuthRepository {
     final body = e.response?.data;
     if (body is Map && body['errors'] is Map) {
       final errors = Map<String, dynamic>.from(body['errors'] as Map);
-      for (final field in ['email', 'name', 'password']) {
+      for (final field in ['email', 'name', 'password', 'role', 'app']) {
         final raw = errors[field];
         if (raw is List && raw.isNotEmpty) {
-          return InvalidCredentialsException('${raw.first}');
+          return ServerException('${raw.first}');
         }
       }
     }
     final message = body is Map && body['message'] is String
         ? body['message'] as String
         : 'Validation failed';
-    return InvalidCredentialsException(message);
+    return ServerException(message);
+  }
+
+  AuthException _mapRegisterDio(DioException e) {
+    if (e.type == DioExceptionType.connectionTimeout ||
+        e.type == DioExceptionType.receiveTimeout ||
+        e.type == DioExceptionType.connectionError) {
+      return const NetworkException();
+    }
+    final status = e.response?.statusCode;
+    final body = e.response?.data;
+    var message = e.message ?? 'Registration failed';
+    if (body is Map && body['message'] is String) {
+      message = body['message'] as String;
+    }
+    if (status == 429) {
+      return RateLimitedException(
+        retryAfterSeconds: _parseRetryAfterSeconds(e, message),
+      );
+    }
+    return ServerException(message, status);
   }
 
   AuthException _mapDioLogin(DioException e) {

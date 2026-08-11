@@ -690,6 +690,11 @@ class _TranslationsAdvertiserWalletFr extends TranslationsAdvertiserWalletEn {
 	@override String get payment_total => 'TOTAL';
 	@override String get payment_deposit_amount => 'Montant du dépôt';
 	@override String get payment_bank_fee => 'Frais de transaction bancaire (3.69%)';
+	@override String get payment_charged => 'Débité';
+	@override String get payment_stripe_fee => 'Frais Stripe';
+	@override String get deposit_net_note => 'Stripe déduit ses frais de traitement de votre paiement. Une fois le paiement traité avec succès, votre solde Disponible est crédité du montant net.';
+	@override String get deposit_ach_net_note => 'Les dépôts ACH sont crédités après confirmation du débit par votre banque. Les frais Stripe s’appliquent toujours.';
+	@override String get deposit_wire_net_note => 'Les virements sont crédités après réception et rapprochement. Envoyez le montant exact avec la référence.';
 	@override String get deposit_pending => 'Dépôt en attente';
 	@override String get deposit_resume_hint => 'Reprise de votre dépôt de {amount} — finalisez le paiement ou cliquez sur Annuler pour abandonner.';
 	@override String get deposit_cancel => 'Annuler';
@@ -2869,6 +2874,11 @@ extension on TranslationsFr {
 			case 'advertiser_wallet.payment_total': return 'TOTAL';
 			case 'advertiser_wallet.payment_deposit_amount': return 'Montant du dépôt';
 			case 'advertiser_wallet.payment_bank_fee': return 'Frais de transaction bancaire (3.69%)';
+			case 'advertiser_wallet.payment_charged': return 'Débité';
+			case 'advertiser_wallet.payment_stripe_fee': return 'Frais Stripe';
+			case 'advertiser_wallet.deposit_net_note': return 'Stripe déduit ses frais de traitement de votre paiement. Une fois le paiement traité avec succès, votre solde Disponible est crédité du montant net.';
+			case 'advertiser_wallet.deposit_ach_net_note': return 'Les dépôts ACH sont crédités après confirmation du débit par votre banque. Les frais Stripe s’appliquent toujours.';
+			case 'advertiser_wallet.deposit_wire_net_note': return 'Les virements sont crédités après réception et rapprochement. Envoyez le montant exact avec la référence.';
 			case 'advertiser_wallet.deposit_pending': return 'Dépôt en attente';
 			case 'advertiser_wallet.deposit_resume_hint': return 'Reprise de votre dépôt de {amount} — finalisez le paiement ou cliquez sur Annuler pour abandonner.';
 			case 'advertiser_wallet.deposit_cancel': return 'Annuler';

@@ -91,6 +91,9 @@ final class AdvertiserWalletRepository {
           currency: (e['currency'] as String?)?.toUpperCase() ?? 'USD',
           description: e['description'] as String? ?? '',
           createdAt: _parseDate(e['createdAt'] ?? e['created_at']),
+          status: e['status'] as String?,
+          stripeFeeCents: (e['stripeFeeCents'] as num?)?.toInt(),
+          chargedCents: (e['chargedCents'] as num?)?.toInt(),
         ),
       );
     }

@@ -1,25 +1,19 @@
-/// Bank fee on wallet top-ups — mirrors `WALLET_DEPOSIT_BANK_FEE_BPS` in Wayo-ads.
-const int kAdvertiserWalletDepositBankFeeBps = 369;
-
-/// Breakdown for advertiser wallet deposit (wallet credit + bank fee only; no tax at deposit).
+/// Advertiser wallet deposit charge — mirrors Wayo-ads web / API (1:1).
+///
+/// Stripe processing fees are deducted at settlement from the charged amount
+/// (see `desiredNetAmountCents` / wallet history `stripeFeeCents`). They are
+/// **not** added on top of the deposit amount at checkout.
 final class AdvertiserDepositCharge {
   const AdvertiserDepositCharge({
     required this.walletAmountCents,
-    required this.bankFeeCents,
     required this.totalChargedCents,
   });
 
+  /// Amount credited to Available after settlement (desired net).
   final int walletAmountCents;
-  final int bankFeeCents;
-  final int totalChargedCents;
-}
 
-int advertiserWalletDepositBankFeeCents(int walletAmountCents) {
-  if (walletAmountCents <= 0) {
-    return 0;
-  }
-  return ((walletAmountCents * kAdvertiserWalletDepositBankFeeBps) / 10000)
-      .round();
+  /// Amount charged on the PaymentIntent — same as [walletAmountCents] (1:1).
+  final int totalChargedCents;
 }
 
 AdvertiserDepositCharge estimateAdvertiserDepositCharge({
@@ -28,14 +22,11 @@ AdvertiserDepositCharge estimateAdvertiserDepositCharge({
   if (walletAmountCents <= 0) {
     return const AdvertiserDepositCharge(
       walletAmountCents: 0,
-      bankFeeCents: 0,
       totalChargedCents: 0,
     );
   }
-  final bankFeeCents = advertiserWalletDepositBankFeeCents(walletAmountCents);
   return AdvertiserDepositCharge(
     walletAmountCents: walletAmountCents,
-    bankFeeCents: bankFeeCents,
-    totalChargedCents: walletAmountCents + bankFeeCents,
+    totalChargedCents: walletAmountCents,
   );
 }

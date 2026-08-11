@@ -146,6 +146,21 @@ class _AdvertiserWalletTabContentState
     // Stripe Payment Sheet / Link Financial Connections can leave a dim
     // overlay or broken edge-to-edge insets on Android — restore chrome.
     FocusManager.instance.primaryFocus?.unfocus();
+    final brightness =
+        mounted ? Theme.of(context).brightness : Brightness.dark;
+    final isDark = brightness == Brightness.dark;
+    final nav = isDark ? AppColors.black : Colors.white;
+    SystemChrome.setSystemUIOverlayStyle(
+      SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+        systemNavigationBarColor: nav,
+        systemNavigationBarDividerColor: nav,
+        systemNavigationBarContrastEnforced: false,
+        systemNavigationBarIconBrightness:
+            isDark ? Brightness.light : Brightness.dark,
+      ),
+    );
     await AndroidWindowInsets.setDecorFitsSystemWindows(false);
     await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     await SystemChrome.setPreferredOrientations(const [
@@ -209,16 +224,19 @@ class _AdvertiserWalletTabContentState
     required _PayMethod method,
     String depositMethod = AdvertiserDepositMethod.card,
   }) async {
+    final brightness = Theme.of(context).brightness;
     switch (method) {
       case _PayMethod.card:
         if (depositMethod == AdvertiserDepositMethod.ach) {
           await AdvertiserStripeDeposit.presentAchPaymentSheet(
             clientSecret: intent.clientSecret,
+            brightness: brightness,
           );
         } else {
           await AdvertiserStripeDeposit.presentCardPaymentSheet(
             clientSecret: intent.clientSecret,
             currency: intent.currency,
+            brightness: brightness,
           );
         }
         break;
@@ -233,6 +251,7 @@ class _AdvertiserWalletTabContentState
         await AdvertiserStripeDeposit.confirmWithGooglePay(
           clientSecret: intent.clientSecret,
           currency: intent.currency,
+          brightness: brightness,
         );
         break;
     }
@@ -1038,6 +1057,7 @@ class _AdvertiserWalletTabContentState
                                     moneyLocale: moneyLocale,
                                     t: t,
                                     isDark: isDark,
+                                    fundingMethod: _fundingMethod,
                                   ),
                                 );
                               },
@@ -1268,10 +1288,9 @@ class _PendingDepositCheckout extends StatelessWidget {
     );
     final charge = AdvertiserDepositCharge(
       walletAmountCents: pending.walletAmountCents,
-      bankFeeCents: pending.bankFeeCents > 0
-          ? pending.bankFeeCents
-          : advertiserWalletDepositBankFeeCents(pending.walletAmountCents),
-      totalChargedCents: pending.totalAmountCents,
+      totalChargedCents: pending.totalAmountCents > 0
+          ? pending.totalAmountCents
+          : pending.walletAmountCents,
     );
 
     return Column(
@@ -1328,6 +1347,11 @@ class _PendingDepositCheckout extends StatelessWidget {
           moneyLocale: moneyLocale,
           t: t,
           isDark: isDark,
+          fundingMethod: switch (pending.depositMethod) {
+            AdvertiserDepositMethod.ach => _FundingMethod.ach,
+            AdvertiserDepositMethod.wire => _FundingMethod.wire,
+            _ => _FundingMethod.card,
+          },
         ),
         const SizedBox(height: 24),
         _WalletPayStrip(
@@ -1956,6 +1980,7 @@ class _DepositPaymentSummary extends StatelessWidget {
     required this.moneyLocale,
     required this.t,
     required this.isDark,
+    this.fundingMethod = _FundingMethod.card,
   });
 
   final AdvertiserDepositCharge charge;
@@ -1963,6 +1988,7 @@ class _DepositPaymentSummary extends StatelessWidget {
   final String moneyLocale;
   final Translations t;
   final bool isDark;
+  final _FundingMethod fundingMethod;
 
   String _money(int cents) {
     return _formatAdvertiserWalletAmount(
@@ -1970,6 +1996,17 @@ class _DepositPaymentSummary extends StatelessWidget {
       currency,
       moneyLocale,
     );
+  }
+
+  String get _netNote {
+    switch (fundingMethod) {
+      case _FundingMethod.ach:
+        return t.advertiser_wallet.deposit_ach_net_note;
+      case _FundingMethod.wire:
+        return t.advertiser_wallet.deposit_wire_net_note;
+      case _FundingMethod.card:
+        return t.advertiser_wallet.deposit_net_note;
+    }
   }
 
   @override
@@ -1983,98 +2020,121 @@ class _DepositPaymentSummary extends StatelessWidget {
     final muted = AppColors.textSecondaryOf(context);
     final primary = AppColors.primary;
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(18, 16, 18, 20),
-      decoration: BoxDecoration(
-        color: cardBg,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: AppColors.borderOf(context).withValues(alpha: 0.6),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.fromLTRB(18, 16, 18, 20),
+          decoration: BoxDecoration(
+            color: cardBg,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: AppColors.borderOf(context).withValues(alpha: 0.6),
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: primary,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Icon(
-                  Icons.credit_card_rounded,
-                  color: Colors.white,
-                  size: 18,
-                ),
+              Row(
+                children: [
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: primary,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      Icons.credit_card_rounded,
+                      color: Colors.white,
+                      size: 18,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    t.advertiser_wallet.payment_title,
+                    style: AppTextStyles.headlineMedium(context).copyWith(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 10),
+              const SizedBox(height: 20),
               Text(
-                t.advertiser_wallet.payment_title,
-                style: AppTextStyles.headlineMedium(context).copyWith(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
+                t.advertiser_wallet.payment_total,
+                textAlign: TextAlign.center,
+                style: AppTextStyles.caption(context).copyWith(
+                  letterSpacing: 1.2,
+                  fontWeight: FontWeight.w600,
+                  color: muted,
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          Text(
-            t.advertiser_wallet.payment_total,
-            textAlign: TextAlign.center,
-            style: AppTextStyles.caption(context).copyWith(
-              letterSpacing: 1.2,
-              fontWeight: FontWeight.w600,
-              color: muted,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            _money(charge.totalChargedCents),
-            textAlign: TextAlign.center,
-            style: AppTextStyles.headlineMedium(context).copyWith(
-              fontSize: 32,
-              fontWeight: FontWeight.w800,
-              letterSpacing: -0.5,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            decoration: BoxDecoration(
-              color: panelBg,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: AppColors.borderOf(context).withValues(alpha: 0.35),
+              const SizedBox(height: 4),
+              Text(
+                _money(charge.totalChargedCents),
+                textAlign: TextAlign.center,
+                style: AppTextStyles.headlineMedium(context).copyWith(
+                  fontSize: 32,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.5,
+                ),
               ),
-            ),
-            child: Column(
-              children: [
-                _DepositBreakdownRow(
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                decoration: BoxDecoration(
+                  color: panelBg,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: AppColors.borderOf(context).withValues(alpha: 0.35),
+                  ),
+                ),
+                child: _DepositBreakdownRow(
                   label: t.advertiser_wallet.payment_deposit_amount,
                   value: _money(charge.walletAmountCents),
                   muted: muted,
                 ),
-                if (charge.bankFeeCents > 0) ...[
-                  const SizedBox(height: 10),
-                  _DepositBreakdownRow(
-                    label: t.advertiser_wallet.payment_bank_fee,
-                    value: _money(charge.bankFeeCents),
-                    muted: muted,
-                    accentColor: primary,
-                  ),
-                ],
-              ],
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          decoration: BoxDecoration(
+            color: panelBg.withValues(alpha: isDark ? 0.65 : 1),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: AppColors.borderOf(context).withValues(alpha: 0.45),
             ),
           ),
-        ],
-      ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(
+                Icons.info_outline_rounded,
+                size: 16,
+                color: muted,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  _netNote,
+                  style: AppTextStyles.caption(context).copyWith(
+                    color: muted,
+                    height: 1.4,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
-
 }
 
 class _DepositBreakdownRow extends StatelessWidget {
@@ -2082,40 +2142,34 @@ class _DepositBreakdownRow extends StatelessWidget {
     required this.label,
     required this.value,
     required this.muted,
-    this.accentColor,
   });
 
   final String label;
   final String value;
   final Color muted;
-  final Color? accentColor;
 
   @override
   Widget build(BuildContext context) {
-    final labelStyle = AppTextStyles.caption(context).copyWith(
-      color: muted,
-      fontSize: accentColor != null ? 12 : 14,
-    );
-    final valueStyle = AppTextStyles.bodyLarge(context).copyWith(
-      fontWeight: FontWeight.w600,
-      fontSize: accentColor != null ? 12 : 14,
-    );
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (accentColor != null)
-          Container(
-            width: 2,
-            height: 18,
-            margin: const EdgeInsets.only(right: 10, top: 2),
-            decoration: BoxDecoration(
-              color: accentColor!.withValues(alpha: 0.55),
-              borderRadius: BorderRadius.circular(1),
+        Expanded(
+          child: Text(
+            label,
+            style: AppTextStyles.caption(context).copyWith(
+              color: muted,
+              fontSize: 14,
             ),
           ),
-        Expanded(child: Text(label, style: labelStyle)),
+        ),
         const SizedBox(width: 8),
-        Text(value, style: valueStyle),
+        Text(
+          value,
+          style: AppTextStyles.bodyLarge(context).copyWith(
+            fontWeight: FontWeight.w600,
+            fontSize: 14,
+          ),
+        ),
       ],
     );
   }
@@ -2244,6 +2298,7 @@ class _TxRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = context.t;
     final c = row.currency;
     final signed = row.amountCents;
     final major = signed / 100.0;
@@ -2258,35 +2313,88 @@ class _TxRow extends StatelessWidget {
             moneyLocale,
           ).add_Hm().format(row.createdAt!.toLocal())
         : '';
+    final isDeposit = row.type.toUpperCase() == 'DEPOSIT';
+    final isPending = (row.status ?? '').toUpperCase() == 'PENDING';
+    final charged = row.chargedCents;
+    final fee = row.stripeFeeCents;
+    final muted = AppColors.textSecondaryOf(context);
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: Material(
         color: AppColors.surfaceElevatedOf(context),
         borderRadius: BorderRadius.circular(16),
-        child: ListTile(
-          title: Text(
-            typeLabel,
-            style: const TextStyle(fontWeight: FontWeight.w700),
-          ),
-          subtitle: Text(
-            row.description.isNotEmpty
-                ? row.description
-                : (dateStr.isNotEmpty ? dateStr : ''),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              color: AppColors.textSecondaryOf(context),
-              fontSize: 13,
-            ),
-          ),
-          trailing: Text(
-            '$prefix$s',
-            style: TextStyle(
-              fontWeight: FontWeight.w800,
-              color: signed >= 0
-                  ? const Color(0xFF10B981)
-                  : AppColors.textPrimaryOf(context),
-            ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      typeLabel,
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      row.description.isNotEmpty
+                          ? row.description
+                          : (dateStr.isNotEmpty ? dateStr : ''),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: muted,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    isPending ? s : '$prefix$s',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w800,
+                      color: isPending
+                          ? const Color(0xFFF59E0B)
+                          : signed >= 0
+                              ? const Color(0xFF10B981)
+                              : AppColors.textPrimaryOf(context),
+                    ),
+                  ),
+                  if (!isPending &&
+                      isDeposit &&
+                      charged != null &&
+                      charged > 0) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      '${t.advertiser_wallet.payment_charged}: ${_formatAdvertiserWalletAmount(charged / 100.0, c, moneyLocale)}',
+                      style: TextStyle(
+                        color: muted,
+                        fontSize: 10,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                  ],
+                  if (!isPending && fee != null && fee > 0) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      '${t.advertiser_wallet.payment_stripe_fee}: −${_formatAdvertiserWalletAmount(fee / 100.0, c, moneyLocale)}',
+                      style: TextStyle(
+                        color: muted,
+                        fontSize: 10,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ],
           ),
         ),
       ),

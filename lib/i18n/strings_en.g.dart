@@ -746,6 +746,11 @@ class TranslationsAdvertiserWalletEn {
 	String get payment_total => 'TOTAL';
 	String get payment_deposit_amount => 'Deposit amount';
 	String get payment_bank_fee => 'Bank transaction fee (3.69%)';
+	String get payment_charged => 'Charged';
+	String get payment_stripe_fee => 'Stripe fee';
+	String get deposit_net_note => 'Stripe deducts its processing fee from your payment. After the payment is successfully processed, your Available balance is credited with the net amount.';
+	String get deposit_ach_net_note => 'ACH deposits are credited after your bank confirms the debit. Stripe processing fees still apply.';
+	String get deposit_wire_net_note => 'Wire deposits are credited after we receive and match your transfer. Send the exact amount and include the reference.';
 	String get deposit_pending => 'Deposit pending';
 	String get deposit_resume_hint => 'Resuming your deposit of {amount} — complete payment or tap Cancel to discard.';
 	String get deposit_cancel => 'Cancel';
@@ -3203,6 +3208,11 @@ extension on Translations {
 			case 'advertiser_wallet.payment_total': return 'TOTAL';
 			case 'advertiser_wallet.payment_deposit_amount': return 'Deposit amount';
 			case 'advertiser_wallet.payment_bank_fee': return 'Bank transaction fee (3.69%)';
+			case 'advertiser_wallet.payment_charged': return 'Charged';
+			case 'advertiser_wallet.payment_stripe_fee': return 'Stripe fee';
+			case 'advertiser_wallet.deposit_net_note': return 'Stripe deducts its processing fee from your payment. After the payment is successfully processed, your Available balance is credited with the net amount.';
+			case 'advertiser_wallet.deposit_ach_net_note': return 'ACH deposits are credited after your bank confirms the debit. Stripe processing fees still apply.';
+			case 'advertiser_wallet.deposit_wire_net_note': return 'Wire deposits are credited after we receive and match your transfer. Send the exact amount and include the reference.';
 			case 'advertiser_wallet.deposit_pending': return 'Deposit pending';
 			case 'advertiser_wallet.deposit_resume_hint': return 'Resuming your deposit of {amount} — complete payment or tap Cancel to discard.';
 			case 'advertiser_wallet.deposit_cancel': return 'Cancel';

@@ -362,6 +362,9 @@ final class WalletTransactionRow extends Equatable {
     required this.currency,
     required this.description,
     required this.createdAt,
+    this.status,
+    this.stripeFeeCents,
+    this.chargedCents,
   });
 
   final String id;
@@ -370,6 +373,13 @@ final class WalletTransactionRow extends Equatable {
   final String currency;
   final String description;
   final DateTime? createdAt;
+  final String? status;
+
+  /// Actual Stripe processing fee from payment audit (web parity).
+  final int? stripeFeeCents;
+
+  /// Gross amount charged to the payment method (web parity).
+  final int? chargedCents;
 
   @override
   List<Object?> get props => [
@@ -379,6 +389,9 @@ final class WalletTransactionRow extends Equatable {
     currency,
     description,
     createdAt,
+    status,
+    stripeFeeCents,
+    chargedCents,
   ];
 }
 

@@ -689,6 +689,11 @@ class _TranslationsAdvertiserWalletAr extends TranslationsAdvertiserWalletEn {
 	@override String get payment_total => 'الإجمالي';
 	@override String get payment_deposit_amount => 'مبلغ الإيداع';
 	@override String get payment_bank_fee => 'رسوم المعاملة البنكية (3.69%)';
+	@override String get payment_charged => 'المبلغ المخصوم';
+	@override String get payment_stripe_fee => 'رسوم Stripe';
+	@override String get deposit_net_note => 'يخصم Stripe رسوم المعالجة من دفعتك. بعد معالجة الدفع بنجاح، يُضاف إلى رصيدك المتاح المبلغ الصافي.';
+	@override String get deposit_ach_net_note => 'تُضاف إيداعات ACH بعد تأكيد البنك للخصم. رسوم معالجة Stripe ما زالت تُطبَّق.';
+	@override String get deposit_wire_net_note => 'تُضاف التحويلات البنكية بعد استلامها ومطابقتها. أرسل المبلغ الدقيق مع المرجع.';
 	@override String get deposit_pending => 'إيداع قيد الانتظار';
 	@override String get deposit_resume_hint => 'استئناف إيداعك بقيمة {amount} — أكمل الدفع أو اضغط إلغاء للتخلي عنه.';
 	@override String get deposit_cancel => 'إلغاء';
@@ -2867,6 +2872,11 @@ extension on TranslationsAr {
 			case 'advertiser_wallet.payment_total': return 'الإجمالي';
 			case 'advertiser_wallet.payment_deposit_amount': return 'مبلغ الإيداع';
 			case 'advertiser_wallet.payment_bank_fee': return 'رسوم المعاملة البنكية (3.69%)';
+			case 'advertiser_wallet.payment_charged': return 'المبلغ المخصوم';
+			case 'advertiser_wallet.payment_stripe_fee': return 'رسوم Stripe';
+			case 'advertiser_wallet.deposit_net_note': return 'يخصم Stripe رسوم المعالجة من دفعتك. بعد معالجة الدفع بنجاح، يُضاف إلى رصيدك المتاح المبلغ الصافي.';
+			case 'advertiser_wallet.deposit_ach_net_note': return 'تُضاف إيداعات ACH بعد تأكيد البنك للخصم. رسوم معالجة Stripe ما زالت تُطبَّق.';
+			case 'advertiser_wallet.deposit_wire_net_note': return 'تُضاف التحويلات البنكية بعد استلامها ومطابقتها. أرسل المبلغ الدقيق مع المرجع.';
 			case 'advertiser_wallet.deposit_pending': return 'إيداع قيد الانتظار';
 			case 'advertiser_wallet.deposit_resume_hint': return 'استئناف إيداعك بقيمة {amount} — أكمل الدفع أو اضغط إلغاء للتخلي عنه.';
 			case 'advertiser_wallet.deposit_cancel': return 'إلغاء';

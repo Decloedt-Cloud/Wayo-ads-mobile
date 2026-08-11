@@ -7,6 +7,7 @@ import 'package:flutter_stripe/flutter_stripe.dart';
 
 import '../../../core/platform/android_window_insets.dart';
 import '../../../core/stripe/stripe_mobile_config.dart';
+import '../../../core/theme/app_colors.dart';
 
 /// Thin wrapper around [Stripe] for the advertiser wallet deposit flow.
 ///
@@ -40,11 +41,28 @@ final class AdvertiserStripeDeposit {
     await Stripe.instance.applySettings();
   }
 
+  static SystemUiOverlayStyle _overlayFor(Brightness brightness) {
+    final isDark = brightness == Brightness.dark;
+    final nav = isDark ? AppColors.black : Colors.white;
+    return SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+      systemNavigationBarColor: nav,
+      systemNavigationBarDividerColor: nav,
+      systemNavigationBarContrastEnforced: false,
+      systemNavigationBarIconBrightness:
+          isDark ? Brightness.light : Brightness.dark,
+    );
+  }
+
   /// Stripe Link / Payment Sheet draw under the Android nav bar when
   /// MainActivity is edge-to-edge (`setDecorFitsSystemWindows(false)`).
   /// [SystemChrome] alone does not flip that flag — we toggle it natively.
   /// Failures here must never abort ACH/card present (native crash risk).
-  static Future<T> _withNavBarSafeChrome<T>(Future<T> Function() action) async {
+  static Future<T> _withNavBarSafeChrome<T>(
+    Future<T> Function() action, {
+    required Brightness brightness,
+  }) async {
     final android = !kIsWeb && Platform.isAndroid;
     final ios = !kIsWeb && Platform.isIOS;
     if (android) {
@@ -54,15 +72,7 @@ final class AdvertiserStripeDeposit {
           SystemUiMode.manual,
           overlays: SystemUiOverlay.values,
         );
-        SystemChrome.setSystemUIOverlayStyle(
-          const SystemUiOverlayStyle(
-            systemNavigationBarColor: Colors.black,
-            systemNavigationBarDividerColor: Colors.black,
-            systemNavigationBarIconBrightness: Brightness.light,
-            systemNavigationBarContrastEnforced: true,
-            statusBarColor: Colors.transparent,
-          ),
-        );
+        SystemChrome.setSystemUIOverlayStyle(_overlayFor(brightness));
         // Give native chrome + content padding a frame to settle before Stripe opens.
         await Future<void>.delayed(const Duration(milliseconds: 120));
       } catch (e) {
@@ -77,6 +87,7 @@ final class AdvertiserStripeDeposit {
           SystemUiMode.manual,
           overlays: SystemUiOverlay.values,
         );
+        SystemChrome.setSystemUIOverlayStyle(_overlayFor(brightness));
       } catch (_) {}
     }
     try {
@@ -84,49 +95,88 @@ final class AdvertiserStripeDeposit {
     } finally {
       if (android) {
         try {
+          // Restore app chrome *before* flipping edge-to-edge so Android does
+          // not briefly paint a light system window behind Flutter.
+          SystemChrome.setSystemUIOverlayStyle(_overlayFor(brightness));
+          await WidgetsBinding.instance.endOfFrame;
           await AndroidWindowInsets.setDecorFitsSystemWindows(false);
           await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+          SystemChrome.setSystemUIOverlayStyle(_overlayFor(brightness));
         } catch (e) {
           if (kDebugMode) {
             debugPrint('[Stripe] nav-bar chrome restore failed: $e');
           }
         }
+      } else if (ios) {
+        try {
+          SystemChrome.setSystemUIOverlayStyle(_overlayFor(brightness));
+          await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+        } catch (_) {}
       }
     }
   }
 
-  static PaymentSheetAppearance get _appearance => PaymentSheetAppearance(
+  /// Match Stripe sheet chrome to the *app* theme — never [ThemeMode.system].
+  /// System light + dark app caused a bright white flash when the sheet closed.
+  static PaymentSheetAppearance _appearanceFor(Brightness brightness) {
+    final isDark = brightness == Brightness.dark;
+    if (isDark) {
+      return PaymentSheetAppearance(
         colors: PaymentSheetAppearanceColors(
           primary: const Color(0xFFF4A237),
+          background: const Color(0xFF0A0A0A),
           componentBackground: const Color(0xFF1C1C1E),
           componentText: Colors.white,
           primaryText: Colors.white,
+          secondaryText: const Color(0xFFAEAEB2),
           placeholderText: const Color(0xFF8E8E93),
           icon: const Color(0xFFF4A237),
           error: const Color(0xFFFF4D4D),
         ),
         shapes: const PaymentSheetShape(borderRadius: 16),
       );
+    }
+    return PaymentSheetAppearance(
+      colors: PaymentSheetAppearanceColors(
+        primary: const Color(0xFFF4A237),
+        background: Colors.white,
+        componentBackground: const Color(0xFFF2F2F7),
+        componentText: Colors.black,
+        primaryText: Colors.black,
+        secondaryText: const Color(0xFF6C6C70),
+        placeholderText: const Color(0xFF8E8E93),
+        icon: const Color(0xFFF4A237),
+        error: const Color(0xFFFF4D4D),
+      ),
+      shapes: const PaymentSheetShape(borderRadius: 16),
+    );
+  }
 
   /// Card-only Payment Sheet for a one-off wallet top-up (no in-app card storage).
   static Future<void> presentCardPaymentSheet({
     required String clientSecret,
     required String currency,
+    Brightness brightness = Brightness.dark,
   }) =>
-      _withNavBarSafeChrome(() async {
-        await Stripe.instance.initPaymentSheet(
-          paymentSheetParameters: SetupPaymentSheetParameters(
-            paymentIntentClientSecret: clientSecret,
-            merchantDisplayName: 'Wayo Ads',
-            style: ThemeMode.system,
-            appearance: _appearance,
-            // iOS: required for 3DS / redirect PMs (Stripe native maps `{scheme}://safepay`).
-            // Without this, Payment Sheet often works on Android but fails on iOS after authentication.
-            returnURL: Platform.isIOS ? '$kStripeUrlScheme://safepay' : null,
-          ),
-        );
-        await Stripe.instance.presentPaymentSheet();
-      });
+      _withNavBarSafeChrome(
+        () async {
+          await Stripe.instance.initPaymentSheet(
+            paymentSheetParameters: SetupPaymentSheetParameters(
+              paymentIntentClientSecret: clientSecret,
+              merchantDisplayName: 'Wayo Ads',
+              style: brightness == Brightness.dark
+                  ? ThemeMode.dark
+                  : ThemeMode.light,
+              appearance: _appearanceFor(brightness),
+              // iOS: required for 3DS / redirect PMs (Stripe native maps `{scheme}://safepay`).
+              // Without this, Payment Sheet often works on Android but fails on iOS after authentication.
+              returnURL: Platform.isIOS ? '$kStripeUrlScheme://safepay' : null,
+            ),
+          );
+          await Stripe.instance.presentPaymentSheet();
+        },
+        brightness: brightness,
+      );
 
   /// ACH (`us_bank_account`) Payment Sheet — mirrors web Payment Element for ACH.
   ///
@@ -134,20 +184,26 @@ final class AdvertiserStripeDeposit {
   /// card-only sheet fails. Settlement is async (1–3 business days).
   static Future<void> presentAchPaymentSheet({
     required String clientSecret,
+    Brightness brightness = Brightness.dark,
   }) =>
-      _withNavBarSafeChrome(() async {
-        await Stripe.instance.initPaymentSheet(
-          paymentSheetParameters: SetupPaymentSheetParameters(
-            paymentIntentClientSecret: clientSecret,
-            merchantDisplayName: 'Wayo Ads',
-            style: ThemeMode.system,
-            appearance: _appearance,
-            allowsDelayedPaymentMethods: true,
-            returnURL: Platform.isIOS ? '$kStripeUrlScheme://safepay' : null,
-          ),
-        );
-        await Stripe.instance.presentPaymentSheet();
-      });
+      _withNavBarSafeChrome(
+        () async {
+          await Stripe.instance.initPaymentSheet(
+            paymentSheetParameters: SetupPaymentSheetParameters(
+              paymentIntentClientSecret: clientSecret,
+              merchantDisplayName: 'Wayo Ads',
+              style: brightness == Brightness.dark
+                  ? ThemeMode.dark
+                  : ThemeMode.light,
+              appearance: _appearanceFor(brightness),
+              allowsDelayedPaymentMethods: true,
+              returnURL: Platform.isIOS ? '$kStripeUrlScheme://safepay' : null,
+            ),
+          );
+          await Stripe.instance.presentPaymentSheet();
+        },
+        brightness: brightness,
+      );
 
   static String? get _iosReturnUrl =>
       Platform.isIOS ? '$kStripeUrlScheme://safepay' : null;
@@ -263,24 +319,28 @@ final class AdvertiserStripeDeposit {
   static Future<void> confirmWithGooglePay({
     required String clientSecret,
     required String currency,
+    Brightness brightness = Brightness.dark,
   }) =>
-      _withNavBarSafeChrome(() async {
-    if (!Platform.isAndroid) {
-      throw const _PlatformPayUnavailable();
-    }
-    final country = _merchantCountryForCurrency(currency);
-    await Stripe.instance.confirmPlatformPayPaymentIntent(
-      clientSecret: clientSecret,
-      confirmParams: PlatformPayConfirmParams.googlePay(
-        googlePay: GooglePayParams(
-          merchantCountryCode: country,
-          currencyCode: currency.toUpperCase(),
-          testEnv: _googlePayTestEnv,
-          merchantName: 'Wayo Ads',
-        ),
-      ),
-    );
-      });
+      _withNavBarSafeChrome(
+        () async {
+          if (!Platform.isAndroid) {
+            throw const _PlatformPayUnavailable();
+          }
+          final country = _merchantCountryForCurrency(currency);
+          await Stripe.instance.confirmPlatformPayPaymentIntent(
+            clientSecret: clientSecret,
+            confirmParams: PlatformPayConfirmParams.googlePay(
+              googlePay: GooglePayParams(
+                merchantCountryCode: country,
+                currencyCode: currency.toUpperCase(),
+                testEnv: _googlePayTestEnv,
+                merchantName: 'Wayo Ads',
+              ),
+            ),
+          );
+        },
+        brightness: brightness,
+      );
 
   /// True for the common "user closed the sheet / cancelled the wallet" exceptions.
   static bool isUserCancelled(Object error) {
@@ -298,22 +358,27 @@ final class AdvertiserStripeDeposit {
     return false;
   }
 
-  /// Best-effort human-readable error message (for SnackBars).
   static String describeError(Object error) {
     if (error is StripeException) {
       final e = error.error;
-      return e.localizedMessage?.isNotEmpty == true
-          ? e.localizedMessage!
-          : (e.message?.isNotEmpty == true
-                ? e.message!
-                : (e.declineCode ?? e.code.name));
+      if (e.localizedMessage?.isNotEmpty == true) {
+        return e.localizedMessage!;
+      }
+      if (e.message?.isNotEmpty == true) {
+        return e.message!;
+      }
+      return e.declineCode ?? e.code.name;
+    }
+    if (error is _PlatformPayUnavailable) {
+      return error.toString();
     }
     return error.toString();
   }
 }
 
-class _PlatformPayUnavailable implements Exception {
+final class _PlatformPayUnavailable implements Exception {
   const _PlatformPayUnavailable();
+
   @override
-  String toString() => 'Platform pay unavailable on this device.';
+  String toString() => 'Platform pay is unavailable on this device';
 }

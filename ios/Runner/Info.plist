@@ -2,153 +2,118 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-    <key>CADisableMinimumFrameDurationOnPhone</key>
-    <true/>
-
-    <key>CFBundleDevelopmentRegion</key>
-    <string>$(DEVELOPMENT_LANGUAGE)</string>
-
-    <key>CFBundleDisplayName</key>
-    <string>Wayo Ads</string>
-
-    <key>CFBundleExecutable</key>
-    <string>$(EXECUTABLE_NAME)</string>
-
-    <key>CFBundleIdentifier</key>
-    <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
-
-    <key>CFBundleInfoDictionaryVersion</key>
-    <string>6.0</string>
-
-    <key>CFBundleName</key>
-    <string>wayoadsgo</string>
-
-    <key>CFBundlePackageType</key>
-    <string>APPL</string>
-
-    <key>CFBundleShortVersionString</key>
-    <string>$(FLUTTER_BUILD_NAME)</string>
-
-    <key>CFBundleURLTypes</key>
-    <array>
-        <dict>
-            <key>CFBundleTypeRole</key>
-            <string>Editor</string>
-            <key>CFBundleURLName</key>
-            <string>com.wayo.wayoadsgo.oauth</string>
-            <key>CFBundleURLSchemes</key>
-            <array>
-                <string>com.wayo.wayoadsgo</string>
-            </array>
-        </dict>
-
-        <dict>
-            <key>CFBundleTypeRole</key>
-            <string>Editor</string>
-            <key>CFBundleURLName</key>
-            <string>google</string>
-            <key>CFBundleURLSchemes</key>
-            <array>
-                <string>com.googleusercontent.apps.458504508199-vprq2p3mk2su77b4mnav0b8gl2p4ie6e</string>
-            </array>
-        </dict>
-
-        <dict>
-            <key>CFBundleTypeRole</key>
-            <string>Editor</string>
-            <key>CFBundleURLName</key>
-            <string>stripe</string>
-            <key>CFBundleURLSchemes</key>
-            <array>
-                <string>wayo</string>
-            </array>
-        </dict>
-
-        <dict>
-            <key>CFBundleTypeRole</key>
-            <string>Editor</string>
-            <key>CFBundleURLName</key>
-            <string>ma.wayo.wayoadsgo.widgets</string>
-            <key>CFBundleURLSchemes</key>
-            <array>
-                <string>wayoads</string>
-            </array>
-        </dict>
-    </array>
-
-    <key>CFBundleVersion</key>
-    <string>$(FLUTTER_BUILD_NUMBER)</string>
-
-    <key>FirebaseAppDelegateProxyEnabled</key>
-    <true/>
-
-    <key>GIDClientID</key>
-    <string>458504508199-vprq2p3mk2su77b4mnav0b8gl2p4ie6e.apps.googleusercontent.com</string>
-
-    <key>GIDServerClientID</key>
-    <string>458504508199-1ifkt7dc1g6cn2mrn9379k8u2uni4985.apps.googleusercontent.com</string>
-
-    <key>ITSAppUsesNonExemptEncryption</key>
-    <false/>
-
-    <key>LSRequiresIPhoneOS</key>
-    <true/>
-
-    <key>NSAppTransportSecurity</key>
-    <dict>
-        <!-- ATS stays fully enforced for all remote hosts (wayo.ac / wayo.agency
-             are HTTPS in production, so no insecure exceptions are declared).
-             NSAllowsLocalNetworking only relaxes ATS for local dev backends
-             (localhost / 127.0.0.1), which are unreachable in production. -->
-        <key>NSAllowsLocalNetworking</key>
-        <true/>
-    </dict>
-
-    <key>NSCameraUsageDescription</key>
-    <string>Wayoadsgo needs access to the camera so you can take photos to upload when you choose that option—for example for your profile, campaigns, or document capture.</string>
-
-    <key>NSPhotoLibraryAddUsageDescription</key>
-    <string>Wayoadsgo saves chat photos you download to your library when you choose “Download photo”.</string>
-
-    <key>NSPhotoLibraryUsageDescription</key>
-    <string>Wayoadsgo needs access to your photo library so you can select photos or files to upload—for example to your profile, campaigns, or other features where you attach images.</string>
-
-    <key>UIApplicationSupportsIndirectInputEvents</key>
-    <true/>
-
-    <key>UIBackgroundModes</key>
-    <array>
-        <string>remote-notification</string>
-    </array>
-
-    <key>UILaunchStoryboardName</key>
-    <string>LaunchScreen</string>
-
-    <key>UIMainStoryboardFile</key>
-    <string>Main</string>
-
-    <key>UIRequiresFullScreen</key>
-    <true/>
-
-    <key>UIStatusBarHidden</key>
-    <true/>
-
-    <key>UISupportedInterfaceOrientations</key>
-    <array>
-        <string>UIInterfaceOrientationPortrait</string>
-        <string>UIInterfaceOrientationLandscapeLeft</string>
-        <string>UIInterfaceOrientationLandscapeRight</string>
-    </array>
-
-    <key>UISupportedInterfaceOrientations~ipad</key>
-    <array>
-        <string>UIInterfaceOrientationPortrait</string>
-        <string>UIInterfaceOrientationLandscapeLeft</string>
-        <string>UIInterfaceOrientationLandscapeRight</string>
-        <string>UIInterfaceOrientationPortraitUpsideDown</string>
-    </array>
-
-    <key>UIViewControllerBasedStatusBarAppearance</key>
-    <false/>
+	<key>CADisableMinimumFrameDurationOnPhone</key>
+	<true/>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>CFBundleDisplayName</key>
+	<string>Wayo Ads</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>wayoadsgo</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>$(FLUTTER_BUILD_NAME)</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>com.wayo.wayoadsgo.oauth</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.wayo.wayoadsgo</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>google</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.458504508199-vprq2p3mk2su77b4mnav0b8gl2p4ie6e</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>stripe</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>wayo</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>ma.wayo.wayoadsgo.widgets</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>wayoads</string>
+			</array>
+		</dict>
+	</array>
+	<key>CFBundleVersion</key>
+	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>FirebaseAppDelegateProxyEnabled</key>
+	<true/>
+	<key>GIDClientID</key>
+	<string>458504508199-vprq2p3mk2su77b4mnav0b8gl2p4ie6e.apps.googleusercontent.com</string>
+	<key>GIDServerClientID</key>
+	<string>458504508199-1ifkt7dc1g6cn2mrn9379k8u2uni4985.apps.googleusercontent.com</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
+	<key>NSCameraUsageDescription</key>
+	<string>Wayoadsgo needs access to the camera so you can take photos to upload when you choose that option—for example for your profile, campaigns, or document capture.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Wayoadsgo saves chat photos you download to your library when you choose “Download photo”.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Wayoadsgo needs access to your photo library so you can select photos or files to upload—for example to your profile, campaigns, or other features where you attach images.</string>
+	<key>UIApplicationSupportsIndirectInputEvents</key>
+	<true/>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
+	<key>UILaunchStoryboardName</key>
+	<string>LaunchScreen</string>
+	<key>UIMainStoryboardFile</key>
+	<string>Main</string>
+	<key>UIRequiresFullScreen</key>
+	<true/>
+	<key>UIStatusBarHidden</key>
+	<true/>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>UISupportedInterfaceOrientations~ipad</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
+	</array>
+	<key>UIViewControllerBasedStatusBarAppearance</key>
+	<false/>
 </dict>
 </plist>

@@ -371,20 +371,40 @@ class _CoachCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = context.t;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardFill = isDark ? const Color(0xFF111111) : AppColors.surfaceLight;
+    final titleColor =
+        isDark ? Colors.white : AppColors.textPrimaryLight;
+    final subtitleColor = isDark
+        ? Colors.white.withValues(alpha: 0.78)
+        : AppColors.textSecondaryLight;
+    final inactiveDot = isDark
+        ? Colors.white.withValues(alpha: 0.18)
+        : AppColors.textPrimaryLight.withValues(alpha: 0.14);
+
     return ConstrainedBox(
       constraints: const BoxConstraints(maxWidth: 420),
       child: Container(
         padding: const EdgeInsets.fromLTRB(18, 16, 18, 14),
         decoration: BoxDecoration(
-          color: const Color(0xFF111111),
+          color: cardFill,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: accent.withValues(alpha: 0.35)),
+          border: Border.all(
+            color: accent.withValues(alpha: isDark ? 0.35 : 0.28),
+          ),
           boxShadow: [
             BoxShadow(
-              color: accent.withValues(alpha: 0.25),
+              color: accent.withValues(alpha: isDark ? 0.25 : 0.16),
               blurRadius: 28,
               spreadRadius: -4,
+              offset: const Offset(0, 8),
             ),
+            if (!isDark)
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.06),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
+              ),
           ],
         ),
         child: Column(
@@ -394,9 +414,11 @@ class _CoachCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: accent.withValues(alpha: 0.18),
+                color: accent.withValues(alpha: isDark ? 0.18 : 0.12),
                 borderRadius: BorderRadius.circular(999),
-                border: Border.all(color: accent.withValues(alpha: 0.4)),
+                border: Border.all(
+                  color: accent.withValues(alpha: isDark ? 0.4 : 0.32),
+                ),
               ),
               child: Text(
                 '${stepIndex + 1} / $stepCount',
@@ -412,7 +434,7 @@ class _CoachCard extends StatelessWidget {
             Text(
               title,
               style: GoogleFonts.inter(
-                color: Colors.white,
+                color: titleColor,
                 fontSize: 18,
                 fontWeight: FontWeight.w800,
                 letterSpacing: -0.2,
@@ -422,7 +444,7 @@ class _CoachCard extends StatelessWidget {
             Text(
               subtitle,
               style: GoogleFonts.inter(
-                color: Colors.white.withValues(alpha: 0.78),
+                color: subtitleColor,
                 fontSize: 13.5,
                 height: 1.35,
               ),
@@ -435,6 +457,7 @@ class _CoachCard extends StatelessWidget {
                     count: stepCount,
                     activeIndex: stepIndex,
                     accent: accent,
+                    inactiveColor: inactiveDot,
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -475,11 +498,13 @@ class _DotsIndicator extends StatelessWidget {
     required this.count,
     required this.activeIndex,
     required this.accent,
+    required this.inactiveColor,
   });
 
   final int count;
   final int activeIndex;
   final Color accent;
+  final Color inactiveColor;
 
   @override
   Widget build(BuildContext context) {
@@ -494,7 +519,7 @@ class _DotsIndicator extends StatelessWidget {
           width: active ? 18 : 6,
           height: 6,
           decoration: BoxDecoration(
-            color: active ? accent : Colors.white.withValues(alpha: 0.18),
+            color: active ? accent : inactiveColor,
             borderRadius: BorderRadius.circular(999),
           ),
         );

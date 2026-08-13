@@ -18,11 +18,11 @@ abstract final class AppTheme {
 
   static ThemeData get light => _base(
     brightness: Brightness.light,
-    scaffold: const Color(0xFFFAFAFA),
-    surface: Colors.white,
-    onSurface: const Color(0xFF0A0A0A),
-    fill: const Color(0xFFF5F5F5),
-    border: const Color(0xFFE5E5E5),
+    scaffold: AppColors.canvasLight,
+    surface: AppColors.surfaceLight,
+    onSurface: AppColors.textPrimaryLight,
+    fill: AppColors.surfaceElevatedLight,
+    border: AppColors.borderLight,
   );
 
   static ThemeData _base({
@@ -115,7 +115,7 @@ abstract final class AppTheme {
           height: 1.45,
           color: brightness == Brightness.dark
               ? AppColors.textSecondary
-              : const Color(0xFF525252),
+              : AppColors.textSecondaryLight,
         ),
         actionsPadding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
         insetPadding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
@@ -124,7 +124,7 @@ abstract final class AppTheme {
         style: TextButton.styleFrom(
           foregroundColor: brightness == Brightness.dark
               ? AppColors.textSecondary
-              : const Color(0xFF525252),
+              : AppColors.textSecondaryLight,
           textStyle: GoogleFonts.sora(
             fontSize: 14,
             fontWeight: FontWeight.w600,
@@ -166,12 +166,12 @@ abstract final class AppTheme {
         labelStyle: TextStyle(
           color: brightness == Brightness.dark
               ? AppColors.textSecondary
-              : const Color(0xFF525252),
+              : AppColors.textSecondaryLight,
         ),
         hintStyle: TextStyle(
           color: brightness == Brightness.dark
               ? AppColors.textMuted
-              : const Color(0xFF737373),
+              : AppColors.textMutedLight,
         ),
       ),
     );

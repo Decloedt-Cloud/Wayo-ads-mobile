@@ -28,14 +28,38 @@ abstract final class CampaignEditorChrome {
                 Color(0xFF1A1208),
               ]
             : const [
-                Color(0xFFFFFBF5),
-                Color(0xFFF7F4EF),
+                AppColors.canvasLight,
+                AppColors.surfaceElevatedLight,
                 Color(0xFFFFF0DE),
               ],
         stops: const [0.0, 0.55, 1.0],
       ),
     );
   }
+
+  /// Status bar / nav bar chrome for the campaign editor (light-safe).
+  static SystemUiOverlayStyle systemOverlay(BuildContext c) {
+    final isDark = dark(c);
+    return SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+      statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
+      systemNavigationBarColor:
+          isDark ? const Color(0xFF0B0B10) : AppColors.canvasLight,
+      systemNavigationBarIconBrightness:
+          isDark ? Brightness.light : Brightness.dark,
+      systemNavigationBarContrastEnforced: false,
+    );
+  }
+
+  /// Compact AppBar title style (readable on light + dark).
+  static TextStyle appBarTitle(BuildContext c) => GoogleFonts.sora(
+        fontSize: 18,
+        fontWeight: FontWeight.w800,
+        letterSpacing: -0.4,
+        height: 1.2,
+        color: AppColors.textPrimaryOf(c),
+      );
 
   static TextStyle display(BuildContext c) => GoogleFonts.sora(
         fontSize: 22,

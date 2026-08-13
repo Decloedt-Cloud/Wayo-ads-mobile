@@ -292,6 +292,8 @@ class _SecuritySettingsScreenState extends ConsumerState<SecuritySettingsScreen>
                         .fadeIn(duration: 280.ms)
                         .slideY(begin: 0.04, curve: Curves.easeOutCubic),
                     const SizedBox(height: 16),
+                    _PasskeysSecurityEntry(),
+                    const SizedBox(height: 16),
                     _SecurityCard(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -414,6 +416,58 @@ class _SecurityCard extends StatelessWidget {
         ),
       ),
       child: Padding(padding: const EdgeInsets.all(18), child: child),
+    );
+  }
+}
+
+class _PasskeysSecurityEntry extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final t = context.t.app_settings;
+    return _SecurityCard(
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () => context.push('/settings/passkeys'),
+        child: Row(
+          children: [
+            Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.14),
+                borderRadius: BorderRadius.circular(13),
+              ),
+              child: const Icon(Icons.key_rounded, color: AppColors.primary),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    t.passkeys_security_entry,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    t.passkeys_security_sub,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: scheme.onSurfaceVariant,
+                        ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.chevron_right_rounded,
+              color: scheme.onSurfaceVariant,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

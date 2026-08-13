@@ -39,6 +39,7 @@ import '../features/security/presentation/screens/trusted_devices_screen.dart';
 import '../features/notification_prefs/presentation/screens/notification_preferences_screen.dart';
 import '../features/app_settings/presentation/screens/privacy_export_screen.dart';
 import '../features/app_settings/presentation/screens/web_only_security_screens.dart';
+import '../features/auth/passkey/passkeys_manage_screen.dart';
 import '../features/app_settings/presentation/screens/guides_resources_screen.dart';
 import '../features/superadmin/presentation/screens/superadmin_home_screen.dart';
 import '../features/superadmin/presentation/screens/ai_usage_screen.dart';
@@ -639,7 +640,7 @@ GoRouter goRouter(GoRouterRef ref) {
       GoRoute(
         parentNavigatorKey: rootNavigatorKey,
         path: '/settings/passkeys',
-        builder: (context, state) => const PasskeysInfoScreen(),
+        builder: (context, state) => const PasskeysManageScreen(),
       ),
       GoRoute(
         parentNavigatorKey: rootNavigatorKey,

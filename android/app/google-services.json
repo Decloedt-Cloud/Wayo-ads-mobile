@@ -46,6 +46,14 @@
           }
         },
         {
+          "client_id": "458504508199-veg615bfo31m008sj1j4dretfmurgqn9.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "ma.wayo.wayo_creator_studio",
+            "certificate_hash": "bc9b880b61694f070a939476642c303ad7a0547f"
+          }
+        },
+        {
           "client_id": "458504508199-1ifkt7dc1g6cn2mrn9379k8u2uni4985.apps.googleusercontent.com",
           "client_type": 3
         }
@@ -95,6 +103,14 @@
           "android_info": {
             "package_name": "ma.wayo.wayoadsgo",
             "certificate_hash": "d4d5a2acd4daca028023fdc8cca6b9d85810ba2c"
+          }
+        },
+        {
+          "client_id": "458504508199-6rmj0j5b61fph7kl5dp655ql697ilf1n.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "ma.wayo.wayoadsgo",
+            "certificate_hash": "bc9b880b61694f070a939476642c303ad7a0547f"
           }
         },
         {

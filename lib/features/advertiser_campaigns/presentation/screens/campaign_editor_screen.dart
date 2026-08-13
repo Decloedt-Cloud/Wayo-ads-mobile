@@ -85,6 +85,8 @@ class _CampaignEditorScreenState extends ConsumerState<CampaignEditorScreen>
   String? _submitIdempotencyKey;
   int _submitGeneration = 0;
   Uint8List? _pendingLogoPreview;
+  /// Original pick bytes — enables web-like "Reposition" without re-picking.
+  Uint8List? _logoOriginalBytes;
   late CampaignEditorDraft _draft;
 
   final _titleCtrl = TextEditingController();
@@ -384,27 +386,39 @@ class _CampaignEditorScreenState extends ConsumerState<CampaignEditorScreen>
     return ok == true;
   }
 
-  Future<void> _pickLogo() async {
+  Future<void> _pickLogo({bool reposition = false}) async {
     final c = _c;
     if (_busy) return;
     HapticFeedback.selectionClick();
     try {
-      final result = await FilePicker.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: const ['png', 'jpg', 'jpeg', 'webp'],
-        withData: true,
-      );
-      if (result == null || result.files.isEmpty) return;
-      final file = result.files.first;
-      final bytes = file.bytes;
-      if (bytes == null || bytes.isEmpty) return;
-      if (bytes.length > CampaignLogoPrep.maxBytes) {
-        if (mounted) WayoToast.error(context, c.logo_too_large);
-        return;
-      }
-      if (CampaignLogoPrep.detectMime(bytes) == null) {
-        if (mounted) WayoToast.error(context, c.logo_pick_error);
-        return;
+      Uint8List bytes;
+      if (reposition) {
+        final original = _logoOriginalBytes;
+        if (original == null || original.isEmpty) {
+          // Fall back to a new pick if we no longer have the source.
+          return _pickLogo(reposition: false);
+        }
+        bytes = original;
+      } else {
+        final result = await FilePicker.pickFiles(
+          type: FileType.custom,
+          allowedExtensions: const ['png', 'jpg', 'jpeg', 'webp'],
+          withData: true,
+        );
+        if (result == null || result.files.isEmpty) return;
+        final file = result.files.first;
+        final picked = file.bytes;
+        if (picked == null || picked.isEmpty) return;
+        if (picked.length > CampaignLogoPrep.maxBytes) {
+          if (mounted) WayoToast.error(context, c.logo_too_large);
+          return;
+        }
+        if (CampaignLogoPrep.detectMime(picked) == null) {
+          if (mounted) WayoToast.error(context, c.logo_pick_error);
+          return;
+        }
+        bytes = picked;
+        _logoOriginalBytes = Uint8List.fromList(picked);
       }
       if (!mounted) return;
       final cropped = await showCampaignLogoCropDialog(
@@ -736,127 +750,146 @@ class _CampaignEditorScreenState extends ConsumerState<CampaignEditorScreen>
         if (!mounted) return;
         if (leave) router.pop();
       },
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        extendBodyBehindAppBar: false,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          surfaceTintColor: Colors.transparent,
-          elevation: 0,
-          title: Text(
-            _isEdit ? c.edit_title : c.title,
-            style: CampaignEditorChrome.display(context),
-          ),
-          leading: IconButton(
-            icon: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.surfaceElevatedOf(context).withValues(alpha: 0.7),
-              ),
-              child: const Icon(Icons.close_rounded, size: 18),
-            ),
-            onPressed: _busy
-                ? null
-                : () async {
-                    final router = GoRouter.of(context);
-                    final leave = await _confirmLeave();
-                    if (!mounted) return;
-                    if (leave) router.pop();
-                  },
-          ),
-        ),
-        body: DecoratedBox(
+      child: AnnotatedRegion<SystemUiOverlayStyle>(
+        value: CampaignEditorChrome.systemOverlay(context),
+        child: DecoratedBox(
           decoration: CampaignEditorChrome.pageBackground(context),
-          child: _loading
-              ? const Center(
-                  child: CircularProgressIndicator(
-                    color: CampaignEditorChrome.amber,
+          child: Scaffold(
+            backgroundColor: Colors.transparent,
+            extendBodyBehindAppBar: false,
+            appBar: AppBar(
+              backgroundColor: Colors.transparent,
+              surfaceTintColor: Colors.transparent,
+              elevation: 0,
+              scrolledUnderElevation: 0,
+              foregroundColor: AppColors.textPrimaryOf(context),
+              systemOverlayStyle: CampaignEditorChrome.systemOverlay(context),
+              title: Text(
+                _isEdit ? c.edit_title : c.title,
+                style: CampaignEditorChrome.appBarTitle(context),
+              ),
+              leading: IconButton(
+                icon: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: CampaignEditorChrome.dark(context)
+                        ? Colors.white.withValues(alpha: 0.08)
+                        : Colors.white.withValues(alpha: 0.9),
+                    border: Border.all(
+                      color: AppColors.borderOf(context).withValues(
+                        alpha: CampaignEditorChrome.dark(context) ? 0.35 : 0.7,
+                      ),
+                    ),
                   ),
-                )
-              : Column(
-                  children: [
-                    CampaignEditorStepRail(
-                      step: _step,
-                      total: _stepCount,
-                      labels: stepLabels,
-                      stepOfLabel: c.step_of(
-                        current: _step + 1,
+                  child: Icon(
+                    Icons.close_rounded,
+                    size: 18,
+                    color: AppColors.textPrimaryOf(context),
+                  ),
+                ),
+                onPressed: _busy
+                    ? null
+                    : () async {
+                        final router = GoRouter.of(context);
+                        final leave = await _confirmLeave();
+                        if (!mounted) return;
+                        if (leave) router.pop();
+                      },
+              ),
+            ),
+            body: _loading
+                ? const Center(
+                    child: CircularProgressIndicator(
+                      color: CampaignEditorChrome.amber,
+                    ),
+                  )
+                : Column(
+                    children: [
+                      CampaignEditorStepRail(
+                        step: _step,
                         total: _stepCount,
-                      ),
-                    ),
-                    walletAsync.when(
-                      data: (w) => Align(
-                        alignment: Alignment.centerLeft,
-                        child: CampaignEditorWalletChip(
-                          label: c.wallet_available(
-                            amount:
-                                '${w.balance.currency} ${w.balance.available.toStringAsFixed(2)}',
-                          ),
-                          low: w.balance.available <= 0,
+                        labels: stepLabels,
+                        stepOfLabel: c.step_of(
+                          current: _step + 1,
+                          total: _stepCount,
                         ),
                       ),
-                      loading: () => const SizedBox.shrink(),
-                      error: (_, _) => const SizedBox.shrink(),
-                    ),
-                    if (_error != null)
-                      CampaignEditorErrorPanel(
-                        message: _error!,
-                        onDismiss: () => setState(() => _error = null),
+                      walletAsync.when(
+                        data: (w) => Align(
+                          alignment: Alignment.centerLeft,
+                          child: CampaignEditorWalletChip(
+                            label: c.wallet_available(
+                              amount:
+                                  '${w.balance.currency} ${w.balance.available.toStringAsFixed(2)}',
+                            ),
+                            low: w.balance.available <= 0,
+                          ),
+                        ),
+                        loading: () => const SizedBox.shrink(),
+                        error: (_, _) => const SizedBox.shrink(),
                       ),
-                    Expanded(
-                      child: PageView(
-                        controller: _pageController,
-                        physics: const NeverScrollableScrollPhysics(),
-                        children: [
-                          _stepIdentity(c),
-                          _stepBudget(c),
-                          _stepReview(c),
-                        ],
+                      if (_error != null)
+                        CampaignEditorErrorPanel(
+                          message: _error!,
+                          onDismiss: () => setState(() => _error = null),
+                        ),
+                      Expanded(
+                        child: PageView(
+                          controller: _pageController,
+                          physics: const NeverScrollableScrollPhysics(),
+                          children: [
+                            _stepIdentity(c),
+                            _stepBudget(c),
+                            _stepReview(c),
+                          ],
+                        ),
                       ),
-                    ),
-                    if (_step < _stepCount - 1)
-                      SafeArea(
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                          child: Row(
-                            children: [
-                              TextButton(
-                                onPressed: _busy ? null : _goBack,
-                                child: Text(_step == 0 ? c.close : c.back),
-                              ),
-                              const Spacer(),
-                              FilledButton(
-                                onPressed: _busy ? null : _goNext,
-                                style: FilledButton.styleFrom(
-                                  backgroundColor: CampaignEditorChrome.amber,
-                                  foregroundColor: Colors.black87,
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 22,
-                                    vertical: 14,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
+                      if (_step < _stepCount - 1)
+                        SafeArea(
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                            child: Row(
+                              children: [
+                                TextButton(
+                                  onPressed: _busy ? null : _goBack,
+                                  child: Text(_step == 0 ? c.close : c.back),
                                 ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text(
-                                      c.continue_btn,
-                                      style: GoogleFonts.sora(
-                                        fontWeight: FontWeight.w700,
-                                      ),
+                                const Spacer(),
+                                FilledButton(
+                                  onPressed: _busy ? null : _goNext,
+                                  style: FilledButton.styleFrom(
+                                    backgroundColor: CampaignEditorChrome.amber,
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 22,
+                                      vertical: 14,
                                     ),
-                                    const SizedBox(width: 6),
-                                    const Icon(Icons.arrow_forward_rounded, size: 18),
-                                  ],
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        c.continue_btn,
+                                        style: GoogleFonts.sora(
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 6),
+                                      const Icon(
+                                        Icons.arrow_forward_rounded,
+                                        size: 18,
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-                      )
+                        )
                     else
                       SafeArea(
                         child: Padding(
@@ -903,30 +936,32 @@ class _CampaignEditorScreenState extends ConsumerState<CampaignEditorScreen>
                       ),
                   ],
                 ),
+            floatingActionButton: _loading || _step != _stepCount - 1
+                ? null
+                : FloatingActionButton.extended(
+                    onPressed: _busy ? null : _publish,
+                    backgroundColor: CampaignEditorChrome.amber,
+                    foregroundColor: Colors.white,
+                    elevation: 8,
+                    icon: _phase == CampaignEditorPhase.submitting
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Icon(Icons.rocket_launch_rounded),
+                    label: Text(
+                      c.publish,
+                      style: GoogleFonts.sora(fontWeight: FontWeight.w800),
+                    ),
+                  ),
+            floatingActionButtonLocation:
+                FloatingActionButtonLocation.centerFloat,
+          ),
         ),
-        floatingActionButton: _loading || _step != _stepCount - 1
-            ? null
-            : FloatingActionButton.extended(
-                onPressed: _busy ? null : _publish,
-                backgroundColor: CampaignEditorChrome.amber,
-                foregroundColor: Colors.black87,
-                elevation: 8,
-                icon: _phase == CampaignEditorPhase.submitting
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.black87,
-                        ),
-                      )
-                    : const Icon(Icons.rocket_launch_rounded),
-                label: Text(
-                  c.publish,
-                  style: GoogleFonts.sora(fontWeight: FontWeight.w800),
-                ),
-              ),
-        floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       ),
     );
   }
@@ -1055,77 +1090,131 @@ class _CampaignEditorScreenState extends ConsumerState<CampaignEditorScreen>
             children: [
               Text(c.logo_section, style: CampaignEditorChrome.section(context)),
               const SizedBox(height: 12),
-              Row(
-                children: [
-                  Container(
-                    width: 80,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(18),
-                      border: Border.all(
-                        color: CampaignEditorChrome.amber.withValues(alpha: 0.45),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: CampaignEditorChrome.amber.withValues(alpha: 0.18),
-                          blurRadius: 16,
-                          offset: const Offset(0, 6),
-                        ),
-                      ],
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(17),
-                      child: preview != null
-                          ? Image.memory(preview, fit: BoxFit.cover)
-                          : logoUrl == null
-                              ? ColoredBox(
-                                  color: AppColors.surfaceElevatedOf(context),
-                                  child: Icon(
-                                    Icons.image_outlined,
-                                    color: AppColors.textMutedOf(context),
-                                  ),
-                                )
-                              : Image.network(logoUrl, fit: BoxFit.cover),
-                    ),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+              if (preview != null || logoUrl != null) ...[
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: AspectRatio(
+                    aspectRatio: 16 / 9,
+                    child: Stack(
+                      fit: StackFit.expand,
                       children: [
-                        FilledButton(
-                          onPressed: _busy ? null : _pickLogo,
-                          style: FilledButton.styleFrom(
-                            backgroundColor: CampaignEditorChrome.amber,
-                            foregroundColor: CampaignEditorChrome.ink,
-                            disabledBackgroundColor: CampaignEditorChrome.amber
-                                .withValues(alpha: 0.4),
-                            disabledForegroundColor: CampaignEditorChrome.ink
-                                .withValues(alpha: 0.45),
-                          ),
-                          child: Text(
-                            _phase == CampaignEditorPhase.uploading
-                                ? c.logo_uploading
-                                : (logoUrl == null
-                                    ? c.logo_pick
-                                    : c.logo_change),
+                        if (preview != null)
+                          Image.memory(preview, fit: BoxFit.cover)
+                        else
+                          Image.network(logoUrl!, fit: BoxFit.cover),
+                        const DecoratedBox(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Colors.transparent,
+                                Color(0x33000000),
+                              ],
+                            ),
                           ),
                         ),
-                        if (logoUrl != null)
-                          TextButton(
-                            onPressed: _busy
-                                ? null
-                                : () {
-                                    setState(() => _draft.brandLogoUrl = null);
-                                    _persistLocal();
-                                  },
-                            child: Text(c.logo_remove),
-                          ),
                       ],
                     ),
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  c.logo_aspect_hint,
+                  style: CampaignEditorChrome.hint(context),
+                ),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    OutlinedButton.icon(
+                      onPressed: _busy
+                          ? null
+                          : () => _pickLogo(reposition: true),
+                      icon: const Icon(Icons.crop_free_rounded, size: 18),
+                      label: Text(c.logo_reposition),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: CampaignEditorChrome.amber,
+                        side: const BorderSide(
+                          color: CampaignEditorChrome.amber,
+                        ),
+                      ),
+                    ),
+                    OutlinedButton(
+                      onPressed: _busy ? null : () => _pickLogo(),
+                      child: Text(
+                        _phase == CampaignEditorPhase.uploading
+                            ? c.logo_uploading
+                            : c.logo_change,
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: _busy
+                          ? null
+                          : () {
+                              setState(() {
+                                _draft.brandLogoUrl = null;
+                                _pendingLogoPreview = null;
+                                _logoOriginalBytes = null;
+                              });
+                              _persistLocal();
+                            },
+                      child: Text(
+                        c.logo_remove,
+                        style: TextStyle(color: AppColors.error),
+                      ),
+                    ),
+                  ],
+                ),
+              ] else
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: _busy ? null : () => _pickLogo(),
+                    borderRadius: BorderRadius.circular(16),
+                    child: Ink(
+                      height: 96,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: AppColors.borderOf(context),
+                          width: 1.5,
+                        ),
+                        color: AppColors.surfaceElevatedOf(context)
+                            .withValues(alpha: 0.55),
+                      ),
+                      child: Center(
+                        child: _phase == CampaignEditorPhase.uploading
+                            ? const SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: CampaignEditorChrome.amber,
+                                ),
+                              )
+                            : Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.add_photo_alternate_outlined,
+                                    color: CampaignEditorChrome.amber,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    c.logo_pick,
+                                    style: GoogleFonts.dmSans(
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.textSecondaryOf(context),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                      ),
+                    ),
+                  ),
+                ),
               const SizedBox(height: 8),
               Text(c.logo_help, style: CampaignEditorChrome.hint(context)),
             ],

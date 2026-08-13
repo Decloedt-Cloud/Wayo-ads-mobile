@@ -32,6 +32,9 @@ import ObjectiveC
 
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
+    if let passkeysRegistrar = engineBridge.pluginRegistry.registrar(forPlugin: "PasskeysPlugin") {
+      PasskeysPlugin.register(with: passkeysRegistrar)
+    }
 
     if let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "WayoPushDismissChannel") {
       let channel = FlutterMethodChannel(

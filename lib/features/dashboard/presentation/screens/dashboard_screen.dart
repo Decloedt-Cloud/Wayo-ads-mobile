@@ -34,6 +34,7 @@ import '../../../advertiser_video_reviews/presentation/providers/advertiser_vide
 import '../../../advertiser_video_reviews/presentation/widgets/advertiser_video_reviews_summary_card.dart';
 import '../../../chat/presentation/providers/chat_providers.dart';
 import '../../../creator/presentation/providers/creator_session_gate.dart';
+import '../../../profile/presentation/providers/user_profile_providers.dart';
 import '../widgets/error_banner.dart';
 import '../widgets/notification_center_popup.dart';
 
@@ -370,7 +371,21 @@ class _WelcomeBlock extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final name = snapshot.user?.displayFirstName ?? '';
+    final authUser = ref.watch(currentAppUserProvider);
+    final profile = ref.watch(userProfileProvider).valueOrNull;
+    final fullName = resolveProfileDisplayName(
+      profile: profile,
+      authUser: authUser,
+      fallback: snapshot.user?.name ?? '',
+    );
+    final name = () {
+      final trimmed = fullName.trim();
+      if (trimmed.isEmpty) {
+        return snapshot.user?.displayFirstName ?? '';
+      }
+      final space = trimmed.indexOf(RegExp(r'\s+'));
+      return space == -1 ? trimmed : trimmed.substring(0, space);
+    }();
     final welcome = name.isEmpty
         ? t.dashboard.welcome_fallback
         : t.dashboard.welcome.replaceAll('{name}', name);
@@ -643,14 +658,23 @@ class _AdvertiserMiniStatCard extends StatelessWidget {
           width: double.infinity,
           padding: const EdgeInsets.fromLTRB(10, 12, 10, 12),
           decoration: BoxDecoration(
-            color: (isDark ? AppColors.black : Colors.black).withValues(
-              alpha: isDark ? 0.35 : 0.04,
-            ),
+            color: isDark
+                ? AppColors.black.withValues(alpha: 0.35)
+                : AppColors.surfaceLight,
             borderRadius: BorderRadius.circular(18),
             border: Border.all(
-              color: AppColors.primary.withValues(alpha: isDark ? 0.38 : 0.22),
+              color: AppColors.primary.withValues(alpha: isDark ? 0.38 : 0.2),
               width: 1,
             ),
+            boxShadow: isDark
+                ? null
+                : [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -673,10 +697,10 @@ class _AdvertiserMiniStatCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(6),
                     decoration: BoxDecoration(
-                      color: accent.withValues(alpha: 0.22),
+                      color: accent.withValues(alpha: isDark ? 0.22 : 0.12),
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: accent.withValues(alpha: 0.45),
+                        color: accent.withValues(alpha: isDark ? 0.45 : 0.3),
                         width: 0.5,
                       ),
                     ),

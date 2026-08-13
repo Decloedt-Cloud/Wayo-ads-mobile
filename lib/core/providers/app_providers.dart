@@ -20,9 +20,12 @@ final crashReporterProvider = Provider<CrashReporter>(
 );
 
 const _kThemeKey = 'app.theme_mode';
+const _kBrandLightDefaultV1 = 'app.theme_brand_light_v1';
 
 class ThemeModeNotifier extends StateNotifier<ThemeMode> {
-  ThemeModeNotifier(this._prefs) : super(_readTheme(_prefs));
+  ThemeModeNotifier(this._prefs) : super(_readTheme(_prefs)) {
+    unawaited(_migrateBrandLightDefault());
+  }
 
   final AppPrefs _prefs;
 
@@ -30,8 +33,18 @@ class ThemeModeNotifier extends StateNotifier<ThemeMode> {
     return switch (p.getString(_kThemeKey)) {
       'light' => ThemeMode.light,
       'dark' => ThemeMode.dark,
-      _ => ThemeMode.system,
+      'system' => ThemeMode.system,
+      // Default: light — shared brand look with Creator Studio.
+      _ => ThemeMode.light,
     };
+  }
+
+  /// One-time: open in light so Ads + Creator Studio share the cream/orange UI.
+  /// Users can still switch back via settings / theme toggle.
+  Future<void> _migrateBrandLightDefault() async {
+    if (_prefs.getInt(_kBrandLightDefaultV1) == 1) return;
+    await _prefs.setInt(_kBrandLightDefaultV1, 1);
+    await set(ThemeMode.light);
   }
 
   Future<void> set(ThemeMode mode) async {
@@ -40,13 +53,14 @@ class ThemeModeNotifier extends StateNotifier<ThemeMode> {
   }
 
   Future<void> toggle() async {
-    final ThemeMode current = state;
-    final ThemeMode next = switch (current) {
-      ThemeMode.dark => ThemeMode.light,
-      ThemeMode.light => ThemeMode.dark,
-      ThemeMode.system => ThemeMode.dark,
+    final platform =
+        WidgetsBinding.instance.platformDispatcher.platformBrightness;
+    final isDark = switch (state) {
+      ThemeMode.dark => true,
+      ThemeMode.light => false,
+      ThemeMode.system => platform == Brightness.dark,
     };
-    await set(next);
+    await set(isDark ? ThemeMode.light : ThemeMode.dark);
   }
 }
 

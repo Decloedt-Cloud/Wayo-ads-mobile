@@ -27,6 +27,7 @@ import '../../../creator/presentation/providers/creator_session_gate.dart';
 import '../../../dashboard/presentation/providers/dashboard_state_providers.dart';
 import '../../../dashboard/presentation/widgets/error_banner.dart';
 import '../../../dashboard/presentation/widgets/notification_center_popup.dart';
+import '../../../profile/presentation/providers/user_profile_providers.dart';
 import '../../../shell/presentation/widgets/shell_tutorial_replay_scope.dart';
 import '../../domain/creator_application.dart';
 import '../../domain/creator_stats.dart';
@@ -120,6 +121,9 @@ class _CreatorDashboardScreenState extends ConsumerState<CreatorDashboardScreen>
     if (isSessionBootstrapActive(ref)) return;
     ref.invalidate(creatorApplicationsProvider);
     ref.invalidate(creatorStatsProvider);
+    unawaited(
+      ref.read(userProfileProvider.notifier).syncRemoteAndAuth(refreshAuth: true),
+    );
   }
 
   @override
@@ -474,8 +478,14 @@ class _WelcomeBlock extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final user = ref.watch(currentAppUserProvider);
-    final firstName = _firstName(user?.name) ?? '';
+    final authUser = ref.watch(currentAppUserProvider);
+    final profile = ref.watch(userProfileProvider).valueOrNull;
+    final fullName = resolveProfileDisplayName(
+      profile: profile,
+      authUser: authUser,
+      fallback: '',
+    );
+    final firstName = _firstName(fullName) ?? '';
     final welcome = firstName.isEmpty
         ? t.dashboard.welcome_fallback
         : t.dashboard.welcome.replaceAll('{name}', firstName);

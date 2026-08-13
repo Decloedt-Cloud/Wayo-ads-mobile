@@ -36,6 +36,8 @@ import '../data/models/auth_response.dart';
 import '../data/models/register_request.dart';
 import '../../app_settings/data/mobile_session_register.dart';
 import '../data/repositories/auth_repository.dart';
+import '../passkey/passkey_exceptions.dart';
+import '../passkey/passkey_service.dart';
 import 'wayo_ads_account_role.dart';
 
 part 'auth_notifier.g.dart';
@@ -80,6 +82,12 @@ class AuthNotifier extends _$AuthNotifier {
 
   /// Starts of `GET /api/auth/user` — limits bursty [force: true] from tab switches / UI.
   DateTime? _lastAuthUserFetchStartUtc;
+
+  /// After a Wayo-ads profile PATCH, Auth_Wayo can lag briefly. Prefer the local
+  /// session name/avatar until this UTC instant, then take Auth as source of truth.
+  DateTime? _localProfileOverrideUntil;
+
+  static const Duration _localProfileOverrideTtl = Duration(seconds: 90);
 
   @override
   Future<AuthState> build() async {
@@ -243,6 +251,33 @@ class AuthNotifier extends _$AuthNotifier {
         case Failure(:final error):
           state = AsyncValue.error(error, StackTrace.current);
       }
+    } finally {
+      _credentialLoginInFlight = false;
+    }
+  }
+
+  /// Native WebAuthn / passkey login via Auth_Wayo (same Passport session as password/OAuth).
+  Future<void> loginWithPasskey() async {
+    if (_credentialLoginInFlight) {
+      return;
+    }
+    _credentialLoginInFlight = true;
+    try {
+      state = const AsyncValue.data(AuthLoading());
+      final data =
+          await ref.read(passkeyServiceProvider).loginWithPasskey();
+      await _finalizeSuccessfulLogin(
+        data,
+        loginMethod: AuthLoginMethod.passkey,
+      );
+    } on PasskeyCancelled {
+      state = const AsyncValue.data(AuthUnauthenticated());
+      rethrow;
+    } on PasskeyException {
+      state = const AsyncValue.data(AuthUnauthenticated());
+      rethrow;
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
     } finally {
       _credentialLoginInFlight = false;
     }
@@ -484,25 +519,46 @@ class AuthNotifier extends _$AuthNotifier {
   }
 
   /// Auth_Wayo `GET /user` can lag behind a fresh Wayo-ads profile PATCH (avatar/name).
+  /// Outside that short window, prefer Auth so greetings/settings never stick on an old name.
   AppUser _mergeAuthRefreshPreservingSessionProfile(
     AppUser current,
     AppUser fresh,
   ) {
     final merged = _preserveExistingRoleIfNeeded(current, fresh);
-    final sessionAvatar = current.avatar?.trim();
-    final authAvatar = merged.avatar?.trim();
     final sessionName = current.name?.trim();
     final authName = merged.name?.trim();
+    final overrideActive = _localProfileOverrideUntil != null &&
+        DateTime.now().toUtc().isBefore(_localProfileOverrideUntil!);
+
+    if (overrideActive) {
+      return AppUser(
+        id: merged.id,
+        email: merged.email,
+        name: (sessionName != null && sessionName.isNotEmpty)
+            ? current.name
+            : merged.name,
+        // Keep local avatar (including cleared) until Auth catches up.
+        avatar: current.avatar,
+        wayoAdsRole: merged.wayoAdsRole,
+        appRoles: merged.appRoles,
+        emailVerified: merged.emailVerified,
+        pendingOnboarding: merged.pendingOnboarding,
+      );
+    }
+
+    if (authName != null &&
+        authName.isNotEmpty &&
+        sessionName != null &&
+        sessionName.isNotEmpty &&
+        authName == sessionName) {
+      _localProfileOverrideUntil = null;
+    }
 
     return AppUser(
       id: merged.id,
       email: merged.email,
-      name: sessionName != null &&
-              sessionName.isNotEmpty &&
-              sessionName != authName
-          ? current.name
-          : merged.name,
-      avatar: sessionAvatar != authAvatar ? current.avatar : merged.avatar,
+      name: (authName != null && authName.isNotEmpty) ? merged.name : current.name,
+      avatar: merged.avatar ?? current.avatar,
       wayoAdsRole: merged.wayoAdsRole,
       appRoles: merged.appRoles,
       emailVerified: merged.emailVerified,
@@ -621,6 +677,8 @@ class AuthNotifier extends _$AuthNotifier {
     final current = state.valueOrNull;
     if (current is! AuthAuthenticated) return;
     final u = current.user;
+    _localProfileOverrideUntil =
+        DateTime.now().toUtc().add(_localProfileOverrideTtl);
     await _persistUserOnly(
       AppUser(
         id: u.id,
@@ -645,6 +703,7 @@ class AuthNotifier extends _$AuthNotifier {
   Future<void> logout() async {
     _lastProfileRefreshUtc = null;
     _lastAuthUserFetchStartUtc = null;
+    _localProfileOverrideUntil = null;
     // Block token-refresh re-register BEFORE DELETE, then clear auth.
     await unregisterWayoPushDeviceOnLogout(
       wayoAdsDio: ref.read(wayoAdsDioProvider),
@@ -671,6 +730,7 @@ class AuthNotifier extends _$AuthNotifier {
     _resetDashboardNetworkSpacing();
     _lastProfileRefreshUtc = null;
     _lastAuthUserFetchStartUtc = null;
+    _localProfileOverrideUntil = null;
     // Block registration immediately so in-flight token refresh cannot POST.
     PushRegistrationGate.block(reason: 'force_logout');
     unawaited(deactivatePushDelivery());

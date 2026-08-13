@@ -23,8 +23,14 @@ import '../../domain/onboarding_gate.dart';
 import '../login/widgets/animated_digital_zellij_background.dart';
 import '../login/widgets/login_field_styles.dart';
 import '../login/widgets/login_hero_premium.dart';
+import '../../passkey/passkey_exceptions.dart';
+import '../../passkey/passkey_feature_flags.dart';
+import '../../passkey/passkey_missing_sheet.dart';
+import '../../passkey/passkey_promote_prompt.dart';
+import '../../passkey/passkey_service.dart';
 import '../login/widgets/premium_apple_sign_in_button.dart';
 import '../login/widgets/premium_google_button.dart';
+import '../login/widgets/premium_passkey_button.dart';
 import '../widgets/login_footer.dart';
 import '../widgets/rate_limit_cooldown_banner.dart';
 import '../widgets/noise_overlay.dart';
@@ -45,6 +51,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   bool _obscure = true;
   bool _googleSigningIn = false;
   bool _appleSigningIn = false;
+  bool _passkeySigningIn = false;
+  bool _passkeyButtonVisible = false;
   bool _sessionExpiredSnackScheduled = false;
 
   /// Blocks duplicate POSTs when both "Done" on keyboard and the CTA fire together.
@@ -53,10 +61,30 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   static final _emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      unawaited(_resolvePasskeyVisibility());
+    });
+  }
+
+  @override
   void dispose() {
     _email.dispose();
     _password.dispose();
     super.dispose();
+  }
+
+  Future<void> _resolvePasskeyVisibility() async {
+    try {
+      final flags = await PasskeyFeatureFlags.resolve();
+      if (!flags.login || !mounted) return;
+      final avail = await ref.read(passkeyServiceProvider).availability();
+      if (!mounted) return;
+      setState(() => _passkeyButtonVisible = avail.canLogin);
+    } catch (_) {
+      // Keep button hidden — other login methods remain available.
+    }
   }
 
   @override
@@ -108,6 +136,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       if (ref.read(authNotifierProvider).hasError) {
         return;
       }
+      await PasskeyPromotePrompt.maybeShow(context, ref);
+      if (!mounted) return;
       _goAfterLogin(ref);
     } finally {
       if (mounted) {
@@ -145,6 +175,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       await ref.read(authNotifierProvider.notifier).loginWithGoogle(idToken);
       if (!mounted) return;
       if (ref.read(authNotifierProvider).hasError) return;
+      await PasskeyPromotePrompt.maybeShow(context, ref);
+      if (!mounted) return;
       // Defer navigation one frame so GoRouter can finish disposing the login
       // route after AuthAuthenticated without using a deactivated context.
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -198,6 +230,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           );
       if (!context.mounted) return;
       if (ref.read(authNotifierProvider).hasError) return;
+      await PasskeyPromotePrompt.maybeShow(context, ref);
+      if (!mounted) return;
       _goAfterLogin(ref);
     } on SignInWithAppleNotSupportedException {
       if (!mounted) return;
@@ -211,6 +245,77 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       WayoToast.error(context, t.login.apple_failed);
     } finally {
       if (mounted) setState(() => _appleSigningIn = false);
+    }
+  }
+
+  Future<void> _signInWithPasskey(Translations t) async {
+    if (_passkeySigningIn || _submitInProgress) return;
+    FocusScope.of(context).unfocus();
+    setState(() => _passkeySigningIn = true);
+    try {
+      await ref.read(authNotifierProvider.notifier).loginWithPasskey();
+      if (!mounted) return;
+      if (ref.read(authNotifierProvider).hasError) return;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _goAfterLogin(ref);
+      });
+    } on PasskeyCancelled {
+      // Quiet — OS cancellation.
+    } on PasskeyNotFound {
+      if (!mounted) return;
+      await showPasskeyMissingSheet(
+        context,
+        title: t.login.passkey_missing_title,
+        body: t.login.passkey_missing_body,
+        primaryLabel: t.login.passkey_missing_primary,
+        secondaryLabel: t.login.passkey_missing_secondary,
+      );
+    } on PasskeyInterrupted {
+      if (!mounted) return;
+      WayoToast.info(context, t.login.passkey_interrupted);
+    } on PasskeyUnavailable {
+      if (!mounted) return;
+      await showPasskeyMissingSheet(
+        context,
+        title: t.login.passkey_missing_title,
+        body: t.login.passkey_unavailable,
+        primaryLabel: t.login.passkey_missing_primary,
+        secondaryLabel: t.login.passkey_missing_secondary,
+      );
+    } on PasskeyNetworkError {
+      if (!mounted) return;
+      WayoToast.error(context, t.login.passkey_network);
+    } on PasskeyServerRejected {
+      // Stale / revoked / unknown credential → same calm “no passkey” UX (not a red error).
+      if (!mounted) return;
+      await showPasskeyMissingSheet(
+        context,
+        title: t.login.passkey_missing_title,
+        body: t.login.passkey_missing_body,
+        primaryLabel: t.login.passkey_missing_primary,
+        secondaryLabel: t.login.passkey_missing_secondary,
+      );
+    } on PasskeyException {
+      if (!mounted) return;
+      await showPasskeyMissingSheet(
+        context,
+        title: t.login.passkey_missing_title,
+        body: t.login.passkey_missing_body,
+        primaryLabel: t.login.passkey_missing_primary,
+        secondaryLabel: t.login.passkey_missing_secondary,
+      );
+    } catch (_) {
+      if (!mounted) return;
+      await showPasskeyMissingSheet(
+        context,
+        title: t.login.passkey_missing_title,
+        body: t.login.passkey_missing_body,
+        primaryLabel: t.login.passkey_missing_primary,
+        secondaryLabel: t.login.passkey_missing_secondary,
+      );
+    } finally {
+      if (mounted) setState(() => _passkeySigningIn = false);
     }
   }
 
@@ -247,7 +352,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       data: (s) => s is AuthLoading,
       orElse: () => false,
     );
-    final formLocked = loading || _googleSigningIn || _appleSigningIn;
+    final formLocked =
+        loading || _googleSigningIn || _appleSigningIn || _passkeySigningIn;
     final showAppleLogin = AppleSignInFacade.isSupportedPlatform;
     final rateLimit = auth.maybeWhen(
       error: (e, _) => e is RateLimitedException ? e : null,
@@ -416,8 +522,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           _wrapEntrance(
                             reduce,
                             WayoLoginButton(
-                              isLoading: loading,
-                              enabled: !loading && !_googleSigningIn && !_appleSigningIn,
+                              isLoading: loading && !_passkeySigningIn,
+                              enabled: !formLocked,
                               onPressed: () => unawaited(_submit(t)),
                               label: t.login.cta,
                             ),
@@ -465,6 +571,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             baseDelay: showAppleLogin ? 720.ms : 680.ms,
                             slideFrom: 0.16,
                           ),
+                          if (_passkeyButtonVisible) ...[
+                            const SizedBox(height: 14),
+                            _wrapEntrance(
+                              reduce,
+                              PremiumPasskeySignInButton(
+                                busy: _passkeySigningIn,
+                                enabled: !formLocked,
+                                label: t.login.passkey_cta,
+                                onPressed: () =>
+                                    unawaited(_signInWithPasskey(t)),
+                              ),
+                              baseDelay: showAppleLogin ? 760.ms : 720.ms,
+                              slideFrom: 0.14,
+                            ),
+                          ],
                           const SizedBox(height: 12),
                           Align(
                             alignment: AlignmentDirectional.centerEnd,

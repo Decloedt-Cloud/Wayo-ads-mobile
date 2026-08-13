@@ -4,7 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 enum AuthLoginMethod {
   email,
   google,
-  apple;
+  apple,
+  passkey;
 
   static AuthLoginMethod? tryParse(String? raw) {
     switch (raw?.trim().toLowerCase()) {
@@ -14,6 +15,8 @@ enum AuthLoginMethod {
         return AuthLoginMethod.google;
       case 'apple':
         return AuthLoginMethod.apple;
+      case 'passkey':
+        return AuthLoginMethod.passkey;
       default:
         return null;
     }

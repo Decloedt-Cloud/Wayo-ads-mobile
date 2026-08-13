@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
 /// Centralised brand colors for Wayo Ads Go.
+///
+/// Light canvas tokens are shared with Creator Studio for a consistent
+/// warm off-white + orange brand look.
 @immutable
 abstract final class AppColors {
   // Brand
@@ -13,6 +16,15 @@ abstract final class AppColors {
   static const Color surface = Color(0xFF121212);
   static const Color surfaceElevated = Color(0xFF1A1A1A);
   static const Color border = Color(0xFF1F1F1F);
+
+  // Base (light) — warm cream canvas (campaign wizard / shell parity)
+  static const Color canvasLight = Color(0xFFF8F6F3);
+  static const Color surfaceLight = Color(0xFFFFFFFF);
+  static const Color surfaceElevatedLight = Color(0xFFF3F1EE);
+  static const Color borderLight = Color(0xFFE8E4DF);
+  static const Color textPrimaryLight = Color(0xFF0A0A0A);
+  static const Color textSecondaryLight = Color(0xFF525252);
+  static const Color textMutedLight = Color(0xFF737373);
 
   // Text (dark defaults)
   static const Color textPrimary = Color(0xFFFAFAFA);
@@ -34,28 +46,33 @@ abstract final class AppColors {
   static Color textPrimaryOf(BuildContext context) =>
       Theme.of(context).brightness == Brightness.dark
       ? textPrimary
-      : const Color(0xFF0A0A0A);
+      : textPrimaryLight;
 
   static Color textSecondaryOf(BuildContext context) =>
       Theme.of(context).brightness == Brightness.dark
       ? textSecondary
-      : const Color(0xFF525252);
+      : textSecondaryLight;
 
   static Color textMutedOf(BuildContext context) =>
       Theme.of(context).brightness == Brightness.dark
       ? textMuted
-      : const Color(0xFF737373);
+      : textMutedLight;
 
   static Color surfaceOf(BuildContext context) =>
-      Theme.of(context).brightness == Brightness.dark ? surface : Colors.white;
+      Theme.of(context).brightness == Brightness.dark
+      ? surface
+      : surfaceLight;
 
   static Color surfaceElevatedOf(BuildContext context) =>
       Theme.of(context).brightness == Brightness.dark
       ? surfaceElevated
-      : const Color(0xFFF5F5F5);
+      : surfaceElevatedLight;
 
   static Color borderOf(BuildContext context) =>
       Theme.of(context).brightness == Brightness.dark
       ? border
-      : const Color(0xFFE5E5E5);
+      : borderLight;
+
+  static Color canvasOf(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark ? black : canvasLight;
 }

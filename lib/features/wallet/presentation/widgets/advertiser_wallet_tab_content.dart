@@ -47,8 +47,17 @@ const List<double> _kQuickDepositAmounts = [50, 100, 500];
 /// `WIRE_DEPOSIT_CURRENCIES` (Wayo-ads `lib/finance/types.ts`).
 const List<String> kWireDepositCurrencies = ['USD', 'EUR', 'GBP'];
 
+/// Temporary: hide advertiser bank-wire ("virement") UI without deleting the flow.
+/// Set to `true` to show wire funding again.
+const bool kAdvertiserWireDepositUiEnabled = false;
+
 bool _isWireDepositCurrencySupported(String currency) {
   return kWireDepositCurrencies.contains(currency.trim().toUpperCase());
+}
+
+bool _isWireDepositUiAvailable(String currency) {
+  return kAdvertiserWireDepositUiEnabled &&
+      _isWireDepositCurrencySupported(currency);
 }
 
 String _advertiserWalletMoneyLocale(String currency, String appMoneyLocale) {
@@ -369,6 +378,9 @@ class _AdvertiserWalletTabContentState
     required String currency,
     required String moneyLocale,
   }) async {
+    if (!kAdvertiserWireDepositUiEnabled) {
+      return;
+    }
     if (_wireBusy || _busyMethod != null) {
       return;
     }
@@ -855,7 +867,8 @@ class _AdvertiserWalletTabContentState
                                   .valueOrNull;
                               if (snapshot == null ||
                                   (snapshot.achProcessing.isEmpty &&
-                                      snapshot.wireAwaiting.isEmpty)) {
+                                      (!kAdvertiserWireDepositUiEnabled ||
+                                          snapshot.wireAwaiting.isEmpty))) {
                                 return const SizedBox.shrink();
                               }
                               return Padding(
@@ -887,30 +900,31 @@ class _AdvertiserWalletTabContentState
                                               _reconcile(item.intentId),
                                         ),
                                       ),
-                                    for (final item in snapshot.wireAwaiting)
-                                      Padding(
-                                        padding: const EdgeInsets.only(bottom: 10),
-                                        child: _PendingMethodBanner(
-                                          description: t
-                                              .advertiser_wallet
-                                              .wire_awaiting_banner
-                                              .replaceAll(
-                                                '{amount}',
-                                                _formatAdvertiserWalletAmount(
-                                                  item.amountCents / 100.0,
-                                                  item.currency,
-                                                  moneyLocale,
+                                    if (kAdvertiserWireDepositUiEnabled)
+                                      for (final item in snapshot.wireAwaiting)
+                                        Padding(
+                                          padding: const EdgeInsets.only(bottom: 10),
+                                          child: _PendingMethodBanner(
+                                            description: t
+                                                .advertiser_wallet
+                                                .wire_awaiting_banner
+                                                .replaceAll(
+                                                  '{amount}',
+                                                  _formatAdvertiserWalletAmount(
+                                                    item.amountCents / 100.0,
+                                                    item.currency,
+                                                    moneyLocale,
+                                                  ),
                                                 ),
-                                              ),
-                                          busy: _reconcilingIntentIds.contains(
-                                            item.intentId,
+                                            busy: _reconcilingIntentIds.contains(
+                                              item.intentId,
+                                            ),
+                                            reconcileLabel:
+                                                t.advertiser_wallet.reconcile_button,
+                                            onReconcile: () =>
+                                                _reconcile(item.intentId),
                                           ),
-                                          reconcileLabel:
-                                              t.advertiser_wallet.reconcile_button,
-                                          onReconcile: () =>
-                                              _reconcile(item.intentId),
                                         ),
-                                      ),
                                   ],
                                 ),
                               );
@@ -941,7 +955,9 @@ class _AdvertiserWalletTabContentState
                             ),
                             onCancel: () => _cancelPendingDeposit(activePending),
                           ),
-                        ] else if (_wireIntent != null && businessReady) ...[
+                        ] else if (kAdvertiserWireDepositUiEnabled &&
+                            _wireIntent != null &&
+                            businessReady) ...[
                           _WireInstructionsPanel(
                             instructions: _wireIntent!.bankTransferInstructions!,
                             amountLabel: _formatAdvertiserWalletAmount(
@@ -1021,11 +1037,18 @@ class _AdvertiserWalletTabContentState
                           if (businessReady) ...[
                             const SizedBox(height: 20),
                             _FundingMethodSelector(
-                              selected: _fundingMethod,
+                              selected: _fundingMethod == _FundingMethod.wire &&
+                                      !kAdvertiserWireDepositUiEnabled
+                                  ? _FundingMethod.card
+                                  : _fundingMethod,
                               achAvailable: c.toUpperCase() == 'USD',
-                              wireAvailable: _isWireDepositCurrencySupported(c),
+                              wireAvailable: _isWireDepositUiAvailable(c),
                               t: t,
                               onSelect: (m) {
+                                if (!kAdvertiserWireDepositUiEnabled &&
+                                    m == _FundingMethod.wire) {
+                                  return;
+                                }
                                 if (m == _fundingMethod) {
                                   return;
                                 }
@@ -1037,7 +1060,9 @@ class _AdvertiserWalletTabContentState
                               },
                             ),
                           ],
-                          if (businessReady && _fundingMethod != _FundingMethod.wire) ...[
+                          if (businessReady &&
+                              !(_fundingMethod == _FundingMethod.wire &&
+                                  kAdvertiserWireDepositUiEnabled)) ...[
                             Builder(
                               builder: (context) {
                                 final walletCents =
@@ -1065,7 +1090,8 @@ class _AdvertiserWalletTabContentState
                           ],
                           if (businessReady) ...[
                             const SizedBox(height: 24),
-                            if (_fundingMethod == _FundingMethod.wire)
+                            if (kAdvertiserWireDepositUiEnabled &&
+                                _fundingMethod == _FundingMethod.wire)
                               _WireCta(
                                 busy: _wireBusy,
                                 label: t.advertiser_wallet.funding_wire_title,
@@ -1629,10 +1655,11 @@ class _WalletPayStrip extends ConsumerWidget {
     final googleBusy = busyMethod == _PayMethod.googlePay;
     final anyBusy = busyMethod != null;
 
-    // Always show card + the platform wallet (iOS: Apple Pay, Android: Google Pay)
-    // when not in dev/mock mode — not gated on isPlatformPaySupported.
-    final showApple = !isSim && Platform.isIOS;
-    final showGoogle = !isSim && Platform.isAndroid;
+    // Always show card + the platform wallet (iOS: Apple Pay, Android: Google Pay).
+    // Do not hide Apple Pay when canSimulate is true — App Review must be able to
+    // locate the PassKit / Apple Pay entry on advertiser Wallet deposits.
+    final showApple = Platform.isIOS;
+    final showGoogle = Platform.isAndroid;
     final showWallet = showApple || showGoogle;
     final stripeTestMode =
         ref.watch(walletPspConfigProvider).valueOrNull?.isTestMode ?? false;
@@ -2454,24 +2481,26 @@ class _FundingMethodSelector extends StatelessWidget {
                 : t.advertiser_wallet.funding_ach_usd_only,
             onTap: achAvailable ? () => onSelect(_FundingMethod.ach) : null,
           ),
-          Divider(
-            height: 1,
-            color: AppColors.borderOf(context).withValues(alpha: 0.5),
-          ),
-          _FundingMethodRow(
-            selected: selected == _FundingMethod.wire,
-            disabled: !wireAvailable,
-            icon: Icons.account_balance_wallet_outlined,
-            title: t.advertiser_wallet.funding_wire_title,
-            badge: t.advertiser_wallet.funding_wire_badge,
-            detail: wireAvailable
-                ? t.advertiser_wallet.funding_wire_eta
-                : t.advertiser_wallet.funding_wire_currency_only.replaceAll(
-                    '{currencies}',
-                    kWireDepositCurrencies.join(', '),
-                  ),
-            onTap: wireAvailable ? () => onSelect(_FundingMethod.wire) : null,
-          ),
+          if (kAdvertiserWireDepositUiEnabled) ...[
+            Divider(
+              height: 1,
+              color: AppColors.borderOf(context).withValues(alpha: 0.5),
+            ),
+            _FundingMethodRow(
+              selected: selected == _FundingMethod.wire,
+              disabled: !wireAvailable,
+              icon: Icons.account_balance_wallet_outlined,
+              title: t.advertiser_wallet.funding_wire_title,
+              badge: t.advertiser_wallet.funding_wire_badge,
+              detail: wireAvailable
+                  ? t.advertiser_wallet.funding_wire_eta
+                  : t.advertiser_wallet.funding_wire_currency_only.replaceAll(
+                      '{currencies}',
+                      kWireDepositCurrencies.join(', '),
+                    ),
+              onTap: wireAvailable ? () => onSelect(_FundingMethod.wire) : null,
+            ),
+          ],
         ],
       ),
     );

@@ -78,8 +78,12 @@ class _TranslationsForceUpdateFr extends TranslationsForceUpdateEn {
 
 	// Translations
 	@override String get title => 'Mise à jour requise';
-	@override String get subtitle => 'Une nouvelle version de Wayo Ads est disponible. Installez-la depuis le store pour continuer.';
+	@override String get subtitle => 'Une nouvelle version de Wayo Ads est disponible.';
+	@override String get body_required => 'Cette mise à jour est nécessaire pour continuer à utiliser l\'application.';
+	@override String get optional_title => 'Nouvelle version disponible';
+	@override String get optional_subtitle => 'Une nouvelle version de Wayo Ads est disponible avec les dernières améliorations.';
 	@override String get action_update => 'Mettre à jour';
+	@override String get action_later => 'Plus tard';
 	@override String get checking => 'Vérification des mises à jour…';
 }
 
@@ -2120,8 +2124,12 @@ extension on TranslationsFr {
 	dynamic _flatMapFunction(String path) {
 		switch (path) {
 			case 'force_update.title': return 'Mise à jour requise';
-			case 'force_update.subtitle': return 'Une nouvelle version de Wayo Ads est disponible. Installez-la depuis le store pour continuer.';
+			case 'force_update.subtitle': return 'Une nouvelle version de Wayo Ads est disponible.';
+			case 'force_update.body_required': return 'Cette mise à jour est nécessaire pour continuer à utiliser l\'application.';
+			case 'force_update.optional_title': return 'Nouvelle version disponible';
+			case 'force_update.optional_subtitle': return 'Une nouvelle version de Wayo Ads est disponible avec les dernières améliorations.';
 			case 'force_update.action_update': return 'Mettre à jour';
+			case 'force_update.action_later': return 'Plus tard';
 			case 'force_update.checking': return 'Vérification des mises à jour…';
 			case 'maintenance.title': return 'Nous revenons bientôt';
 			case 'maintenance.subtitle': return 'Nous améliorons le service avec de nouvelles fonctionnalités. Nous serons de retour très bientôt.';

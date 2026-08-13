@@ -1,8 +1,12 @@
 {
   "force_update": {
     "title": "Mise à jour requise",
-    "subtitle": "Une nouvelle version de Wayo Ads est disponible. Installez-la depuis le store pour continuer.",
+    "subtitle": "Une nouvelle version de Wayo Ads est disponible.",
+    "body_required": "Cette mise à jour est nécessaire pour continuer à utiliser l'application.",
+    "optional_title": "Nouvelle version disponible",
+    "optional_subtitle": "Une nouvelle version de Wayo Ads est disponible avec les dernières améliorations.",
     "action_update": "Mettre à jour",
+    "action_later": "Plus tard",
     "checking": "Vérification des mises à jour…"
   },
   "maintenance": {

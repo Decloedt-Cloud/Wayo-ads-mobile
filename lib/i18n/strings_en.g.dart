@@ -81,9 +81,13 @@ class TranslationsForceUpdateEn {
 	final Translations _root; // ignore: unused_field
 
 	// Translations
-	String get title => 'Update required';
-	String get subtitle => 'A new version of Wayo Ads is available. Please update from the store to continue.';
-	String get action_update => 'Update now';
+	String get title => 'Update Required';
+	String get subtitle => 'A new version of Wayo Ads is available.';
+	String get body_required => 'This update is required to continue using the application.';
+	String get optional_title => 'New Version Available';
+	String get optional_subtitle => 'A new version of Wayo Ads is available with the latest improvements.';
+	String get action_update => 'Update';
+	String get action_later => 'Later';
 	String get checking => 'Checking for updates…';
 }
 
@@ -2293,9 +2297,13 @@ class TranslationsCreatorBusinessValidationEn {
 extension on Translations {
 	dynamic _flatMapFunction(String path) {
 		switch (path) {
-			case 'force_update.title': return 'Update required';
-			case 'force_update.subtitle': return 'A new version of Wayo Ads is available. Please update from the store to continue.';
-			case 'force_update.action_update': return 'Update now';
+			case 'force_update.title': return 'Update Required';
+			case 'force_update.subtitle': return 'A new version of Wayo Ads is available.';
+			case 'force_update.body_required': return 'This update is required to continue using the application.';
+			case 'force_update.optional_title': return 'New Version Available';
+			case 'force_update.optional_subtitle': return 'A new version of Wayo Ads is available with the latest improvements.';
+			case 'force_update.action_update': return 'Update';
+			case 'force_update.action_later': return 'Later';
 			case 'force_update.checking': return 'Checking for updates…';
 			case 'maintenance.title': return 'We\'ll be back soon';
 			case 'maintenance.subtitle': return 'We are busy upgrading the service with more features. We will return soon.';

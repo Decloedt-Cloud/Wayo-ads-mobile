@@ -1,8 +1,12 @@
 {
   "force_update": {
-    "title": "مطلوب تحديث",
-    "subtitle": "يتوفر إصدار جديد من Wayo Ads. يرجى التحديث من المتجر للمتابعة.",
-    "action_update": "تحديث الآن",
+    "title": "تحديث مطلوب",
+    "subtitle": "يتوفر إصدار جديد من Wayo Ads.",
+    "body_required": "هذا التحديث ضروري لمواصلة استخدام التطبيق.",
+    "optional_title": "إصدار جديد متاح",
+    "optional_subtitle": "يتوفر إصدار جديد من Wayo Ads مع أحدث التحسينات.",
+    "action_update": "تحديث",
+    "action_later": "لاحقاً",
     "checking": "جاري التحقق من التحديثات…"
   },
   "maintenance": {

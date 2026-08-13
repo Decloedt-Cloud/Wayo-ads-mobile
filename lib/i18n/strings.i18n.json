@@ -1,8 +1,12 @@
 {
   "force_update": {
-    "title": "Update required",
-    "subtitle": "A new version of Wayo Ads is available. Please update from the store to continue.",
-    "action_update": "Update now",
+    "title": "Update Required",
+    "subtitle": "A new version of Wayo Ads is available.",
+    "body_required": "This update is required to continue using the application.",
+    "optional_title": "New Version Available",
+    "optional_subtitle": "A new version of Wayo Ads is available with the latest improvements.",
+    "action_update": "Update",
+    "action_later": "Later",
     "checking": "Checking for updates…"
   },
   "maintenance": {

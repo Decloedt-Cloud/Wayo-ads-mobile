@@ -77,9 +77,13 @@ class _TranslationsForceUpdateAr extends TranslationsForceUpdateEn {
 	final TranslationsAr _root; // ignore: unused_field
 
 	// Translations
-	@override String get title => 'مطلوب تحديث';
-	@override String get subtitle => 'يتوفر إصدار جديد من Wayo Ads. يرجى التحديث من المتجر للمتابعة.';
-	@override String get action_update => 'تحديث الآن';
+	@override String get title => 'تحديث مطلوب';
+	@override String get subtitle => 'يتوفر إصدار جديد من Wayo Ads.';
+	@override String get body_required => 'هذا التحديث ضروري لمواصلة استخدام التطبيق.';
+	@override String get optional_title => 'إصدار جديد متاح';
+	@override String get optional_subtitle => 'يتوفر إصدار جديد من Wayo Ads مع أحدث التحسينات.';
+	@override String get action_update => 'تحديث';
+	@override String get action_later => 'لاحقاً';
 	@override String get checking => 'جاري التحقق من التحديثات…';
 }
 
@@ -2108,9 +2112,13 @@ class _TranslationsCreatorBusinessValidationAr extends TranslationsCreatorBusine
 extension on TranslationsAr {
 	dynamic _flatMapFunction(String path) {
 		switch (path) {
-			case 'force_update.title': return 'مطلوب تحديث';
-			case 'force_update.subtitle': return 'يتوفر إصدار جديد من Wayo Ads. يرجى التحديث من المتجر للمتابعة.';
-			case 'force_update.action_update': return 'تحديث الآن';
+			case 'force_update.title': return 'تحديث مطلوب';
+			case 'force_update.subtitle': return 'يتوفر إصدار جديد من Wayo Ads.';
+			case 'force_update.body_required': return 'هذا التحديث ضروري لمواصلة استخدام التطبيق.';
+			case 'force_update.optional_title': return 'إصدار جديد متاح';
+			case 'force_update.optional_subtitle': return 'يتوفر إصدار جديد من Wayo Ads مع أحدث التحسينات.';
+			case 'force_update.action_update': return 'تحديث';
+			case 'force_update.action_later': return 'لاحقاً';
 			case 'force_update.checking': return 'جاري التحقق من التحديثات…';
 			case 'maintenance.title': return 'سنعود قريباً';
 			case 'maintenance.subtitle': return 'نقوم بترقية الخدمة بميزات جديدة. سنعود قريباً.';
